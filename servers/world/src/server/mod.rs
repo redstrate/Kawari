@@ -191,6 +191,7 @@ impl WorldServer {
                     lua,
                     tasks: Vec::new(),
                     bosses: HashMap::new(),
+                    shortcut_poprange_id: None,
                 };
 
                 // Call into the onSetup function before returning, as we need the flag to be initialized before any players change zones.
@@ -974,6 +975,32 @@ pub async fn server_main_loop(
                                     task.from_id,
                                     FromServer::PacketSegment(segment.clone(), task.from_actor_id),
                                     DestinationNetwork::ZoneClients,
+                                );
+                            }
+                            QueuedTaskData::WarpToPopRange { id } => {
+                                let mut data = data.lock();
+                                let mut network = network.lock();
+                                let mut game_data = game_data.lock();
+
+                                let destination_zone_id = data
+                                    .find_actor_instance(task.from_actor_id)
+                                    .unwrap()
+                                    .zone
+                                    .id;
+                                let from_id = network.find_by_actor(task.from_actor_id).unwrap();
+
+                                change_zone_warp_to_pop_range(
+                                    &mut data,
+                                    &mut network,
+                                    &mut game_data,
+                                    destination_zone_id,
+                                    *id,
+                                    task.from_actor_id,
+                                    from_id,
+                                    WarpType::Normal,
+                                    0,
+                                    0,
+                                    0,
                                 );
                             }
                         }

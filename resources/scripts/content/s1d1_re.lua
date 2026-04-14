@@ -40,6 +40,11 @@ PLACE_SECOND_RAMBADE = 670
 EOBJ_SECOND_RAMBADE_BOSS_WALL = 2001539
 EOBJ_SECOND_RAMBADE_BOSS_LINE = 2001540
 
+-- TODO: unsure if its actually called Mistbeard Cove, need to double check
+PLACE_NAME_MISTBEARD_COVE = 658
+EOBJ_MISTBEARD_COVE_BOSS_WALL = 2001508
+EOBJ_MISTBEARD_COVE_BOSS_LINE = 2001509
+
 EVENT_RANGE_BOSS = 4069552
 
 -- Sequence 0
@@ -69,6 +74,22 @@ BNPC_REAVER3 = 3978797
 BNPC_REAVER4 = 3988324
 BNPC_CAPTAIN2 = 4035056
 
+-- Sequence 5
+BNPC_DENN = 3978771
+
+-- Shortcuts
+SHORTCUT_BEFORE_CATTERY = 11432969
+SHORTCUT_AFTER_CATTERY = 4033741
+
+SHORTCUT_BEFORE_CAPTAIN1 = 11432970
+SHORTCUT_AFTER_CAPTAIN1 = 4033745
+
+SHORTCUT_BEFORE_CAPTAIN2 = 11432971
+SHORTCUT_AFTER_CAPTAIN2 = 4165184
+
+SHORTCUT_BEFORE_DENN = 11432972
+SHORTCUT_AFTER_DENN = 7372594
+
 EVENT_ACTION_INTERACT = 24
 
 LOG_MESSAGE_SEQ0 = 2034 -- You hear something move in the distance
@@ -80,6 +101,7 @@ SEQ1 = 1 -- Open the hidden door
 SEQ2 = 2 -- Discover the pirate captain
 SEQ3 = 4 -- Obtain the Waverider Gate key
 SEQ4 = 8 -- Defeat final boss
+SEQ5 = 16 -- Dungeon completed
 
 -- Randomized coral color
 local coral_color
@@ -91,6 +113,8 @@ local has_captains_quarters
 local has_waverider_gate
 -- Whether the Chopper boss was defeated
 local chopper_defeated
+-- Whether the final boss cutscene played
+local seen_final_cutscene
 
 function onSetup(director)
     coral_color = math.random(0, 2)
@@ -99,6 +123,7 @@ function onSetup(director)
     director:hide_eobj(EOBJ_CATTERY_BOSS_WALL)
     director:hide_eobj(EOBJ_FIRST_RAMBADE_BOSS_WALL)
     director:hide_eobj(EOBJ_SECOND_RAMBADE_BOSS_WALL)
+    director:hide_eobj(EOBJ_MISTBEARD_COVE_BOSS_WALL)
 
     -- Random treasure coffers in the coral room
     director:spawn_treasure(97)
@@ -149,15 +174,18 @@ function onGimmickAccessor(director, actor_id, id, params)
             return
         end
     elseif id == EOBJ_EXIT then
-        director:abandon_duty(actor_id)
+        director:abandon_duty(actor_id) -- TODO: should be generically handled
+    elseif id == EOBJ_SHORTCUT then
+        director:use_shortcut(actor_id) -- TODO: should be generically handled
     end
 
     director:finish_gimmick(actor_id)
 end
 
 function onGimmickRect(director, target)
-    if target == EVENT_RANGE_BOSS then
-        print("TODO cutscene")
+    if target == EVENT_RANGE_BOSS and not seen_final_cutscene then
+        director:play_cutscene(175) -- Denn's cutscene
+        seen_final_cutscene = true
     end
 end
 
@@ -205,10 +233,16 @@ function onActorDeath(director, bnpc_id, position)
         director:spawn_treasure(94) -- Treasure for this boss
         director:set_bgm(0) -- Reset music
         chopper_defeated = true
+
+        -- Update shortcut
+        director:update_shortcut(SHORTCUT_AFTER_CATTERY)
     elseif bnpc_id == BNPC_CAPTAIN1 then
         director:spawn_treasure(95) -- Treasure for this boss
         director:set_bgm(0) -- Reset music
         beginSequence3(director)
+
+        -- Update shortcut
+        director:update_shortcut(SHORTCUT_AFTER_CAPTAIN1)
     elseif bnpc_id == BNPC_KEY_HOLDER_REAVER then
         director:spawn_eobj(EOBJ_CAPTAINS_QUARTERS_KEY, { x = position.x, y = position.y, z = position.z })
     elseif bnpc_id == BNPC_CAPTAINS_QUARTERS_REAVER then
@@ -217,6 +251,19 @@ function onActorDeath(director, bnpc_id, position)
         director:spawn_treasure(96) -- Treasure for this boss
         director:set_bgm(0) -- Reset music
         director:hide_eobj(EOBJ_RAMBADE_DOOR2)
+
+        beginSequence5(director)
+
+        -- Update shortcut
+        director:update_shortcut(SHORTCUT_AFTER_CAPTAIN2)
+    elseif bnpc_id == BNPC_DENN then
+        setSequence(director, SEQ1 | SEQ2 | SEQ3 | SEQ4 | SEQ5)
+
+        director:spawn_treasure(93) -- Treasure for this boss
+        director:set_bgm(0) -- Reset music
+
+        -- Update shortcut
+        director:update_shortcut(SHORTCUT_AFTER_DENN)
     end
 end
 
@@ -286,6 +333,9 @@ function beginSequence2(director)
 
     director:hide_eobj(EOBJ_NEXT_DOOR1)
 
+    -- Update shortcut
+    director:update_shortcut(SHORTCUT_BEFORE_CAPTAIN1)
+
     -- Spawn captain and his goons
     director:spawn_bnpc(BNPC_REAVER1)
     director:spawn_bnpc(BNPC_REAVER2)
@@ -315,7 +365,18 @@ function beginSequence4(director)
 
     -- TODO: spawn them dogs
 
+    -- Update shortcut
+    director:update_shortcut(SHORTCUT_BEFORE_CAPTAIN2)
+
     -- Set battle music
     director:set_bgm(37)
     director:spawn_boss(BNPC_CAPTAIN2, EOBJ_SECOND_RAMBADE_BOSS_WALL, EOBJ_SECOND_RAMBADE_BOSS_LINE, PLACE_SECOND_RAMBADE)
+end
+
+-- TODO: why is this "sequence 5"? shouldn't it be 4?
+function beginSequence5(director)
+    -- Update shortcut
+    director:update_shortcut(SHORTCUT_BEFORE_DENN)
+
+    director:spawn_boss(BNPC_DENN, EOBJ_MISTBEARD_COVE_BOSS_WALL, EOBJ_MISTBEARD_COVE_BOSS_LINE, PLACE_NAME_MISTBEARD_COVE)
 end

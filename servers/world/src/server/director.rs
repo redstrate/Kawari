@@ -2,8 +2,8 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use kawari::{
     common::{
-        DirectorEvent, HandlerId, InvisibilityFlags, ObjectId, ObjectTypeId, ObjectTypeKind,
-        Position,
+        DirectorEvent, EOBJ_SHORTCUT, HandlerId, InvisibilityFlags, ObjectId, ObjectTypeId,
+        ObjectTypeKind, Position,
     },
     ipc::zone::{ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment},
 };
@@ -82,6 +82,15 @@ pub enum LuaDirectorTask {
     },
     VariantVoteRoute {
         npc_route: u32,
+    },
+    PlayCutscene {
+        cutscene_id: u32,
+    },
+    UpdateShortcut {
+        poprange_id: u32,
+    },
+    UseShortcut {
+        actor_id: ObjectId,
     },
 }
 
@@ -189,6 +198,26 @@ impl UserData for LuaDirector {
                 .push(LuaDirectorTask::VariantVoteRoute { npc_route });
             Ok(())
         });
+        methods.add_method_mut("play_cutscene", |_, this, cutscene_id: u32| {
+            this.tasks
+                .push(LuaDirectorTask::PlayCutscene { cutscene_id });
+            Ok(())
+        });
+        methods.add_method_mut("update_shortcut", |_, this, poprange_id: u32| {
+            // Show the shortcut object because it's hidden by default
+            this.tasks.push(LuaDirectorTask::ShowEObj {
+                base_id: EOBJ_SHORTCUT,
+            });
+            this.tasks
+                .push(LuaDirectorTask::UpdateShortcut { poprange_id });
+            Ok(())
+        });
+        methods.add_method_mut("use_shortcut", |_, this, actor_id: u32| {
+            this.tasks.push(LuaDirectorTask::UseShortcut {
+                actor_id: ObjectId(actor_id),
+            });
+            Ok(())
+        });
     }
 }
 
@@ -210,6 +239,8 @@ pub struct DirectorData {
     pub tasks: Vec<LuaDirectorTask>,
     /// List of alive bosses and their data.
     pub bosses: HashMap<u32, DirectorBoss>,
+    /// What the shortcut is currently pointing to.
+    pub shortcut_poprange_id: Option<u32>,
 }
 
 impl DirectorData {
@@ -669,6 +700,33 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     DestinationNetwork::ZoneClients,
                 );
             }
+            LuaDirectorTask::PlayCutscene { cutscene_id } => {
+                let mut network = network.lock();
+                network.send_to_instance(
+                    ObjectId::default(),
+                    instance,
+                    FromServer::PlayDirectorCutscene(*cutscene_id),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
+            LuaDirectorTask::UpdateShortcut { poprange_id } => {
+                instance.director.as_mut().unwrap().shortcut_poprange_id = Some(*poprange_id);
+            }
+            LuaDirectorTask::UseShortcut { actor_id } => {
+                instance.insert_task(
+                    ClientId::default(),
+                    *actor_id,
+                    Duration::from_secs(0),
+                    QueuedTaskData::WarpToPopRange {
+                        id: instance
+                            .director
+                            .as_ref()
+                            .unwrap()
+                            .shortcut_poprange_id
+                            .unwrap(),
+                    },
+                );
+            }
         }
     }
 
@@ -688,7 +746,10 @@ pub fn handle_director_messages(data: Arc<Mutex<WorldServer>>, msg: &ToServer) -
                 return true;
             };
 
-            let id = instance.find_base_id_by_actor_id(*from_object_id).unwrap();
+            let Some(id) = instance.find_base_id_by_actor_id(*from_object_id) else {
+                tracing::warn!("Somehow failed to find base id from actor id {from_object_id}!");
+                return true;
+            };
 
             if let Some(director) = &mut instance.director {
                 director.gimmick_accessor(*from_actor_id, id, params);

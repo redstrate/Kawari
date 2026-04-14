@@ -221,6 +221,8 @@ pub enum FromServer {
     FriendRemoved(u64, String),
     /// Inform the client that a new letter has arrived in their mailbox.
     NewLetterArrived(),
+    /// Plays a cutscene from the instance director.
+    PlayDirectorCutscene(u32),
 }
 
 #[derive(Debug, Clone)]

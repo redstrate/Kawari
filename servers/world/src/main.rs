@@ -3425,6 +3425,33 @@ async fn process_server_msg(
                 // TODO: We probably also need to check if the client is in the mail window and send them an update? Need a capture to see if this happens.
                 connection.send_mailbox_status().await;
             }
+            FromServer::PlayDirectorCutscene(cutscene_id) => {
+                connection
+                    .start_event(
+                        ObjectTypeId {
+                            object_id: connection.player_data.character.actor_id,
+                            object_type: ObjectTypeKind::None,
+                        },
+                        connection.content_handler_id.0,
+                        EventType::GameProgress,
+                        1,
+                        events,
+                    )
+                    .await;
+                if events.last_mut().is_some() {
+                    lua_player.play_scene(
+                        3,
+                        SceneFlags::NO_DEFAULT_CAMERA
+                            | SceneFlags::FADE_OUT
+                            | SceneFlags::CONDITION_CUTSCENE
+                            | SceneFlags::HIDE_HOTBAR
+                            | SceneFlags::UNK1
+                            | SceneFlags::DISABLE_STEALTH
+                            | SceneFlags::INVIS_AOE,
+                        vec![cutscene_id, 1, 38, 1, 0],
+                    );
+                }
+            }
             _ => {
                 tracing::error!(
                     "ZoneConnection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!",

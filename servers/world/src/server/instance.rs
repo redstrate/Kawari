@@ -75,6 +75,10 @@ pub enum QueuedTaskData {
     PacketSegment {
         segment: ServerZoneIpcSegment,
     },
+    /// Used by directors since its tough to fit this into the director logic.
+    WarpToPopRange {
+        id: u32,
+    },
 }
 
 #[derive(Debug, Clone)]
