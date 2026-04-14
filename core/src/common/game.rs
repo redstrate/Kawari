@@ -51,6 +51,9 @@ pub const EOBJ_SHORTCUT_EXPLORER_MODE: u32 = 2011343;
 /// EObj ID for the "exit" object seen in instanced content.
 pub const EOBJ_EXIT: u32 = 2000139;
 
+/// EObj ID for the "entrance" object in housing.
+pub const EOBJ_HOUSING_ENTRANCE: u32 = 2002737;
+
 /// Time until a dead actor fades away. Estimated from retail.
 pub const DEAD_FADE_OUT_TIME: Duration = Duration::from_secs(8);
 

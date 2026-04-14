@@ -24,8 +24,9 @@ use crate::{
 use kawari::{
     common::{
         DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_EXIT,
-        EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType, InvisibilityFlags, ObjectId,
-        Position, WARP_DELAY, euler_to_direction, internal_housing_row,
+        EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType,
+        InvisibilityFlags, ObjectId, Position, WARP_DELAY, euler_to_direction,
+        internal_housing_row,
     },
     config::get_config,
     ipc::zone::{
@@ -616,7 +617,7 @@ impl Zone {
         for (i, plot) in self.cached_housing_plots.iter().enumerate() {
             let spawn = SpawnObject {
                 kind: ObjectKind::EventObj,
-                base_id: 2002737, // TODO: move to game.rs or whatever
+                base_id: EOBJ_HOUSING_ENTRANCE,
                 entity_id: ObjectId(fastrand::u32(..)),
                 radius: 1.0,
                 position: plot.entrance_position,
