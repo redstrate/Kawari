@@ -1,5 +1,6 @@
 use binrw::binrw;
 use bitflags::bitflags;
+use strum::FromRepr;
 
 #[binrw]
 #[brw(little)]
@@ -56,12 +57,16 @@ pub enum HousingAppealTag {
 
 /// Represents the size of a housing plot.
 #[binrw]
+#[repr(u8)]
 #[brw(repr = u8)]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, FromRepr)]
 pub enum PlotSize {
+    /// Small housing plot.
     #[default]
     Small = 0,
+    /// Medium housing plot.
     Medium = 1,
+    /// Large housing plot.
     Large = 2,
 }
 

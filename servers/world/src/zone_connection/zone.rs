@@ -213,7 +213,7 @@ impl ZoneConnection {
             houses[4] = House {
                 plot_size: PlotSize::Medium,
                 status: HouseStatus::HouseBuilt,
-                flags: 0,
+                flags: 1,
                 exterior: HouseExterior {
                     roof: 1029,
                     walls: 3589,
@@ -228,7 +228,7 @@ impl ZoneConnection {
             houses[5] = House {
                 plot_size: PlotSize::Large,
                 status: HouseStatus::HouseBuilt,
-                flags: 0,
+                flags: 1,
                 exterior: HouseExterior {
                     roof: 1081,
                     walls: 3632,
@@ -243,7 +243,7 @@ impl ZoneConnection {
             houses[11] = House {
                 plot_size: PlotSize::Small,
                 status: HouseStatus::HouseBuilt,
-                flags: 0,
+                flags: 1,
                 exterior: HouseExterior {
                     roof: 1136,
                     walls: 3687,

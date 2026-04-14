@@ -26,6 +26,7 @@ use icarus::GilShopItem::GilShopItemSheet;
 use icarus::GimmickRect::{GimmickRectRow, GimmickRectSheet};
 use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
 use icarus::HousingAethernet::HousingAethernetSheet;
+use icarus::HousingLandSet::HousingLandSetSheet;
 use icarus::InstanceContent::InstanceContentSheet;
 use icarus::Item::ItemSheet;
 use icarus::ItemAction::ItemActionSheet;
@@ -46,6 +47,7 @@ use icarus::TopicSelect::TopicSelectSheet;
 use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
+use kawari::ipc::zone::PlotSize;
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
 use physis::{Language, TerritoryIntendedUse};
 
@@ -1462,6 +1464,22 @@ impl GameData {
     pub fn get_intended_use(&mut self, zone_id: u32) -> Option<TerritoryIntendedUse> {
         let row = self.territory_type_sheet.row(zone_id)?;
         TerritoryIntendedUse::from_repr(row.TerritoryIntendedUse())
+    }
+
+    /// Returns the plot size for a given land set in a housing district.
+    pub fn get_land_set_size(&mut self, housing_id: u32, plot_index: usize) -> Option<PlotSize> {
+        let sheet = HousingLandSetSheet::read_from(&mut self.resource, Language::None).ok()?;
+        let row = sheet.row(housing_id)?;
+
+        PlotSize::from_repr(row.LandSet()[plot_index].PlotSize)
+    }
+
+    /// Returns the map range for a given land set in a housing district.
+    pub fn get_land_set_map_range(&mut self, housing_id: u32, plot_index: usize) -> Option<u32> {
+        let sheet = HousingLandSetSheet::read_from(&mut self.resource, Language::None).ok()?;
+        let row = sheet.row(housing_id)?;
+
+        Some(row.LandSet()[plot_index].UnknownRange1) // NOTE: Will be MapRange in the future
     }
 }
 

@@ -26,7 +26,7 @@ pub enum HouseStatus {
     HouseBuilt = 3,
 }
 
-/// Represents a House's "pattern ids", or in other words, what models make up the house's exterior. 0 indicates that item isn't present.
+/// Represents a House's "pattern ids", or in other words, what models make up the house's exterior. All values are an index into the HousingExterior Excel sheet.
 #[binrw]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct HouseExterior {
@@ -42,7 +42,7 @@ pub struct HouseExterior {
     pub roof_fixture: u16,
     /// Exterior wall fixture, like an awning.
     pub wall_fixture: u16,
-    /// The flag/banner/crest that resides above the front door. 0 indicates it's not present.
+    /// The flag/banner/crest that resides above the front door.
     pub above_door_banner: u16,
     /// The perimeter fence's style.
     pub fence: u16,
