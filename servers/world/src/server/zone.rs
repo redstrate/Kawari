@@ -666,7 +666,7 @@ impl Zone {
                     link_range,
                 } = object.data
                 {
-                    let (model_chara, battalion, customize, rank) =
+                    let (model_chara, battalion, customize, rank, equip) =
                         game_data.find_bnpc(base_id).unwrap();
 
                     let usable_hp;
@@ -721,7 +721,7 @@ impl Zone {
                             rotation: object.rotation,
                             look: customize,
                             layout_id: object.instance_id,
-                            ..Default::default()
+                            ..game_data.get_npc_equip(equip as u32).unwrap_or_default()
                         },
                         ..Default::default()
                     };

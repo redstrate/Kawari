@@ -32,6 +32,7 @@ use icarus::Item::ItemSheet;
 use icarus::ItemAction::ItemActionSheet;
 use icarus::ItemLevel::ItemLevelSheet;
 use icarus::Mount::MountSheet;
+use icarus::NpcEquip::NpcEquipSheet;
 use icarus::NpcYell::NpcYellSheet;
 use icarus::OnlineStatus::OnlineStatusSheet;
 use icarus::Opening::OpeningSheet;
@@ -47,7 +48,7 @@ use icarus::TopicSelect::TopicSelectSheet;
 use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
-use kawari::ipc::zone::PlotSize;
+use kawari::ipc::zone::{CommonSpawn, PlotSize};
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
 use physis::{Language, TerritoryIntendedUse};
 
@@ -699,7 +700,7 @@ impl GameData {
     }
 
     /// Grabs needed BattleNPC information such as their name, model id and more.
-    pub fn find_bnpc(&mut self, id: u32) -> Option<(u16, u8, CustomizeData, u8)> {
+    pub fn find_bnpc(&mut self, id: u32) -> Option<(u16, u8, CustomizeData, u8, u16)> {
         let bnpc_row = self.bnpc_base_sheet.row(id)?;
         let model_row_id = bnpc_row.ModelChara();
         let customize_row_id = bnpc_row.BNpcCustomize();
@@ -739,6 +740,7 @@ impl GameData {
             bnpc_row.Battalion(),
             customize,
             bnpc_row.Rank(),
+            bnpc_row.NpcEquip(),
         ))
     }
 
@@ -1480,6 +1482,35 @@ impl GameData {
         let row = sheet.row(housing_id)?;
 
         Some(row.LandSet()[plot_index].UnknownRange1) // NOTE: Will be MapRange in the future
+    }
+
+    /// Returns a CommonSpawn with the NPC's equipment.
+    pub fn get_npc_equip(&mut self, equip_id: u32) -> Option<CommonSpawn> {
+        let sheet = NpcEquipSheet::read_from(&mut self.resource, Language::None).ok()?;
+        let row = sheet.row(equip_id)?;
+
+        // TODO: support dyes
+        Some(CommonSpawn {
+            main_weapon_model: row.ModelMainHand(),
+            sec_weapon_model: row.ModelOffHand(),
+            models: [
+                row.ModelHead(),
+                row.ModelBody(),
+                row.ModelHands(),
+                row.ModelLegs(),
+                row.ModelFeet(),
+                row.ModelEars(),
+                row.ModelNeck(),
+                row.ModelWrists(),
+                row.ModelLeftRing(),
+                row.ModelRightRing(),
+            ],
+            glasses_ids: [
+                row.Unknown_70_1(), // NOTE: will be Glasses in the future
+                row.Unknown_70_2(),
+            ],
+            ..Default::default()
+        })
     }
 }
 
