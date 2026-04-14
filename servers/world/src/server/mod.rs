@@ -570,7 +570,18 @@ fn server_logic_tick(
                     }
                 }
 
-                for (other_id, other_actor) in &instance.actors {
+                // We want to prioritize actors closest to us!
+                let mut actors_by_distance = instance.actors.iter().collect::<Vec<_>>();
+                actors_by_distance.sort_by(|a, b| {
+                    let a_position = a.1.position();
+                    let b_position = b.1.position();
+
+                    let a_distance = Position::distance(actor.position(), a_position);
+                    let b_distance = Position::distance(actor.position(), b_position);
+
+                    a_distance.total_cmp(&b_distance)
+                });
+                for (other_id, other_actor) in actors_by_distance {
                     // We're always in our own view
                     if *id == *other_id {
                         continue;
