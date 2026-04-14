@@ -52,9 +52,12 @@ pub fn npc_behavior(
                 navmesh_target: current_target,
                 spawn,
                 last_position,
+                state,
                 ..
             } = actor
                 && current_target.is_some()
+                && *state != NpcState::Dead
+                && spawn.common.health_points > 0
             {
                 let current_target = current_target.unwrap();
 
@@ -137,6 +140,7 @@ pub fn npc_behavior(
                 ..
             } = actor
                 && *state != NpcState::Dead
+                && spawn.common.health_points > 0
             {
                 // NOTE: this is *intentional* as I believe in retail the timing of actions are dependent on when the actor spawned
                 // This doesn't have an effect if you re-aggro them or whatever.
