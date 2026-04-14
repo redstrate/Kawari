@@ -95,7 +95,17 @@ local chopper_defeated
 function onSetup(director)
     coral_color = math.random(0, 2)
 
+    -- Take down initial boss walls
+    director:hide_eobj(EOBJ_CATTERY_BOSS_WALL)
+    director:hide_eobj(EOBJ_FIRST_RAMBADE_BOSS_WALL)
+    director:hide_eobj(EOBJ_SECOND_RAMBADE_BOSS_WALL)
+
+    -- Random treasure coffers in the coral room
+    director:spawn_treasure(97)
     director:spawn_treasure(98)
+
+    -- Treasure coffer in The Hole
+    director:spawn_treasure(99)
 
     beginSequence0(director)
 end
@@ -192,9 +202,11 @@ end
 
 function onActorDeath(director, bnpc_id, position)
     if bnpc_id == BNPC_CHOPPER then
+        director:spawn_treasure(94) -- Treasure for this boss
         director:set_bgm(0) -- Reset music
         chopper_defeated = true
     elseif bnpc_id == BNPC_CAPTAIN1 then
+        director:spawn_treasure(95) -- Treasure for this boss
         director:set_bgm(0) -- Reset music
         beginSequence3(director)
     elseif bnpc_id == BNPC_KEY_HOLDER_REAVER then
@@ -202,6 +214,7 @@ function onActorDeath(director, bnpc_id, position)
     elseif bnpc_id == BNPC_CAPTAINS_QUARTERS_REAVER then
         director:spawn_eobj(EOBJ_WAVERIDER_GATE_KEY, { x = position.x, y = position.y, z = position.z })
     elseif bnpc_id == BNPC_CAPTAIN2 then
+        director:spawn_treasure(96) -- Treasure for this boss
         director:set_bgm(0) -- Reset music
         director:hide_eobj(EOBJ_RAMBADE_DOOR2)
     end
