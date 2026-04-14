@@ -257,13 +257,16 @@ function onActorDeath(director, bnpc_id, position)
         -- Update shortcut
         director:update_shortcut(SHORTCUT_AFTER_CAPTAIN2)
     elseif bnpc_id == BNPC_DENN then
-        setSequence(director, SEQ1 | SEQ2 | SEQ3 | SEQ4 | SEQ5)
-
         director:spawn_treasure(93) -- Treasure for this boss
         director:set_bgm(0) -- Reset music
 
         -- Update shortcut
         director:update_shortcut(SHORTCUT_AFTER_DENN)
+
+        -- Play defeat cutscene
+        director:play_cutscene(176)
+
+        director:complete_duty()
     end
 end
 

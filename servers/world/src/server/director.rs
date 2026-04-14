@@ -2,8 +2,8 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use kawari::{
     common::{
-        DirectorEvent, EOBJ_SHORTCUT, HandlerId, InvisibilityFlags, ObjectId, ObjectTypeId,
-        ObjectTypeKind, Position,
+        DirectorEvent, EOBJ_EXIT, EOBJ_SHORTCUT, HandlerId, InvisibilityFlags, ObjectId,
+        ObjectTypeId, ObjectTypeKind, Position,
     },
     ipc::zone::{ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment},
 };
@@ -92,6 +92,7 @@ pub enum LuaDirectorTask {
     UseShortcut {
         actor_id: ObjectId,
     },
+    CompleteDuty {},
 }
 
 // TODO: Maybe collapse into DirectorData?
@@ -216,6 +217,13 @@ impl UserData for LuaDirector {
             this.tasks.push(LuaDirectorTask::UseShortcut {
                 actor_id: ObjectId(actor_id),
             });
+            Ok(())
+        });
+        methods.add_method_mut("complete_duty", |_, this, _: ()| {
+            // Show the exit object
+            this.tasks
+                .push(LuaDirectorTask::ShowEObj { base_id: EOBJ_EXIT });
+            this.tasks.push(LuaDirectorTask::CompleteDuty {});
             Ok(())
         });
     }
@@ -744,6 +752,28 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                             .unwrap(),
                     },
                 );
+            }
+            LuaDirectorTask::CompleteDuty {} => {
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(
+                    ActorControlSelf {
+                        category: ActorControlCategory::DirectorEvent {
+                            handler_id: director_id,
+                            event: DirectorEvent::DutyCompleted,
+                            arg1: 0,
+                            arg2: 0,
+                        },
+                    },
+                ));
+
+                let mut network = network.lock();
+                network.send_to_instance(
+                    ObjectId::default(),
+                    instance,
+                    FromServer::PacketSegment(ipc, ObjectId::default()), // TODO: how do we just send it from the player?
+                    DestinationNetwork::ZoneClients,
+                );
+
+                // TODO: mark duty as completed for each player
             }
         }
     }
