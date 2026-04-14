@@ -222,7 +222,18 @@ impl UserData for LuaDirector {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DirectorBossState {
+    /// The boss arena is open and nothing has happened yet.
+    Open,
+    /// The boss arena is closing soon, because the boss was aggravated.
+    Aggro,
+    /// The boss arena is closed.
+    Closed,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DirectorBoss {
+    state: DirectorBossState,
     actor_id: ObjectId,
     wall_id: u32,
     line_id: u32,
@@ -362,11 +373,14 @@ impl DirectorData {
 
     /// Actually insert tasks to seal the boss wall.
     pub fn seal_boss_wall(&mut self, id: u32, place_name: u32) {
-        self.tasks.push(LuaDirectorTask::LogMessage {
-            id: 2013,
-            params: vec![place_name],
-        });
-        self.tasks.push(LuaDirectorTask::ShowEObj { base_id: id });
+        if let Some(boss) = self.bosses.iter_mut().find(|x| x.1.wall_id == id) {
+            self.tasks.push(LuaDirectorTask::LogMessage {
+                id: 2013,
+                params: vec![place_name],
+            });
+            self.tasks.push(LuaDirectorTask::ShowEObj { base_id: id });
+            boss.1.state = DirectorBossState::Closed;
+        }
     }
 
     /// Actually insert tasks to unseal the boss wall.
@@ -382,7 +396,9 @@ impl DirectorData {
     }
 
     pub fn on_actor_aggro(&mut self, id: u32) {
-        if let Some(boss) = self.bosses.get(&id) {
+        if let Some(boss) = self.bosses.get_mut(&id)
+            && boss.state == DirectorBossState::Open
+        {
             // TODO: is there times that are longer than 15 secs?
             self.tasks.push(LuaDirectorTask::LogMessage {
                 id: 2012,
@@ -394,6 +410,7 @@ impl DirectorData {
                 place_name: boss.place_name,
                 time_until: 15,
             });
+            boss.state = DirectorBossState::Aggro;
         }
     }
 
@@ -658,6 +675,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     bosses.insert(
                         *bnpc_id,
                         DirectorBoss {
+                            state: DirectorBossState::Open,
                             actor_id,
                             wall_id: *wall_id,
                             line_id: *line_id,
