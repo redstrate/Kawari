@@ -6,7 +6,7 @@ use crate::{
     lua::{LuaContent, LuaZone},
 };
 use kawari::{
-    common::{HandlerId, HandlerType, HouseId, HouseUnit, Position, timestamp_secs},
+    common::{HandlerId, HandlerType, HouseId, HouseUnit, HousingFlag, Position, timestamp_secs},
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
@@ -213,7 +213,7 @@ impl ZoneConnection {
             houses[4] = House {
                 plot_size: PlotSize::Medium,
                 status: HouseStatus::HouseBuilt,
-                flags: 1,
+                flags: HousingFlag::OPEN,
                 exterior: HouseExterior {
                     roof: 1029,
                     walls: 3589,
@@ -228,7 +228,7 @@ impl ZoneConnection {
             houses[5] = House {
                 plot_size: PlotSize::Large,
                 status: HouseStatus::HouseBuilt,
-                flags: 1,
+                flags: HousingFlag::OPEN,
                 exterior: HouseExterior {
                     roof: 1081,
                     walls: 3632,
@@ -243,7 +243,7 @@ impl ZoneConnection {
             houses[11] = House {
                 plot_size: PlotSize::Small,
                 status: HouseStatus::HouseBuilt,
-                flags: 1,
+                flags: HousingFlag::OPEN | HousingFlag::OWNED_BY_FC,
                 exterior: HouseExterior {
                     roof: 1136,
                     walls: 3687,

@@ -46,6 +46,7 @@ pub struct SpawnObject {
     pub visibility: InvisibilityFlags,
     /// For EventObjs, this is the default SharedGroupTimelineState.
     pub args1: u32,
+    /// Part of this is used for housing entrances.
     pub args2: u32,
     /// The position to create the object at.
     pub position: Position,

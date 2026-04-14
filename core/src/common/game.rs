@@ -1150,6 +1150,33 @@ pub fn internal_housing_row(zone_id: u16) -> Option<u32> {
     }
 }
 
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub struct HousingFlag(u8);
+
+bitflags! {
+    impl HousingFlag: u8 {
+        /// Only players with the requisite permissions can enter. This changes the house to a orange icon on the map.
+        const LOCKED = 0x0;
+        /// This housing is open to any individual to enter. This changes the house to a blue icon on the map.
+        const OPEN = 0x1;
+        /// This house is owned by a Free Company.
+        const OWNED_BY_FC = 0x2;
+    }
+}
+
+impl Default for HousingFlag {
+    fn default() -> Self {
+        Self::OPEN
+    }
+}
+
+impl std::fmt::Debug for HousingFlag {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;

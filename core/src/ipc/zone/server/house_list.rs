@@ -1,4 +1,4 @@
-use crate::ipc::zone::PlotSize;
+use crate::{common::HousingFlag, ipc::zone::PlotSize};
 use binrw::binrw;
 
 #[binrw]
@@ -8,7 +8,7 @@ pub struct House {
     pub plot_size: PlotSize,
     pub status: HouseStatus,
     #[brw(pad_after = 1)]
-    pub flags: u8,
+    pub flags: HousingFlag,
     pub fc_id: u32,
     pub fc_crest_id: u32,
     pub fc_crest_id1: u32,
