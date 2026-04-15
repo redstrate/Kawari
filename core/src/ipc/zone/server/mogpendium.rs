@@ -5,30 +5,30 @@ use bitflags::bitflags;
 #[binrw]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Mogpendium {
-    unk1: u32,
+    pub unk1: u32,
     /// Always 0x18, Possible discriminator
-    unk2: u32,
+    pub unk2: u32,
     /// Always 0x20, Possible discriminator
-    unk3: u32,
+    pub unk3: u32,
     /// Unique and stable per character, observed in range of 1810000000 - 3000000000
     /// Seems to be somewhat related to the owning character `content_id`, which exposes which server the character was originally created on
     /// Eg. characters created on any US datacenter have ranges of 3000000000, while characters created on any EU datacenter have ranges of 1810000000.
     /// This remains visible even when the character was transferred between datacenter regions years ago.
     /// My initial thought was that these 4 bytes represent each weekly objective,
     /// but they show no identical weekly challenge between characters that have the same byte at the same offset.
-    id_or_seed: u32,
+    pub id_or_seed: u32,
     /// Completion flags for weekly objectives
-    weekly_objective_flags: MogpendiumCompletionFlags,
-    unk4: [u8; 16],
+    pub weekly_objective_flags: MogpendiumCompletionFlags,
+    pub unk4: [u8; 16],
     /// Completion flags for minimog challenges
-    minimog_challenge_flags: MogpendiumCompletionFlags,
+    pub minimog_challenge_flags: MogpendiumCompletionFlags,
     /// TODO: The progress count for the ultimog challenge is somewhere in there, I just don't care about treasure dungeons :(
-    unk5: [u8; 36],
+    pub unk5: [u8; 36],
     /// Holds the progress count for the first minimog objective of the *current* week
-    minimog_objective_1_progress: u32,
+    pub minimog_objective_1_progress: u32,
     /// Holds the progress count for the second minimog objective of the *current* week
-    minimog_objective_2_progress: u32,
-    unk6: [u8; 60],
+    pub minimog_objective_2_progress: u32,
+    pub unk6: [u8; 60],
 }
 
 impl Default for Mogpendium {
