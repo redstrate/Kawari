@@ -15,6 +15,7 @@ end
 function onReturn(scene, results, player)
     local ENTER_LOBBY <const> = 1 -- The player chose to enter the apartment building lobby.
     local CANCEL_MENU <const> = -1 -- This is here for documentation purposes, no need to actually use it.
+    local ENTER_MY_APARTMENT <const> = 2 -- The player chose to enter their own apartment.
 
     -- TODO: Is there a mapping anywhere in Excel sheets that tell us how these link up? Initial findings seem to indicate no.
     local WARD_LOBBIES <const> = {
@@ -35,6 +36,11 @@ function onReturn(scene, results, player)
         else -- If it's nil we're already in a ward lobby most likely, and the option to enter a lobby from within a lobby makes no sense
             player:send_message("This option shouldn't be here and is a bug in Kawari, please select a different option.")
         end
+    elseif results[1] == ENTER_MY_APARTMENT then
+        player:finish_event()
+        local destination_zone = 609 -- Lily Hills Apartment, for now
+        player:change_territory(destination_zone, { x = 0.0, y = 0.0, z = 0.0}, 180.0) -- TODO: Are there popranges for this anywhere?
+        return
     end
     player:finish_event()
 end

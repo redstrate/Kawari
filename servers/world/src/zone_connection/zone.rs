@@ -6,7 +6,9 @@ use crate::{
     lua::{LuaContent, LuaZone},
 };
 use kawari::{
-    common::{HandlerId, HandlerType, HouseId, HouseUnit, HousingFlag, Position, timestamp_secs},
+    common::{
+        HandlerId, HandlerType, HouseId, HouseUnit, HousingFlag, LandData, Position, timestamp_secs,
+    },
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
@@ -129,7 +131,21 @@ impl ZoneConnection {
                 unk3: Default::default(),
                 unk4: Default::default(),
                 unk5: Default::default(),
-                apartment: Default::default(),
+                apartment: LandData {
+                    id: HouseId {
+                        unit: HouseUnit {
+                            apartment_division_plot_index: 0,
+                            apartment_flag: true,
+                        },
+                        unk1: 0,
+                        ward_index: 0,
+                        room_number: 1,
+                        territory_type_id: 340,
+                        world_id: config.world.world_id,
+                    },
+                    flags: 19,
+                    unk1: 0,
+                },
             });
             self.send_ipc_self(ipc).await;
         }
@@ -295,12 +311,12 @@ impl ZoneConnection {
                     id: HouseId {
                         unit: HouseUnit {
                             apartment_division_plot_index: 0,
-                            apartment_flag: false,
+                            apartment_flag: true,
                         },
                         unk1: 0,
-                        room_number: 0,
-                        ward_index: 1,
-                        territory_type_id: lua_zone.zone_id,
+                        room_number: 1,
+                        ward_index: 0,
+                        territory_type_id: 340,
                         world_id: config.world.world_id,
                     },
                     count: 1,

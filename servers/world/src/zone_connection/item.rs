@@ -2,7 +2,7 @@
 
 use crate::{
     ItemInfoQuery, ToServer, ZoneConnection,
-    inventory::{EQUIP_RESTRICTED, Item, Storage},
+    inventory::{DesiredHousingInventoryPages, EQUIP_RESTRICTED, Item, Storage},
 };
 use kawari::{
     common::{ContainerType, ItemOperationKind, ObjectId},
@@ -223,6 +223,65 @@ impl ZoneConnection {
 
         self.send_stats().await;
         self.update_class_info().await;
+    }
+
+    pub async fn send_housing_inventory(&mut self, which: DesiredHousingInventoryPages) {
+        let cloned_inv = match which {
+            DesiredHousingInventoryPages::Interior => {
+                self.player_data.house_inventory.interior.clone()
+            }
+            DesiredHousingInventoryPages::InteriorStoreroom => {
+                self.player_data.house_inventory.interior_storeroom.clone()
+            }
+            DesiredHousingInventoryPages::Exterior => {
+                self.player_data.house_inventory.exterior.clone()
+            }
+            DesiredHousingInventoryPages::ExteriorStoreroom => {
+                self.player_data.house_inventory.exterior_storeroom.clone()
+            }
+            DesiredHousingInventoryPages::None => {
+                return;
+            }
+        };
+
+        // TODO: Since this is mostly copy-pasted, maybe create a common function that does the actual sending, shared with the regular inventory?
+        for (sequence, container) in cloned_inv.into_iter().enumerate() {
+            let mut num_items = 0;
+
+            // items
+            let mut send_slot = async |slot: u16, item: &Item| {
+                // skip telling the client what they don't have
+                if item.quantity == 0 || item.item_id == 0 {
+                    return;
+                }
+
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateItem(ItemInfo {
+                    sequence: sequence as u32,
+                    container: container.kind,
+                    slot,
+                    ..(*item).into()
+                }));
+                self.send_ipc_self(ipc).await;
+
+                num_items += 1;
+            };
+
+            for i in 0..container.max_slots() {
+                send_slot(i as u16, container.get_slot(i as u16)).await;
+            }
+
+            // inform the client of container state
+            {
+                let ipc =
+                    ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
+                        container: container.kind,
+                        num_items,
+                        sequence: sequence as u32,
+                        ..Default::default()
+                    }));
+                self.send_ipc_self(ipc).await;
+            }
+        }
     }
 
     pub async fn send_inventory_ack(&mut self, sequence: u32, action_type: u16) {
