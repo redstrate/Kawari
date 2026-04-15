@@ -2996,6 +2996,12 @@ async fn process_packet(
                                 }
                             }
                         }
+                        ClientZoneIpcData::PlaceFurniture { .. } => {
+                            tracing::warn!("Placing furniture is unimplemented");
+                        }
+                        ClientZoneIpcData::TranslateFurniture { .. } => {
+                            tracing::warn!("Moving and rotating furniture is unimplemented");
+                        }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
                                 "Unknown Zone packet {:?} recieved ({} bytes), this should be handled!",

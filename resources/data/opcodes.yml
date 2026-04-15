@@ -711,6 +711,10 @@ ServerZoneIpcType:
     comment: Seen during Gold Saucer GATE announcements.
     opcode: 556
     size: 32
+  - name: FurniturePlaced
+    comment: The server informs the client about a piece of furniture that was placed in the world.
+    opcode: 429
+    size: 32
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -1075,6 +1079,14 @@ ClientZoneIpcType:
   - name: WorldInteraction
     comment: The client interacts with the world in some way.
     opcode: 296
+    size: 32
+  - name: PlaceFurniture
+    comment: The client places furniture on their property (indoors or outdoors).
+    opcode: 191
+    size: 40
+  - name: TranslateFurniture
+    comment: The client moves or rotates a piece of furniture.
+    opcode: 546
     size: 32
 ServerLobbyIpcType:
   - name: NackReply

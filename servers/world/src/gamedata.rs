@@ -26,6 +26,7 @@ use icarus::GilShopItem::GilShopItemSheet;
 use icarus::GimmickRect::{GimmickRectRow, GimmickRectSheet};
 use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
 use icarus::HousingAethernet::HousingAethernetSheet;
+use icarus::HousingFurniture::HousingFurnitureSheet;
 use icarus::HousingLandSet::HousingLandSetSheet;
 use icarus::InstanceContent::InstanceContentSheet;
 use icarus::Item::ItemSheet;
@@ -1511,6 +1512,21 @@ impl GameData {
             ],
             ..Default::default()
         })
+    }
+
+    /// Returns a piece of furniture's model key/catalog id from its item id.
+    pub fn get_furniture_catalog_id(&mut self, item_id: u32) -> Option<u16> {
+        // First, we need the item's AdditionalData column to point us to where we need to look on the HousingFurniture sheet.
+        let row = self.item_sheet.row(item_id)?;
+        let next_row = row.AdditionalData();
+
+        // Next, grab the row from the HousingFurniture sheet and return the ModelKey column's value. This value is the same as the catalog id.
+        let sheet = HousingFurnitureSheet::read_from(&mut self.resource, Language::None).ok()?;
+        let row = sheet.row(next_row)?;
+
+        let model_key = row.ModelKey();
+
+        Some(model_key)
     }
 }
 

@@ -1309,6 +1309,20 @@ pub enum ServerZoneIpcData {
         /// Fourth generic parameter.
         param4: u32,
     },
+    FurniturePlaced {
+        /// Which storage the furniture was placed into.
+        storage_id: ContainerType,
+        /// Which slot the furniture was placed into.
+        slot: u16,
+        /// The furniture's id. Index into the FurnitureCatalogItemList sheet. Can be obtained from the HousingFurniture sheet, ModelKey column, and that index can be obtained from the Item sheet, AdditionalData column.
+        catalog_id: u16,
+        unk1: u16, // Always 1?
+        /// The furniture's dye/stain.
+        stain: u16,
+        unk2: [u8; 6], // Presumably the rotation would be in here normally, but the client can't place and rotate in the same operation
+        position: Position,
+        unk3: [u8; 4],
+    },
 }
 
 #[cfg(test)]
