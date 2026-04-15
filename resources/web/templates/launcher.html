@@ -19,16 +19,16 @@
     <button type='submit'  class="btn btn-primary">Login</button>
 </form>
 
-<input type="button" class="btn btn-primary btn-lg mt-3 mb-3" id="play" value="Play" onclick="window.external.user('startPlay');" style="display: none"/>
+<input type="button" class="btn btn-primary btn-lg mt-3 mb-3" id="play" value="Play" onclick="sendApp('startPlay');" style="display: none"/>
 
 <div class="btn-group mb-3" role="group">
-    <input type="button" class="btn btn-secondary" value="System Info" onclick="window.external.user('systemInfo');" />
-    <input type="button" class="btn btn-secondary" value="Config Tool" onclick="window.external.user('configTransport');" />
+    <input type="button" class="btn btn-secondary" value="System Info" onclick="sendApp('systemInfo');" />
+    <input type="button" class="btn btn-secondary" value="Config Tool" onclick="sendApp('configTransport');" />
 </div>
 
 <div class="btn-group mb-3" role="group">
-    <input type="button" class="btn btn-outline-secondary" value="Accept EULA" onclick="window.external.user('eulaOk');" />
-    <input type="button" class="btn btn-outline-secondary" value="Accept Ex EULAs" onclick="window.external.user('eulaExOk');" />
+    <input type="button" class="btn btn-outline-secondary" value="Accept EULA" onclick="sendApp('eulaOk');" />
+    <input type="button" class="btn btn-outline-secondary" value="Accept Ex EULAs" onclick="sendApp('eulaExOk');" />
 </div>
 
 <p><small>This is not an official login page. It will <i>not</i> accept your official account's credentials, please do not enter them here!</small></p>
@@ -36,16 +36,26 @@
 </main>
 
 <script type="text/javascript">
+    let debug_logging = false;
+
+    function debug(text) {
+        if (debug_logging) {
+            confirm(text);
+        }
+    }
+
     let req;
     function readystatechange(event) {
         if (req.readyState == 4) {
+            debug("readystatechange(" + req.response + ")")
+
             // This login endpoint sends a "window.external.user" which we need to evaludate.
             eval(req.response);
         }
     }
 
     function error(event) {
-        window.external.user('login=auth,ng,err,' + req.statusText);
+        sendApp('login=auth,ng,err,' + req.statusText);
     }
 
     function login() {
@@ -69,45 +79,48 @@
         document.getElementById('alert').style.display = "block";
     }
 
-    function checkHandlerType(e) {
-        if ('function' != typeof e) throw new Error('Protocol Callback is not function.');
-        return e
+    function sendApp(text) {
+        if (debug_logging) {
+            debug("window.external.user(" + text + ")");
+        }
+        window.external.user(text);
+    }
+
+    function sendReceivedID(id) {
+        sendApp('received=' + id);
     }
 
     function fromAppConfig(thing) {
-        console.debug("fromAppConfig(" + JSON.stringify(thing) + ")")
+        debug("fromAppConfig(" + JSON.stringify(thing) + ")")
     }
-    window.fromAppConfig = this.checkHandlerType(fromAppConfig);
 
     function fromAppWarn(thing) {
-        console.debug("fromAppWarn(" + JSON.stringify(thing) + ")")
+        debug("fromAppWarn(" + JSON.stringify(thing) + ")")
 
         document.getElementById('statusMessage').innerText += "warn: " + JSON.stringify(thing);
     }
-    window.fromAppWarn = this.checkHandlerType(fromAppWarn);
 
     function fromAppStartVersionCheck(thing) {
-        console.debug("fromAppStartVersionCheck(" + JSON.stringify(thing) + ")")
+        debug("fromAppStartVersionCheck(" + JSON.stringify(thing) + ")")
 
         sendAlert(thing.versionChecking);
 
         // the official launcher does some preparation stuff here, and when it's finished it tells it the ID it just recieved
-        window.external.user('received=' + thing.ID);
+        sendReceivedID(thing.ID);
     }
-    window.fromAppStartVersionCheck = this.checkHandlerType(fromAppStartVersionCheck);
 
     function fromAppDP(thing) {
-        console.debug("fromAppDP(" + JSON.stringify(thing) + ")")
+        debug("fromAppDP(" + JSON.stringify(thing) + ")")
     }
-    window.fromAppDP = this.checkHandlerType(fromAppDP);
 
     function fromAppDisplaySettings(thing) {
-        console.debug("fromAppDisplaySettings(" + JSON.stringify(thing) + ")")
+        debug("fromAppDisplaySettings(" + JSON.stringify(thing) + ")")
+
+        //sendApp('requestResumeInfo');
     }
-    window.fromAppDisplaySettings = this.checkHandlerType(fromAppDisplaySettings);
 
     function fromAppResumeInfo(thing) {
-        console.debug("fromAppResumeInfo(" + JSON.stringify(thing) + ")")
+        debug("fromAppResumeInfo(" + JSON.stringify(thing) + ")")
 
         // 3 means "ready to play"
         if (thing.state == 3) {
@@ -116,85 +129,86 @@
         }
 
         // acknowledge
-        window.external.user('received=' + thing.ID);
+        if (thing.state === 6) {
+            sendReceivedID(thing.ID);
+        }
     }
-    window.fromAppResumeInfo = this.checkHandlerType(fromAppResumeInfo);
-
-    function fromAppLoginUrl(thing) {
-        console.debug("fromAppLoginUrl(" + JSON.stringify(thing) + ")")
-    }
-    window.fromAppLoginUrl = this.checkHandlerType(fromAppLoginUrl);
 
     function fromAppExAgree(thing) {
-        console.debug("fromAppExAgree(" + JSON.stringify(thing) + ")")
+        debug("fromAppExAgree(" + JSON.stringify(thing) + ")")
 
         sendAlert("You need to accept the following Ex EULAs: " + thing.notAgreedExEulas);
     }
-    window.fromAppExAgree = this.checkHandlerType(fromAppExAgree);
 
     function fromAppStartDownload(thing) {
-        console.debug("fromAppStartDownload(" + JSON.stringify(thing) + ")")
+        debug("fromAppStartDownload(" + JSON.stringify(thing) + ")")
     }
-    window.fromAppStartDownload = this.checkHandlerType(fromAppStartDownload);
 
     function fromAppDownloadProgress(thing) {
-        console.debug("fromAppDownloadProgress(" + JSON.stringify(thing) + ")")
+        debug("fromAppDownloadProgress(" + JSON.stringify(thing) + ")")
     }
-    window.fromAppDownloadProgress = this.checkHandlerType(fromAppDownloadProgress);
 
     function fromAppInstallProgress(thing) {
-        console.debug("fromAppInstallProgress(" + JSON.stringify(thing) + ")")
+        debug("fromAppInstallProgress(" + JSON.stringify(thing) + ")")
     }
-    window.fromAppInstallProgress = this.checkHandlerType(fromAppInstallProgress);
 
     function fromAppStartInstall(thing) {
-        console.debug("fromAppStartInstall(" + JSON.stringify(thing) + ")")
+        debug("fromAppStartInstall(" + JSON.stringify(thing) + ")")
     }
-    window.fromAppStartInstall = this.checkHandlerType(fromAppStartInstall);
 
     function fromAppWaitPlay(thing) {
-        console.debug("fromAppWaitPlay(" + JSON.stringify(thing) + ")")
+        debug("fromAppWaitPlay(" + JSON.stringify(thing) + ")");
 
         // the official launcher does some preparation stuff here, and when it's finished it tells it the ID it just recieved
-        window.external.user('received=' + thing.ID);
+        sendReceivedID(thing.ID);
 
-        // it requests the config again?
-        window.external.user('requestConfig');
-        window.external.user('requestResumeInfo');
+        document.getElementById("login").style.display = "none";
+        document.getElementById("play").style.display = "block";
     }
-    window.fromAppWaitPlay = this.checkHandlerType(fromAppWaitPlay);
-
-    function fromAppStartFileCheck(thing) {
-        console.debug("fromAppStartFileCheck(" + JSON.stringify(thing) + ")")
-    }
-    window.fromAppStartFileCheck = this.checkHandlerType(fromAppStartFileCheck);
-
-    function fromAppFileCheckProgress(thing) {
-        console.debug("fromAppFileCheckProgress(" + JSON.stringify(thing) + ")")
-    }
-    window.fromAppFileCheckProgress = this.checkHandlerType(fromAppFileCheckProgress);
-
-    function fromAppFinishedFileCheck(thing) {
-        console.debug("fromAppFinishedFileCheck(" + JSON.stringify(thing) + ")")
-    }
-    window.fromAppFinishedFileCheck = this.checkHandlerType(fromAppFinishedFileCheck);
 
     function fromAppServiceAgreement(thing) {
-        console.debug("fromAppServiceAgreement(" + JSON.stringify(thing) + ")")
+        debug("fromAppServiceAgreement(" + JSON.stringify(thing) + ")")
     }
-    window.fromAppServiceAgreement = this.checkHandlerType(fromAppServiceAgreement);
 
     function fromAppDialog(thing) {
-        console.debug("fromAppDialog(" + JSON.stringify(thing) + ")")
+        debug("fromAppDialog(" + JSON.stringify(thing) + ")")
     }
-    window.fromAppDialog = this.checkHandlerType(fromAppDialog);
+
+    function fromAppGameStatus(thing) {
+        debug("fromAppGameStatus(" + JSON.stringify(thing) + ")")
+
+        sendApp('requestDisplaySettings');
+    }
+
+    function fromAppEtmAdd(thing) {
+        debug("fromAppEtmAdd(" + JSON.stringify(thing) + ")")
+    }
+
+    function fromAppEtmAdd(thing) {
+        debug("fromAppEtmAdd(" + JSON.stringify(thing) + ")")
+    }
+
+    function fromAppDialogClose(thing) {
+        debug("fromAppDialogClose(" + JSON.stringify(thing) + ")")
+    }
+
+    function fromAppOtpManv(thing) {
+        debug("fromAppOtpManv(" + JSON.stringify(thing) + ")")
+    }
+
+    function fromAppSoftkey(thing) {
+        debug("fromAppSoftkey(" + JSON.stringify(thing) + ")")
+    }
+
+    function fromAppSvcRmd(thing) {
+        debug("fromAppSvcRmd(" + JSON.stringify(thing) + ")")
+    }
 
     // this is what the retail launcher does
-    window.external.user('permissionFromApp=1');
-    window.external.user('requestDP');
-    window.external.user('requestConfig');
-    window.external.user('requestDisplaySettings');
-    window.external.user('requestResumeInfo');
+    sendApp('permissionFromApp=1');
+    sendApp('requestDP');
+    sendApp('requestConfig');
+    sendApp('requestGameStatus');
 
     // setup form submission
     const form = document.getElementById("login");
