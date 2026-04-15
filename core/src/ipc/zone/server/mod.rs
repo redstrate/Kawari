@@ -155,6 +155,9 @@ pub use linkshell::*;
 mod spawn_treasure;
 pub use spawn_treasure::SpawnTreasure;
 
+mod mogpendium;
+pub use mogpendium::{Mogpendium, MogpendiumCompletionFlags};
+
 mod cross_realm_listing;
 pub use cross_realm_listing::{CrossRealmListing, CrossRealmListings};
 
@@ -1323,6 +1326,7 @@ pub enum ServerZoneIpcData {
         position: Position,
         unk3: [u8; 4],
     },
+    Mogpendium(Mogpendium),
 }
 
 #[cfg(test)]

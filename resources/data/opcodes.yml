@@ -715,6 +715,10 @@ ServerZoneIpcType:
     comment: The server informs the client about a piece of furniture that was placed in the world.
     opcode: 429
     size: 32
+  - name: Mogpendium
+    comment: Contains character specific Mogpendium progress data.
+    opcode: 535
+    size: 144
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
