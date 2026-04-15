@@ -346,7 +346,7 @@ impl ZoneConnection {
     }
 
     /// Determine the online status mask, with party/novice/mentor status.
-    fn get_online_status_mask(&self) -> OnlineStatusMask {
+    pub fn get_online_status_mask(&self) -> OnlineStatusMask {
         let mut database = self.database.lock();
         database.determine_online_status_mask(self.player_data.character.content_id)
     }

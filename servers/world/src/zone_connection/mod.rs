@@ -35,7 +35,7 @@ use kawari::{
 use super::{
     WorldDatabase,
     common::{ClientId, ServerHandle},
-    inventory::{BuyBackList, Inventory},
+    inventory::{BuyBackList, HousingInventory, Inventory},
 };
 
 mod actor;
@@ -107,6 +107,8 @@ pub struct PlayerData {
     pub saw_inn_wakeup: bool,
     pub friends: Friends,
     pub grand_company: GrandCompany,
+    // TODO: These inventories need to be made persistent and also vary per property, this is just for initial support
+    pub house_inventory: HousingInventory,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.
@@ -406,6 +408,15 @@ impl ZoneConnection {
 
     // TODO: break this out into its own housing file eventually
     pub async fn send_apartment_list(&mut self, starting_index: u32) {
+        let mut apartments = vec![ApartmentListEntry::default(); ApartmentListEntry::COUNT];
+        apartments[0] = ApartmentListEntry {
+            resident_online_status_mask: self.get_online_status_mask(),
+            resident_zone_id: self.player_data.volatile.zone_id as u16,
+            resident_name: self.player_data.character.name.clone(),
+            apartment_description: "A test apartment provided to you by Kawari!".to_string(),
+            ..Default::default()
+        };
+
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ApartmentList(ApartmentList {
             content_id: self.player_data.character.content_id as u64,
             flags: 128,
@@ -413,7 +424,7 @@ impl ZoneConnection {
             zone_id: self.player_data.volatile.zone_id as u16, // TODO: Apartment lists can be requested from apartments themselves, so this wouldn't make sense there!
             world_id: self.config.world_id,
             list_index: starting_index,
-            apartments: vec![ApartmentListEntry::default(); ApartmentListEntry::COUNT],
+            apartments,
         }));
         self.send_ipc_self(ipc).await;
     }

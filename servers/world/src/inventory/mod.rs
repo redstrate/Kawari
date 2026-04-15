@@ -34,6 +34,8 @@ pub use crystals::{CrystalKind, CrystalsStorage};
 
 use crate::{GameData, ItemInfoQuery};
 
+use physis::TerritoryIntendedUse;
+
 const MAX_NORMAL_STORAGE: usize = 35;
 const MAX_LARGE_STORAGE: usize = 50;
 
@@ -539,4 +541,235 @@ impl Inventory {
 
         *self.equipped.get_slot_mut(slot) = Item::default();
     }
+}
+
+/// Represents a single housing plot's collective inventory, both inside and out.
+// TODO: This will need to adjustments in 7.5x
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct HousingInventory {
+    //pub plot_size: kawari::ipc::zone::PlotSize,
+    pub interior: Vec<GenericStorage<MAX_LARGE_STORAGE>>,
+    pub interior_storeroom: Vec<GenericStorage<MAX_LARGE_STORAGE>>,
+    // TODO: Unclear if we need to emulate this
+    pub interior_appearance: Vec<GenericStorage<MAX_LARGE_STORAGE>>,
+    pub exterior: Vec<GenericStorage<MAX_LARGE_STORAGE>>,
+    pub exterior_storeroom: Vec<GenericStorage<MAX_LARGE_STORAGE>>,
+    // TODO: Unclear if we need to emulate this
+    pub exterior_appearance: Vec<GenericStorage<MAX_LARGE_STORAGE>>,
+}
+
+impl HousingInventory {
+    pub const INT_STORAGE_APT_FC: usize = 2;
+    pub const INT_STORAGE_SMALL: usize = 3;
+    pub const INT_STORAGE_MEDIUM: usize = 4;
+    pub const INT_STORAGE_MANSION: usize = 8;
+}
+
+// By default, be an apartment/fc chamber.
+impl Default for HousingInventory {
+    fn default() -> Self {
+        Self {
+            // plot_size: kawari::ipc::zone::PlotSize::Small,
+            interior: vec![
+                GenericStorage::<MAX_LARGE_STORAGE>::new(
+                    ContainerType::HousingInteriorPlacedItems1,
+                ),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(
+                    ContainerType::HousingInteriorPlacedItems2,
+                ),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(
+                    ContainerType::HousingInteriorPlacedItems3,
+                ),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(
+                    ContainerType::HousingInteriorPlacedItems4,
+                ),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(
+                    ContainerType::HousingInteriorPlacedItems5,
+                ),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(
+                    ContainerType::HousingInteriorPlacedItems6,
+                ),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(
+                    ContainerType::HousingInteriorPlacedItems7,
+                ),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(
+                    ContainerType::HousingInteriorPlacedItems8,
+                ),
+            ],
+            interior_storeroom: vec![
+                GenericStorage::<MAX_LARGE_STORAGE>::new(ContainerType::HousingInteriorStoreroom1),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(ContainerType::HousingInteriorStoreroom2),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(ContainerType::HousingInteriorStoreroom3),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(ContainerType::HousingInteriorStoreroom4),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(ContainerType::HousingInteriorStoreroom5),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(ContainerType::HousingInteriorStoreroom6),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(ContainerType::HousingInteriorStoreroom7),
+                GenericStorage::<MAX_LARGE_STORAGE>::new(ContainerType::HousingInteriorStoreroom8),
+            ],
+            interior_appearance: vec![GenericStorage::<MAX_LARGE_STORAGE>::new(
+                ContainerType::HousingExteriorAppearance,
+            )],
+
+            exterior: vec![GenericStorage::<MAX_LARGE_STORAGE>::new(
+                ContainerType::HousingExteriorPlacedItems,
+            )],
+            exterior_storeroom: vec![GenericStorage::<MAX_LARGE_STORAGE>::new(
+                ContainerType::HousingExteriorPlacedItems,
+            )],
+            exterior_appearance: vec![GenericStorage::<MAX_LARGE_STORAGE>::new(
+                ContainerType::HousingExteriorAppearance,
+            )],
+        }
+    }
+}
+
+impl HousingInventory {
+    pub fn add_in_empty_slot(
+        &mut self,
+        item: Item,
+        desired_pages: DesiredHousingInventoryPages,
+    ) -> Option<ItemInfo> {
+        let desired_pages = match desired_pages {
+            DesiredHousingInventoryPages::Interior => &mut self.interior,
+            DesiredHousingInventoryPages::InteriorStoreroom => &mut self.interior_storeroom,
+            DesiredHousingInventoryPages::Exterior => {
+                if !self.exterior.is_empty() {
+                    &mut self.exterior
+                } else {
+                    return None;
+                }
+            }
+            DesiredHousingInventoryPages::ExteriorStoreroom => {
+                if !self.exterior_storeroom.is_empty() {
+                    &mut self.exterior_storeroom
+                } else {
+                    return None;
+                }
+            }
+            DesiredHousingInventoryPages::None => {
+                return None;
+            }
+        };
+
+        for page in desired_pages {
+            for (slot_index, slot) in page.slots.iter_mut().enumerate() {
+                if slot.quantity == 0 {
+                    slot.clone_from(&item);
+                    return Some(ItemInfo {
+                        slot: slot_index as u16,
+                        container: page.kind,
+                        ..(*slot).into()
+                    });
+                }
+            }
+        }
+        None
+    }
+
+    pub fn get_desired_pages_from_intendeduse(
+        &self,
+        intended_use: TerritoryIntendedUse,
+        storeroom: bool,
+    ) -> DesiredHousingInventoryPages {
+        match intended_use {
+            TerritoryIntendedUse::HousingOutdoor => {
+                if storeroom {
+                    DesiredHousingInventoryPages::ExteriorStoreroom
+                } else {
+                    DesiredHousingInventoryPages::Exterior
+                }
+            }
+            TerritoryIntendedUse::HousingIndoor => {
+                if storeroom {
+                    DesiredHousingInventoryPages::InteriorStoreroom
+                } else {
+                    DesiredHousingInventoryPages::Interior
+                }
+            }
+            _ => DesiredHousingInventoryPages::None,
+        }
+    }
+
+    fn get_container_mut(&mut self, container_type: &ContainerType) -> &mut dyn Storage {
+        match container_type {
+            ContainerType::HousingInteriorPlacedItems1 => &mut self.interior[0],
+            ContainerType::HousingInteriorPlacedItems2 => &mut self.interior[1],
+            ContainerType::HousingInteriorPlacedItems3 => &mut self.interior[2],
+            ContainerType::HousingInteriorPlacedItems4 => &mut self.interior[3],
+            ContainerType::HousingInteriorPlacedItems5 => &mut self.interior[4],
+            ContainerType::HousingInteriorPlacedItems6 => &mut self.interior[5],
+            ContainerType::HousingInteriorPlacedItems7 => &mut self.interior[6],
+            ContainerType::HousingInteriorPlacedItems8 => &mut self.interior[7],
+
+            ContainerType::HousingInteriorStoreroom1 => &mut self.interior_storeroom[0],
+            ContainerType::HousingInteriorStoreroom2 => &mut self.interior_storeroom[1],
+            ContainerType::HousingInteriorStoreroom3 => &mut self.interior_storeroom[2],
+            ContainerType::HousingInteriorStoreroom4 => &mut self.interior_storeroom[3],
+            ContainerType::HousingInteriorStoreroom5 => &mut self.interior_storeroom[4],
+            ContainerType::HousingInteriorStoreroom6 => &mut self.interior_storeroom[5],
+            ContainerType::HousingInteriorStoreroom7 => &mut self.interior_storeroom[6],
+            ContainerType::HousingInteriorStoreroom8 => &mut self.interior_storeroom[7],
+
+            ContainerType::HousingInteriorAppearance => &mut self.interior_appearance[0],
+            ContainerType::HousingExteriorAppearance => &mut self.exterior_appearance[0],
+
+            ContainerType::HousingExteriorPlacedItems => &mut self.exterior[0],
+            ContainerType::HousingExteriorStoreroom => &mut self.exterior_storeroom[0],
+            _ => unimplemented!(),
+        }
+    }
+
+    pub fn get_container(&self, container_type: ContainerType) -> &dyn Storage {
+        match container_type {
+            ContainerType::HousingInteriorPlacedItems1 => &self.interior[0],
+            ContainerType::HousingInteriorPlacedItems2 => &self.interior[1],
+            ContainerType::HousingInteriorPlacedItems3 => &self.interior[2],
+            ContainerType::HousingInteriorPlacedItems4 => &self.interior[3],
+            ContainerType::HousingInteriorPlacedItems5 => &self.interior[4],
+            ContainerType::HousingInteriorPlacedItems6 => &self.interior[5],
+            ContainerType::HousingInteriorPlacedItems7 => &self.interior[6],
+            ContainerType::HousingInteriorPlacedItems8 => &self.interior[7],
+
+            ContainerType::HousingInteriorStoreroom1 => &self.interior_storeroom[0],
+            ContainerType::HousingInteriorStoreroom2 => &self.interior_storeroom[1],
+            ContainerType::HousingInteriorStoreroom3 => &self.interior_storeroom[2],
+            ContainerType::HousingInteriorStoreroom4 => &self.interior_storeroom[3],
+            ContainerType::HousingInteriorStoreroom5 => &self.interior_storeroom[4],
+            ContainerType::HousingInteriorStoreroom6 => &self.interior_storeroom[5],
+            ContainerType::HousingInteriorStoreroom7 => &self.interior_storeroom[6],
+            ContainerType::HousingInteriorStoreroom8 => &self.interior_storeroom[7],
+
+            ContainerType::HousingInteriorAppearance => &self.interior_appearance[0],
+            ContainerType::HousingExteriorAppearance => &self.exterior_appearance[0],
+
+            ContainerType::HousingExteriorPlacedItems => &self.exterior[0],
+            ContainerType::HousingExteriorStoreroom => &self.exterior_storeroom[0],
+            _ => unimplemented!(),
+        }
+    }
+
+    /// Helper functions to reduce boilerplate
+    pub fn get_item_mut(&mut self, storage_id: ContainerType, storage_index: u16) -> &mut Item {
+        let container = self.get_container_mut(&storage_id);
+        container.get_slot_mut(storage_index)
+    }
+
+    pub fn get_item(&self, storage_id: ContainerType, storage_index: u16) -> Item {
+        if storage_id == ContainerType::Invalid {
+            return Item::default();
+        }
+
+        let container = self.get_container(storage_id);
+        *container.get_slot(storage_index)
+    }
+}
+
+/// Used to decide which set of housing inventory pages to send.
+#[derive(Debug, Copy, Clone)]
+pub enum DesiredHousingInventoryPages {
+    None,
+    Exterior,
+    ExteriorStoreroom,
+    Interior,
+    InteriorStoreroom,
 }

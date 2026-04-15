@@ -6,6 +6,7 @@ use crate::common::{
     read_bool_from, write_bool_as,
 };
 use crate::ipc::zone::WaymarkPosition;
+use crate::ipc::zone::client::HouseId;
 
 #[binrw]
 #[derive(Debug, PartialEq, Clone, IntoStaticStr)]
@@ -299,15 +300,21 @@ pub enum ClientTriggerCommand {
         ward_index: u32,
     },
 
-    /// The client removes a piece of furniture from the world and puts it in their inventory.
+    /// The client removes a piece of furniture from the world and puts it in their inventory or the storeroom.
     // TODO: Research is still ongoing for this one
     #[brw(magic = 1113u32)]
     MoveHousingItemToInventory {
-        unk1: u32,
-        unk2: u32,
-        #[brw(pad_after = 2)]
+        /// The house's id.
+        house_id: HouseId,
+        /// The source container to move the item from.
         storage_id: ContainerType,
-        unk4: u32,
+        unk1: [u8; 2], // likely padding
+        /// The slot that contains the desired item.
+        slot: u16,
+        /// If the item should be moved to the storeroom or not.
+        #[br(map = read_bool_from::<u16>)]
+        #[bw(map = write_bool_as::<u16>)]
+        to_storeroom: bool, // TODO: This might actually just be a u8
     },
 
     /// The client requests the housing inventory be sent to them. This happens automatically after opening the Interior Furnishings menu.
@@ -321,19 +328,11 @@ pub enum ClientTriggerCommand {
 
     /// The client opens or closes the Interior Furnishings menu.
     #[brw(magic = 1123u32)]
-    OpenOrCloseFurnitureMenu {
+    FurnitureMenuToggled {
         /// If the menu was closed or not.
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         closed: bool,
-    },
-
-    /// The client sets the interior lighting level.
-    #[brw(magic = 1137u32)]
-    SetInteriorLightLevel {
-        /// See HousingInteriorDetails in housing_interior_furniture.rs for further details, but `level` is actually a level of *darkness*, not light, so this CT is a misnomer, but it's more intuitive to just call it a light level...
-        level: u32,
-        unk: u32, // Seems to be always 1
     },
 
     /// The client requests to warp to the housing interior's front door.
@@ -345,6 +344,26 @@ pub enum ClientTriggerCommand {
     RequestApartmentList {
         /// The desired starting index of apartments.
         starting_index: u32,
+    },
+
+    /// The client sets the interior lighting level.
+    #[brw(magic = 1137u32)]
+    SetInteriorLightLevel {
+        /// See HousingInteriorDetails in housing_interior_furniture.rs for further details, but `level` is actually a level of *darkness*, not light, so this CT is a misnomer, but it's more intuitive to just call it a light level...
+        level: u32,
+        unk: u32, // Seems to be always 1
+    },
+
+    /// The client places furniture from the storeroom.
+    #[brw(magic = 1150u32)]
+    PlaceFurnitureFromStoreroom {
+        /// The house's id.
+        house_id: HouseId,
+        /// The source container to retrieve the item from.
+        container_type: ContainerType,
+        /// The index into the container.
+        container_index: u16,
+        unk: u16, // Just in case, observed as zeroes but with all this stuff lately, you never know.
     },
 
     /// The client requests to repair and item at a mender.

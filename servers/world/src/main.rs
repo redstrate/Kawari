@@ -16,7 +16,7 @@ use kawari::ipc::chat::ClientChatIpcData;
 
 use kawari::ipc::zone::{
     ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
-    CrossRealmListings, EventType, LinkshellInviteResponse, MapEffects, MarketBoardItem,
+    CrossRealmListings, EventType, ItemInfo, LinkshellInviteResponse, MapEffects, MarketBoardItem,
     OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType,
     TrustContent, TrustInformation, WarpType,
 };
@@ -50,6 +50,7 @@ use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
 use kawari::common::INVENTORY_ACTION_ACK_GENERAL;
+use physis::TerritoryIntendedUse;
 
 fn spawn_main_loop(
     game_data: Arc<Mutex<GameData>>,
@@ -1439,6 +1440,134 @@ async fn process_packet(
                                 }
                                 ClientTriggerCommand::RequestApartmentList { starting_index } => {
                                     connection.send_apartment_list(starting_index).await;
+                                }
+                                // TODO: This needs to be networked
+                                ClientTriggerCommand::SetInteriorLightLevel { level, unk } => {
+                                    connection
+                                        .actor_control_self(
+                                            ActorControlCategory::InteriorLightLevel {
+                                                unk1: 0,
+                                                level,
+                                                unk2: unk,
+                                            },
+                                        )
+                                        .await;
+                                }
+                                ClientTriggerCommand::FurnitureMenuToggled { closed } => {
+                                    if !closed {
+                                        connection.conditions.set_condition(
+                                            kawari::ipc::zone::Condition::UsingHousingFunctions,
+                                        );
+
+                                        connection
+                                            .actor_control_self(
+                                                ActorControlCategory::FurnitureMenu {},
+                                            )
+                                            .await;
+                                    } else {
+                                        connection.conditions.remove_condition(
+                                            kawari::ipc::zone::Condition::UsingHousingFunctions,
+                                        );
+                                    }
+                                    connection.send_conditions().await;
+                                }
+                                ClientTriggerCommand::RequestHousingInventory { storeroom } => {
+                                    let intended_use;
+                                    {
+                                        let mut gamedata = connection.gamedata.lock();
+                                        intended_use = gamedata
+                                            .get_intended_use(
+                                                connection.player_data.volatile.zone_id as u32,
+                                            )
+                                            .unwrap_or(TerritoryIntendedUse::Jail);
+                                    }
+
+                                    let desired_pages = connection
+                                        .player_data
+                                        .house_inventory
+                                        .get_desired_pages_from_intendeduse(
+                                            intended_use,
+                                            storeroom,
+                                        );
+
+                                    connection.send_housing_inventory(desired_pages).await;
+                                }
+                                ClientTriggerCommand::MoveHousingItemToInventory {
+                                    to_storeroom,
+                                    storage_id,
+                                    slot,
+                                    ..
+                                } => {
+                                    tracing::info!(
+                                        "Client is moving item to inventory! {:#?} {:#?} {:#?}",
+                                        to_storeroom,
+                                        storage_id,
+                                        slot
+                                    );
+
+                                    let intended_use;
+                                    {
+                                        let mut gamedata = connection.gamedata.lock();
+                                        intended_use = gamedata
+                                            .get_intended_use(
+                                                connection.player_data.volatile.zone_id as u32,
+                                            )
+                                            .unwrap_or(TerritoryIntendedUse::Jail);
+                                    }
+
+                                    let desired_pages = connection
+                                        .player_data
+                                        .house_inventory
+                                        .get_desired_pages_from_intendeduse(
+                                            intended_use,
+                                            to_storeroom,
+                                        );
+
+                                    let transfer_item = connection
+                                        .player_data
+                                        .house_inventory
+                                        .get_item(storage_id, slot);
+
+                                    if (!to_storeroom
+                                        && connection
+                                            .player_data
+                                            .inventory
+                                            .add_in_next_free_slot(transfer_item)
+                                            .is_none())
+                                        || (to_storeroom
+                                            && connection
+                                                .player_data
+                                                .house_inventory
+                                                .add_in_empty_slot(transfer_item, desired_pages)
+                                                .is_none())
+                                    {
+                                        continue;
+                                    }
+
+                                    // This is a bit ugly, but we have to do this after that `if` to avoid borrowing the house inventory twice...
+                                    let transfer_item = connection
+                                        .player_data
+                                        .house_inventory
+                                        .get_item_mut(storage_id, slot);
+                                    *transfer_item = Item::default();
+
+                                    // TODO: We should only send the affected container, not all of the pages, but for now it doesn't hurt anything
+                                    connection.send_inventory().await;
+
+                                    // Here we do want to send all of the housing inventory pages
+                                    connection.send_housing_inventory(desired_pages).await;
+
+                                    // TODO: This probably needs to be networked if the source furniture was placed in the world
+                                    connection
+                                        .actor_control_self(
+                                            ActorControlCategory::FurnitureRemovedToInventoryAck {
+                                                unk1: 0, // TODO: unk1 is actually filled with data, it might be an index of some sort
+                                                unk2: 0,
+                                                unk3: 0,
+                                                unk4: 0,
+                                            },
+                                        )
+                                        .await;
                                 }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
@@ -2996,11 +3125,145 @@ async fn process_packet(
                                 }
                             }
                         }
-                        ClientZoneIpcData::PlaceFurniture { .. } => {
-                            tracing::warn!("Placing furniture is unimplemented");
+                        ClientZoneIpcData::PlaceFurniture {
+                            container,
+                            slot,
+                            position,
+                            ..
+                        } => {
+                            tracing::info!(
+                                "Client placed furniture! {:#?} {:#?} {:#?}",
+                                container,
+                                slot,
+                                position,
+                            );
+
+                            let intended_use;
+                            {
+                                let mut gamedata = connection.gamedata.lock();
+                                intended_use = gamedata
+                                    .get_intended_use(
+                                        connection.player_data.volatile.zone_id as u32,
+                                    )
+                                    .unwrap_or(TerritoryIntendedUse::Jail);
+                            }
+
+                            if intended_use != TerritoryIntendedUse::HousingIndoor
+                                && intended_use != TerritoryIntendedUse::HousingOutdoor
+                            {
+                                tracing::error!(
+                                    "The player attempted to place furniture while not within a housing zone! Rejecting request!"
+                                );
+                                continue;
+                            }
+
+                            let transfer_item = connection.player_data.inventory.pages
+                                [*container as usize]
+                                .get_slot(*slot);
+
+                            let catalog_id;
+                            {
+                                let mut gamedata = connection.gamedata.lock();
+                                let result =
+                                    gamedata.get_furniture_catalog_id(transfer_item.item_id);
+                                catalog_id = result.unwrap_or_default();
+                            }
+
+                            let desired_pages = connection
+                                .player_data
+                                .house_inventory
+                                .get_desired_pages_from_intendeduse(intended_use, false);
+
+                            let Some(result) = connection
+                                .player_data
+                                .house_inventory
+                                .add_in_empty_slot(*transfer_item, desired_pages)
+                            else {
+                                tracing::error!(
+                                    "Unable to add item to this housing inventory, it's full!"
+                                );
+                                continue;
+                            };
+
+                            // Next, remove the item from the player's main inventory.
+                            {
+                                let old_slot = connection.player_data.inventory.pages
+                                    [*container as usize]
+                                    .get_slot_mut(*slot);
+                                *old_slot = Item::default();
+
+                                let ipc = ServerZoneIpcSegment::new(
+                                    ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
+                                        sequence: 0,
+                                        container: connection.player_data.inventory.pages
+                                            [*container as usize]
+                                            .kind,
+                                        slot: *slot,
+                                        ..(Item::default()).into()
+                                    }),
+                                );
+                                connection.send_ipc_self(ipc).await;
+                            }
+
+                            // Then send the refreshed housing inventory.
+                            connection.send_housing_inventory(desired_pages).await;
+
+                            // Finally, acknowledge the placement.
+                            // TODO: This needs to be networked so other players can see the results
+                            // TODO: We need to store the coordinates when things are persistent
+                            connection
+                                .send_ipc_self(ServerZoneIpcSegment::new(
+                                    ServerZoneIpcData::FurniturePlaced {
+                                        storage_id: result.container,
+                                        slot: result.slot,
+                                        catalog_id,
+                                        unk1: 1,
+                                        stain: 0,
+                                        unk2: 0,
+                                        unk3: 0,
+                                        unk4: 0,
+                                        position: *position,
+                                        unk5: [0; 4],
+                                    },
+                                ))
+                                .await;
+
+                            connection
+                                .actor_control_self(ActorControlCategory::FurniturePlacedAck {
+                                    unk1: 0,
+                                    unk2: 0,
+                                    unk3: 0,
+                                    unk4: 0,
+                                })
+                                .await;
                         }
-                        ClientZoneIpcData::TranslateFurniture { .. } => {
-                            tracing::warn!("Moving and rotating furniture is unimplemented");
+                        ClientZoneIpcData::TranslateFurniture {
+                            house_id,
+                            slot,
+                            position,
+                            rotation,
+                            unk2,
+                            unk3,
+                        } => {
+                            tracing::info!(
+                                "Client moved furniture! {:#?} {:#?}, {:#?}, {:#?} {:#?} {:#?}",
+                                house_id,
+                                slot,
+                                position,
+                                rotation,
+                                unk2,
+                                unk3
+                            );
+                            // TODO: We need to store the new coordinates and rotation when making everything persistent!
+                            // TODO: This process needs to be networked!
+                            // TODO: this storage_id is likely wrong!
+                            connection
+                                .actor_control_self(ActorControlCategory::FurnitureTranslatedAck {
+                                    storage_id: ContainerType::HousingInteriorPlacedItems1,
+                                    slot: *slot as u32,
+                                    unk1: 0,
+                                })
+                                .await;
                         }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
