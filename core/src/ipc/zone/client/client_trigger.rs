@@ -295,6 +295,43 @@ pub enum ClientTriggerCommand {
         ward_index: u32,
     },
 
+    /// The client removes a piece of furniture from the world and puts it in their inventory.
+    // TODO: Research is still ongoing for this one
+    #[brw(magic = 1113u32)]
+    MoveHousingItemToInventory {
+        unk1: u32,
+        unk2: u32,
+        #[brw(pad_after = 2)]
+        storage_id: ContainerType,
+        unk4: u32,
+    },
+
+    /// The client requests the housing inventory be sent to them. This happens automatically after opening the Interior Furnishings menu.
+    #[brw(magic = 1121u32)]
+    RequestHousingInventory {
+        /// Which housing inventory to access. If true, the client wants the storeroom's inventory, otherwise, the placed furniture.
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        storeroom: bool,
+    },
+
+    /// The client opens or closes the Interior Furnishings menu.
+    #[brw(magic = 1123u32)]
+    OpenOrCloseFurnitureMenu {
+        /// If the menu was closed or not.
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        closed: bool,
+    },
+
+    /// The client sets the interior lighting level.
+    #[brw(magic = 1137u32)]
+    SetInteriorLightLevel {
+        /// See HousingInteriorDetails in housing_interior_furniture.rs for further details, but `level` is actually a level of *darkness*, not light, so this CT is a misnomer, but it's more intuitive to just call it a light level...
+        level: u32,
+        unk: u32, // Seems to be always 1
+    },
+
     /// The client requests to warp to the housing interior's front door.
     #[brw(magic = 1122u32)]
     HousingMoveToFrontDoor {},

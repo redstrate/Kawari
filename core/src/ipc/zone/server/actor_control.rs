@@ -1,12 +1,14 @@
 use binrw::binrw;
 use strum_macros::IntoStaticStr;
 
-use crate::common::{
-    CharacterMode, DirectorEvent, EquipDisplayFlag, FateState, HandlerId, InvisibilityFlags,
-    ObjectId, ObjectTypeId, SharedGroupTimelineState, read_bool_from, read_packed_float,
-    write_bool_as, write_packed_float,
+use crate::{
+    common::{
+        CharacterMode, DirectorEvent, EquipDisplayFlag, FateState, HandlerId, InvisibilityFlags,
+        ObjectId, ObjectTypeId, SharedGroupTimelineState, read_bool_from, read_packed_float,
+        write_bool_as, write_packed_float,
+    },
+    ipc::zone::{online_status::OnlineStatus, server::ContainerType},
 };
-use crate::ipc::zone::online_status::OnlineStatus;
 
 #[binrw]
 #[derive(Debug, PartialEq, Clone)]
@@ -727,6 +729,42 @@ pub enum ActorControlCategory {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,
+    },
+
+    /// The server acknowledges the client's request to remove an item from the world and put it back into their inventory. Doesn't seem to have any values, but we should keep unknowns for now, just in case...
+    #[brw(magic = 1009u32)]
+    FurnitureRemovedToInventoryAck {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    /// The server acknowledges the client's request to place an item. Doesn't seem to have any values, but we should keep unknowns for now, just in case...
+    #[brw(magic = 1011u32)]
+    FurniturePlacedAck {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    /// The server displays the Interior Furnishings menu for the client.
+    #[brw(magic = 1015u32)]
+    FurnitureMenu(),
+
+    /// The server acknowledges the client's request to translate (move or rotate) an item. The purpose of sending the item's container is unclear.
+    #[brw(magic = 1017u32)]
+    FurnitureTranslatedAck { storage_id: ContainerType },
+
+    /// The server sets the interior lighting level for the client.
+    #[brw(magic = 1035u32)]
+    InteriorLightLevel {
+        unk1: u32,
+        /// The light level set by the client.
+        level: u32,
+        /// This repeats the client trigger's unk back to them. It's always 1.
+        unk2: u32,
     },
 
     #[brw(magic = 1204u32)]

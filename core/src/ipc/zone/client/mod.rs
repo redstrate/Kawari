@@ -602,6 +602,21 @@ pub enum ClientZoneIpcData {
         param4: u32,
         position: Position,
     },
+    PlaceFurniture {
+        unk1: [u8; 8], // zeroes?
+        /// The container the furniture item came from.
+        container: ContainerType,
+        /// The slot the item came from.
+        slot: u16,
+        /// Where in the world the client has placed it.
+        position: Position,
+        unk2: [u8; 4], // zeroes?
+        unk3: u32,     // Always 1?
+        unk4: [u8; 8], // zeroes?
+    },
+    TranslateFurniture {
+        unk: [u8; 32], // TODO: Should have data for both rotation and position, along with info on what item in the housing inventory it is
+    },
 }
 
 #[cfg(test)]
