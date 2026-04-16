@@ -1317,7 +1317,7 @@ pub enum ServerZoneIpcData {
         storage_id: ContainerType,
         /// Which slot the furniture was placed into.
         slot: u16,
-        /// The furniture's id. Index into the FurnitureCatalogItemList sheet. Can be obtained from the HousingFurniture sheet, ModelKey column, and that index can be obtained from the Item sheet, AdditionalData column.
+        /// Supposedly the furniture's ModelKey. You should be able determine this from the FurnitureCatalogItemList Excel sheet. The row to that sheet can be obtained from the AdditionalData column on the Item Excel sheet.
         catalog_id: u16,
         unk1: u16, // Always 1?
         /// The furniture's dye/stain.
