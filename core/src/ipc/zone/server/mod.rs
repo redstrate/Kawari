@@ -1327,6 +1327,15 @@ pub enum ServerZoneIpcData {
         unk3: [u8; 4],
     },
     Mogpendium(Mogpendium),
+    PlayerName {
+        /// Content ID of the player in question.
+        content_id: u64,
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        name: String,
+    },
 }
 
 #[cfg(test)]

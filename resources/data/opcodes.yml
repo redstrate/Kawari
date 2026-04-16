@@ -719,6 +719,10 @@ ServerZoneIpcType:
     comment: Contains character specific Mogpendium progress data.
     opcode: 535
     size: 144
+  - name: PlayerName
+    comment: Sent in response to the RequestPlayerName client trigger.
+    opcode: 338
+    size: 40
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)

@@ -115,6 +115,10 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 303u32)]
     RequestTitleList {},
 
+    /// Requests the name of a player by their content ID. Seen used for crafted items.
+    #[brw(magic = 305u32)]
+    RequestPlayerName {},
+
     /// The client shows an Active Help pop-up. This is triggered *when* it's shown, not when closed.
     #[brw(magic = 306u32)]
     ShownActiveHelp { id: u32 },
