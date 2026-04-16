@@ -49,10 +49,10 @@ impl ZoneConnection {
                     member.actor_id = ObjectId(0);
                     member.classjob_id = 0;
                     member.classjob_level = 0;
-                    member.current_hp = 0;
-                    member.max_hp = 0;
-                    member.current_mp = 0;
-                    member.max_mp = 0;
+                    member.health_points = 0;
+                    member.max_health_points = 0;
+                    member.resource_points = 0;
+                    member.max_resource_points = 0;
                     // Don't want to sync positions of offline people.
                     member.sync_positions = 0;
                     member.unk2 = 0;
