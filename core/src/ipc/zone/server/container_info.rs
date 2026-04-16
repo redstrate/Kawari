@@ -8,6 +8,7 @@ use crate::common::ContainerType;
 pub struct ContainerInfo {
     pub sequence: u32,
     pub num_items: u32,
+    /// Which container we're updating.
     #[brw(pad_size_to = 4)]
     pub container: ContainerType,
     pub start_or_finish: u32,

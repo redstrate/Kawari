@@ -25,8 +25,11 @@ pub struct EffectResult {
     pub unk1: u32,
     pub unk2: u32,
     pub target_id: ObjectId,
+    /// Amount of health points.
     pub health_points: u32,
+    /// Maximum amount of health points.
     pub max_health_points: u32,
+    /// Amount of resource points (MP/GP/CP etc.)
     pub resource_points: u16,
     pub unk3: u8,
     pub class_id: u8,

@@ -96,12 +96,12 @@ pub fn send_effects_list(
         return;
     };
 
-    let mut list = [StatusEffect::default(); 30];
+    let mut statuses = [StatusEffect::default(); 30];
     let status_data = status_effects.data();
-    list[..status_data.len()].copy_from_slice(status_data);
+    statuses[..status_data.len()].copy_from_slice(status_data);
 
     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::StatusEffectList(StatusEffectList {
-        statues: list,
+        statuses,
         classjob_id: spawn.common.class_job,
         level: spawn.common.level,
         unk1: spawn.common.level,

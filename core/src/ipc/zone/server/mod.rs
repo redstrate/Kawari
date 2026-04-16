@@ -197,6 +197,7 @@ pub type ServerZoneIpcSegment =
 #[derive(Debug, Clone)]
 pub enum ServerZoneIpcData {
     InitResponse {
+        /// The actor id of the player logging in.
         #[brw(pad_before = 8, pad_after = 4)] // empty
         actor_id: ObjectId,
     },
@@ -212,11 +213,9 @@ pub enum ServerZoneIpcData {
     },
     ActorSetPos(ActorSetPos),
     ServerNoticeMessage(ServerNoticeMessage),
-    LinkShellInformation {
-        unk: [u8; 456],
-    },
     PrepareZoning {
         log_message: u32,
+        /// What zone we're about to load into. Index into the TerritoryType Excel sheet.
         target_zone: u16,
         animation: u16,
         /// This, in conjunction with unk1, seem to influence visual effects displayed during the zoning transition. For example, when diving, param4 is 218, and unk1 is 6 (with hide_character set to 1). When surfacing, param4 is 227, unk1 6, and hide_character 1. When going through an underwater portal, param4 is 15, unk1 is 4, and hide_character is 2.
@@ -238,66 +237,86 @@ pub enum ServerZoneIpcData {
     UpdateItem(ItemInfo),
     ContainerInfo(ContainerInfo),
     EventResume2 {
+        /// Data to resume this event.
         #[brw(args { max_params: 2 } )]
         data: EventResume,
     },
     EventResume4 {
+        /// Data to resume this event.
         #[brw(args { max_params: 4 } )]
         data: EventResume,
     },
     EventResume8 {
+        /// Data to resume this event.
         #[brw(args { max_params: 8 } )]
         data: EventResume,
     },
     EventScene2 {
+        /// Data to resume this event.
         #[brw(args { max_params: 2 } )]
         data: EventScene,
     },
     EventScene4 {
+        /// Data to resume this event.
         #[brw(args { max_params: 4 } )]
         data: EventScene,
     },
     EventScene8 {
+        /// Data to resume this event.
         #[brw(args { max_params: 8 } )]
         data: EventScene,
     },
     EventScene16 {
+        /// Data to resume this event.
         #[brw(args { max_params: 16 } )]
         data: EventScene,
     },
     EventScene32 {
+        /// Data to resume this event.
         #[brw(args { max_params: 32 } )]
         data: EventScene,
     },
     EventScene64 {
+        /// Data to resume this event.
         #[brw(args { max_params: 64 } )]
         data: EventScene,
     },
     EventScene128 {
+        /// Data to resume this event.
         #[brw(args { max_params: 128 } )]
         data: EventScene,
     },
     EventScene255 {
+        /// Data to resume this event.
         #[brw(args { max_params: 255 } )]
         data: EventScene,
     },
     EventStart(EventStart),
     UpdateHpMpTp {
+        /// The new health point value.
         hp: u32,
+        /// The new resource point value.
         mp: u16,
-        unk: u16, // it's filled with... something
+        // Unknown. It's filled with... something.
+        unk: u16,
     },
     ActionResult(ActionResult),
     Equip(Equip),
     DeleteActor {
+        /// The index into the client-side object pool.
         spawn_index: u8,
+        /// The ID of the actor being deleted.
         #[brw(pad_before = 3)] // padding
         actor_id: ObjectId,
     },
     EventFinish {
+        /// ID of this event.
         handler_id: HandlerId,
+        /// Type of this event.
         event_type: EventType,
+        /// Arbitrary value.
         result: u8,
+        /// Arbitrary value.
         #[brw(pad_before = 2)] // padding
         #[brw(pad_after = 4)] // padding
         arg: u32,
@@ -317,6 +336,7 @@ pub enum ServerZoneIpcData {
         transmission_interval: u32,
     },
     QuestCompleteList {
+        /// Bitmask of completed quests.
         #[br(count = COMPLETED_QUEST_BITMASK_SIZE)]
         #[bw(pad_size_to = COMPLETED_QUEST_BITMASK_SIZE)]
         completed_quests: Vec<u8>,
@@ -330,7 +350,7 @@ pub enum ServerZoneIpcData {
         unk1: u8,
     },
     InventoryTransaction {
-        /// This is later reused in InventoryTransactionFinish, so it might be some sort of sequence or context id, but it's not the one sent by the client
+        /// This is later reused in InventoryTransactionFinish, so it might be some sort of sequence or context id, but it's not the one sent by the client.
         sequence: u32,
         /// Same as the one sent by the client, not the one that the server responds with in InventoryActionAck!
         operation_type: ItemOperationKind,
@@ -374,31 +394,38 @@ pub enum ServerZoneIpcData {
         /// 4 = checking member status
         /// nothing appears to happen above 5
         state1: u8,
+        /// The class you registered with. Index into the ClassJob Excel sheet.
         classjob_id: u8,
         unk1: [u8; 18],
+        /// The content IDs you registered for. Index into the ContentFinderCondition Excel sheet.
         content_ids: [u16; 5],
         unk2: [u8; 10],
     },
     ContentFinderFound {
         unk1: [u8; 28],
+        /// The content ID that popped. Index into the ContentFinderCondition Excel sheet.
         content_id: u16,
         unk2: [u8; 10],
     },
     SpawnObject(SpawnObject),
     ActorGauge {
+        /// The class (ideally the one you actually are) to update the gauge for. Index into the ClassJob Excel sheet.
         classjob_id: u8,
+        /// Arbitrary class-specific data.
         data: [u8; 15],
     },
     FreeCompanyInfo {
         unk: [u8; 80],
     },
     TitleList {
+        /// Bitmask of unlocked titles.
         #[br(count = TITLE_UNLOCK_BITMASK_SIZE)]
         #[bw(pad_size_to = TITLE_UNLOCK_BITMASK_SIZE)]
         unlock_bitmask: Vec<u8>,
     },
     QuestActiveList(QuestActiveList),
     LevequestCompleteList {
+        /// Bitmask of completed levequests.
         #[br(count = COMPLETED_LEVEQUEST_BITMASK_SIZE)]
         #[bw(pad_size_to = COMPLETED_LEVEQUEST_BITMASK_SIZE)]
         completed_levequests: Vec<u8>,
@@ -408,6 +435,7 @@ pub enum ServerZoneIpcData {
         unk2: Vec<u8>,
     },
     ShopLogMessage {
+        /// Event ID of this shop.
         handler_id: HandlerId,
         /// When buying: 0x697
         /// When selling: 0x698
@@ -438,9 +466,11 @@ pub enum ServerZoneIpcData {
         unk1: [u8; 24],
     },
     StatusEffectList3 {
+        /// List of status effects.
         status_effects: [StatusEffect; 30],
     },
     CrossworldLinkshells {
+        /// List of cross-world linkshells.
         #[brw(pad_before = 8)] // Seems to be empty/zeroes
         #[br(count = CrossworldLinkshell::COUNT)]
         #[brw(pad_size_to = CrossworldLinkshell::COUNT * CrossworldLinkshell::SIZE)]
@@ -463,9 +493,13 @@ pub enum ServerZoneIpcData {
         unk5: u32,
     },
     GrandCompanyInfo {
+        /// Which Grand Company this player is affiliated with.
         active_company_id: u8,
+        /// Maelstrom rank.
         maelstrom_rank: u8,
+        /// Twin Adder rank.
         twin_adder_rank: u8,
+        /// Immortal Flames rank.
         #[brw(pad_after = 4)]
         immortal_flames_rank: u8,
     },
@@ -485,6 +519,7 @@ pub enum ServerZoneIpcData {
         unk1: [u8; 8],
     },
     Linkshells {
+        /// List of linkshells.
         #[br(count = LinkshellEntry::COUNT)]
         #[bw(pad_size_to = LinkshellEntry::SIZE * LinkshellEntry::COUNT)]
         shells: Vec<LinkshellEntry>,
@@ -495,6 +530,7 @@ pub enum ServerZoneIpcData {
         map_id: u32,
     },
     Mount {
+        /// Index into the Mount Excel sheet.
         id: u16,
         unk1: [u8; 14],
     },
@@ -649,6 +685,7 @@ pub enum ServerZoneIpcData {
         bitmask: [u8; 40],
     },
     DirectorVars {
+        /// ID of this director.
         handler_id: HandlerId,
         flag: u8,
         branch: u8,
@@ -666,6 +703,7 @@ pub enum ServerZoneIpcData {
     },
     FieldMarkerPreset(WaymarkPreset),
     DeleteObject {
+        /// Index into the client-side object spawn pool.
         #[brw(pad_after = 7)] // padding
         spawn_index: u8,
     },
@@ -677,7 +715,7 @@ pub enum ServerZoneIpcData {
     },
     TrustInformation(TrustInformation),
     DutySupportInformation {
-        /// Indices into the DawnContent Excel sheet.
+        /// List indices into the DawnContent Excel sheet.
         #[br(count = 80)]
         #[bw(pad_size_to = 80)]
         available_content: Vec<u8>,
@@ -828,9 +866,9 @@ pub enum ServerZoneIpcData {
         unk1: u64, // Empty?
         /// Should be the ID of the instance's director.
         handler_id: HandlerId,
-        /// See the BNPCName Excel sheet.
+        /// Index into the BNPCName Excel sheet.
         npc_name: u32,
-        /// See the InstanceContentTextData Excel sheet.
+        /// Index into the InstanceContentTextData Excel sheet.
         text_data_id: u32,
         unk4: u32,
         unk5: u32,
@@ -839,10 +877,12 @@ pub enum ServerZoneIpcData {
         unk8: u32,
     },
     DirectorSetupMapEffects64 {
+        /// The map effects to setup.
         #[brw(args { max_params: 64 } )]
         data: MapEffects,
     },
     DirectorSetupMapEffects128 {
+        /// The map effects to setup.
         #[brw(args { max_params: 128 } )]
         data: MapEffects,
     },
@@ -892,11 +932,14 @@ pub enum ServerZoneIpcData {
     HaterList(HaterList),
     DuelInformation {
         account_id: u64,
+        /// The opponent's content ID.
         opponent_content_id: u64,
+        /// The opponent's object ID.
         opponent_object_id: ObjectId,
         world_id: u16,
         unk1: u16,
         unk2: u8,
+        /// The name of the opponent.
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
@@ -905,9 +948,11 @@ pub enum ServerZoneIpcData {
         opponent_name: String,
     },
     MarketBoardItems {
+        /// The items contained in this search result.
         #[br(count = 21)]
         #[brw(pad_size_to = 21 * MarketBoardItem::SIZE)]
         items: Vec<MarketBoardItem>,
+        /// Sequence number for this search result.
         #[brw(pad_before = 4, pad_after = 2)] // empty
         sequence: u16,
     },
@@ -944,6 +989,7 @@ pub enum ServerZoneIpcData {
     },
     ActorCast {
         action: u16,
+        /// What kind of action is being cast.
         #[brw(pad_after = 1)] // empty
         action_kind: ActionKind,
         action_key: u32,
@@ -958,11 +1004,12 @@ pub enum ServerZoneIpcData {
     },
     SearchPlayersResult {
         /// The number of results found after a player search.
-        #[brw(pad_after = 4)] //empty
+        #[brw(pad_after = 4)] // empty
         num_results: u32, // TODO: this might be only an u16 or an u8, since the search results window only shows up to 200 players.
     },
     FriendGroupIcon(FriendGroupIconInfo),
     DeepDungeonParty {
+        /// Refers to the player actors in your party, including yourself.
         entity_ids: [ObjectId; 4],
         room_indices: [u8; 4],
     },
@@ -997,6 +1044,7 @@ pub enum ServerZoneIpcData {
     },
     ExamineCharacterInformation {
         unk1: [u8; 640],
+        /// The requested player's name.
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
@@ -1005,17 +1053,22 @@ pub enum ServerZoneIpcData {
         unk2: [u8; 272],
     },
     OtherSearchInfo {
+        /// The requested player's content ID.
         content_id: u64,
         unk1: [u8; 26], // seems empty but not 100%
+        /// The requested player's home world. Index into the World Excel sheet.
         world_id: u16,
+        /// The requested player's search comment.
         #[brw(pad_size_to = 60)]
         #[br(count = 60)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         comment: String,
         unk2: [u8; 157], // also seems empty
+        /// The requested player's Grand Company rank.
         grand_company_rank: u8,
         unk3: [u8; 2], // probably also empty
+        /// The requested player's class levels.
         classjob_levels: [(u16, u16); AVAILABLE_CLASSJOBS],
     },
     SetPlayerCustomizeData(CustomizeData),
@@ -1068,6 +1121,7 @@ pub enum ServerZoneIpcData {
         unk: [u8; 48],
     },
     CrossRealmListingInformation {
+        /// The unique ID for this listing.
         listing_id: u64,
         unk: [u8; 456],
     },
@@ -1325,6 +1379,7 @@ pub enum ServerZoneIpcData {
         unk2: u16,
         unk3: u16,
         unk4: u16,
+        /// The furniture's position.'
         position: Position,
         unk5: [u8; 4],
     },
@@ -1342,6 +1397,7 @@ pub enum ServerZoneIpcData {
         unk3: [u8; 3], // Likely just padding
         /// The furniture's rotation. Strange, considering that the client cannot rotate an item until after it's placed...
         rotation: f32,
+        /// The furniture's position.'
         position: Position,
         unk5: u32, // Observed as zeroes
     },
@@ -1349,6 +1405,7 @@ pub enum ServerZoneIpcData {
     PlayerName {
         /// Content ID of the player in question.
         content_id: u64,
+        /// Name of the player requested.
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]

@@ -39,10 +39,6 @@ ServerZoneIpcType:
     comment: Display a purple server notice message in the chat window, or in some cases, on-screen. Usually used for login messages and imminent maintenance notices.
     opcode: 757
     size: 776
-  - name: LinkShellInformation
-    comment: Unknown, but seems to contain information on cross-world linkshells
-    opcode: 900
-    size: 456
   - name: PrepareZoning
     comment: Inform the client to display next loading screen, how long it should last and other information.
     opcode: 416

@@ -53,9 +53,12 @@ impl mlua::IntoLua for EventType {
 #[derive(Debug, Clone, Default)]
 pub struct EventStart {
     pub target_id: ObjectTypeId,
+    /// ID of this event.
     pub handler_id: HandlerId,
+    /// The type of event.
     pub event_type: EventType,
     pub flags: u8,
+    /// Arbitrary value.
     #[brw(pad_before = 2)]
     #[brw(pad_after = 4)]
     pub event_arg: u32,

@@ -11,7 +11,9 @@ use crate::ipc::zone::server::{ServerZoneIpcData, ServerZoneIpcSegment};
 #[brw(import{max_params: usize})]
 #[brw(assert(params.len() <= max_params, "Too many params! {} > {}", params.len(), max_params))]
 pub struct EventResume {
+    /// ID of the event to resume a scene for.
     pub handler_id: HandlerId,
+    /// Which scene to resume.
     pub scene: u16,
     /// Seems to be a custom ID (handled internally by an EventHandler on the client.)
     pub resume_id: u8,

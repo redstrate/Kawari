@@ -5,6 +5,7 @@ use crate::common::ObjectId;
 #[binrw]
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct Hater {
+    /// ID of the hater.
     pub actor_id: ObjectId,
     /// Value out of a 100, I think.
     pub enmity: u32,

@@ -7,8 +7,10 @@ pub struct Equip {
     pub main_weapon_id: u64,
     pub sub_weapon_id: u64,
     pub crest_enable: u8,
+    /// Current class of the player. Index into the ClassJob Excel sheet.
     pub classjob_id: u8,
     pub pattern_invalid: u16,
+    /// List of model IDs.
     pub model_ids: [u32; 10],
     /// These appear to be some sort of display flags? They're continually included as long as the gear in question remains equipped.
     /// Associated with headgear: set to 0x41 for some headgear when equipped, 0 when unequipped, observed when equipping Songbird Hat; 0x41 doesn't seem to be related to visor toggling or hiding earrings.

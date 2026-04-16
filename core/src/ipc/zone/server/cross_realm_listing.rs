@@ -5,6 +5,7 @@ use crate::common::{CHAR_NAME_MAX_LENGTH, read_string, write_string};
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct CrossRealmListing {
+    /// Unique ID for this listing.
     pub listing_id: u64,
     pub account_id: u64,
     pub content_id: u64,

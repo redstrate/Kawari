@@ -79,7 +79,9 @@ impl Default for SceneFlags {
 #[brw(assert(params.len() <= max_params, "Too many params! {} > {}", params.len(), max_params))]
 pub struct EventScene {
     pub actor_id: ObjectTypeId,
+    /// The event to play this scene in.
     pub handler_id: HandlerId,
+    /// Which scene to play.
     pub scene: u16,
     #[brw(pad_before = 2)] // FIXME: um, i don't think this is empty!!
     pub scene_flags: SceneFlags,

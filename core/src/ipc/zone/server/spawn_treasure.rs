@@ -30,6 +30,7 @@ pub struct SpawnTreasure {
     pub exported_sg_row_id: u32,
     #[brw(pad_after = 1)] // empty?
     pub targetable: u8,
+    /// The position of this treasure.
     #[br(map = read_packed_position)]
     #[bw(map = write_packed_position)]
     pub position: Position,
