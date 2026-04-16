@@ -3211,9 +3211,10 @@ async fn process_packet(
                             // Finally, acknowledge the placement.
                             // TODO: This needs to be networked so other players can see the results
                             // TODO: We need to store the coordinates when things are persistent
+                            // TODO: Outdoor furniture uses a different response opcode, so we need to send the appropriate one!
                             connection
                                 .send_ipc_self(ServerZoneIpcSegment::new(
-                                    ServerZoneIpcData::FurniturePlaced {
+                                    ServerZoneIpcData::InteriorFurniturePlaced {
                                         storage_id: result.container,
                                         slot: result.slot,
                                         catalog_id,
