@@ -1322,9 +1322,11 @@ pub enum ServerZoneIpcData {
         unk1: u16, // Always 1?
         /// The furniture's dye/stain.
         stain: u16,
-        unk2: [u8; 6], // Presumably the rotation would be in here normally, but the client can't place and rotate in the same operation
+        unk2: u16,
+        unk3: u16,
+        unk4: u16,
         position: Position,
-        unk3: [u8; 4],
+        unk5: [u8; 4],
     },
     Mogpendium(Mogpendium),
     PlayerName {

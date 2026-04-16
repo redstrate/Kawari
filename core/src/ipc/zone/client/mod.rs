@@ -617,10 +617,9 @@ pub enum ClientZoneIpcData {
     TranslateFurniture {
         /// Which house this affects.
         house_id: HouseId,
-        /// The slot of the housing item being moved.
-        slot: u8,
-        /// (Unconfirmed) Might be the page?
-        page: u8,
+        /// Index of the housing item being moved. This is across all placed item containers, e.g. 50 here means the second container's first slot.
+        slot: u16,
+        /// Unknown.
         unk2: u16,
         /// The new position of this furniture.
         position: Position,
