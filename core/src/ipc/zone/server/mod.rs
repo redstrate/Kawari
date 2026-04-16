@@ -1328,6 +1328,23 @@ pub enum ServerZoneIpcData {
         position: Position,
         unk5: [u8; 4],
     },
+    ExteriorFurniturePlaced {
+        /// Likely the plot upon which this furniture was placed.
+        plot_index: u8,
+        /// The item slot the furniture was placed into.
+        slot: u8,
+        unk1: [u8; 2], // Likely just padding
+        /// The low 12 bits of the row number on the HousingYardObject sheet for this furniture. The row to that sheet can be obtained from the AdditionalData column on the Item Excel sheet. When the client receives this value, it then ORs it with 0x20000 to recreate the row number.
+        catalog_id: u16,
+        unk2: u16, // Observed as zeroes
+        /// The furniture's dye/stain.
+        stain: u8,
+        unk3: [u8; 3], // Likely just padding
+        /// The furniture's rotation. Strange, considering that the client cannot rotate an item until after it's placed...
+        rotation: f32,
+        position: Position,
+        unk5: u32, // Observed as zeroes
+    },
     Mogpendium(Mogpendium),
     PlayerName {
         /// Content ID of the player in question.
