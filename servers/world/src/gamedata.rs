@@ -26,7 +26,6 @@ use icarus::GilShopItem::GilShopItemSheet;
 use icarus::GimmickRect::{GimmickRectRow, GimmickRectSheet};
 use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
 use icarus::HousingAethernet::HousingAethernetSheet;
-use icarus::HousingFurniture::HousingFurnitureSheet;
 use icarus::HousingLandSet::HousingLandSetSheet;
 use icarus::InstanceContent::InstanceContentSheet;
 use icarus::Item::ItemSheet;
@@ -1514,19 +1513,23 @@ impl GameData {
         })
     }
 
-    /// Returns a piece of furniture's model key/catalog id from its item id.
+    /// Returns a piece of furniture's catalog id from its item id. In this context, "catalog id" means the low 12 bits of the furniture's row number on the HousingFurniture/HousingYardObject sheet, which is what we send to the client when placing furniture.
     pub fn get_furniture_catalog_id(&mut self, item_id: u32) -> Option<u16> {
         // First, we need the item's AdditionalData column to point us to where we need to look on the HousingFurniture sheet.
         let row = self.item_sheet.row(item_id)?;
+        let item_ui_category = row.ItemUICategory();
+
+        // TODO: A better way to do this is checking if the link in AdditionalData leads to the HousingFurniture/HousingYardObject sheet or not.
+        // In order: Furnishing, Outdoor Furnishing, Table, Tabletop, Wall-mounted, Rug
+        let acceptable_ui_categories = [57, 76, 77, 78, 79, 80];
         let next_row = row.AdditionalData();
 
-        // Next, grab the row from the HousingFurniture sheet and return the ModelKey column's value. This value is the same as the catalog id.
-        let sheet = HousingFurnitureSheet::read_from(&mut self.resource, Language::None).ok()?;
-        let row = sheet.row(next_row)?;
+        // If the item is a piece of furniture, return the low 12 bits of the row number.
+        if acceptable_ui_categories.contains(&item_ui_category) && next_row != 0 {
+            return Some((next_row & 0x0FFF) as u16);
+        }
 
-        let model_key = row.ModelKey();
-
-        Some(model_key)
+        None
     }
 }
 

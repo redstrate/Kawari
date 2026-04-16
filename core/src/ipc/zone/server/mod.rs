@@ -1312,12 +1312,12 @@ pub enum ServerZoneIpcData {
         /// Fourth generic parameter.
         param4: u32,
     },
-    FurniturePlaced {
+    InteriorFurniturePlaced {
         /// Which storage the furniture was placed into.
         storage_id: ContainerType,
         /// Which slot the furniture was placed into.
         slot: u16,
-        /// Supposedly the furniture's ModelKey. You should be able determine this from the FurnitureCatalogItemList Excel sheet. The row to that sheet can be obtained from the AdditionalData column on the Item Excel sheet.
+        /// The low 12 bits of the row number on the HousingFurniture sheet for this furniture. The row to that sheet can be obtained from the AdditionalData column on the Item Excel sheet. When the client receives this value, it then ORs it with 0x30000 to recreate the row number.
         catalog_id: u16,
         unk1: u16, // Always 1?
         /// The furniture's dye/stain.
