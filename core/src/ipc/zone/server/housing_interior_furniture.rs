@@ -61,11 +61,12 @@ pub struct HousingInteriorDetails {
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Furniture {
     /// Index into the FurnitureCatalogItemList sheet. If 0, no item is present in this entry. Therefore, this index needs to subtract 1 when indexing into the sheet!
-    pub catalog_id: u16,
-    pub unk1: u16, // Seems to always be 1 when this item is present.
+    pub id: u16,
+    /// Unknown.
+    pub id2: i16,
     /// Index into the Stain sheet. Sets the dye for this item.
-    pub stain: u16,
-    pub unk2: [u8; 2], // Likely padding, but unsure.
+    #[brw(pad_after = 3)] // Empty, not read by the client.
+    pub stain: u8,
     /// This item's rotation.
     pub rotation: f32,
     /// This item's 3d coordinates in the housing interior.
