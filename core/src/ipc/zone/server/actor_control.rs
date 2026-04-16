@@ -755,7 +755,14 @@ pub enum ActorControlCategory {
 
     /// The server acknowledges the client's request to translate (move or rotate) an item. The purpose of sending the item's container is unclear.
     #[brw(magic = 1017u32)]
-    FurnitureTranslatedAck { storage_id: ContainerType },
+    FurnitureTranslatedAck {
+        /// What the furniture was stored in.
+        storage_id: ContainerType,
+        /// Unknown.
+        unk1: u16,
+        /// The slot the furniture occupied.
+        slot: u32,
+    },
 
     /// The server sets the interior lighting level for the client.
     #[brw(magic = 1035u32)]

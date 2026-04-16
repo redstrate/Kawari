@@ -41,7 +41,7 @@ pub use super::social_list::{
 
 use super::config::Config;
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, ClientLanguage, HandlerId, JumpState, MoveAnimationState,
+    CHAR_NAME_MAX_LENGTH, ClientLanguage, HandlerId, HouseId, JumpState, MoveAnimationState,
     MoveAnimationType, ObjectId, Position, read_sestring, read_string, write_sestring,
     write_string,
 };
@@ -615,7 +615,19 @@ pub enum ClientZoneIpcData {
         unk4: [u8; 8], // zeroes?
     },
     TranslateFurniture {
-        unk: [u8; 32], // TODO: Should have data for both rotation and position, along with info on what item in the housing inventory it is
+        /// Which house this affects.
+        house_id: HouseId,
+        /// The slot of the housing item being moved.
+        slot: u8,
+        /// (Unconfirmed) Might be the page?
+        page: u8,
+        unk2: u16,
+        /// The new position of this furniture.
+        position: Position,
+        /// The new rotation of this furniture.
+        rotation: f32,
+        /// Unknown.
+        unk3: u32,
     },
 }
 
