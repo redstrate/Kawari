@@ -445,16 +445,34 @@ pub enum ClientTriggerCommand {
         unk2: u32,
         unk3: u32,
         unk4: u32,
+        unk5: u32,
     },
 }
 
 #[binrw]
 #[derive(Debug, Clone)]
 pub struct ClientTrigger {
-    #[brw(pad_size_to = 20)] // take into account categories without params
+    #[brw(pad_size_to = 24)] // take into account categories without params
     pub trigger: ClientTriggerCommand,
-    #[brw(pad_before = 4)] // empty
-    pub target: ObjectTypeId,
+
+    /// Can be a ObjectTypeId or a content ID.
+    #[br(temp)]
+    #[bw(calc = {
+        if let Some(target) = self.target {
+            target.into()
+        } else {
+            content_id.unwrap_or_default()
+        }
+    })]
+    target_id: u64,
+
+    // TODO: double check in a couple of months to see if the double-fallibility here is a stupid idea
+    #[br(calc = ObjectTypeId::try_from(target_id).ok())]
+    #[bw(ignore)]
+    pub target: Option<ObjectTypeId>,
+    #[br(calc = if target.is_none() { Some(target_id) } else { None } )]
+    #[bw(ignore)]
+    pub content_id: Option<u64>,
 }
 
 impl Default for ClientTrigger {
@@ -464,7 +482,8 @@ impl Default for ClientTrigger {
                 actor_id: ObjectId::default(),
                 actor_type: 0,
             },
-            target: ObjectTypeId::default(),
+            target: None,
+            content_id: None,
         }
     }
 }

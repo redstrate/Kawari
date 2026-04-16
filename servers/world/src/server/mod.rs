@@ -1297,7 +1297,7 @@ pub async fn server_main_loop(
                         ClientTriggerCommand::SetSoftTarget {} => {
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
-                                trigger.target,
+                                trigger.target.unwrap(),
                                 ActorControlCategory::SetSoftTarget {},
                             );
 
@@ -1369,7 +1369,7 @@ pub async fn server_main_loop(
                         ClientTriggerCommand::Emote { emote, hide_text } => {
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
-                                trigger.target,
+                                trigger.target.unwrap(),
                                 ActorControlCategory::Emote {
                                     emote: *emote,
                                     hide_text: *hide_text,

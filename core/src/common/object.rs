@@ -2,6 +2,7 @@
 
 use binrw::binrw;
 use serde::Deserialize;
+use strum::FromRepr;
 
 #[binrw]
 #[brw(little)]
@@ -66,8 +67,9 @@ impl diesel::deserialize::FromSql<diesel::sql_types::BigInt, diesel::sqlite::Sql
 // Instead it correlates to the Type field in the GameObjectId client struct.
 // See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Object/GameObject.cs#L230
 #[binrw]
+#[repr(u32)]
 #[brw(repr = u32)]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, FromRepr)]
 pub enum ObjectTypeKind {
     /// Everything that has a proper entity/actor ID.
     #[default]
@@ -118,6 +120,23 @@ impl mlua::FromLua for ObjectTypeId {
             }),
             _ => unreachable!(),
         }
+    }
+}
+
+impl TryFrom<u64> for ObjectTypeId {
+    type Error = ();
+
+    fn try_from(value: u64) -> Result<Self, Self::Error> {
+        Ok(Self {
+            object_id: ObjectId(value as u32),
+            object_type: ObjectTypeKind::from_repr((value << 4) as u32).ok_or(())?,
+        })
+    }
+}
+
+impl From<ObjectTypeId> for u64 {
+    fn from(value: ObjectTypeId) -> Self {
+        value.object_id.0 as u64 | value.object_type as u64 >> 4
     }
 }
 
