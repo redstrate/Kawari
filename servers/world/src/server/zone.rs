@@ -653,7 +653,7 @@ impl Zone {
         // Only dropins are checked for battle npcs, because they strip that from retail LGBs.
         for layer in &self.dropin_layers {
             for object in &layer.objects {
-                if let DropInObjectData::BattleNpc {
+                if let DropInObjectData::Npc {
                     base_id,
                     name_id,
                     hp,
@@ -664,10 +664,23 @@ impl Zone {
                     max_links,
                     link_family,
                     link_range,
+                    battle_npc,
                 } = object.data
                 {
-                    let (model_chara, battalion, customize, rank, equip) =
-                        game_data.find_bnpc(base_id).unwrap();
+                    let model_chara;
+                    let battalion;
+                    let customize;
+                    let rank;
+                    let equip;
+
+                    if battle_npc {
+                        (model_chara, battalion, customize, rank, equip) =
+                            game_data.find_bnpc(base_id).unwrap();
+                    } else {
+                        (model_chara, customize, equip) = game_data.find_enpc(base_id).unwrap();
+                        battalion = 0;
+                        rank = 0;
+                    }
 
                     let usable_hp;
                     if let Some(hp) = hp {
@@ -714,7 +727,11 @@ impl Zone {
                             max_health_points: usable_hp,
                             health_points: usable_hp,
                             model_chara,
-                            object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
+                            object_kind: if battle_npc {
+                                ObjectKind::BattleNpc(BattleNpcSubKind::Enemy)
+                            } else {
+                                ObjectKind::EventNpc
+                            },
                             battalion,
                             level: level as u8,
                             position: object.position,

@@ -448,6 +448,8 @@ pub enum ToServer {
     Jump(ClientId, String),
     /// Teleport the player to this one.
     Call(ObjectId, String),
+    /// Spawns an NPC defined by the layout or drop-in.
+    SpawnLayoutNpc(ObjectId, u32),
 }
 
 #[derive(Clone, Debug)]

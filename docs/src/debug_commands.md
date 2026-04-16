@@ -10,12 +10,13 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!classjob <id>` | Unlocks said class/job at level 1, and gives you a job crystal (if applicable). |
 | `!clearconditions` | Forcefully clears all conditions set on your character. |
 | `!equip <name>` | Forcefully equip an item, useful for bypassing class/job and other client restrictions. This will *overwrite* any item in that slot! |
-| `!item <name>` | Gives you an item matching by name. |
-| `!inspect` | Prints info about the player. |
-| `!itemlevel <level>` | Temporarily set your own item level. |
 | `!fate <id>` | Spawns a temporary, test FATE for yourself. |
 | `!festival <id1> <id2> <id3> <id4>` | Sets the festival in the current zone. Multiple festivals can be set together to create interesting effects. |
 | `!finishevent` | Forcefully finishes the current event, useful if the script has an error and you're stuck talking to something. |
+| `!gate` | Spawns a non-functional debug GATE. |
+| `!item <name>` | Gives you an item matching by name. |
+| `!inspect` | Prints info about the player. |
+| `!itemlevel <level>` | Temporarily set your own item level. |
 | `!mount <id/name>` | Allows you to mount in any zone, on the specified mount ID/name. |
 | `!monies` | Give a unreasonable amount of some currencies. |
 | `!nudge <distance> <up/down (optional)>` | Teleport forward, back, up or down `distance` yalms. Specifying up or down will move the player up or down instead of forward or back. |

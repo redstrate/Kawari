@@ -41,6 +41,12 @@ pub enum DirectorEvent {
 #[binrw]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum DirectorTrigger {
+    /// Seen while GATEs were spawning.
+    #[brw(magic = 0u32)]
+    GoldSaucerUnk1,
+    /// Seen while GATEs were spawning.
+    #[brw(magic = 1u32)]
+    GoldSaucerUnk2,
     /// Seen when voting in a Variant Dungeon, but probably used for other things.
     /// For Variant Dungeons, the first `arg` is the route chosen by this player.
     #[brw(magic = 0x10000002u32)]

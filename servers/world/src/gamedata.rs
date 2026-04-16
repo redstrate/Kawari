@@ -14,6 +14,7 @@ use icarus::ContentDirectorManagedSG::ContentDirectorManagedSGSheet;
 use icarus::ContentFinderCondition::ContentFinderConditionSheet;
 use icarus::CraftAction::CraftActionSheet;
 use icarus::CustomTalk::CustomTalkSheet;
+use icarus::ENpcBase::ENpcBaseSheet;
 use icarus::EObj::EObjSheet;
 use icarus::Emote::EmoteSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
@@ -83,6 +84,7 @@ pub struct GameData {
     pub base_param_sheet: BaseParamSheet,
     pub classjob_sheet: ClassJobSheet,
     pub battalion_sheet: BattalionSheet,
+    pub enpc_base_sheet: ENpcBaseSheet,
 }
 
 impl Default for GameData {
@@ -305,6 +307,9 @@ impl GameData {
             .ok()
             .unwrap();
 
+        let enpc_base_sheet =
+            ENpcBaseSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
         Self {
             resource: resource_resolver,
             item_sheet,
@@ -327,6 +332,7 @@ impl GameData {
             base_param_sheet,
             classjob_sheet,
             battalion_sheet,
+            enpc_base_sheet,
         }
     }
 
@@ -742,6 +748,43 @@ impl GameData {
             bnpc_row.Rank(),
             bnpc_row.NpcEquip(),
         ))
+    }
+
+    /// Grabs needed EventNpc information such as their name, model id and more.
+    pub fn find_enpc(&mut self, id: u32) -> Option<(u16, CustomizeData, u16)> {
+        let row = self.enpc_base_sheet.row(id)?;
+        let model_row_id = row.ModelChara();
+
+        let customize = CustomizeData {
+            race: row.Race(),
+            gender: row.Gender(),
+            age: row.BodyType(),
+            height: row.Height(),
+            subrace: row.Tribe(),
+            face: row.Face(),
+            hair: row.HairStyle(),
+            enable_highlights: row.HairHighlight(),
+            skin_tone: row.SkinColor(),
+            right_eye_color: row.EyeColor(),
+            hair_tone: row.HairColor(),
+            highlights: row.HairHighlightColor(),
+            facial_features: row.FacialFeature(),
+            facial_feature_color: row.FacialFeatureColor(),
+            eyebrows: row.Eyebrows(),
+            left_eye_color: row.EyeHeterochromia(),
+            eyes: row.EyeShape(),
+            nose: row.Nose(),
+            jaw: row.Jaw(),
+            mouth: row.Mouth(),
+            lips_tone_fur_pattern: row.LipColor(),
+            race_feature_size: row.BustOrTone1(),
+            race_feature_type: row.ExtraFeature1(),
+            bust: row.ExtraFeature2OrBust(),
+            face_paint: row.FacePaint(),
+            face_paint_color: row.FacePaintColor(),
+        };
+
+        Some((model_row_id, customize, row.NpcEquip()))
     }
 
     /// Gets the content type for the given InstanceContent.

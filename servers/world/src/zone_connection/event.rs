@@ -5,7 +5,7 @@ use crate::{
     event::{EventHandler, dispatch_event},
 };
 use kawari::{
-    common::{CharacterMode, HandlerId, HandlerType, ObjectTypeId},
+    common::{CharacterMode, HandlerId, ObjectTypeId},
     config::get_config,
     ipc::zone::{
         EventResume, EventScene, EventStart, EventType, SceneFlags, ServerZoneIpcData,
@@ -128,13 +128,9 @@ impl ZoneConnection {
 
             true
         } else {
-            let event_handler_type = event_id >> 16;
-
             tracing::warn!(
-                "Event {event_id} ({}) isn't scripted yet! Ignoring...",
-                HandlerType::from_repr(event_handler_type)
-                    .map(|x| format!("{:?}", x))
-                    .unwrap_or(format!("{event_handler_type}"))
+                "Event {:?} isn't scripted yet! Ignoring...",
+                HandlerId(event_id)
             );
 
             // give control back to the player so they aren't stuck

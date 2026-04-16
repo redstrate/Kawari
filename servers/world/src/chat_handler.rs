@@ -7,7 +7,9 @@ use crate::{
     inventory::{Item, Storage},
 };
 use kawari::{
-    common::{ERR_INVENTORY_ADD_FAILED, FateState, ObjectTypeId},
+    common::{
+        DirectorEvent, ERR_INVENTORY_ADD_FAILED, FateState, HandlerId, HandlerType, ObjectTypeId,
+    },
     ipc::zone::{
         ActorControlCategory, Condition, Conditions, GameMasterRank, ServerZoneIpcData,
         ServerZoneIpcSegment,
@@ -270,6 +272,38 @@ impl ChatHandler {
                         }))
                         .await;
                 }
+
+                true
+            }
+            "!gate" => {
+                connection
+                    .send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::NpcYell {
+                        object_id: ObjectTypeId::default(),
+                        name_id: 1010448,
+                        npc_yell_id: 2450,
+                        param1: 3,
+                        param2: 7,
+                        param3: 0,
+                        param4: 0,
+                    }))
+                    .await;
+
+                connection
+                    .actor_control_self(ActorControlCategory::InitDirector {
+                        handler_id: HandlerId::new(HandlerType::GoldSaucer, 1319),
+                        content_id: 10,
+                        flags: 0,
+                    })
+                    .await;
+
+                connection
+                    .actor_control_self(ActorControlCategory::DirectorEvent {
+                        handler_id: HandlerId::new(HandlerType::GoldSaucer, 1319),
+                        event: DirectorEvent::Unknown(11),
+                        arg1: 3,
+                        arg2: 0,
+                    })
+                    .await;
 
                 true
             }

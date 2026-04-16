@@ -1158,6 +1158,53 @@ async fn process_packet(
                                                 ))
                                                 .await;
                                         }
+                                        DirectorTrigger::GoldSaucerUnk1 => {
+                                            // dummied out
+                                        }
+                                        DirectorTrigger::GoldSaucerUnk2 => {
+                                            // hardcoded for now
+
+                                            connection
+                                                .actor_control_self(
+                                                    ActorControlCategory::DirectorEvent {
+                                                        handler_id,
+                                                        event: DirectorEvent::Unknown(9),
+                                                        arg1: 74,
+                                                        arg2: 1,
+                                                    },
+                                                )
+                                                .await;
+
+                                            connection
+                                                .actor_control_self(
+                                                    ActorControlCategory::DirectorEvent {
+                                                        handler_id,
+                                                        event: DirectorEvent::Unknown(6),
+                                                        arg1: 7773571, // TODO: hardcoded to the air force one attendant for now
+                                                        arg2: 1775917801,
+                                                    },
+                                                )
+                                                .await;
+
+                                            connection
+                                                .actor_control_self(
+                                                    ActorControlCategory::DirectorEvent {
+                                                        handler_id,
+                                                        event: DirectorEvent::Unknown(11),
+                                                        arg1: 3,
+                                                        arg2: 0,
+                                                    },
+                                                )
+                                                .await;
+
+                                            connection
+                                                .handle
+                                                .send(ToServer::SpawnLayoutNpc(
+                                                    connection.player_data.character.actor_id,
+                                                    7773571, // TODO: hardcoded to airforce one NPC for now
+                                                ))
+                                                .await;
+                                        }
                                         _ => tracing::info!(
                                             "DirectorTrigger: {handler_id} {trigger:?} {arg}"
                                         ),
