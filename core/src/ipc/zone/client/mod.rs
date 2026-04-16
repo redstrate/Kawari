@@ -603,7 +603,9 @@ pub enum ClientZoneIpcData {
         position: Position,
     },
     PlaceFurniture {
-        unk1: [u8; 8], // zeroes?
+        /// Likely the plot upon which this furniture was placed. When indoors, this should be zero.
+        plot_index: u8,
+        unk1: [u8; 7], // Zeroes? Haven't seen it change yet.
         /// The container the furniture item came from.
         container: ContainerType,
         /// The slot the item came from.
