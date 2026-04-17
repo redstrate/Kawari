@@ -307,6 +307,40 @@ impl ChatHandler {
 
                 true
             }
+            "!ofbg" => {
+                let parts: Vec<&str> = chat_message.split(' ').collect();
+
+                // TODO: Should we reject doing this if it's attempted from other types of content?
+                // Ocean fishing uses "festival" ids of 101 & 102, set when entering the zone, but it's more convenient to set it in this command for the time being
+                connection
+                    .actor_control_self(ActorControlCategory::SetFestival {
+                        festival1: 101,
+                        festival2: 102,
+                        festival3: 0,
+                        festival4: 0,
+                    })
+                    .await;
+                // The director sends this with a background arg and a "phase" arg when the scenery needs to change. See the IKDSpot sheet for arg1 values (the row number should be increased by 1, so Kugane Coast would be 10, not 9).
+                connection
+                    .actor_control_self(ActorControlCategory::DirectorEvent {
+                        handler_id: connection.content_handler_id,
+                        event: DirectorEvent::Unknown(2),
+                        arg1: parts
+                            .get(1)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
+                        arg2: parts
+                            .get(2)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
+                    })
+                    .await;
+                true
+            }
             _ => false,
         }
     }

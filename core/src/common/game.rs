@@ -405,6 +405,7 @@ impl HandlerType {
             TerritoryIntendedUse::OpenWorldInstanceBattle => Some(Self::QuestBattle),
             TerritoryIntendedUse::LeapOfFaith => Some(Self::PublicContent),
             TerritoryIntendedUse::GoldSaucer => Some(Self::GoldSaucer),
+            TerritoryIntendedUse::OceanFishing => Some(Self::InstanceContent),
             _ => None,
         }
     }

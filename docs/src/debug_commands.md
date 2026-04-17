@@ -20,6 +20,7 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!mount <id/name>` | Allows you to mount in any zone, on the specified mount ID/name. |
 | `!monies` | Give a unreasonable amount of some currencies. |
 | `!nudge <distance> <up/down (optional)>` | Teleport forward, back, up or down `distance` yalms. Specifying up or down will move the player up or down instead of forward or back. |
+| `!ofbg <id> <phase (optional)>` | Sets the background scenery to the given `id` during Ocean Fishing content. For a list of ids, refer to the `IKDSpot` Excel sheet. Changing `phase` doesn't seem to do much, but you can try it out here. |
 | `!reload` | Reloads `Global.lua` that is normally only loaded once at start-up. |
 | `!unlock <id>` | Unlock an action, emote, etc. for example: `1` for Return and `4` for Teleport. |
 | `!unlockbuddyequip <id>` | Unlocks the specified BuddyEquip (Companion Barding) ID. |
