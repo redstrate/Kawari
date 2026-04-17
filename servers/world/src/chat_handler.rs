@@ -320,7 +320,7 @@ impl ChatHandler {
                         festival4: 0,
                     })
                     .await;
-                    // The director sends this even with a background arg and a "phase" arg when the scenery needs to change. See the IKDSpot sheet for arg1 values (the row number should be increased by 1, so Kugane Coast would be 10, not 9).
+                // The director sends this with a background arg and a "phase" arg when the scenery needs to change. See the IKDSpot sheet for arg1 values (the row number should be increased by 1, so Kugane Coast would be 10, not 9).
                 connection
                     .actor_control_self(ActorControlCategory::DirectorEvent {
                         handler_id: connection.content_handler_id,
