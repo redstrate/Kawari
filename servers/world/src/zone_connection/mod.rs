@@ -431,7 +431,7 @@ impl ZoneConnection {
 
     pub async fn send_grand_company_info(&mut self) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::GrandCompanyInfo {
-            active_company_id: self.player_data.grand_company.active_company as u8,
+            active_company_id: self.player_data.grand_company.active_company,
             maelstrom_rank: self.grand_company_rank(IpcGrandCompany::Maelstrom).unwrap(),
             twin_adder_rank: self.grand_company_rank(IpcGrandCompany::Adders).unwrap(),
             immortal_flames_rank: self.grand_company_rank(IpcGrandCompany::Flames).unwrap(),

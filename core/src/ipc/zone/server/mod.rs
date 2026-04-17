@@ -494,7 +494,7 @@ pub enum ServerZoneIpcData {
     },
     GrandCompanyInfo {
         /// Which Grand Company this player is affiliated with.
-        active_company_id: u8,
+        active_company_id: GrandCompany,
         /// Maelstrom rank.
         maelstrom_rank: u8,
         /// Twin Adder rank.
