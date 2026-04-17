@@ -28,6 +28,7 @@ pub enum ConnectionType {
     /// The lobby connection.
     Lobby = 0x3,
     /// A custom internal connection for use between Kawari servers.
+    #[doc(hidden)]
     KawariIpc = 0xAAAA,
 }
 
