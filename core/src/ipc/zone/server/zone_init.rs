@@ -52,7 +52,7 @@ impl Default for ZoneInitFlags {
 }
 
 #[binrw]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ZoneInit {
     /// This is the internal server ID. *Not* the World's ID.
     /// This seems to be just for informational purposes, and doesn't affect anything functionally. Always the same as the `server_id` in `IpcSegment`.
@@ -67,24 +67,27 @@ pub struct ZoneInit {
     pub transition_territory_filter_key: u32,
     /// Refers to an instance ID in this zone.
     pub pop_range_id: u32,
-    #[brw(pad_after = 1)]
+    #[brw(pad_after = 1)] // empty
     /// Index into the Weather Excel sheet.
     // NOTE: Currently it's read as a byte, however it's more than likely going to change into a u16 in the future.
     pub weather_id: u8,
     /// Various flags that can be set.
     pub flags: ZoneInitFlags,
     /// Unknown purpose, seems to always be 170 for me. 168 in instanced areas.
-    pub unk_bitmask1: u8,
+    pub unk1: u8,
     /// Seems to only matter for content replay.
+    #[brw(pad_after = 2)] // empty in every ZoneInit I've seen, and not read by the client.
     pub input_timer_related: u8,
-    pub unk7: [u8; 6],
-    pub unk8: f32,
+    /// Unknown (assumed) float.
+    pub unk2: f32,
+    /// Unknown (assumed) float.
+    pub unk3: f32,
     /// Index into the WorldDCGroupType Excel sheet.
     pub ranked_crystalline_conflict_hosting_data_center_id: u32,
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]
+    #[brw(pad_after = 1)] // empty in every ZoneInit I've seen, and not read by the client.
     pub is_limited_time_bonus_active: bool,
-    pub unk10: [u8; 1],
     /// Saved to GameMain on the client, used by various systems like LayoutManager, WeatherManager, EventHandlers etc. for how things should look.
     pub game_festival_ids: [u16; 8],
     /// Phases for festivals defined in `game_festival_ids`.
@@ -92,11 +95,11 @@ pub struct ZoneInit {
     /// Saved to PlayerState on the client, used by UI systems like ContentsFinder, AgentHalloweenNpcSelect, AgentFriendlist (for "Invite Friend to Return") and lua scripts for what options should be displayed.
     pub ui_festival_ids: [u16; 8],
     /// Phases for festivals defined in `ui_festival_ids`.
+    #[brw(pad_after = 2)] // empty in every ZoneInit I've seen, and not read by the client.
     pub ui_festival_phases: [u16; 8],
-    pub unk8_9: [u8; 2],
     /// This gives a hint to level streaming so it can preload this area.
     pub position: Position,
-    #[brw(pad_after = 1)]
+    #[brw(pad_after = 1)] // empty
     pub content_roulette_bonuses: [u8; 11],
     pub penalty_timestamps: [i32; 2],
 }
@@ -120,12 +123,35 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let init_zone = ZoneInit::read_le(&mut buffer).unwrap();
-        assert_eq!(init_zone.server_id, 17);
-        assert_eq!(init_zone.territory_type, 144);
-        assert_eq!(init_zone.instance_id, 0);
-        assert_eq!(init_zone.weather_id, 2);
-        assert_eq!(init_zone.position.x, -33.66853);
-        assert_eq!(init_zone.position.y, 0.044279873);
-        assert_eq!(init_zone.position.z, 12.595009);
+        assert_eq!(
+            init_zone,
+            ZoneInit {
+                server_id: 17,
+                territory_type: 144,
+                instance_id: 0,
+                content_finder_condition_id: 0,
+                transition_territory_filter_key: 0,
+                pop_range_id: 0,
+                weather_id: 2,
+                flags: ZoneInitFlags::INITIAL_LOGIN,
+                unk1: 170,
+                input_timer_related: 0,
+                unk2: 8.59375,
+                unk3: 1.0,
+                ranked_crystalline_conflict_hosting_data_center_id: 5,
+                is_limited_time_bonus_active: false,
+                game_festival_ids: [165, 0, 0, 0, 0, 0, 0, 0],
+                game_festival_phases: [0, 0, 0, 0, 0, 0, 0, 0],
+                ui_festival_ids: [165, 0, 0, 0, 0, 0, 0, 0],
+                ui_festival_phases: [0, 0, 0, 0, 0, 0, 0, 0],
+                position: Position {
+                    x: -33.66853,
+                    y: 0.044279873,
+                    z: 12.595009
+                },
+                content_roulette_bonuses: [0, 1, 1, 4, 4, 1, 2, 1, 1, 4, 1],
+                penalty_timestamps: [0, 0]
+            }
+        );
     }
 }
