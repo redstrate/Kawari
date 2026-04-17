@@ -1,5 +1,5 @@
 ServerZoneIpcType:
-  - name: InitZone
+  - name: ZoneInit
     comment: Inform the client which zone to load, along with some other miscellaneous information.
     opcode: 754
     size: 136

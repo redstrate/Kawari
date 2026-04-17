@@ -100,6 +100,11 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
         input.festival1.unwrap_or(1),
         input.festival2.unwrap_or(2),
         input.festival3.unwrap_or(3),
+        // TODO: expose these in the UI
+        0,
+        0,
+        0,
+        0,
     ];
 
     if let Some(world) = input.world {

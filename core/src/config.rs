@@ -343,7 +343,7 @@ pub struct WorldConfig {
 
     /// The active festivals.
     #[serde(default = "WorldConfig::default_active_festivals")]
-    pub active_festivals: [u16; 4],
+    pub active_festivals: [u16; 8],
 
     /// Whether the World should accept new characters.
     #[serde(default = "WorldConfig::default_accept_new_characters")]
@@ -411,8 +411,8 @@ impl WorldConfig {
         true
     }
 
-    fn default_active_festivals() -> [u16; 4] {
-        [0; 4]
+    fn default_active_festivals() -> [u16; 8] {
+        [0; 8]
     }
 
     fn default_accept_new_characters() -> bool {

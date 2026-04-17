@@ -1,20 +1,20 @@
 use binrw::binrw;
 use bitflags::bitflags;
 
-use crate::common::Position;
+use crate::common::{Position, read_bool_from, write_bool_as};
 
 #[binrw]
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct InitZoneFlags(pub u16);
+pub struct ZoneInitFlags(pub u16);
 
-impl std::fmt::Debug for InitZoneFlags {
+impl std::fmt::Debug for ZoneInitFlags {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         bitflags::parser::to_writer(self, f)
     }
 }
 
 bitflags! {
-    impl InitZoneFlags : u16 {
+    impl ZoneInitFlags : u16 {
         /// No flags.
         const NONE = 0x000;
 
@@ -45,7 +45,7 @@ bitflags! {
     }
 }
 
-impl Default for InitZoneFlags {
+impl Default for ZoneInitFlags {
     fn default() -> Self {
         Self::NONE
     }
@@ -53,8 +53,9 @@ impl Default for InitZoneFlags {
 
 #[binrw]
 #[derive(Debug, Clone, Default)]
-pub struct InitZone {
-    /// This is the internal server ID. (*Not* the World ID.) This seems to be just for informational purposes, and doesn't affect anything functionally. Always the same as the `server_id` in `IpcSegment`.
+pub struct ZoneInit {
+    /// This is the internal server ID. *Not* the World's ID.
+    /// This seems to be just for informational purposes, and doesn't affect anything functionally. Always the same as the `server_id` in `IpcSegment`.
     pub server_id: u16,
     /// Index into the TerritoryType Excel sheet.
     pub territory_type: u16,
@@ -62,35 +63,42 @@ pub struct InitZone {
     pub instance_id: u16,
     /// Index into the ContentFinderCondition Excel sheet.
     pub content_finder_condition_id: u16,
-    /// Uses the ambient sound from this row in the TerritoryIntendedUse Excel sheet. Isn't used for anything else.
-    pub ambient_territory_intended_use: u32,
-    /// Unknown purpose.
-    pub unk_setter: u32,
+    /// Uses the ambient sound from this row in the TerritoryIntendedUse Excel sheet. Isn't used for anything else I think.
+    pub transition_territory_filter_key: u32,
+    /// Refers to an instance ID in this zone.
+    pub pop_range_id: u32,
     #[brw(pad_after = 1)]
     /// Index into the Weather Excel sheet.
-    /// NOTE: Currently it's read as a byte, however it's more than likely going to change into a u16 in the future.
+    // NOTE: Currently it's read as a byte, however it's more than likely going to change into a u16 in the future.
     pub weather_id: u8,
     /// Various flags that can be set.
-    pub flags: InitZoneFlags,
+    pub flags: ZoneInitFlags,
     /// Unknown purpose, seems to always be 170 for me. 168 in instanced areas.
     pub unk_bitmask1: u8,
     /// Seems to only matter for content replay.
     pub input_timer_related: u8,
-    pub unk7: [u8; 16],
-    /// Might be the festivals active in the current zone? Unsure.
-    pub festivals_id1: [u16; 4],
-    pub festivals_phase1: [u16; 4],
-    pub festivals_unk1: [u16; 8],
-    /// Might be festivals active on the current server? Unsure.
-    pub festivals_id2: [u16; 4],
-    pub festivals_phase2: [u16; 4],
-    pub festivals_unk2: [u16; 8],
+    pub unk7: [u8; 6],
+    pub unk8: f32,
+    /// Index into the WorldDCGroupType Excel sheet.
+    pub ranked_crystalline_conflict_hosting_data_center_id: u32,
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub is_limited_time_bonus_active: bool,
+    pub unk10: [u8; 1],
+    /// Saved to GameMain on the client, used by various systems like LayoutManager, WeatherManager, EventHandlers etc. for how things should look.
+    pub game_festival_ids: [u16; 8],
+    /// Phases for festivals defined in `game_festival_ids`.
+    pub game_festival_phases: [u16; 8],
+    /// Saved to PlayerState on the client, used by UI systems like ContentsFinder, AgentHalloweenNpcSelect, AgentFriendlist (for "Invite Friend to Return") and lua scripts for what options should be displayed.
+    pub ui_festival_ids: [u16; 8],
+    /// Phases for festivals defined in `ui_festival_ids`.
+    pub ui_festival_phases: [u16; 8],
     pub unk8_9: [u8; 2],
     /// This gives a hint to level streaming so it can preload this area.
     pub position: Position,
-    #[br(count = 20)]
-    #[bw(pad_size_to = 20)]
-    pub unk_end: Vec<u8>,
+    #[brw(pad_after = 1)]
+    pub content_roulette_bonuses: [u8; 11],
+    pub penalty_timestamps: [i32; 2],
 }
 
 #[cfg(test)]
@@ -111,7 +119,7 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let init_zone = InitZone::read_le(&mut buffer).unwrap();
+        let init_zone = ZoneInit::read_le(&mut buffer).unwrap();
         assert_eq!(init_zone.server_id, 17);
         assert_eq!(init_zone.territory_type, 144);
         assert_eq!(init_zone.instance_id, 0);

@@ -1117,7 +1117,7 @@ pub async fn server_main_loop(
                     if let Some(city_state) = city_state_opening {
                         // If spawning for the initial opening, we need to spawn them at this pop range *as soon as possible*
                         // The reason being is that this helps loading times and the initial camera rotation.
-                        // Doing it in the opening Lua script happens far too late, as EnterTerritoryEvent will only be fired after InitZone is sent.
+                        // Doing it in the opening Lua script happens far too late, as EnterTerritoryEvent will only be fired after ZoneInit is sent.
                         if let Some((object, _)) = instance
                             .zone
                             .find_pop_range(determine_initial_pop_range(city_state))

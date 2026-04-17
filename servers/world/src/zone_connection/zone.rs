@@ -13,8 +13,8 @@ use kawari::{
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
         ActorControlCategory, Condition, ContentRegistrationFlags, FurnitureList, House,
-        HouseExterior, HouseList, HouseStatus, HousingInteriorDetails, InitZone, InitZoneFlags,
-        PlotSize, ServerZoneIpcData, ServerZoneIpcSegment, WarpType, WeatherChange,
+        HouseExterior, HouseList, HouseStatus, HousingInteriorDetails, PlotSize, ServerZoneIpcData,
+        ServerZoneIpcSegment, WarpType, WeatherChange, ZoneInit, ZoneInitFlags,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
 };
@@ -123,7 +123,7 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
-        // Send owned housing list (unsure where this fits in before InitZone?!)
+        // Send owned housing list (unsure where this fits in before ZoneInit?!)
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::OwnedHousing {
                 unk1: Default::default(),
@@ -166,24 +166,24 @@ impl ZoneConnection {
         // Init Zone
         {
             let mut flags = if initial_login {
-                InitZoneFlags::INITIAL_LOGIN
+                ZoneInitFlags::INITIAL_LOGIN
             } else if bound_by_duty {
-                InitZoneFlags::UNK1 | InitZoneFlags::UNK3
+                ZoneInitFlags::UNK1 | ZoneInitFlags::UNK3
             } else {
-                InitZoneFlags::default()
+                ZoneInitFlags::default()
             };
 
             if !bound_by_duty {
-                flags |= InitZoneFlags::ENABLE_FLYING;
+                flags |= ZoneInitFlags::ENABLE_FLYING;
             }
 
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitZone(InitZone {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ZoneInit(ZoneInit {
                 territory_type: new_zone_id,
                 weather_id: weather_id as u8,
                 flags,
                 content_finder_condition_id,
-                festivals_id1: config.world.active_festivals,
-                festivals_id2: config.world.active_festivals,
+                game_festival_ids: config.world.active_festivals,
+                ui_festival_ids: config.world.active_festivals,
                 ..Default::default()
             }));
             self.send_ipc_self(ipc).await;

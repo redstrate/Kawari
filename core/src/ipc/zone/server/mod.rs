@@ -27,8 +27,8 @@ pub use actor_control::{
     ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, LiveEventType,
 };
 
-mod init_zone;
-pub use init_zone::{InitZone, InitZoneFlags};
+mod zone_init;
+pub use zone_init::{ZoneInit, ZoneInitFlags};
 
 mod spawn_npc;
 pub use spawn_npc::{CharacterDataFlag, SpawnNpc};
@@ -201,7 +201,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_before = 8, pad_after = 4)] // empty
         actor_id: ObjectId,
     },
-    InitZone(InitZone),
+    ZoneInit(ZoneInit),
     ActorControlSelf(ActorControlSelf),
     PlayerStats(PlayerStats),
     PlayerSetup(PlayerSetup),
