@@ -31,21 +31,21 @@ pub enum HouseStatus {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct HouseExterior {
     /// The roof's style.
-    pub roof: u16,
+    pub roof_id: u16,
     /// The walls' style.
-    pub walls: u16,
+    pub walls_id: u16,
     /// The windows' style.
-    pub windows: u16,
+    pub windows_id: u16,
     // The front door's style.
-    pub door: u16,
+    pub door_id: u16,
     /// The roof's fixture, like a chimney.
-    pub roof_fixture: u16,
+    pub roof_fixture_id: u16,
     /// Exterior wall fixture, like an awning.
-    pub wall_fixture: u16,
+    pub wall_fixture_id: u16,
     /// The flag/banner/crest that resides above the front door.
-    pub above_door_banner: u16,
+    pub above_door_banner_id: u16,
     /// The perimeter fence's style.
-    pub fence: u16,
+    pub fence_id: u16,
     /// All of the above's dyes/stains info.
     pub colors: HouseExteriorColors,
 }

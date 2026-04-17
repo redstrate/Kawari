@@ -231,10 +231,10 @@ impl ZoneConnection {
                 status: HouseStatus::HouseBuilt,
                 flags: HousingFlag::OPEN,
                 exterior: HouseExterior {
-                    roof: 1029,
-                    walls: 3589,
-                    windows: 2562,
-                    door: 514,
+                    roof_id: 1029,
+                    walls_id: 3589,
+                    windows_id: 2562,
+                    door_id: 514,
                     ..Default::default()
                 },
                 ..Default::default()
@@ -246,10 +246,10 @@ impl ZoneConnection {
                 status: HouseStatus::HouseBuilt,
                 flags: HousingFlag::OPEN,
                 exterior: HouseExterior {
-                    roof: 1081,
-                    walls: 3632,
-                    windows: 2579,
-                    door: 531,
+                    roof_id: 1081,
+                    walls_id: 3632,
+                    windows_id: 2579,
+                    door_id: 531,
                     ..Default::default()
                 },
                 ..Default::default()
@@ -261,10 +261,10 @@ impl ZoneConnection {
                 status: HouseStatus::HouseBuilt,
                 flags: HousingFlag::OPEN | HousingFlag::OWNED_BY_FC,
                 exterior: HouseExterior {
-                    roof: 1136,
-                    walls: 3687,
-                    windows: 2598,
-                    door: 550,
+                    roof_id: 1136,
+                    walls_id: 3687,
+                    windows_id: 2598,
+                    door_id: 550,
                     ..Default::default()
                 },
                 ..Default::default()
