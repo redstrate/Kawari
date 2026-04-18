@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::body::Body;
-use axum::extract::{Multipart, Query, State};
+use axum::extract::{DefaultBodyLimit, Multipart, Query, State};
 use axum::http::Response;
 use axum::response::{Html, IntoResponse, Redirect};
 use axum::routing::post;
@@ -562,7 +562,8 @@ async fn main() {
         .route("/account/app/svc/login_revoke", post(revoke_sid))
         .with_state(state)
         .nest_service("/static", ServeDir::new(web_static_dir!("")))
-        .layer(cors);
+        .layer(cors)
+        .layer(DefaultBodyLimit::max(536870912)); // 512 MiB
 
     let addr = config.login.get_socketaddr();
     tracing::info!("Server started on {addr}");

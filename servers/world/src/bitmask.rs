@@ -121,6 +121,14 @@ impl<const N: usize, T: BitmaskTransformation + std::fmt::Debug> GenericBitmask<
     pub fn set_all(&mut self) {
         self.data = vec![0xFF; N];
     }
+
+    /// Returns the of this bitmask but with the correct size.
+    pub fn data_truncated(&self) -> Vec<u8> {
+        let mut data = self.data.clone();
+        data.resize(N, 0);
+
+        data
+    }
 }
 
 pub type Bitmask<const N: usize> = GenericBitmask<N, NormalBitmaskTransformation>;
