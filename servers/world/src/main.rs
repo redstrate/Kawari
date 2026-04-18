@@ -4,7 +4,7 @@ use std::time::{Instant, SystemTime};
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    ContainerType, DirectorEvent, DirectorTrigger, DutyOption, HandlerId, HandlerType,
+    ContainerType, DirectorEvent, DirectorTrigger, DutyOption, FestivalId, HandlerId, HandlerType,
     ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind, PlayerStateFlags1,
     PlayerStateFlags2, PlayerStateFlags3, Position, calculate_max_level,
 };
@@ -867,6 +867,10 @@ async fn process_packet(
                                             .data
                                             .clone(),
                                         can_do_triple_triad_matches: true,
+                                        ui_festival_ids: config
+                                            .world
+                                            .active_festivals
+                                            .map(FestivalId),
                                         ..Default::default()
                                     }),
                                 );
