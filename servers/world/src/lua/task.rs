@@ -43,7 +43,7 @@ pub enum LuaTask {
         level: u16,
     },
     ChangeWeather {
-        id: u16,
+        id: u8,
     },
     ModifyCurrency {
         id: CurrencyKind,

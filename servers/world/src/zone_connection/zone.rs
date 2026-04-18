@@ -487,10 +487,11 @@ impl ZoneConnection {
             .await;
     }
 
-    pub async fn change_weather(&mut self, new_weather_id: u16) {
+    pub async fn change_weather(&mut self, new_weather_id: u8) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::WeatherId(WeatherChange {
             weather_id: new_weather_id,
-            transistion_time: 1.0,
+            daytime_fade_length: 1.0,
+            ..Default::default()
         }));
         self.send_ipc_self(ipc).await;
     }

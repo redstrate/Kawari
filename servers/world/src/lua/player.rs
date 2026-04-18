@@ -193,7 +193,7 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::SetLevel { level });
     }
 
-    fn change_weather(&mut self, id: u16) {
+    fn change_weather(&mut self, id: u8) {
         self.queued_tasks.push(LuaTask::ChangeWeather { id });
     }
 
@@ -710,7 +710,7 @@ impl UserData for LuaPlayer {
             this.set_level(level);
             Ok(())
         });
-        methods.add_method_mut("change_weather", |_, this, id: u16| {
+        methods.add_method_mut("change_weather", |_, this, id: u8| {
             this.change_weather(id);
             Ok(())
         });
