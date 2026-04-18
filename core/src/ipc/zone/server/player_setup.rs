@@ -143,8 +143,8 @@ pub struct PlayerSetup {
     #[br(count = CLASSJOB_ARRAY_SIZE)]
     #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 2)]
     pub levels: Vec<u16>,
-    pub active_festivals: [u16; 8],
-    pub active_festival_phases: [u16; 8],
+    pub ui_festival_ids: [u16; 8],
+    pub ui_festival_phases: [u16; 8],
     #[br(count = 232)]
     #[bw(pad_size_to = 232)]
     pub unknown194: Vec<u8>,
