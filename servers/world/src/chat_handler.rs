@@ -341,6 +341,15 @@ impl ChatHandler {
                     .await;
                 true
             }
+            "!settime" => {
+                // TODO: Figure out how UTC is converted to Eorzean time and make this friendly by allowing for strings such as "6:30PM" or "18:30"
+                // TODO: Write the GM command equivalent which would just set the time offset directly as an i64/u64 (whichever this actually is)
+                let val = chat_message.split_once(' ').unwrap();
+                let val = val.1.parse::<i64>().unwrap();
+                connection.set_eorzean_time(val).await;
+
+                true
+            }
             _ => false,
         }
     }

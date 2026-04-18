@@ -1412,6 +1412,9 @@ pub enum ServerZoneIpcData {
         #[bw(map = write_string)]
         name: String,
     },
+    EorzeanTimeOffset {
+        offset: i64, // TODO: Not 100% sure this is an i64, but setting it to negative values does make the time to go back to an extent.
+    },
 }
 
 #[cfg(test)]

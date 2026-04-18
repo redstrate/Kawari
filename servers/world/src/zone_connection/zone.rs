@@ -540,4 +540,11 @@ impl ZoneConnection {
                 .await;
         }
     }
+
+    pub async fn set_eorzean_time(&mut self, offset: i64) {
+        self.send_ipc_self(ServerZoneIpcSegment::new(
+            ServerZoneIpcData::EorzeanTimeOffset { offset },
+        ))
+        .await;
+    }
 }
