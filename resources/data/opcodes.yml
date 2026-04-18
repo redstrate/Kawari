@@ -723,6 +723,10 @@ ServerZoneIpcType:
     comment: The server informs the client about a piece of furniture that was placed in the current housing ward.
     opcode: 227
     size: 32
+  - name: EorzeanTimeOffset
+    comment: Probably a GM-only opcode, it sets the time of day in the current zone.
+    opcode: 285
+    size: 8
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
