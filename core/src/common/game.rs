@@ -8,7 +8,9 @@ use physis::TerritoryIntendedUse;
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumIter, FromRepr};
 
-use crate::{constants::BASE_INVENTORY_ACTION, ipc::zone::ContentRegistrationFlags};
+use crate::{
+    constants::BASE_INVENTORY_ACTION, festivals::festival_name, ipc::zone::ContentRegistrationFlags,
+};
 
 /// Maxmimum length of a character's name.
 pub const CHAR_NAME_MAX_LENGTH: usize = 32;
@@ -1175,6 +1177,21 @@ impl Default for HousingFlag {
 impl std::fmt::Debug for HousingFlag {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         bitflags::parser::to_writer(self, f)
+    }
+}
+
+#[binrw]
+#[brw(little)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct FestivalId(pub u16);
+
+impl std::fmt::Debug for FestivalId {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str(&format!(
+            "{} ({})",
+            festival_name(self.0).unwrap_or("Unknown Festival"),
+            self.0
+        ))
     }
 }
 

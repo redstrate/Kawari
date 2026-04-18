@@ -1,7 +1,7 @@
 use binrw::binrw;
 use bitflags::bitflags;
 
-use crate::common::{Position, read_bool_from, write_bool_as};
+use crate::common::{FestivalId, Position, read_bool_from, write_bool_as};
 
 #[binrw]
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -89,11 +89,11 @@ pub struct ZoneInit {
     #[brw(pad_after = 1)] // empty in every ZoneInit I've seen, and not read by the client.
     pub is_limited_time_bonus_active: bool,
     /// Saved to GameMain on the client, used by various systems like LayoutManager, WeatherManager, EventHandlers etc. for how things should look.
-    pub game_festival_ids: [u16; 8],
+    pub game_festival_ids: [FestivalId; 8],
     /// Phases for festivals defined in `game_festival_ids`.
     pub game_festival_phases: [u16; 8],
     /// Saved to PlayerState on the client, used by UI systems like ContentsFinder, AgentHalloweenNpcSelect, AgentFriendlist (for "Invite Friend to Return") and lua scripts for what options should be displayed.
-    pub ui_festival_ids: [u16; 8],
+    pub ui_festival_ids: [FestivalId; 8],
     /// Phases for festivals defined in `ui_festival_ids`.
     #[brw(pad_after = 2)] // empty in every ZoneInit I've seen, and not read by the client.
     pub ui_festival_phases: [u16; 8],
@@ -140,9 +140,9 @@ mod tests {
                 unk3: 1.0,
                 ranked_crystalline_conflict_hosting_data_center_id: 5,
                 is_limited_time_bonus_active: false,
-                game_festival_ids: [165, 0, 0, 0, 0, 0, 0, 0],
+                game_festival_ids: [165, 0, 0, 0, 0, 0, 0, 0].map(|x| FestivalId(x)),
                 game_festival_phases: [0, 0, 0, 0, 0, 0, 0, 0],
-                ui_festival_ids: [165, 0, 0, 0, 0, 0, 0, 0],
+                ui_festival_ids: [165, 0, 0, 0, 0, 0, 0, 0].map(|x| FestivalId(x)),
                 ui_festival_phases: [0, 0, 0, 0, 0, 0, 0, 0],
                 position: Position {
                     x: -33.66853,

@@ -16,6 +16,9 @@ pub mod constants;
 #[rustfmt::skip]
 #[doc(hidden)]
 pub mod opcodes;
+#[rustfmt::skip]
+#[doc(hidden)]
+pub mod festivals;
 
 /// IPC
 pub mod ipc;

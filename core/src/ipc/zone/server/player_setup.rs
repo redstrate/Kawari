@@ -2,8 +2,8 @@ use binrw::binrw;
 
 use crate::{
     common::{
-        ObjectId, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, read_bool_from,
-        read_string, write_bool_as, write_string,
+        FestivalId, ObjectId, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3,
+        read_bool_from, read_string, write_bool_as, write_string,
     },
     constants::{
         ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
@@ -143,7 +143,7 @@ pub struct PlayerSetup {
     #[br(count = CLASSJOB_ARRAY_SIZE)]
     #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 2)]
     pub levels: Vec<u16>,
-    pub ui_festival_ids: [u16; 8],
+    pub ui_festival_ids: [FestivalId; 8],
     pub ui_festival_phases: [u16; 8],
     #[br(count = 232)]
     #[bw(pad_size_to = 232)]

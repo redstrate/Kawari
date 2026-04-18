@@ -1,6 +1,7 @@
 # Auto-generated stuff
 core/src/opcodes.rs
 core/src/constants.rs
+core/src/festivals.rs
 core/src/doc_*.md
 
 # Rust stuff

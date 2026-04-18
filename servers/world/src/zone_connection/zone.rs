@@ -7,7 +7,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        HandlerId, HandlerType, HouseId, HouseUnit, HousingFlag, LandData, Position, timestamp_secs,
+        FestivalId, HandlerId, HandlerType, HouseId, HouseUnit, HousingFlag, LandData, Position,
+        timestamp_secs,
     },
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
@@ -182,8 +183,8 @@ impl ZoneConnection {
                 weather_id: weather_id as u8,
                 flags,
                 content_finder_condition_id,
-                game_festival_ids: config.world.active_festivals,
-                ui_festival_ids: config.world.active_festivals,
+                game_festival_ids: config.world.active_festivals.map(FestivalId),
+                ui_festival_ids: config.world.active_festivals.map(FestivalId),
                 ..Default::default()
             }));
             self.send_ipc_self(ipc).await;
