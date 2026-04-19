@@ -16,9 +16,10 @@ use kawari::ipc::chat::ClientChatIpcData;
 
 use kawari::ipc::zone::{
     ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
-    CrossRealmListings, EventType, ItemInfo, LinkshellInviteResponse, MapEffects, MarketBoardItem,
-    OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType,
-    TrustContent, TrustInformation, WarpType,
+    CrossRealmListings, EventType, FurnitureTranslatedForObserver, ItemInfo,
+    LinkshellInviteResponse, MapEffects, MarketBoardItem, OnlineStatus, OnlineStatusMask,
+    PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType, TrustContent, TrustInformation,
+    WarpType,
 };
 
 use kawari::ipc::zone::{
@@ -1475,6 +1476,15 @@ async fn process_packet(
                                             },
                                         )
                                         .await;
+
+                                    connection
+                                        .broadcast_actor_control(
+                                            ActorControlCategory::InteriorLightLevelForObserver {
+                                                level,
+                                                unk1: unk,
+                                            },
+                                        )
+                                        .await;
                                 }
                                 ClientTriggerCommand::FurnitureMenuToggled { closed } => {
                                     if !closed {
@@ -1582,9 +1592,9 @@ async fn process_packet(
 
                                     // TODO: This probably needs to be networked if the source furniture was placed in the world
                                     connection
-                                        .actor_control_self(
+                                        .broadcast_actor_control(
                                             ActorControlCategory::FurnitureRemovedToInventoryAck {
-                                                unk1: 0, // TODO: unk1 is actually filled with data, it might be an index of some sort
+                                                unk1: slot as u32,
                                                 unk2: 0,
                                                 unk3: 0,
                                                 unk4: 0,
@@ -3234,24 +3244,24 @@ async fn process_packet(
                             // Finally, acknowledge the placement.
                             // TODO: This needs to be networked so other players can see the results
                             // TODO: We need to store the coordinates when things are persistent
-                            // TODO: Outdoor furniture uses a different response opcode, so we need to send the appropriate one!
+                            let indoors = true; // TODO: Logic for outdoors
+                            // TODO: implement dyes...
+                            let stain = 0;
+
                             connection
-                                .send_ipc_self(ServerZoneIpcSegment::new(
-                                    ServerZoneIpcData::InteriorFurniturePlaced {
-                                        storage_id: result.container,
-                                        slot: result.slot,
-                                        catalog_id,
-                                        unk1: 1,
-                                        stain: 0,
-                                        unk2: 0,
-                                        unk3: 0,
-                                        unk4: 0,
-                                        position: *position,
-                                        unk5: [0; 4],
-                                    },
+                                .handle
+                                .send(ToServer::PlaceFurniture(
+                                    connection.player_data.character.actor_id,
+                                    result.container,
+                                    result.slot,
+                                    catalog_id,
+                                    stain,
+                                    *position,
+                                    indoors,
                                 ))
                                 .await;
 
+                            // This ack doesn't need to be networked
                             connection
                                 .actor_control_self(ActorControlCategory::FurniturePlacedAck {
                                     unk1: 0,
@@ -3279,11 +3289,27 @@ async fn process_packet(
                                 unk3
                             );
                             // TODO: We need to store the new coordinates and rotation when making everything persistent!
-                            // TODO: This process needs to be networked!
-                            // TODO: this storage_id is likely wrong!
+                            let indoors = true;
+                            connection
+                                .handle
+                                .send(ToServer::TranslateFurniture(
+                                    connection.player_data.character.actor_id,
+                                    // TODO: Maybe revise sending this tuple, we'll see
+                                    (
+                                        house_id.unit.apartment_flag,
+                                        house_id.unit.apartment_division_plot_index,
+                                    ),
+                                    *slot,
+                                    *position,
+                                    *rotation,
+                                    indoors,
+                                ))
+                                .await;
+
+                            // This ack doesn't need to be networked
                             connection
                                 .actor_control_self(ActorControlCategory::FurnitureTranslatedAck {
-                                    storage_id: ContainerType::HousingInteriorPlacedItems1,
+                                    storage_id: ContainerType::HousingInteriorPlacedItems1, // TODO: This storage_id is wrong!
                                     slot: *slot as u32,
                                     unk1: 0,
                                 })
@@ -3744,6 +3770,49 @@ async fn process_server_msg(
                         vec![cutscene_id, 1, 38, 1, 0],
                     );
                 }
+            }
+            FromServer::FurniturePlaced(
+                storage_id,
+                slot,
+                catalog_id,
+                stain,
+                position,
+                _indoors,
+            ) => {
+                // TODO: needs outdoor logic to send ExteriorFurniturePlaced instead when relevant
+                connection
+                    .send_ipc_self(ServerZoneIpcSegment::new(
+                        ServerZoneIpcData::InteriorFurniturePlaced {
+                            storage_id,
+                            slot,
+                            catalog_id,
+                            unk1: 1,
+                            stain: stain as u16,
+                            unk2: 0,
+                            unk3: 0,
+                            unk4: 0,
+                            position,
+                            unk5: [0; 4],
+                        },
+                    ))
+                    .await;
+            }
+            FromServer::FurnitureTranslated(_plot_info, slot, position, rotation, _indoors) => {
+                // TODO: needs outdoor logic for `plot_and_index`
+                connection
+                    .send_ipc_self(ServerZoneIpcSegment::new(
+                        ServerZoneIpcData::FurnitureTranslatedForObserver(
+                            FurnitureTranslatedForObserver {
+                                rotation,
+                                plot_and_index: slot,
+                                unk1: [0; 2],
+                                position,
+                                unk2: [0; 4],
+                                ..Default::default()
+                            },
+                        ),
+                    ))
+                    .await;
             }
             _ => {
                 tracing::error!(
