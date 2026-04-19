@@ -308,9 +308,11 @@ impl LobbyConnection {
                 service_account_id: self.selected_service_account.unwrap(),
             });
 
-            let name_response = send_custom_world_packet(charlist_request)
-                .await
-                .expect("Failed to get name request packet!");
+            let Some(name_response) = send_custom_world_packet(charlist_request).await else {
+                // "World data could not be obtained. Please try logging in later."
+                self.send_error(sequence, 2002, 13201).await;
+                return;
+            };
             let CustomIpcData::RequestCharacterListResponse { characters } = &name_response.data
             else {
                 panic!("Unexpedted custom IPC type!")
