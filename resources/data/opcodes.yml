@@ -727,6 +727,10 @@ ServerZoneIpcType:
     comment: Probably a GM-only opcode, it sets the time of day in the current zone.
     opcode: 285
     size: 8
+  - name: FurnitureTranslatedForObserver
+    comment: The server informs the client about a piece of furniture being moved/rotated indoors or outdoors. This is only sent to observing clients.
+    opcode: 125
+    size: 24
 ClientZoneIpcType:
   - name: InitRequest
     comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
