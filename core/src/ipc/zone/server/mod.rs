@@ -117,7 +117,9 @@ mod housing_ward;
 pub use housing_ward::{HousingWardInfo, HousingWardSummaryItem};
 
 mod housing_interior_furniture;
-pub use housing_interior_furniture::{Furniture, FurnitureList, HousingInteriorDetails};
+pub use housing_interior_furniture::{
+    Furniture, FurnitureList, FurnitureTranslatedForObserver, HousingInteriorDetails,
+};
 
 mod housing_occupied_land_info;
 pub use housing_occupied_land_info::HousingOccupiedLandInfo;
@@ -1379,7 +1381,7 @@ pub enum ServerZoneIpcData {
         unk2: u16,
         unk3: u16,
         unk4: u16,
-        /// The furniture's position.'
+        /// The furniture's position.
         position: Position,
         unk5: [u8; 4],
     },
@@ -1397,7 +1399,7 @@ pub enum ServerZoneIpcData {
         unk3: [u8; 3], // Likely just padding
         /// The furniture's rotation. Strange, considering that the client cannot rotate an item until after it's placed...
         rotation: f32,
-        /// The furniture's position.'
+        /// The furniture's position.
         position: Position,
         unk5: u32, // Observed as zeroes
     },
@@ -1415,6 +1417,7 @@ pub enum ServerZoneIpcData {
     EorzeanTimeOffset {
         offset: i64, // TODO: Not 100% sure this is an i64, but setting it to negative values does make the time to go back to an extent.
     },
+    FurnitureTranslatedForObserver(FurnitureTranslatedForObserver),
 }
 
 #[cfg(test)]

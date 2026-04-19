@@ -73,6 +73,28 @@ pub struct Furniture {
     pub position: Position,
 }
 
+/// Data sent to a client that observes another client moving or rotating furniture.
+#[binrw]
+#[derive(Clone, Copy, Debug, Default)]
+pub struct FurnitureTranslatedForObserver {
+    /// This furniture's new rotation.
+    pub rotation: f32,
+    /// NOTE: The purpose of `plot_and_index` changes depending on whether this operation is happening indoors or outdoors. When indoors, this value stays as a u16 so that furniture can be addressed beyond an index of 255. When outdoors, it's treated as two separate values: `outdoor_index`, and `plot_number`. See their comments below for more info.
+    pub plot_and_index: u16,
+    /// When outdoors, this byte represents the affected index into the outdoor furniture. This exists mainly for PacketAnalyzer display.
+    #[br(calc = (plot_and_index & 0xFF) as u8)]
+    #[bw(ignore)]
+    pub outdoor_index: u8,
+    /// When outdoors, this byte represents which plot the furniture was moved on. This exists mainly for PacketAnalyzer display.
+    #[br(calc = (plot_and_index >> 8) as u8)]
+    #[bw(ignore)]
+    pub plot_number: u8,
+    pub unk1: [u8; 2], // Likely just padding, observed as zeroes
+    /// This furniture's new position in the world.
+    pub position: Position,
+    pub unk2: [u8; 4], // Likely just padding, observed as zeroes
+}
+
 impl Furniture {
     pub const SIZE: usize = 24;
     pub const COUNT: usize = 100;
