@@ -764,6 +764,15 @@ pub enum ActorControlCategory {
         slot: u32,
     },
 
+    /// The server sets the interior lighting level for an observing client.
+    #[brw(magic = 1034u32)]
+    InteriorLightLevelForObserver {
+        /// The light level set by the resident.
+        level: u32,
+        /// Same unk from the resident's client trigger. It's always 1.
+        unk1: u32,
+    },
+
     /// The server sets the interior lighting level for the client.
     #[brw(magic = 1035u32)]
     InteriorLightLevel {

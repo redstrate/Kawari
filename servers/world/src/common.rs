@@ -11,8 +11,8 @@ use tokio::sync::mpsc::Sender;
 use crate::{StatusEffects, lua::LuaTask, server::Party, zone_connection::BaseParameters};
 use kawari::{
     common::{
-        CharacterMode, JumpState, LogMessageType, MoveAnimationState, MoveAnimationType, ObjectId,
-        ObjectTypeId, Position,
+        CharacterMode, ContainerType, JumpState, LogMessageType, MoveAnimationState,
+        MoveAnimationType, ObjectId, ObjectTypeId, Position,
     },
     ipc::{
         chat::{CWLinkshellMessage, ChatChannelType, PartyMessage, TellMessage},
@@ -223,6 +223,10 @@ pub enum FromServer {
     NewLetterArrived(),
     /// Plays a cutscene from the instance director.
     PlayDirectorCutscene(u32),
+    /// Inform the client that another player has placed a piece of furniture.
+    FurniturePlaced(ContainerType, u16, u16, u8, Position, bool),
+    /// Inform the client that another player has moved or rotated a piece of furniture.
+    FurnitureTranslated((bool, u8), u16, Position, f32, bool),
 }
 
 #[derive(Debug, Clone)]
@@ -450,6 +454,10 @@ pub enum ToServer {
     Call(ObjectId, String),
     /// Spawns an NPC defined by the layout or drop-in.
     SpawnLayoutNpc(ObjectId, u32),
+    /// The client places a piece of furniture.
+    PlaceFurniture(ObjectId, ContainerType, u16, u16, u8, Position, bool),
+    /// The client moves or rotates a piece of furniture.
+    TranslateFurniture(ObjectId, (bool, u8), u16, Position, f32, bool),
 }
 
 #[derive(Clone, Debug)]

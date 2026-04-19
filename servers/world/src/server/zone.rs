@@ -1389,6 +1389,69 @@ pub fn handle_zone_messages(
 
             true
         }
+        ToServer::PlaceFurniture(
+            from_actor_id,
+            container,
+            slot,
+            catalog_id,
+            stain,
+            position,
+            indoors,
+        ) => {
+            let mut network = network.lock();
+            let data = data.lock();
+
+            let Some(instance) = data.find_actor_instance(*from_actor_id) else {
+                return true;
+            };
+
+            let msg = FromServer::FurniturePlaced(
+                *container,
+                *slot,
+                *catalog_id,
+                *stain,
+                *position,
+                *indoors,
+            );
+
+            // We *do* want to include the sender here
+            network.send_in_range_inclusive_instance(
+                *from_actor_id,
+                instance,
+                msg,
+                DestinationNetwork::ZoneClients,
+            );
+
+            true
+        }
+        ToServer::TranslateFurniture(
+            from_actor_id,
+            plot_info,
+            slot,
+            position,
+            rotation,
+            indoors,
+        ) => {
+            let mut network = network.lock();
+            let data = data.lock();
+
+            let Some(instance) = data.find_actor_instance(*from_actor_id) else {
+                return true;
+            };
+
+            let msg =
+                FromServer::FurnitureTranslated(*plot_info, *slot, *position, *rotation, *indoors);
+
+            // We *don't* want to include the sender here
+            network.send_in_range_instance(
+                *from_actor_id,
+                instance,
+                msg,
+                DestinationNetwork::ZoneClients,
+            );
+
+            true
+        }
         _ => false,
     }
 }
