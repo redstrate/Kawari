@@ -189,44 +189,67 @@ impl Inventory {
     }
 
     /// Helper functions to reduce boilerplate
-    pub fn get_item_mut(&mut self, storage_id: ContainerType, storage_index: u16) -> &mut Item {
-        let container = self.get_container_mut(&storage_id);
-        container.get_slot_mut(storage_index)
-    }
-
-    pub fn get_item(&self, storage_id: ContainerType, storage_index: u16) -> Item {
-        if storage_id == ContainerType::Invalid {
-            return Item::default();
+    pub fn get_item_mut(
+        &mut self,
+        storage_id: ContainerType,
+        storage_index: u16,
+    ) -> Option<&mut Item> {
+        if let Some(container) = self.get_container_mut(&storage_id) {
+            return Some(container.get_slot_mut(storage_index));
         }
 
-        let container = self.get_container(storage_id);
-        *container.get_slot(storage_index)
+        None
+    }
+
+    pub fn get_item(&self, storage_id: ContainerType, storage_index: u16) -> Option<Item> {
+        if let Some(container) = self.get_container(storage_id) {
+            return Some(*container.get_slot(storage_index));
+        }
+
+        None
     }
 
     pub fn process_action(&mut self, action: &ItemOperation) {
         match action.operation_type {
             ItemOperationKind::Discard => {
-                let src_item = self.get_item_mut(action.src_storage_id, action.src_container_index);
-                *src_item = Item::default();
+                if let Some(src_item) =
+                    self.get_item_mut(action.src_storage_id, action.src_container_index)
+                {
+                    *src_item = Item::default();
+                }
             }
             ItemOperationKind::CombineStack => {
                 let src_item;
                 {
-                    let original_item =
-                        self.get_item_mut(action.src_storage_id, action.src_container_index);
-                    src_item = *original_item;
-                    *original_item = Item::default();
+                    if let Some(original_item) =
+                        self.get_item_mut(action.src_storage_id, action.src_container_index)
+                    {
+                        src_item = *original_item;
+                        *original_item = Item::default();
+                    } else {
+                        return;
+                    }
                 }
 
-                let dst_item = self.get_item_mut(action.dst_storage_id, action.dst_container_index);
-                // TODO: We ought to check the max stack size for a given item id and disallow overflow
-                dst_item.quantity += src_item.quantity;
+                if let Some(dst_item) =
+                    self.get_item_mut(action.dst_storage_id, action.dst_container_index)
+                {
+                    // TODO: We ought to check the max stack size for a given item id and disallow overflow
+                    dst_item.quantity += src_item.quantity;
+                }
             }
             ItemOperationKind::SplitStack => {
                 let mut src_item;
                 {
-                    let original_item =
-                        self.get_item_mut(action.src_storage_id, action.src_container_index);
+                    let Some(original_item) =
+                        self.get_item_mut(action.src_storage_id, action.src_container_index)
+                    else {
+                        tracing::warn!(
+                            "Client sent a bogus storage id: {}! Rejecting item operation!",
+                            action.src_storage_id
+                        );
+                        return;
+                    };
                     if original_item.quantity >= action.dst_stack {
                         original_item.quantity -= action.dst_stack;
                         src_item = *original_item;
@@ -240,28 +263,41 @@ impl Inventory {
                     }
                 }
 
-                let dst_item = self.get_item_mut(action.dst_storage_id, action.dst_container_index);
-                dst_item.clone_from(&src_item);
+                if let Some(dst_item) =
+                    self.get_item_mut(action.dst_storage_id, action.dst_container_index)
+                {
+                    dst_item.clone_from(&src_item);
+                }
             }
             ItemOperationKind::Exchange | ItemOperationKind::Move => {
                 let src_item;
 
                 // Clear existing item so add in next free slot checks work.
                 {
-                    let src_slot =
-                        self.get_item_mut(action.src_storage_id, action.src_container_index);
-                    src_item = *src_slot;
-                    src_slot.quantity = 0;
+                    if let Some(src_slot) =
+                        self.get_item_mut(action.src_storage_id, action.src_container_index)
+                    {
+                        src_item = *src_slot;
+                        src_slot.quantity = 0;
+                    } else {
+                        return;
+                    }
                 }
 
                 // move src item into dst slot
-                let dst_slot = self.get_item_mut(action.dst_storage_id, action.dst_container_index);
-                let dst_item = *dst_slot;
-                dst_slot.clone_from(&src_item);
+                if let Some(dst_slot) =
+                    self.get_item_mut(action.dst_storage_id, action.dst_container_index)
+                {
+                    let dst_item = *dst_slot;
+                    dst_slot.clone_from(&src_item);
 
-                // move dst item into src slot
-                let src_slot = self.get_item_mut(action.src_storage_id, action.src_container_index);
-                src_slot.clone_from(&dst_item);
+                    // move dst item into src slot
+                    if let Some(src_slot) =
+                        self.get_item_mut(action.src_storage_id, action.src_container_index)
+                    {
+                        src_slot.clone_from(&dst_item);
+                    }
+                }
             }
             _ => todo!(),
         }
@@ -308,14 +344,15 @@ impl Inventory {
     pub fn add_in_next_free_armory_slot(&self, equip_index: u16) -> Option<ItemInfo> {
         let container_type = ContainerType::from_equip_slot(equip_index as u8);
 
-        let container = self.get_container(container_type);
-        for i in 0..container.max_slots() {
-            if container.get_slot(i as u16).quantity == 0 {
-                return Some(ItemInfo {
-                    slot: i as u16,
-                    container: container_type,
-                    ..(*container.get_slot(i as u16)).into()
-                });
+        if let Some(container) = self.get_container(container_type) {
+            for i in 0..container.max_slots() {
+                if container.get_slot(i as u16).quantity == 0 {
+                    return Some(ItemInfo {
+                        slot: i as u16,
+                        container: container_type,
+                        ..(*container.get_slot(i as u16)).into()
+                    });
+                }
             }
         }
 
@@ -323,60 +360,63 @@ impl Inventory {
     }
 
     pub fn add_in_slot(&mut self, item: Item, container_type: &ContainerType, index: u16) {
-        let container = self.get_container_mut(container_type);
+        let Some(container) = self.get_container_mut(container_type) else {
+            return;
+        };
+
         let slot = container.get_slot_mut(index);
         slot.clone_from(&item);
     }
 
-    fn get_container_mut(&mut self, container_type: &ContainerType) -> &mut dyn Storage {
+    fn get_container_mut(&mut self, container_type: &ContainerType) -> Option<&mut dyn Storage> {
         match container_type {
-            ContainerType::Inventory0 => &mut self.pages[0],
-            ContainerType::Inventory1 => &mut self.pages[1],
-            ContainerType::Inventory2 => &mut self.pages[2],
-            ContainerType::Inventory3 => &mut self.pages[3],
-            ContainerType::Equipped => &mut self.equipped,
-            ContainerType::Currency => &mut self.currency,
-            ContainerType::Crystals => &mut self.crystals,
-            ContainerType::ArmoryOffWeapon => &mut self.armoury_off_hand,
-            ContainerType::ArmoryHead => &mut self.armoury_head,
-            ContainerType::ArmoryBody => &mut self.armoury_body,
-            ContainerType::ArmoryHand => &mut self.armoury_hands,
-            ContainerType::ArmoryLeg => &mut self.armoury_legs,
-            ContainerType::ArmoryFoot => &mut self.armoury_feet,
-            ContainerType::ArmoryEarring => &mut self.armoury_earring,
-            ContainerType::ArmoryNeck => &mut self.armoury_necklace,
-            ContainerType::ArmoryWrist => &mut self.armoury_bracelet,
-            ContainerType::ArmoryRing => &mut self.armoury_rings,
-            ContainerType::ArmorySoulCrystal => &mut self.armoury_soul_crystal,
-            ContainerType::ArmoryWeapon => &mut self.armoury_main_hand,
-            ContainerType::KeyItems => &mut self.key_items,
-            _ => unimplemented!(),
+            ContainerType::Inventory0 => Some(&mut self.pages[0]),
+            ContainerType::Inventory1 => Some(&mut self.pages[1]),
+            ContainerType::Inventory2 => Some(&mut self.pages[2]),
+            ContainerType::Inventory3 => Some(&mut self.pages[3]),
+            ContainerType::Equipped => Some(&mut self.equipped),
+            ContainerType::Currency => Some(&mut self.currency),
+            ContainerType::Crystals => Some(&mut self.crystals),
+            ContainerType::ArmoryOffWeapon => Some(&mut self.armoury_off_hand),
+            ContainerType::ArmoryHead => Some(&mut self.armoury_head),
+            ContainerType::ArmoryBody => Some(&mut self.armoury_body),
+            ContainerType::ArmoryHand => Some(&mut self.armoury_hands),
+            ContainerType::ArmoryLeg => Some(&mut self.armoury_legs),
+            ContainerType::ArmoryFoot => Some(&mut self.armoury_feet),
+            ContainerType::ArmoryEarring => Some(&mut self.armoury_earring),
+            ContainerType::ArmoryNeck => Some(&mut self.armoury_necklace),
+            ContainerType::ArmoryWrist => Some(&mut self.armoury_bracelet),
+            ContainerType::ArmoryRing => Some(&mut self.armoury_rings),
+            ContainerType::ArmorySoulCrystal => Some(&mut self.armoury_soul_crystal),
+            ContainerType::ArmoryWeapon => Some(&mut self.armoury_main_hand),
+            ContainerType::KeyItems => Some(&mut self.key_items),
+            _ => None,
         }
     }
 
-    pub fn get_container(&self, container_type: ContainerType) -> &dyn Storage {
+    pub fn get_container(&self, container_type: ContainerType) -> Option<&dyn Storage> {
         match container_type {
-            ContainerType::Inventory0 => &self.pages[0],
-            ContainerType::Inventory1 => &self.pages[1],
-            ContainerType::Inventory2 => &self.pages[2],
-            ContainerType::Inventory3 => &self.pages[3],
-            ContainerType::Equipped => &self.equipped,
-            ContainerType::Currency => &self.currency,
-            ContainerType::Crystals => &self.crystals,
-            ContainerType::ArmoryOffWeapon => &self.armoury_off_hand,
-            ContainerType::ArmoryHead => &self.armoury_head,
-            ContainerType::ArmoryBody => &self.armoury_body,
-            ContainerType::ArmoryHand => &self.armoury_hands,
-            ContainerType::ArmoryLeg => &self.armoury_legs,
-            ContainerType::ArmoryFoot => &self.armoury_feet,
-            ContainerType::ArmoryEarring => &self.armoury_earring,
-            ContainerType::ArmoryNeck => &self.armoury_necklace,
-            ContainerType::ArmoryWrist => &self.armoury_bracelet,
-            ContainerType::ArmoryRing => &self.armoury_rings,
-            ContainerType::ArmorySoulCrystal => &self.armoury_soul_crystal,
-            ContainerType::ArmoryWeapon => &self.armoury_main_hand,
-            ContainerType::KeyItems => &self.key_items,
-            _ => unimplemented!(),
+            ContainerType::Inventory0 => Some(&self.pages[0]),
+            ContainerType::Inventory1 => Some(&self.pages[1]),
+            ContainerType::Inventory2 => Some(&self.pages[2]),
+            ContainerType::Inventory3 => Some(&self.pages[3]),
+            ContainerType::Equipped => Some(&self.equipped),
+            ContainerType::Currency => Some(&self.currency),
+            ContainerType::Crystals => Some(&self.crystals),
+            ContainerType::ArmoryOffWeapon => Some(&self.armoury_off_hand),
+            ContainerType::ArmoryHead => Some(&self.armoury_head),
+            ContainerType::ArmoryBody => Some(&self.armoury_body),
+            ContainerType::ArmoryHand => Some(&self.armoury_hands),
+            ContainerType::ArmoryLeg => Some(&self.armoury_legs),
+            ContainerType::ArmoryFoot => Some(&self.armoury_feet),
+            ContainerType::ArmoryEarring => Some(&self.armoury_earring),
+            ContainerType::ArmoryNeck => Some(&self.armoury_necklace),
+            ContainerType::ArmoryWrist => Some(&self.armoury_bracelet),
+            ContainerType::ArmoryRing => Some(&self.armoury_rings),
+            ContainerType::ArmorySoulCrystal => Some(&self.armoury_soul_crystal),
+            ContainerType::ArmoryWeapon => Some(&self.armoury_main_hand),
+            ContainerType::KeyItems => Some(&self.key_items),
+            _ => None,
         }
     }
 
@@ -690,77 +730,83 @@ impl HousingInventory {
         }
     }
 
-    fn get_container_mut(&mut self, container_type: &ContainerType) -> &mut dyn Storage {
+    fn get_container_mut(&mut self, container_type: &ContainerType) -> Option<&mut dyn Storage> {
         match container_type {
-            ContainerType::HousingInteriorPlacedItems1 => &mut self.interior[0],
-            ContainerType::HousingInteriorPlacedItems2 => &mut self.interior[1],
-            ContainerType::HousingInteriorPlacedItems3 => &mut self.interior[2],
-            ContainerType::HousingInteriorPlacedItems4 => &mut self.interior[3],
-            ContainerType::HousingInteriorPlacedItems5 => &mut self.interior[4],
-            ContainerType::HousingInteriorPlacedItems6 => &mut self.interior[5],
-            ContainerType::HousingInteriorPlacedItems7 => &mut self.interior[6],
-            ContainerType::HousingInteriorPlacedItems8 => &mut self.interior[7],
+            ContainerType::HousingInteriorPlacedItems1 => Some(&mut self.interior[0]),
+            ContainerType::HousingInteriorPlacedItems2 => Some(&mut self.interior[1]),
+            ContainerType::HousingInteriorPlacedItems3 => Some(&mut self.interior[2]),
+            ContainerType::HousingInteriorPlacedItems4 => Some(&mut self.interior[3]),
+            ContainerType::HousingInteriorPlacedItems5 => Some(&mut self.interior[4]),
+            ContainerType::HousingInteriorPlacedItems6 => Some(&mut self.interior[5]),
+            ContainerType::HousingInteriorPlacedItems7 => Some(&mut self.interior[6]),
+            ContainerType::HousingInteriorPlacedItems8 => Some(&mut self.interior[7]),
 
-            ContainerType::HousingInteriorStoreroom1 => &mut self.interior_storeroom[0],
-            ContainerType::HousingInteriorStoreroom2 => &mut self.interior_storeroom[1],
-            ContainerType::HousingInteriorStoreroom3 => &mut self.interior_storeroom[2],
-            ContainerType::HousingInteriorStoreroom4 => &mut self.interior_storeroom[3],
-            ContainerType::HousingInteriorStoreroom5 => &mut self.interior_storeroom[4],
-            ContainerType::HousingInteriorStoreroom6 => &mut self.interior_storeroom[5],
-            ContainerType::HousingInteriorStoreroom7 => &mut self.interior_storeroom[6],
-            ContainerType::HousingInteriorStoreroom8 => &mut self.interior_storeroom[7],
+            ContainerType::HousingInteriorStoreroom1 => Some(&mut self.interior_storeroom[0]),
+            ContainerType::HousingInteriorStoreroom2 => Some(&mut self.interior_storeroom[1]),
+            ContainerType::HousingInteriorStoreroom3 => Some(&mut self.interior_storeroom[2]),
+            ContainerType::HousingInteriorStoreroom4 => Some(&mut self.interior_storeroom[3]),
+            ContainerType::HousingInteriorStoreroom5 => Some(&mut self.interior_storeroom[4]),
+            ContainerType::HousingInteriorStoreroom6 => Some(&mut self.interior_storeroom[5]),
+            ContainerType::HousingInteriorStoreroom7 => Some(&mut self.interior_storeroom[6]),
+            ContainerType::HousingInteriorStoreroom8 => Some(&mut self.interior_storeroom[7]),
 
-            ContainerType::HousingInteriorAppearance => &mut self.interior_appearance[0],
-            ContainerType::HousingExteriorAppearance => &mut self.exterior_appearance[0],
+            ContainerType::HousingInteriorAppearance => Some(&mut self.interior_appearance[0]),
+            ContainerType::HousingExteriorAppearance => Some(&mut self.exterior_appearance[0]),
 
-            ContainerType::HousingExteriorPlacedItems => &mut self.exterior[0],
-            ContainerType::HousingExteriorStoreroom => &mut self.exterior_storeroom[0],
-            _ => unimplemented!(),
+            ContainerType::HousingExteriorPlacedItems => Some(&mut self.exterior[0]),
+            ContainerType::HousingExteriorStoreroom => Some(&mut self.exterior_storeroom[0]),
+            _ => None,
         }
     }
 
-    pub fn get_container(&self, container_type: ContainerType) -> &dyn Storage {
+    pub fn get_container(&self, container_type: ContainerType) -> Option<&dyn Storage> {
         match container_type {
-            ContainerType::HousingInteriorPlacedItems1 => &self.interior[0],
-            ContainerType::HousingInteriorPlacedItems2 => &self.interior[1],
-            ContainerType::HousingInteriorPlacedItems3 => &self.interior[2],
-            ContainerType::HousingInteriorPlacedItems4 => &self.interior[3],
-            ContainerType::HousingInteriorPlacedItems5 => &self.interior[4],
-            ContainerType::HousingInteriorPlacedItems6 => &self.interior[5],
-            ContainerType::HousingInteriorPlacedItems7 => &self.interior[6],
-            ContainerType::HousingInteriorPlacedItems8 => &self.interior[7],
+            ContainerType::HousingInteriorPlacedItems1 => Some(&self.interior[0]),
+            ContainerType::HousingInteriorPlacedItems2 => Some(&self.interior[1]),
+            ContainerType::HousingInteriorPlacedItems3 => Some(&self.interior[2]),
+            ContainerType::HousingInteriorPlacedItems4 => Some(&self.interior[3]),
+            ContainerType::HousingInteriorPlacedItems5 => Some(&self.interior[4]),
+            ContainerType::HousingInteriorPlacedItems6 => Some(&self.interior[5]),
+            ContainerType::HousingInteriorPlacedItems7 => Some(&self.interior[6]),
+            ContainerType::HousingInteriorPlacedItems8 => Some(&self.interior[7]),
 
-            ContainerType::HousingInteriorStoreroom1 => &self.interior_storeroom[0],
-            ContainerType::HousingInteriorStoreroom2 => &self.interior_storeroom[1],
-            ContainerType::HousingInteriorStoreroom3 => &self.interior_storeroom[2],
-            ContainerType::HousingInteriorStoreroom4 => &self.interior_storeroom[3],
-            ContainerType::HousingInteriorStoreroom5 => &self.interior_storeroom[4],
-            ContainerType::HousingInteriorStoreroom6 => &self.interior_storeroom[5],
-            ContainerType::HousingInteriorStoreroom7 => &self.interior_storeroom[6],
-            ContainerType::HousingInteriorStoreroom8 => &self.interior_storeroom[7],
+            ContainerType::HousingInteriorStoreroom1 => Some(&self.interior_storeroom[0]),
+            ContainerType::HousingInteriorStoreroom2 => Some(&self.interior_storeroom[1]),
+            ContainerType::HousingInteriorStoreroom3 => Some(&self.interior_storeroom[2]),
+            ContainerType::HousingInteriorStoreroom4 => Some(&self.interior_storeroom[3]),
+            ContainerType::HousingInteriorStoreroom5 => Some(&self.interior_storeroom[4]),
+            ContainerType::HousingInteriorStoreroom6 => Some(&self.interior_storeroom[5]),
+            ContainerType::HousingInteriorStoreroom7 => Some(&self.interior_storeroom[6]),
+            ContainerType::HousingInteriorStoreroom8 => Some(&self.interior_storeroom[7]),
 
-            ContainerType::HousingInteriorAppearance => &self.interior_appearance[0],
-            ContainerType::HousingExteriorAppearance => &self.exterior_appearance[0],
+            ContainerType::HousingInteriorAppearance => Some(&self.interior_appearance[0]),
+            ContainerType::HousingExteriorAppearance => Some(&self.exterior_appearance[0]),
 
-            ContainerType::HousingExteriorPlacedItems => &self.exterior[0],
-            ContainerType::HousingExteriorStoreroom => &self.exterior_storeroom[0],
-            _ => unimplemented!(),
+            ContainerType::HousingExteriorPlacedItems => Some(&self.exterior[0]),
+            ContainerType::HousingExteriorStoreroom => Some(&self.exterior_storeroom[0]),
+            _ => None,
         }
     }
 
     /// Helper functions to reduce boilerplate
-    pub fn get_item_mut(&mut self, storage_id: ContainerType, storage_index: u16) -> &mut Item {
-        let container = self.get_container_mut(&storage_id);
-        container.get_slot_mut(storage_index)
-    }
-
-    pub fn get_item(&self, storage_id: ContainerType, storage_index: u16) -> Item {
-        if storage_id == ContainerType::Invalid {
-            return Item::default();
+    pub fn get_item_mut(
+        &mut self,
+        storage_id: ContainerType,
+        storage_index: u16,
+    ) -> Option<&mut Item> {
+        if let Some(container) = self.get_container_mut(&storage_id) {
+            return Some(container.get_slot_mut(storage_index));
         }
 
-        let container = self.get_container(storage_id);
-        *container.get_slot(storage_index)
+        None
+    }
+
+    pub fn get_item(&self, storage_id: ContainerType, storage_index: u16) -> Option<Item> {
+        if let Some(container) = self.get_container(storage_id) {
+            return Some(*container.get_slot(storage_index));
+        }
+
+        None
     }
 }
 

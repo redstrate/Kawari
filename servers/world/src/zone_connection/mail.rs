@@ -134,17 +134,23 @@ impl ZoneConnection {
             let osm = db.determine_online_status_mask(recipient_content_id as i64);
             is_online = osm.has_status(OnlineStatus::Online);
 
-            // TODO: Process attached_items into this GenericStorage, and then send a full inventory update to the client if anything is actually sent, because sending letters actually does take items out of your inventory and sends the recipient an exact copy of it.
             let mut items =
                 crate::inventory::GenericStorage::<{ MAX_MAIL_ATTACHMENTS_STORAGE }>::default();
 
             for item in items.slots.iter_mut().zip(attached_items.iter()) {
                 // TODO: Maybe perform stricter validation on the item id and quantity?
                 if item.1.item_id != 0 && item.1.item_quantity > 0 {
-                    let player_item = self
+                    let Some(player_item) = self
                         .player_data
                         .inventory
-                        .get_item_mut(item.1.src_container, item.1.src_container_index);
+                        .get_item_mut(item.1.src_container, item.1.src_container_index)
+                    else {
+                        tracing::warn!(
+                            "Client attempted to mail an item from an invalid container: {:#?}",
+                            item.1.src_container
+                        );
+                        return;
+                    };
                     *item.0 = *player_item;
                     *player_item = crate::inventory::Item::default();
                     need_to_send_inventory = true;

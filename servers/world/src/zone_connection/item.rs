@@ -312,29 +312,40 @@ impl ZoneConnection {
         dst_container: ContainerType,
         dst_index: u16,
     ) {
-        let src_item = self
+        let Some(src_item) = self
             .player_data
             .inventory
-            .get_item(src_container, src_index);
+            .get_item(src_container, src_index)
+        else {
+            tracing::warn!(
+                "Unable to swap items: src_container was an invalid container for this operation: {src_container}!"
+            );
+            return;
+        };
 
         // move src item into dst slot
-        let dst_slot = self
+        let Some(dst_slot) = self
             .player_data
             .inventory
-            .get_item_mut(dst_container, dst_index);
+            .get_item_mut(dst_container, dst_index)
+        else {
+            tracing::warn!(
+                "Unable to swap items: dst_container was an invalid container for this operation: {dst_container}!"
+            );
+            return;
+        };
 
         let dst_item = *dst_slot;
         let was_empty = dst_item.quantity == 0;
         dst_slot.clone_from(&src_item);
 
         // move dst item into src slot
-        if src_container != ContainerType::Invalid {
-            let src_slot = self
-                .player_data
-                .inventory
-                .get_item_mut(src_container, src_index);
-            src_slot.clone_from(&dst_item);
-        }
+        let src_slot = self
+            .player_data
+            .inventory
+            .get_item_mut(src_container, src_index)
+            .unwrap(); // This unwrap should be fine since we've reached this point.
+        src_slot.clone_from(&dst_item);
 
         // Then inform the client of the updated slots, we have to do this since this is caused server-side.
         {
