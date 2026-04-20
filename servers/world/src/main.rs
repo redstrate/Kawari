@@ -1556,10 +1556,13 @@ async fn process_packet(
                                             to_storeroom,
                                         );
 
-                                    let transfer_item = connection
+                                    let Some(transfer_item) = connection
                                         .player_data
                                         .house_inventory
-                                        .get_item(storage_id, slot);
+                                        .get_item(storage_id, slot)
+                                    else {
+                                        continue;
+                                    };
 
                                     if (!to_storeroom
                                         && connection
@@ -1581,7 +1584,9 @@ async fn process_packet(
                                     let transfer_item = connection
                                         .player_data
                                         .house_inventory
-                                        .get_item_mut(storage_id, slot);
+                                        .get_item_mut(storage_id, slot)
+                                        .unwrap(); // This unwrap should be fine since the check was performed above.
+
                                     *transfer_item = Item::default();
 
                                     // TODO: We should only send the affected container, not all of the pages, but for now it doesn't hurt anything
@@ -1590,7 +1595,7 @@ async fn process_packet(
                                     // Here we do want to send all of the housing inventory pages
                                     connection.send_housing_inventory(desired_pages).await;
 
-                                    // TODO: This probably needs to be networked if the source furniture was placed in the world
+                                    // TODO: This probably needs to be networked only if the source furniture was placed in the world, and this is not a transfer from the storeroom to the player's inventory
                                     connection
                                         .broadcast_actor_control(
                                             ActorControlCategory::FurnitureRemovedToInventoryAck {
@@ -2241,14 +2246,17 @@ async fn process_packet(
                                     continue;
                                 }
 
-                                let from_item = if from_slot != -1 {
-                                    connection
+                                let mut from_item = Item::default();
+
+                                if from_slot != -1
+                                    && let Some(the_item) = connection
                                         .player_data
                                         .inventory
                                         .get_item(from_container, from_slot as u16)
-                                } else {
-                                    Item::default()
-                                };
+                                {
+                                    from_item = the_item;
+                                }
+
                                 let equipped_item = connection
                                     .player_data
                                     .inventory
@@ -2285,11 +2293,13 @@ async fn process_packet(
                                     let target_container_type =
                                         ContainerType::from_equip_slot(slot as u8);
 
-                                    let target_container = connection
+                                    if let Some(target_container) = connection
                                         .player_data
                                         .inventory
-                                        .get_container(target_container_type);
-                                    if let Some(free_slot) = get_next_free_slot(target_container) {
+                                        .get_container(target_container_type)
+                                        && let Some(free_slot) =
+                                            get_next_free_slot(target_container)
+                                    {
                                         connection
                                             .swap_items(
                                                 ContainerType::Equipped,

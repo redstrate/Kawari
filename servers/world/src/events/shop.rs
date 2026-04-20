@@ -220,10 +220,16 @@ impl ShopEventHandler {
             let result;
             let quantity;
             {
-                let item = connection
+                let Some(item) = connection
                     .player_data
                     .inventory
-                    .get_item(storage, index as u16);
+                    .get_item(storage, index as u16)
+                else {
+                    tracing::warn!(
+                        "Client attempted to sell an item from invalid storage id {storage}! Rejecting request!"
+                    );
+                    return;
+                };
                 let mut game_data = connection.gamedata.lock();
                 result = game_data.get_item_info(ItemInfoQuery::ById(item.item_id));
                 quantity = item.quantity;

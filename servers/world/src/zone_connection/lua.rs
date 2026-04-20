@@ -690,14 +690,20 @@ impl ZoneConnection {
                         src_container_index,
                     }) = self.glamour_information
                     {
-                        let src_slot = self
+                        let Some(src_slot) = self
                             .player_data
                             .inventory
-                            .get_item(src_container_type, src_container_index as u16);
-                        let dst_slot = self
+                            .get_item(src_container_type, src_container_index as u16)
+                        else {
+                            return true;
+                        };
+                        let Some(dst_slot) = self
                             .player_data
                             .inventory
-                            .get_item_mut(dst_container_type, dst_container_index as u16);
+                            .get_item_mut(dst_container_type, dst_container_index as u16)
+                        else {
+                            return true;
+                        };
 
                         dst_slot.glamour_id = src_slot.item_id;
 
@@ -712,10 +718,13 @@ impl ZoneConnection {
                         dst_container_index,
                     }) = self.glamour_information
                     {
-                        let dst_slot = self
+                        let Some(dst_slot) = self
                             .player_data
                             .inventory
-                            .get_item_mut(dst_container_type, dst_container_index as u16);
+                            .get_item_mut(dst_container_type, dst_container_index as u16)
+                        else {
+                            return true;
+                        };
 
                         dst_slot.glamour_id = 0;
 
