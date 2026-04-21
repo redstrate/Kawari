@@ -1375,15 +1375,15 @@ pub enum ServerZoneIpcData {
         slot: u16,
         /// The low 12 bits of the row number on the HousingFurniture sheet for this furniture. The row to that sheet can be obtained from the AdditionalData column on the Item Excel sheet. When the client receives this value, it then ORs it with 0x30000 to recreate the row number.
         catalog_id: u16,
-        unk1: u16, // Always 1?
+        unk1: u16, // Always 1? Changing it seems to have no visible effect so far.
         /// The furniture's dye/stain.
-        stain: u16,
-        unk2: u16,
-        unk3: u16,
-        unk4: u16,
+        stain: u8,
+        unk2: [u8; 3],
+        /// The furniture's rotation. This is only used when placing furniture from the storeroom to ensure the furniture's front faces the player.
+        rotation: f32,
         /// The furniture's position.
         position: Position,
-        unk5: [u8; 4],
+        unk3: [u8; 4],
     },
     ExteriorFurniturePlaced {
         /// Likely the plot upon which this furniture was placed.
@@ -1397,11 +1397,11 @@ pub enum ServerZoneIpcData {
         /// The furniture's dye/stain.
         stain: u8,
         unk3: [u8; 3], // Likely just padding
-        /// The furniture's rotation. Strange, considering that the client cannot rotate an item until after it's placed...
+        /// The furniture's rotation. This is only used when placing furniture from the storeroom to ensure the furniture's front faces the player.
         rotation: f32,
         /// The furniture's position.
         position: Position,
-        unk5: u32, // Observed as zeroes
+        unk4: u32, // Observed as zeroes
     },
     Mogpendium(Mogpendium),
     PlayerName {

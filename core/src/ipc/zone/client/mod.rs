@@ -42,8 +42,8 @@ pub use super::social_list::{
 use super::config::Config;
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ClientLanguage, HandlerId, HouseId, JumpState, MoveAnimationState,
-    MoveAnimationType, ObjectId, Position, read_sestring, read_string, write_sestring,
-    write_string,
+    MoveAnimationType, ObjectId, Position, read_bool_from, read_sestring, read_string,
+    write_bool_as, write_sestring, write_string,
 };
 use crate::opcodes::ClientZoneIpcType;
 use crate::packet::ServerIpcSegmentHeader;
@@ -612,9 +612,13 @@ pub enum ClientZoneIpcData {
         slot: u16,
         /// Where in the world the client has placed it.
         position: Position,
-        unk2: [u8; 4], // zeroes?
-        unk3: u32,     // Always 1?
-        unk4: [u8; 8], // zeroes?
+        /// The direction the furniture will be rotated towards when placed. This matters more for placing items from the storeroom, since in that case the furniture's front will face the player. The client sends 0.0 otherwise.
+        rotation: f32,
+        /// If true, this furniture will be spawned in the world, if false it should be placed into the storeroom. This seems to be false only when right-clicking furniture in the main inventory and selecting "Store". Otherwise, it seems to be always true.
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        spawn_furniture: bool,
+        unk2: [u8; 8], // Zeroes?
     },
     TranslateFurniture {
         /// Which house this affects.
