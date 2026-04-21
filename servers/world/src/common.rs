@@ -224,7 +224,7 @@ pub enum FromServer {
     /// Plays a cutscene from the instance director.
     PlayDirectorCutscene(u32),
     /// Inform the client that another player has placed a piece of furniture.
-    FurniturePlaced(ContainerType, u16, u16, u8, Position, bool),
+    FurniturePlaced(ContainerType, u16, u16, u8, Position, bool, f32),
     /// Inform the client that another player has moved or rotated a piece of furniture.
     FurnitureTranslated((bool, u8), u16, Position, f32, bool),
 }
@@ -455,7 +455,7 @@ pub enum ToServer {
     /// Spawns an NPC defined by the layout or drop-in.
     SpawnLayoutNpc(ObjectId, u32),
     /// The client places a piece of furniture.
-    PlaceFurniture(ObjectId, ContainerType, u16, u16, u8, Position, bool),
+    PlaceFurniture(ObjectId, ContainerType, u16, u16, u8, Position, bool, f32),
     /// The client moves or rotates a piece of furniture.
     TranslateFurniture(ObjectId, (bool, u8), u16, Position, f32, bool),
 }

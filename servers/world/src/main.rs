@@ -5,7 +5,7 @@ use axum::Router;
 use axum::routing::get;
 use kawari::common::{
     ContainerType, DirectorEvent, DirectorTrigger, DutyOption, FestivalId, HandlerId, HandlerType,
-    ItemOperationKind, ObjectId, ObjectTypeId, ObjectTypeKind, PlayerStateFlags1,
+    ItemOperationKind, LogMessageType, ObjectId, ObjectTypeId, ObjectTypeKind, PlayerStateFlags1,
     PlayerStateFlags2, PlayerStateFlags3, Position, calculate_max_level,
 };
 use kawari::config::{FilesystemConfig, get_config};
@@ -1580,6 +1580,9 @@ async fn process_packet(
                                         continue;
                                     }
 
+                                    // Have to get this before deleting the item...
+                                    let item_id = transfer_item.item_id;
+
                                     // This is a bit ugly, but we have to do this after that `if` to avoid borrowing the house inventory twice...
                                     let transfer_item = connection
                                         .player_data
@@ -1595,6 +1598,18 @@ async fn process_packet(
                                     // Here we do want to send all of the housing inventory pages
                                     connection.send_housing_inventory(desired_pages).await;
 
+                                    // Inform the player via a log message where their item went.
+                                    connection
+                                        .actor_control_self(ActorControlCategory::LogMessage {
+                                            log_message: if to_storeroom {
+                                                LogMessageType::FurnitureMovedToStoreroom as u32
+                                            } else {
+                                                LogMessageType::FurnitureMovedToInventory as u32
+                                            },
+                                            id: item_id,
+                                        })
+                                        .await;
+
                                     // TODO: This probably needs to be networked only if the source furniture was placed in the world, and this is not a transfer from the storeroom to the player's inventory
                                     connection
                                         .broadcast_actor_control(
@@ -1605,6 +1620,48 @@ async fn process_packet(
                                                 unk4: 0,
                                             },
                                         )
+                                        .await;
+                                }
+                                ClientTriggerCommand::PlaceFurnitureFromStoreroom {
+                                    container_type,
+                                    container_index,
+                                    ..
+                                } => {
+                                    let catalog_id;
+                                    {
+                                        let mut gamedata = connection.gamedata.lock();
+                                        let Some(the_item) = connection
+                                            .player_data
+                                            .house_inventory
+                                            .get_item(container_type, container_index)
+                                        else {
+                                            continue;
+                                        };
+                                        let Some(the_id) =
+                                            gamedata.get_furniture_catalog_id(the_item.item_id)
+                                        else {
+                                            continue;
+                                        };
+
+                                        catalog_id = the_id;
+                                    }
+
+                                    // This acts as a preview, it doesn't actually spawn the furniture until the client sends a PlaceFurniture. Therefore, we don't network this.
+                                    // TODO: Outdoor logic
+                                    connection
+                                        .send_ipc_self(ServerZoneIpcSegment::new(
+                                            ServerZoneIpcData::InteriorFurniturePlaced {
+                                                storage_id: container_type,
+                                                slot: container_index,
+                                                catalog_id,
+                                                unk1: 1,
+                                                stain: 0,
+                                                unk2: [0; 3],
+                                                rotation: 0.0,
+                                                position: connection.player_data.volatile.position,
+                                                unk3: [0; 4],
+                                            },
+                                        ))
                                         .await;
                                 }
                                 _ => {
@@ -3163,7 +3220,7 @@ async fn process_packet(
                                 }
                                 _ => {
                                     tracing::info!(
-                                        "Client executed uninplemented world interaction {action} with params {param1} {param2} {param3} {param4}"
+                                        "Client executed unimplemented world interaction {action} with params {param1} {param2} {param3} {param4}"
                                     );
                                 }
                             }
@@ -3172,13 +3229,17 @@ async fn process_packet(
                             container,
                             slot,
                             position,
+                            rotation,
+                            spawn_furniture,
                             ..
                         } => {
                             tracing::info!(
-                                "Client placed furniture! {:#?} {:#?} {:#?}",
+                                "Client placed furniture! {:#?} {:#?} {:#?} {:#?} {:#?}",
                                 container,
                                 slot,
                                 position,
+                                rotation,
+                                spawn_furniture,
                             );
 
                             let intended_use;
@@ -3200,9 +3261,22 @@ async fn process_packet(
                                 continue;
                             }
 
-                            let transfer_item = connection.player_data.inventory.pages
-                                [*container as usize]
-                                .get_slot(*slot);
+                            let transfer_item = if let Some(the_item) =
+                                connection.player_data.inventory.get_item(*container, *slot)
+                            {
+                                the_item
+                            } else if let Some(the_item) = connection
+                                .player_data
+                                .house_inventory
+                                .get_item(*container, *slot)
+                            {
+                                the_item
+                            } else {
+                                tracing::error!(
+                                    "The client attempted to use an invalid container to place a furniture item! Rejecting request!"
+                                );
+                                continue;
+                            };
 
                             let catalog_id;
                             {
@@ -3215,12 +3289,12 @@ async fn process_packet(
                             let desired_pages = connection
                                 .player_data
                                 .house_inventory
-                                .get_desired_pages_from_intendeduse(intended_use, false);
+                                .get_desired_pages_from_intendeduse(intended_use, !spawn_furniture);
 
                             let Some(result) = connection
                                 .player_data
                                 .house_inventory
-                                .add_in_empty_slot(*transfer_item, desired_pages)
+                                .add_in_empty_slot(transfer_item, desired_pages)
                             else {
                                 tracing::error!(
                                     "Unable to add item to this housing inventory, it's full!"
@@ -3228,19 +3302,30 @@ async fn process_packet(
                                 continue;
                             };
 
-                            // Next, remove the item from the player's main inventory.
+                            // Next, remove the item from the player's main inventory or the storeroom.
                             {
-                                let old_slot = connection.player_data.inventory.pages
-                                    [*container as usize]
-                                    .get_slot_mut(*slot);
+                                let old_slot = if let Some(the_item) = connection
+                                    .player_data
+                                    .inventory
+                                    .get_item_mut(*container, *slot)
+                                {
+                                    the_item
+                                } else if let Some(the_item) = connection
+                                    .player_data
+                                    .house_inventory
+                                    .get_item_mut(*container, *slot)
+                                {
+                                    the_item
+                                } else {
+                                    continue; // This shouldn't even be reachable or possible but it's not overly desirable to crash intentionally, so we'll just skip over it.
+                                };
+
                                 *old_slot = Item::default();
 
                                 let ipc = ServerZoneIpcSegment::new(
                                     ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
                                         sequence: 0,
-                                        container: connection.player_data.inventory.pages
-                                            [*container as usize]
-                                            .kind,
+                                        container: *container,
                                         slot: *slot,
                                         ..(Item::default()).into()
                                     }),
@@ -3251,8 +3336,12 @@ async fn process_packet(
                             // Then send the refreshed housing inventory.
                             connection.send_housing_inventory(desired_pages).await;
 
+                            // If the client opted to move furniture to the storeroom, there's nothing further to do here.
+                            if !spawn_furniture {
+                                continue;
+                            }
+
                             // Finally, acknowledge the placement.
-                            // TODO: This needs to be networked so other players can see the results
                             // TODO: We need to store the coordinates when things are persistent
                             let indoors = true; // TODO: Logic for outdoors
                             // TODO: implement dyes...
@@ -3268,6 +3357,7 @@ async fn process_packet(
                                     stain,
                                     *position,
                                     indoors,
+                                    *rotation,
                                 ))
                                 .await;
 
@@ -3788,6 +3878,7 @@ async fn process_server_msg(
                 stain,
                 position,
                 _indoors,
+                rotation,
             ) => {
                 // TODO: needs outdoor logic to send ExteriorFurniturePlaced instead when relevant
                 connection
@@ -3797,12 +3888,11 @@ async fn process_server_msg(
                             slot,
                             catalog_id,
                             unk1: 1,
-                            stain: stain as u16,
-                            unk2: 0,
-                            unk3: 0,
-                            unk4: 0,
+                            stain,
+                            unk2: [0; 3],
+                            rotation,
                             position,
-                            unk5: [0; 4],
+                            unk3: [0; 4],
                         },
                     ))
                     .await;

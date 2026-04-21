@@ -1097,7 +1097,7 @@ ClientZoneIpcType:
     opcode: 296
     size: 32
   - name: PlaceFurniture
-    comment: The client places furniture on their property (indoors or outdoors).
+    comment: The client places furniture on their property (indoors or outdoors), or into the relevant storeroom (the furniture is not spawned in that case).
     opcode: 191
     size: 40
   - name: TranslateFurniture
