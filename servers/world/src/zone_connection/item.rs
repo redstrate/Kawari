@@ -2,7 +2,7 @@
 
 use crate::{
     ItemInfoQuery, ToServer, ZoneConnection,
-    inventory::{DesiredHousingInventoryPages, EQUIP_RESTRICTED, Item, Storage},
+    inventory::{DesiredHousingInventoryPages, EQUIP_RESTRICTED, Storage},
 };
 use kawari::{
     common::{ContainerType, ItemOperationKind, ObjectId},
@@ -42,94 +42,24 @@ impl ZoneConnection {
     }
 
     pub async fn send_inventory(&mut self) {
-        let mut last_sequence = 0;
-        for (sequence, (container_type, container)) in (&self.player_data.inventory.clone())
-            .into_iter()
-            .enumerate()
-        {
-            let mut num_items = 0;
-
-            if container_type == ContainerType::Currency
-                || container_type == ContainerType::Crystals
-            {
-                // currencies
-                let mut send_currency = async |slot: u16, item: &Item| {
-                    // skip telling the client what they don't have
-                    if item.quantity == 0 || item.item_id == 0 {
-                        return;
-                    }
-
-                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CurrencyCrystalInfo(
-                        CurrencyInfo {
-                            sequence: sequence as u32,
-                            container: container_type,
-                            quantity: item.quantity,
-                            catalog_id: item.item_id,
-                            slot,
-                            ..Default::default()
-                        },
-                    ));
-                    self.send_ipc_self(ipc).await;
-
-                    num_items += 1;
-                };
-
-                for i in 0..container.max_slots() {
-                    send_currency(i as u16, container.get_slot(i as u16)).await;
-                }
-            } else {
-                // items
-                let mut send_slot = async |slot: u16, item: &Item| {
-                    // skip telling the client what they don't have
-                    if item.quantity == 0 || item.item_id == 0 {
-                        return;
-                    }
-
-                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateItem(ItemInfo {
-                        sequence: sequence as u32,
-                        container: container_type,
-                        slot,
-                        ..(*item).into()
-                    }));
-                    self.send_ipc_self(ipc).await;
-
-                    num_items += 1;
-                };
-
-                for i in 0..container.max_slots() {
-                    send_slot(i as u16, container.get_slot(i as u16)).await;
-                }
-            }
-
-            // inform the client of container state
-            {
-                let ipc =
-                    ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
-                        container: container_type,
-                        num_items,
-                        sequence: sequence as u32,
-                        ..Default::default()
-                    }));
-                self.send_ipc_self(ipc).await;
-            }
-
-            last_sequence = sequence;
+        for (container_type, container) in (&self.player_data.inventory.clone()).into_iter() {
+            self.send_container(container, container_type).await;
         }
 
-        // dummy container states that are not implemented
-        // inform the client of container state
-        for (sequence, container_type) in (last_sequence + 1..).zip([
+        // Inform the client of dummy container states that are not implemented
+        for container_type in [
             ContainerType::Mail,
             ContainerType::Unk2,
             ContainerType::ArmoryWaist,
-        ]) {
+        ] {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
-                sequence: sequence as u32,
+                sequence: self.player_data.item_sequence,
                 num_items: 0,
                 container: container_type,
                 ..Default::default()
             }));
             self.send_ipc_self(ipc).await;
+            self.player_data.item_sequence += 1;
         }
     }
 
@@ -137,38 +67,77 @@ impl ZoneConnection {
     pub async fn send_equipped_inventory(&mut self) {
         let equipped = self.player_data.inventory.equipped;
 
-        let mut num_items = 0;
+        self.send_container(&equipped, ContainerType::Equipped)
+            .await;
+    }
 
-        let mut send_slot = async |slot_index: u16, item: &Item| {
-            if item.quantity == 0 || item.item_id == 0 {
+    pub async fn send_housing_inventory(&mut self, which: DesiredHousingInventoryPages) {
+        let cloned_inv = match which {
+            DesiredHousingInventoryPages::Interior => {
+                self.player_data.house_inventory.interior.clone()
+            }
+            DesiredHousingInventoryPages::InteriorStoreroom => {
+                self.player_data.house_inventory.interior_storeroom.clone()
+            }
+            DesiredHousingInventoryPages::Exterior => {
+                self.player_data.house_inventory.exterior.clone()
+            }
+            DesiredHousingInventoryPages::ExteriorStoreroom => {
+                self.player_data.house_inventory.exterior_storeroom.clone()
+            }
+            DesiredHousingInventoryPages::None => {
                 return;
             }
+        };
 
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateItem(ItemInfo {
-                sequence: self.player_data.item_sequence,
-                container: ContainerType::Equipped,
-                slot: slot_index,
-                ..(*item).into()
-            }));
+        for container in cloned_inv.into_iter() {
+            self.send_container(&container, container.kind).await;
+        }
+    }
+
+    pub async fn send_container(&mut self, container: &dyn Storage, container_type: ContainerType) {
+        let mut num_items = 0;
+        for slot_index in 0..container.max_slots() {
+            let item = container.get_slot(slot_index as u16);
+            // Don't tell the client about things they don't have
+            if item.is_empty_slot() {
+                continue;
+            }
+
+            let ipc = match container_type {
+                ContainerType::Currency | ContainerType::Crystals => ServerZoneIpcSegment::new(
+                    ServerZoneIpcData::CurrencyCrystalInfo(CurrencyInfo {
+                        sequence: self.player_data.item_sequence,
+                        container: container_type,
+                        quantity: item.quantity,
+                        catalog_id: item.item_id,
+                        slot: slot_index as u16,
+                        ..Default::default()
+                    }),
+                ),
+                _ => ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateItem(ItemInfo {
+                    sequence: self.player_data.item_sequence,
+                    container: container_type,
+                    slot: slot_index as u16,
+                    ..(*item).into()
+                })),
+            };
+
             self.send_ipc_self(ipc).await;
 
             num_items += 1;
-        };
-
-        for i in 0..equipped.max_slots() {
-            send_slot(i as u16, equipped.get_slot(i as u16)).await;
         }
 
-        // inform the client of container state
-        {
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
-                container: ContainerType::Equipped,
-                num_items,
-                sequence: self.player_data.item_sequence,
-                ..Default::default()
-            }));
-            self.send_ipc_self(ipc).await;
-        }
+        // Inform the client of container state
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
+            container: container_type,
+            num_items,
+            sequence: self.player_data.item_sequence,
+            ..Default::default()
+        }));
+        self.send_ipc_self(ipc).await;
+
+        self.player_data.item_sequence += 1;
     }
 
     pub async fn update_equip(
@@ -220,65 +189,6 @@ impl ZoneConnection {
 
         self.send_stats().await;
         self.update_class_info().await;
-    }
-
-    pub async fn send_housing_inventory(&mut self, which: DesiredHousingInventoryPages) {
-        let cloned_inv = match which {
-            DesiredHousingInventoryPages::Interior => {
-                self.player_data.house_inventory.interior.clone()
-            }
-            DesiredHousingInventoryPages::InteriorStoreroom => {
-                self.player_data.house_inventory.interior_storeroom.clone()
-            }
-            DesiredHousingInventoryPages::Exterior => {
-                self.player_data.house_inventory.exterior.clone()
-            }
-            DesiredHousingInventoryPages::ExteriorStoreroom => {
-                self.player_data.house_inventory.exterior_storeroom.clone()
-            }
-            DesiredHousingInventoryPages::None => {
-                return;
-            }
-        };
-
-        // TODO: Since this is mostly copy-pasted, maybe create a common function that does the actual sending, shared with the regular inventory?
-        for (sequence, container) in cloned_inv.into_iter().enumerate() {
-            let mut num_items = 0;
-
-            // items
-            let mut send_slot = async |slot: u16, item: &Item| {
-                // skip telling the client what they don't have
-                if item.quantity == 0 || item.item_id == 0 {
-                    return;
-                }
-
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateItem(ItemInfo {
-                    sequence: sequence as u32,
-                    container: container.kind,
-                    slot,
-                    ..(*item).into()
-                }));
-                self.send_ipc_self(ipc).await;
-
-                num_items += 1;
-            };
-
-            for i in 0..container.max_slots() {
-                send_slot(i as u16, container.get_slot(i as u16)).await;
-            }
-
-            // inform the client of container state
-            {
-                let ipc =
-                    ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
-                        container: container.kind,
-                        num_items,
-                        sequence: sequence as u32,
-                        ..Default::default()
-                    }));
-                self.send_ipc_self(ipc).await;
-            }
-        }
     }
 
     pub async fn send_inventory_ack(&mut self, sequence: u32, action_type: u16) {
