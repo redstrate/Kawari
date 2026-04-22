@@ -74,7 +74,7 @@ impl Item {
     }
 
     pub fn is_empty_slot(&self) -> bool {
-        self.quantity == 0
+        self.quantity == 0 || self.item_id == 0
     }
 }
 
