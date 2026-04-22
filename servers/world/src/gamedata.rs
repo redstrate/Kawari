@@ -50,6 +50,7 @@ use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use kawari::ipc::zone::{CommonSpawn, PlotSize};
+use physis::equipment::EquipSlotCategory;
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
 use physis::{Language, TerritoryIntendedUse};
 
@@ -115,7 +116,7 @@ pub struct ItemRow {
     /// The item's price, when sold to an NPC by the player.
     pub price_low: u32,
     /// The item's equip category.
-    pub equip_category: u8,
+    pub equip_category: EquipSlotCategory,
     /// The item's equip restrictions.
     pub equip_restrictions: ItemEquipRestrictions,
     /// The item's primary model id.
@@ -386,7 +387,8 @@ impl GameData {
                 name: matched_row.Name().to_string(),
                 price_mid: matched_row.PriceMid(),
                 price_low: matched_row.PriceLow(),
-                equip_category: matched_row.EquipSlotCategory(),
+                equip_category: EquipSlotCategory::from_repr(matched_row.EquipSlotCategory())
+                    .unwrap_or_default(),
                 primary_model_id: matched_row.ModelMain(),
                 sub_model_id: matched_row.ModelSub(),
                 stack_size: matched_row.StackSize(),
