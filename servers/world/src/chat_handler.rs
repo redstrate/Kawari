@@ -15,6 +15,7 @@ use kawari::{
         ServerZoneIpcSegment,
     },
 };
+use physis::equipment::EquipSlot;
 
 use super::ZoneConnection;
 
@@ -65,23 +66,63 @@ impl ChatHandler {
             }
             "!equip" => {
                 if let Some((_, name)) = chat_message.split_once(' ') {
+                    let item_info;
                     {
                         let mut gamedata = connection.gamedata.lock();
-
-                        if let Some(item_info) =
-                            gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
-                        {
-                            let slot = connection
-                                .player_data
-                                .inventory
-                                .equipped
-                                .get_slot_mut(item_info.equip_category as u16);
-                            *slot = Item::new(&item_info, 1);
-                        }
+                        item_info = gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()));
                     }
+                    if let Some(item_info) = item_info {
+                        // Reject belts that may have forgotten to be changed to 0 and items that aren't equipment.
+                        let belts_and_misc = [0, 6, 24]; // Invalid, belts, invalid respectively
+                        if belts_and_misc.contains(&item_info.equip_category) {
+                            connection.send_notice(&format!("[equip] The found item, {:#?}, isn't equipment! If the wrong item was found, try being more specific with its name, or consider using //gm item instead if you can't get the desired item from this command.", item_info.name).to_string()).await;
+                            return true;
+                        }
 
-                    connection.send_inventory().await;
-                    connection.inform_equip().await;
+                        // EquipSlotCategory rows belong to these slot types. There's currently no physis mechanism for this, so we'll hardcode it here for the time being.
+                        let main_hand = [1, 13, 14];
+                        let legs = [7, 18];
+                        let body = [4, 15, 16, 19, 20, 21, 22, 23];
+                        let soul_crystal = 17;
+
+                        // First, assume nothing special is going on. For most equipment you can just use the category minus one to get the correct slot.
+                        let mut slot = if let Some(the_slot) =
+                            EquipSlot::from_repr((item_info.equip_category - 1) as u16)
+                        {
+                            the_slot
+                        } else {
+                            EquipSlot::Waist // This should should never slip through since stuff like Herklaedi (category 16) or the Star Pilot Suit (category 23) will be caught below
+                        };
+
+                        // Convert more complicated EquipSlotCategory rows into proper slots.
+                        if main_hand.contains(&item_info.equip_category) {
+                            slot = EquipSlot::MainHand;
+                        } else if legs.contains(&item_info.equip_category) {
+                            slot = EquipSlot::Legs;
+                        } else if body.contains(&item_info.equip_category) {
+                            slot = EquipSlot::Body;
+                        } else if item_info.equip_category == soul_crystal {
+                            slot = EquipSlot::SoulCrystal;
+                        }
+
+                        assert!(slot != EquipSlot::Waist);
+
+                        let slot = connection
+                            .player_data
+                            .inventory
+                            .equipped
+                            .get_slot_mut(slot as u16);
+                        *slot = Item::new(&item_info, 1);
+
+                        connection.send_inventory().await;
+                        connection.inform_equip().await;
+                    } else {
+                        connection.send_notice(&format!("[equip] No items named {name:#?} were found! If you know its item id instead, consider using //gm item.").to_string()).await;
+                    }
+                } else {
+                    connection
+                        .send_notice("[equip] Usage: !equip <item name>")
+                        .await;
                 }
 
                 true
