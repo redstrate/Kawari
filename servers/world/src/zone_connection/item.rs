@@ -116,15 +116,13 @@ impl ZoneConnection {
             last_sequence = sequence;
         }
 
-        let mut sequence = last_sequence + 1;
-
         // dummy container states that are not implemented
         // inform the client of container state
-        for container_type in [
+        for (sequence, container_type) in (last_sequence + 1..).zip([
             ContainerType::Mail,
             ContainerType::Unk2,
             ContainerType::ArmoryWaist,
-        ] {
+        ]) {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ContainerInfo(ContainerInfo {
                 sequence: sequence as u32,
                 num_items: 0,
@@ -132,7 +130,6 @@ impl ZoneConnection {
                 ..Default::default()
             }));
             self.send_ipc_self(ipc).await;
-            sequence += 1;
         }
     }
 
