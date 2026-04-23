@@ -16,6 +16,7 @@
 - [Debug Commands](debug_commands.md)
 - [Tips](tips.md)
 - [Patching](patching.md)
+- [Connecting From Other Machines](external_connections.md)
 
 # Extending Kawari
 - [Extensibility](extensibility.md)
