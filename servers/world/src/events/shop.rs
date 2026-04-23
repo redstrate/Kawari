@@ -48,12 +48,7 @@ impl ShopEventHandler {
             .as_scene_params(shop_id, shop_intro)
     }
 
-    async fn do_gilshop_buyback(
-        connection: &mut ZoneConnection,
-        shop_id: u32,
-        buyback_index: u32,
-        lua_player: &mut LuaPlayer,
-    ) {
+    async fn do_gilshop_buyback(connection: &mut ZoneConnection, shop_id: u32, buyback_index: u32) {
         let bb_item;
         {
             let Some(tmp_bb_item) = connection
@@ -69,8 +64,6 @@ impl ShopEventHandler {
             bb_item = *tmp_bb_item;
         }
 
-        // This is a no-op since we can't edit PlayerData from the Lua side, but we can queue it up afterward.
-        // We *need* this information, though.
         let Some(item_dst_info) = connection
             .player_data
             .inventory
@@ -89,14 +82,10 @@ impl ShopEventHandler {
             .buyback_list
             .remove_item(shop_id, buyback_index);
 
-        // TODO: port from LuaPlayer
-        // Queue up the item restoration, but we're not going to send an entire inventory update to the client.
-        lua_player.add_item(bb_item.item_id, item_dst_info.quantity, false);
-
         // Queue up the player's adjusted gil, but we're not going to send an entire inventory update to the client.
         let cost = item_dst_info.quantity * bb_item.price_low;
         let new_gil = connection.player_data.inventory.currency.gil.quantity - cost;
-        lua_player.modify_currency(CurrencyKind::Gil, -(cost as i32), false);
+        connection.player_data.inventory.currency.gil.quantity = new_gil;
 
         let shop_packets_to_send = [
             ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
@@ -414,7 +403,7 @@ impl EventHandler for ShopEventHandler {
             // It shouldn't even be possible to get into a situation where results[1] isn't BUYBACK, but we'll leave it as a guard.
             if !results.is_empty() && results[0] == buyback {
                 let item_index = results[1];
-                Self::do_gilshop_buyback(connection, event.id, item_index as u32, player).await;
+                Self::do_gilshop_buyback(connection, event.id, item_index as u32).await;
 
                 let mut buyback_list = Self::get_buyback_list(connection, event.id, false);
                 buyback_list[0] = buyback as u32;
