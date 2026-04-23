@@ -11,8 +11,7 @@
                         "level": 1,
                         "link_range": 20,
                         "name_id": 541,
-                        "type": "npc",
-                        "npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4296960,
                     "position": {
@@ -29,8 +28,7 @@
                         "level": 1,
                         "link_range": 20,
                         "name_id": 541,
-                        "type": "npc",
-                        "npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4296959,
                     "position": {
@@ -47,8 +45,7 @@
                         "level": 1,
                         "link_range": 20,
                         "name_id": 541,
-                        "type": "npc",
-                        "npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4296958,
                     "position": {
@@ -65,8 +62,7 @@
                         "level": 1,
                         "link_range": 20,
                         "name_id": 541,
-                        "type": "npc",
-                        "npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4296957,
                     "position": {
@@ -83,8 +79,7 @@
                         "level": 1,
                         "link_range": 20,
                         "name_id": 541,
-                        "type": "npc",
-                        "npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4295677,
                     "position": {
@@ -101,8 +96,7 @@
                         "level": 1,
                         "link_range": 20,
                         "name_id": 541,
-                        "type": "npc",
-                        "npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4295675,
                     "position": {
@@ -119,8 +113,7 @@
                         "level": 1,
                         "link_range": 20,
                         "name_id": 541,
-                        "type": "npc",
-                        "npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4295672,
                     "position": {
@@ -137,8 +130,7 @@
                         "level": 1,
                         "link_range": 20,
                         "name_id": 541,
-                        "type": "npc",
-                        "npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4083871,
                     "position": {
@@ -155,8 +147,7 @@
                         "level": 1,
                         "link_range": 20,
                         "name_id": 541,
-                        "type": "npc",
-                        "npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4295673,
                     "position": {

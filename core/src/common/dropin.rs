@@ -37,9 +37,9 @@ pub enum DropInObjectData {
         /// Index into the GatheringPoint Excel sheet.
         base_id: u32,
     },
-    /// Represents a battle or event NPC.
-    #[serde(rename = "npc")]
-    Npc {
+    /// Represents a battle NPC.
+    #[serde(rename = "battle_npc")]
+    BattleNpc {
         /// Index into the BNpcBase sheet.
         base_id: u32,
         /// Index into the BNpcName sheet.
@@ -60,8 +60,12 @@ pub enum DropInObjectData {
         link_family: u8,
         /// How far the link family can be apart.
         link_range: u8,
-        /// Whether to consider this a battle NPC.
-        battle_npc: bool,
+    },
+    /// Represents a battle or event NPC.
+    #[serde(rename = "event_npc")]
+    EventNpc {
+        /// Index into the ENpcBase and ENpcResident sheet.
+        base_id: u32,
     },
 }
 

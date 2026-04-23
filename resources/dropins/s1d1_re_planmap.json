@@ -16,8 +16,7 @@
                         "max_links": 0,
                         "name_id": 1210,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4217967,
                     "position": {
@@ -39,8 +38,7 @@
                         "max_links": 0,
                         "name_id": 1210,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4217968,
                     "position": {
@@ -62,8 +60,7 @@
                         "max_links": 2,
                         "name_id": 1210,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3725818,
                     "position": {
@@ -85,8 +82,7 @@
                         "max_links": 2,
                         "name_id": 38,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3725425,
                     "position": {
@@ -108,8 +104,7 @@
                         "max_links": 2,
                         "name_id": 38,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3725423,
                     "position": {
@@ -131,8 +126,7 @@
                         "max_links": 2,
                         "name_id": 38,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3725392,
                     "position": {
@@ -154,8 +148,7 @@
                         "max_links": 2,
                         "name_id": 38,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3726787,
                     "position": {
@@ -177,8 +170,7 @@
                         "max_links": 1,
                         "name_id": 38,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3725390,
                     "position": {
@@ -200,8 +192,7 @@
                         "max_links": 1,
                         "name_id": 38,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3725388,
                     "position": {
@@ -223,8 +214,7 @@
                         "max_links": 1,
                         "name_id": 1210,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3725822,
                     "position": {
@@ -246,8 +236,7 @@
                         "max_links": 1,
                         "name_id": 1210,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3725820,
                     "position": {
@@ -269,8 +258,7 @@
                         "max_links": 1,
                         "name_id": 1210,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3796129,
                     "position": {
@@ -292,8 +280,7 @@
                         "max_links": 4,
                         "name_id": 1209,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3281765,
                     "position": {
@@ -315,8 +302,7 @@
                         "max_links": 0,
                         "name_id": 1208,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3637470,
                     "position": {
@@ -338,8 +324,7 @@
                         "max_links": 1,
                         "name_id": 1211,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3725935,
                     "position": {
@@ -361,8 +346,7 @@
                         "max_links": 0,
                         "name_id": 1208,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3637472,
                     "position": {
@@ -384,8 +368,7 @@
                         "max_links": 2,
                         "name_id": 1211,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3796133,
                     "position": {
@@ -407,8 +390,7 @@
                         "max_links": 2,
                         "name_id": 1211,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3796131,
                     "position": {
@@ -430,8 +412,7 @@
                         "max_links": 0,
                         "name_id": 1208,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3637475,
                     "position": {
@@ -453,8 +434,7 @@
                         "max_links": 2,
                         "name_id": 1210,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3796117,
                     "position": {
@@ -476,8 +456,7 @@
                         "max_links": 4,
                         "name_id": 1209,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4191890,
                     "position": {
@@ -499,8 +478,7 @@
                         "max_links": 0,
                         "name_id": 1208,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3637473,
                     "position": {
@@ -522,8 +500,7 @@
                         "max_links": 2,
                         "name_id": 1211,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3796115,
                     "position": {
@@ -545,8 +522,7 @@
                         "max_links": 2,
                         "name_id": 1212,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3796116,
                     "position": {
@@ -568,8 +544,7 @@
                         "max_links": 0,
                         "name_id": 1208,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3637474,
                     "position": {
@@ -591,8 +566,7 @@
                         "max_links": 4,
                         "name_id": 1209,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4191893,
                     "position": {
@@ -614,8 +588,7 @@
                         "max_links": 4,
                         "name_id": 1209,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4191892,
                     "position": {
@@ -637,8 +610,7 @@
                         "max_links": 4,
                         "name_id": 1209,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4191894,
                     "position": {
@@ -660,8 +632,7 @@
                         "max_links": 0,
                         "name_id": 1208,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3637476,
                     "position": {
@@ -683,8 +654,7 @@
                         "max_links": 4,
                         "name_id": 1209,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4191895,
                     "position": {
@@ -706,8 +676,7 @@
                         "max_links": 4,
                         "name_id": 1209,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4191897,
                     "position": {
@@ -729,8 +698,7 @@
                         "max_links": 4,
                         "name_id": 1209,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4191896,
                     "position": {
@@ -752,8 +720,7 @@
                         "max_links": 2,
                         "name_id": 344,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3981889,
                     "position": {
@@ -775,8 +742,7 @@
                         "max_links": 2,
                         "name_id": 1205,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3982024,
                     "position": {
@@ -798,8 +764,7 @@
                         "max_links": 2,
                         "name_id": 1205,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3982023,
                     "position": {
@@ -821,8 +786,7 @@
                         "max_links": 4,
                         "name_id": 1204,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4035011,
                     "position": {
@@ -844,8 +808,7 @@
                         "max_links": 0,
                         "name_id": 108,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4192074,
                     "position": {
@@ -867,8 +830,7 @@
                         "max_links": 2,
                         "name_id": 342,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3981887,
                     "position": {
@@ -890,8 +852,7 @@
                         "max_links": 2,
                         "name_id": 342,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3981888,
                     "position": {
@@ -913,8 +874,7 @@
                         "max_links": 2,
                         "name_id": 1382,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3988325,
                     "position": {
@@ -936,8 +896,7 @@
                         "max_links": 2,
                         "name_id": 344,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4142091,
                     "position": {
@@ -959,8 +918,7 @@
                         "max_links": 2,
                         "name_id": 344,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4142096,
                     "position": {
@@ -982,8 +940,7 @@
                         "max_links": 2,
                         "name_id": 344,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4142095,
                     "position": {
@@ -1005,8 +962,7 @@
                         "max_links": 2,
                         "name_id": 346,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4142094,
                     "position": {
@@ -1028,8 +984,7 @@
                         "max_links": 1,
                         "name_id": 344,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3981884,
                     "position": {
@@ -1051,8 +1006,7 @@
                         "max_links": 1,
                         "name_id": 1205,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4106641,
                     "position": {
@@ -1074,8 +1028,7 @@
                         "max_links": 1,
                         "name_id": 348,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4056179,
                     "position": {
@@ -1097,8 +1050,7 @@
                         "max_links": 2,
                         "name_id": 344,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4142092,
                     "position": {
@@ -1120,8 +1072,7 @@
                         "max_links": 2,
                         "name_id": 346,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3981862,
                     "position": {
@@ -1143,8 +1094,7 @@
                         "max_links": 1,
                         "name_id": 348,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4106354,
                     "position": {
@@ -1166,8 +1116,7 @@
                         "max_links": 2,
                         "name_id": 346,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4138739,
                     "position": {
@@ -1189,8 +1138,7 @@
                         "max_links": 2,
                         "name_id": 348,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3981860,
                     "position": {
@@ -1212,8 +1160,7 @@
                         "max_links": 2,
                         "name_id": 342,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3981865,
                     "position": {
@@ -1235,8 +1182,7 @@
                         "max_links": 1,
                         "name_id": 346,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3981878,
                     "position": {
@@ -1258,8 +1204,7 @@
                         "max_links": 1,
                         "name_id": 342,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3981843,
                     "position": {
@@ -1281,8 +1226,7 @@
                         "max_links": 1,
                         "name_id": 1205,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4106638,
                     "position": {
@@ -1304,8 +1248,7 @@
                         "max_links": 1,
                         "name_id": 348,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4056165,
                     "position": {
@@ -1327,8 +1270,7 @@
                         "max_links": 1,
                         "name_id": 346,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4056166,
                     "position": {
@@ -1350,8 +1292,7 @@
                         "max_links": 1,
                         "name_id": 342,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3981864,
                     "position": {
@@ -1373,8 +1314,7 @@
                         "max_links": 1,
                         "name_id": 342,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3981886,
                     "position": {
@@ -1396,8 +1336,7 @@
                         "max_links": 1,
                         "name_id": 342,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3981883,
                     "position": {
@@ -1419,8 +1358,7 @@
                         "max_links": 1,
                         "name_id": 342,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4056170,
                     "position": {
@@ -1442,8 +1380,7 @@
                         "max_links": 1,
                         "name_id": 348,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4056171,
                     "position": {
@@ -1465,8 +1402,7 @@
                         "max_links": 1,
                         "name_id": 344,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4056186,
                     "position": {
@@ -1488,8 +1424,7 @@
                         "max_links": 1,
                         "name_id": 348,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4056188,
                     "position": {
@@ -1511,8 +1446,7 @@
                         "max_links": 4,
                         "name_id": 342,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3282344,
                     "position": {
@@ -1534,8 +1468,7 @@
                         "max_links": 0,
                         "name_id": 108,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4192083,
                     "position": {
@@ -1557,8 +1490,7 @@
                         "max_links": 2,
                         "name_id": 342,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978797,
                     "position": {
@@ -1580,8 +1512,7 @@
                         "max_links": 2,
                         "name_id": 342,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3988324,
                     "position": {
@@ -1603,8 +1534,7 @@
                         "max_links": 2,
                         "name_id": 1382,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4035056,
                     "position": {
@@ -1626,8 +1556,7 @@
                         "max_links": 4,
                         "name_id": 1205,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3988323,
                     "position": {
@@ -1649,8 +1578,7 @@
                         "max_links": 4,
                         "name_id": 1205,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3988322,
                     "position": {
@@ -1672,8 +1600,7 @@
                         "max_links": 4,
                         "name_id": 1205,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4087815,
                     "position": {
@@ -1695,8 +1622,7 @@
                         "max_links": 4,
                         "name_id": 1205,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4087814,
                     "position": {
@@ -1718,8 +1644,7 @@
                         "max_links": 2,
                         "name_id": 348,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978779,
                     "position": {
@@ -1741,8 +1666,7 @@
                         "max_links": 2,
                         "name_id": 1205,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4125433,
                     "position": {
@@ -1764,8 +1688,7 @@
                         "max_links": 2,
                         "name_id": 342,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978776,
                     "position": {
@@ -1787,8 +1710,7 @@
                         "max_links": 2,
                         "name_id": 344,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978784,
                     "position": {
@@ -1810,8 +1732,7 @@
                         "max_links": 2,
                         "name_id": 342,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978791,
                     "position": {
@@ -1833,8 +1754,7 @@
                         "max_links": 2,
                         "name_id": 348,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978783,
                     "position": {
@@ -1856,8 +1776,7 @@
                         "max_links": 2,
                         "name_id": 346,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978786,
                     "position": {
@@ -1879,8 +1798,7 @@
                         "max_links": 2,
                         "name_id": 342,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978792,
                     "position": {
@@ -1902,8 +1820,7 @@
                         "max_links": 2,
                         "name_id": 1205,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4125434,
                     "position": {
@@ -1925,8 +1842,7 @@
                         "max_links": 2,
                         "name_id": 346,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978790,
                     "position": {
@@ -1948,8 +1864,7 @@
                         "max_links": 2,
                         "name_id": 346,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978789,
                     "position": {
@@ -1971,8 +1886,7 @@
                         "max_links": 2,
                         "name_id": 346,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978788,
                     "position": {
@@ -1994,8 +1908,7 @@
                         "max_links": 2,
                         "name_id": 346,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978794,
                     "position": {
@@ -2017,8 +1930,7 @@
                         "max_links": 0,
                         "name_id": 108,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4334190,
                     "position": {
@@ -2040,8 +1952,7 @@
                         "max_links": 2,
                         "name_id": 346,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978793,
                     "position": {
@@ -2063,8 +1974,7 @@
                         "max_links": 2,
                         "name_id": 344,
                         "nonpop": false,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978795,
                     "position": {
@@ -2086,8 +1996,7 @@
                         "max_links": 0,
                         "name_id": 1382,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4334189,
                     "position": {
@@ -2109,8 +2018,7 @@
                         "max_links": 4,
                         "name_id": 1206,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978771,
                     "position": {
@@ -2132,8 +2040,7 @@
                         "max_links": 4,
                         "name_id": 1207,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 4064938,
                     "position": {
@@ -2155,8 +2062,7 @@
                         "max_links": 4,
                         "name_id": 1207,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978770,
                     "position": {
@@ -2178,8 +2084,7 @@
                         "max_links": 4,
                         "name_id": 1207,
                         "nonpop": true,
-                        "type": "npc",
-                        "battle_npc": true
+                        "type": "battle_npc"
                     },
                     "instance_id": 3978761,
                     "position": {

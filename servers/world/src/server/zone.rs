@@ -653,7 +653,7 @@ impl Zone {
         // Only dropins are checked for battle npcs, because they strip that from retail LGBs.
         for layer in &self.dropin_layers {
             for object in &layer.objects {
-                if let DropInObjectData::Npc {
+                if let DropInObjectData::BattleNpc {
                     base_id,
                     name_id,
                     hp,
@@ -664,23 +664,10 @@ impl Zone {
                     max_links,
                     link_family,
                     link_range,
-                    battle_npc,
                 } = object.data
                 {
-                    let model_chara;
-                    let battalion;
-                    let customize;
-                    let rank;
-                    let equip;
-
-                    if battle_npc {
-                        (model_chara, battalion, customize, rank, equip) =
-                            game_data.find_bnpc(base_id).unwrap();
-                    } else {
-                        (model_chara, customize, equip) = game_data.find_enpc(base_id).unwrap();
-                        battalion = 0;
-                        rank = 0;
-                    }
+                    let (model_chara, battalion, customize, rank, equip) =
+                        game_data.find_bnpc(base_id).unwrap();
 
                     let usable_hp;
                     if let Some(hp) = hp {
@@ -727,11 +714,7 @@ impl Zone {
                             max_health_points: usable_hp,
                             health_points: usable_hp,
                             model_chara,
-                            object_kind: if battle_npc {
-                                ObjectKind::BattleNpc(BattleNpcSubKind::Enemy)
-                            } else {
-                                ObjectKind::EventNpc
-                            },
+                            object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
                             battalion,
                             level: level as u8,
                             position: object.position,
@@ -747,6 +730,27 @@ impl Zone {
                     if !nonpop {
                         npc_spawns.push(spawn);
                     }
+                }
+                if let DropInObjectData::EventNpc { base_id } = object.data {
+                    let (model_chara, customize, equip) = game_data.find_enpc(base_id).unwrap();
+
+                    let spawn = SpawnNpc {
+                        common: CommonSpawn {
+                            base_id,
+                            name_id: base_id,
+                            model_chara,
+                            object_kind: ObjectKind::EventNpc,
+                            position: object.position,
+                            rotation: object.rotation,
+                            look: customize,
+                            layout_id: object.instance_id,
+                            ..game_data.get_npc_equip(equip as u32).unwrap_or_default()
+                        },
+                        ..Default::default()
+                    };
+
+                    self.cached_npcs.insert(object.instance_id, spawn.clone());
+                    npc_spawns.push(spawn);
                 }
             }
         }
