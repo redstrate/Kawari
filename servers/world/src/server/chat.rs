@@ -51,7 +51,6 @@ pub fn handle_chat_messages(
                         },
                     ));
 
-                    // TODO: send in chat
                     let mut network = network.lock();
                     network.send_to(
                         *from_id,
@@ -262,6 +261,29 @@ fn process_debug_commands(
                     },
                 );
             }
+
+            true
+        }
+        "!ai_disable" => {
+            let mut data = data.lock();
+            if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+                instance.enemy_ai_disabled = true;
+            }
+
+            // If it's truly not existent...
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage(
+                ServerNoticeMessage {
+                    message: "A.I. disabled...".to_string(),
+                    ..Default::default()
+                },
+            ));
+
+            let mut network = network.lock();
+            network.send_to(
+                from_id,
+                FromServer::PacketSegment(ipc, from_actor_id),
+                DestinationNetwork::ZoneClients,
+            );
 
             true
         }

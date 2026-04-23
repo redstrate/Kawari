@@ -110,6 +110,7 @@ pub struct Instance {
     pub queued_task: Vec<QueuedTask>,
     /// Director for this instance.
     pub director: Option<DirectorData>,
+    pub enemy_ai_disabled: bool,
 }
 
 impl Instance {

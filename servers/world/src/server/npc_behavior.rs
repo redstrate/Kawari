@@ -37,6 +37,10 @@ pub fn npc_behavior(
     instance: &mut Instance,
     haters: &mut HashMap<ObjectId, Vec<ObjectId>>,
 ) {
+    if instance.enemy_ai_disabled {
+        return;
+    }
+
     // Only pathfind if there's navmesh data available.
     if instance.navmesh.is_available() {
         let mut actor_moves = Vec::new();

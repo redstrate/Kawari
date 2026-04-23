@@ -5,6 +5,7 @@ These special debug commands start with `!` and are custom to Kawari.
 | Usage | Details|
 | --- | --- |
 | `!acs <category> <param1 (optional)> <param2 (optional)> <param3 (optional)> <param4 (optional)>` | Send an ActorControlSelf to the player. |
+| `!ai_disable` | Disables AI for enemies in the current area. |
 | `!condition <name>` | Forcefully sets a condition, see `condition.rs` for what is supported. |
 | `!cf <id>` | Joins the Content Finder ID specified as if you'd queued. |
 | `!classjob <id>` | Unlocks said class/job at level 1, and gives you a job crystal (if applicable). |
