@@ -11,7 +11,3 @@ function onCommandRequiredRankMissingError(additional_information, player)
     local error_msg = "Your script does not define the required_rank variable. Please define it in your script for it to run."
     printf(player, "%s\nAdditional information: %s", error_msg, additional_information)
 end
-
-function onUnknownCommandError(command_name, player)
-    printf(player, "Unknown command %s", command_name)
-end

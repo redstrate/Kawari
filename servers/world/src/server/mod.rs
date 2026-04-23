@@ -44,10 +44,8 @@ use kawari::{
     },
     config::{FilesystemConfig, get_config},
     ipc::zone::{
-        ActionKind, ActionRequest, ActorControlCategory, BattleNpcSubKind, CharacterDataFlag,
-        ClientTriggerCommand, CommonSpawn, Condition, Conditions, EnmityList, Hater, HaterList,
-        ObjectKind, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, WarpType,
-        WaymarkPreset,
+        ActorControlCategory, ClientTriggerCommand, Condition, Conditions, EnmityList, Hater,
+        HaterList, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, WarpType, WaymarkPreset,
     },
 };
 
@@ -1013,7 +1011,13 @@ pub async fn server_main_loop(
     while let Some(msg) = recv.recv().await {
         let mut to_remove = Vec::new();
 
-        let mut handled = handle_chat_messages(data.clone(), network.clone(), &msg);
+        let mut handled = handle_chat_messages(
+            data.clone(),
+            network.clone(),
+            game_data.clone(),
+            lua.clone(),
+            &msg,
+        );
         handled |= handle_social_messages(data.clone(), network.clone(), &msg);
         handled |= handle_zone_messages(data.clone(), network.clone(), game_data.clone(), &msg);
         handled |= handle_action_messages(data.clone(), game_data.clone(), &msg);
@@ -1937,78 +1941,6 @@ pub async fn server_main_loop(
                         _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
                     }
                 }
-                ToServer::DebugNewEnemy(_from_id, from_actor_id, id) => {
-                    let mut data = data.lock();
-
-                    let actor_id = Instance::generate_actor_id();
-                    let npc_spawn;
-                    {
-                        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                            continue;
-                        };
-
-                        let Some(actor) = instance.find_actor(from_actor_id) else {
-                            continue;
-                        };
-
-                        let NetworkedActor::Player { spawn, .. } = actor else {
-                            continue;
-                        };
-
-                        let model_chara;
-                        {
-                            let mut game_data = game_data.lock();
-                            (model_chara, _, _, _, _) = game_data.find_bnpc(id).unwrap();
-                        }
-
-                        npc_spawn = SpawnNpc {
-                            character_data_flags: CharacterDataFlag::HOSTILE,
-                            common: CommonSpawn {
-                                health_points: 1500,
-                                max_health_points: 1500,
-                                resource_points: 100,
-                                max_resource_points: 100,
-                                base_id: id,
-                                name_id: 405,
-                                object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
-                                level: 1,
-                                battalion: 4,
-                                model_chara,
-                                position: spawn.common.position,
-                                ..Default::default()
-                            },
-                            ..Default::default()
-                        };
-
-                        instance.insert_npc(actor_id, npc_spawn.clone());
-                    }
-                }
-                ToServer::DebugSpawnClone(_from_id, from_actor_id) => {
-                    let mut data = data.lock();
-
-                    let actor_id = Instance::generate_actor_id();
-                    let npc_spawn;
-                    {
-                        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                            continue;
-                        };
-
-                        let Some(actor) = instance.find_actor(from_actor_id) else {
-                            continue;
-                        };
-
-                        let NetworkedActor::Player { spawn, .. } = actor else {
-                            continue;
-                        };
-
-                        npc_spawn = SpawnNpc {
-                            common: spawn.common.clone(),
-                            ..Default::default()
-                        };
-
-                        instance.insert_npc(actor_id, npc_spawn.clone());
-                    }
-                }
                 ToServer::Config(_from_id, from_actor_id, config) => {
                     let mut data = data.lock();
 
@@ -2343,22 +2275,6 @@ pub async fn server_main_loop(
                         from_actor_id,
                         Duration::from_secs(2),
                         QueuedTaskData::FishBite {},
-                    );
-                }
-                ToServer::DebugMount(from_id, from_actor_id, mount_id) => {
-                    execute_action(
-                        network.clone(),
-                        data.clone(),
-                        game_data.clone(),
-                        lua.clone(),
-                        from_id,
-                        from_actor_id,
-                        ActionRequest {
-                            action_key: mount_id as u32,
-                            exec_proc: 0,
-                            action_kind: ActionKind::Mount,
-                            ..Default::default()
-                        },
                     );
                 }
                 ToServer::ReloadScripts => {

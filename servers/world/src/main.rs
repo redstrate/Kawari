@@ -4,9 +4,10 @@ use std::time::{Instant, SystemTime};
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    ContainerType, DirectorEvent, DirectorTrigger, DutyOption, FestivalId, HandlerId, HandlerType,
-    ItemOperationKind, LogMessageType, ObjectId, ObjectTypeId, ObjectTypeKind, PlayerStateFlags1,
-    PlayerStateFlags2, PlayerStateFlags3, Position, calculate_max_level,
+    ContainerType, DEBUG_COMMAND_TRIGGER, DirectorEvent, DirectorTrigger, DutyOption, FestivalId,
+    HandlerId, HandlerType, ItemOperationKind, LogMessageType, ObjectId, ObjectTypeId,
+    ObjectTypeKind, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position,
+    calculate_max_level,
 };
 use kawari::config::{FilesystemConfig, get_config};
 use kawari_world::inventory::{Item, Storage, get_next_free_slot};
@@ -33,8 +34,8 @@ use kawari::packet::oodle::OodleNetwork;
 use kawari::packet::{ConnectionState, ConnectionType, SegmentData, parse_packet_header};
 use kawari_world::lua::{KawariLua, KawariLuaState, LuaPlayer};
 use kawari_world::{
-    ChatConnection, ChatHandler, CustomIpcConnection, Event, EventHandler, GameData,
-    ObsfucationData, Roulette, TeleportReason, ZoneConnection,
+    ChatConnection, CustomIpcConnection, Event, EventHandler, GameData, ObsfucationData, Roulette,
+    TeleportReason, ZoneConnection,
 };
 use kawari_world::{
     ChatConnectionChannels, ChatPlayerData, ClientHandle, ClientId, FromServer, MessageInfo,
@@ -1126,14 +1127,9 @@ async fn process_packet(
                                                 .await;
                                         }
                                         DirectorTrigger::SummonStrikingDummy => {
-                                            connection
-                                                .handle
-                                                .send(ToServer::DebugNewEnemy(
-                                                    connection.id,
-                                                    connection.player_data.character.actor_id,
-                                                    11744, // TODO: this doesn't seem to be right?!
-                                                ))
-                                                .await;
+                                            tracing::info!(
+                                                "Spawning a striking dummy is unsupported!"
+                                            );
                                         }
                                         DirectorTrigger::GoldSaucerUnk1 => {
                                             // dummied out
@@ -1748,34 +1744,11 @@ async fn process_packet(
                             return false;
                         }
                         ClientZoneIpcData::SendChatMessage(chat_message) => {
-                            let info = MessageInfo {
-                                sender_actor_id: connection.player_data.character.actor_id,
-                                sender_account_id: connection
-                                    .player_data
-                                    .character
-                                    .service_account_id
-                                    as u64,
-                                sender_world_id: config.world.world_id,
-                                sender_position: connection.player_data.volatile.position,
-                                sender_name: connection.player_data.character.name.clone(),
-                                channel: chat_message.channel,
-                                message: chat_message.message.clone(),
-                            };
-
-                            connection
-                                .handle
-                                .send(ToServer::Message(
-                                    connection.player_data.character.actor_id,
-                                    info,
-                                ))
-                                .await;
-
-                            let mut handled = false;
-                            let command_trigger: char = '!';
+                            // Process debug commands
                             if chat_message
                                 .message
                                 .to_string()
-                                .starts_with(command_trigger)
+                                .starts_with(DEBUG_COMMAND_TRIGGER)
                             {
                                 let msg = chat_message.message.to_string();
                                 let parts: Vec<&str> = msg.split(' ').collect();
@@ -1789,8 +1762,6 @@ async fn process_packet(
                                     if let Some(command_script) =
                                         state.command_scripts.get(command_name)
                                     {
-                                        handled = true;
-
                                         let file_name =
                                             FilesystemConfig::locate_script_file(command_script);
 
@@ -1855,41 +1826,43 @@ async fn process_packet(
                                         if let Err(err) = run_script() {
                                             tracing::warn!("Lua error in {file_name}: {:?}", err);
                                         }
+
+                                        continue; // Don't send the message off anywhere
                                     }
                                 }
 
-                                // Fallback to Rust implemented commands
-                                if !handled {
-                                    handled = ChatHandler::handle_chat_message(
-                                        connection,
-                                        &chat_message.message,
-                                        events,
-                                    )
-                                    .await;
-                                }
-
-                                // If it's truly not existent:
-                                if !handled {
-                                    tracing::info!("Unknown command {command_name}");
-
-                                    let lua = connection.lua.lock();
-
-                                    let mut call_func = || {
-                                        lua.0.scope(|scope| {
-                                            let connection_data =
-                                                scope.create_userdata_ref_mut(lua_player)?;
-                                            let func: Function =
-                                                lua.0.globals().get("onUnknownCommandError")?;
-                                            func.call::<()>((command_name, connection_data))?;
-                                            Ok(())
-                                        })
-                                    };
-
-                                    if let Err(err) = call_func() {
-                                        tracing::warn!("Lua error in Global.lua: {:?}", err);
-                                    }
+                                // Fallback to Rust implemented commands in ZoneConnection, but if this fails then
+                                if connection
+                                    .process_debug_commands(&chat_message.message, events)
+                                    .await
+                                {
+                                    continue; // Don't send the message off anywhere
                                 }
                             }
+
+                            // Send the message to the global server to be processed further
+                            let info = MessageInfo {
+                                sender_actor_id: connection.player_data.character.actor_id,
+                                sender_account_id: connection
+                                    .player_data
+                                    .character
+                                    .service_account_id
+                                    as u64,
+                                sender_world_id: config.world.world_id,
+                                sender_position: connection.player_data.volatile.position,
+                                sender_name: connection.player_data.character.name.clone(),
+                                channel: chat_message.channel,
+                                message: chat_message.message.clone(),
+                            };
+
+                            connection
+                                .handle
+                                .send(ToServer::Message(
+                                    connection.id,
+                                    connection.player_data.character.actor_id,
+                                    info,
+                                ))
+                                .await;
                         }
                         ClientZoneIpcData::GMCommand {
                             command,

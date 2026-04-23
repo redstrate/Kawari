@@ -29,6 +29,9 @@ pub use timeline::{Timeline, Timepoint, TimepointData};
 
 use crate::constants::{GRIDANIA_POS_START, LIMSA_POS_START, ULDAH_POS_START};
 
+/// First character for all of Kawari's debug commands.
+pub const DEBUG_COMMAND_TRIGGER: char = '!';
+
 /// Get the number of seconds since UNIX epoch.
 pub fn timestamp_secs() -> u32 {
     SystemTime::now()

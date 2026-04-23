@@ -267,7 +267,7 @@ pub enum ToServer {
     /// A new chat connection has started.
     NewChatClient(ClientHandle),
     /// The connection sent a message.
-    Message(ObjectId, MessageInfo),
+    Message(ClientId, ObjectId, MessageInfo),
     /// The connection's player moved.
     ActorMoved(
         ObjectId,
@@ -299,10 +299,6 @@ pub enum ToServer {
     Disconnected(ClientId, ObjectId),
     /// A fatal error occured.
     FatalError(std::io::Error),
-    /// Spawn an enemy debug NPC.
-    DebugNewEnemy(ClientId, ObjectId, u32),
-    /// Spawn a debug clone.
-    DebugSpawnClone(ClientId, ObjectId),
     /// Request to perform an action
     ActionRequest(ClientId, ObjectId, ActionRequest),
     /// We want to update our own equip display flags.
@@ -408,8 +404,6 @@ pub enum ToServer {
     Fish(ClientId, ObjectId),
     /// Warp to a specified pop range in a new territory.
     WarpPopRange(ClientId, ObjectId, u16, u32),
-    /// Simulate mounting.
-    DebugMount(ClientId, ObjectId, u16),
     /// Request the global server state to reload its Lua state.
     ReloadScripts,
     /// The client dismounted.

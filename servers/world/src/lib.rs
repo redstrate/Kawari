@@ -1,6 +1,3 @@
-mod chat_handler;
-pub use chat_handler::ChatHandler;
-
 mod chat_connection;
 pub use chat_connection::{ChatConnection, ChatConnectionChannels, ChatPlayerData};
 
