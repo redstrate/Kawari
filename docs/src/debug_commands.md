@@ -26,6 +26,7 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!unlock <id>` | Unlock an action, emote, etc. for example: `1` for Return and `4` for Teleport. |
 | `!unlockbuddyequip <id>` | Unlocks the specified BuddyEquip (Companion Barding) ID. |
 | `!unlockcontent <id/all>` | Unlocks the specified instanced content. The ID to use is from the InstanceContent Excel sheet. |
+| `!shortcut <id>` | Teleports to a content shortcut defined in the Lua script. |
 | `!skipintro` | Teleports you to Limsa, unlocks all features and completes all quests. |
 | `!spawnmonster <id>` | Spawn a monster for debugging. |
 | `!spawnclone` | Spawn a clone of yourself. |

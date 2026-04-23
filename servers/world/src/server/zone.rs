@@ -842,49 +842,74 @@ fn begin_change_zone<'a>(
     data: &'a mut WorldServer,
     network: &mut NetworkState,
     game_data: &mut GameData,
-    destination_zone_id: u16,
+    destination_zone_id: Option<u16>,
     actor_id: ObjectId,
     warp_type: WarpType,
     param4: u8,
     hide_character: u8,
     unk1: u8,
 ) -> (&'a mut Instance, bool) {
-    let mut needs_init_zone = false;
+    if let Some(destination_zone_id) = destination_zone_id {
+        let mut needs_init_zone = false;
 
-    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
-        target_zone: destination_zone_id,
-        warp_type,
-        fade_out_time: 1,
-        log_message: 0,
-        animation: 0,
-        param4,
-        hide_character,
-        param_7: 0,
-        unk1,
-        unk2: 0,
-    });
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
+            target_zone: destination_zone_id,
+            warp_type,
+            fade_out_time: 1,
+            log_message: 0,
+            animation: 0,
+            param4,
+            hide_character,
+            param_7: 0,
+            unk1,
+            unk2: 0,
+        });
 
-    network.send_to_by_actor_id(
-        actor_id,
-        FromServer::PacketSegment(ipc, actor_id),
-        DestinationNetwork::ZoneClients,
-    );
+        network.send_to_by_actor_id(
+            actor_id,
+            FromServer::PacketSegment(ipc, actor_id),
+            DestinationNetwork::ZoneClients,
+        );
 
-    // inform the players in this zone that this actor left
-    if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
-        // HACK: This is to prevent actors from disappearing when warping within the same zone.
-        if current_instance.zone.id != destination_zone_id {
-            network.remove_actor(current_instance, actor_id);
-            needs_init_zone = true;
+        // inform the players in this zone that this actor left
+        if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
+            // HACK: This is to prevent actors from disappearing when warping within the same zone.
+            if current_instance.zone.id != destination_zone_id {
+                network.remove_actor(current_instance, actor_id);
+                needs_init_zone = true;
+            }
         }
+
+        // then find or create a new instance with the zone id
+        let instance = data.ensure_exists(destination_zone_id, game_data);
+        // Insert an empty actor that will be filled later
+        instance.insert_empty_actor(actor_id);
+
+        (instance, needs_init_zone)
+    } else {
+        let instance = data.find_actor_instance_mut(actor_id).unwrap();
+
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
+            target_zone: instance.zone.id,
+            warp_type,
+            fade_out_time: 1,
+            log_message: 0,
+            animation: 0,
+            param4,
+            hide_character,
+            param_7: 0,
+            unk1,
+            unk2: 0,
+        });
+
+        network.send_to_by_actor_id(
+            actor_id,
+            FromServer::PacketSegment(ipc, actor_id),
+            DestinationNetwork::ZoneClients,
+        );
+
+        (instance, false)
     }
-
-    // then find or create a new instance with the zone id
-    let instance = data.ensure_exists(destination_zone_id, game_data);
-    // Insert an empty actor that will be filled later
-    instance.insert_empty_actor(actor_id);
-
-    (instance, needs_init_zone)
 }
 
 /// Sends the needed information to ZoneConnection for a zone change.
@@ -892,7 +917,7 @@ pub fn change_zone_warp_to_pop_range(
     data: &mut WorldServer,
     network: &mut NetworkState,
     game_data: &mut GameData,
-    destination_zone_id: u16,
+    destination_zone_id: Option<u16>,
     destination_instance_id: u32,
     actor_id: ObjectId,
     from_id: ClientId,
@@ -998,7 +1023,7 @@ pub fn change_zone_to_player(
         data,
         network,
         game_data,
-        destination_zone_id,
+        Some(destination_zone_id),
         from_actor_id,
         WarpType::Normal,
         0,
@@ -1131,7 +1156,7 @@ pub fn handle_zone_messages(
                 &mut data,
                 &mut network,
                 &mut game_data,
-                *zone_id,
+                Some(*zone_id),
                 *actor_id,
                 warp_type,
                 param4,
@@ -1191,7 +1216,7 @@ pub fn handle_zone_messages(
                 &mut data,
                 &mut network,
                 &mut game_data,
-                destination_zone_id,
+                Some(destination_zone_id),
                 destination_instance_id,
                 *actor_id,
                 *from_id,
@@ -1217,7 +1242,7 @@ pub fn handle_zone_messages(
                 &mut data,
                 &mut network,
                 &mut game_data,
-                destination_zone_id,
+                Some(destination_zone_id),
                 destination_instance_id,
                 *actor_id,
                 *from_id,
@@ -1243,7 +1268,7 @@ pub fn handle_zone_messages(
                 &mut data,
                 &mut network,
                 &mut game_data,
-                destination_zone_id,
+                Some(destination_zone_id),
                 destination_instance_id,
                 *actor_id,
                 *from_id,
@@ -1264,7 +1289,7 @@ pub fn handle_zone_messages(
                 &mut data,
                 &mut network,
                 &mut game_data,
-                *territory_id,
+                Some(*territory_id),
                 *pop_range_id,
                 *from_actor_id,
                 *from_id,
@@ -1338,7 +1363,7 @@ pub fn handle_zone_messages(
                 &mut data,
                 &mut network,
                 &mut game_data,
-                zone_id,
+                Some(zone_id),
                 *id,
                 *from_actor_id,
                 *from_id,

@@ -383,3 +383,17 @@ function beginSequence5(director)
 
     director:spawn_boss(BNPC_DENN, EOBJ_MISTBEARD_COVE_BOSS_WALL, EOBJ_MISTBEARD_COVE_BOSS_LINE, PLACE_NAME_MISTBEARD_COVE)
 end
+
+function getDebugShortcut(id)
+    if id == 0 then
+        return SHORTCUT_BEFORE_CATTERY
+    elseif id == 1 then
+        return SHORTCUT_BEFORE_CAPTAIN1
+    elseif id == 2 then
+        return SHORTCUT_BEFORE_CAPTAIN2
+    elseif id == 3 then
+        return SHORTCUT_BEFORE_DENN
+    end
+
+    return 0
+end

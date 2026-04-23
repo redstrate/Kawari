@@ -5,7 +5,7 @@ use kawari::{
     common::{DEBUG_COMMAND_TRIGGER, ObjectId},
     ipc::zone::{
         ActionKind, ActionRequest, BattleNpcSubKind, CharacterDataFlag, CommonSpawn, ObjectKind,
-        ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc,
+        ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, WarpType,
     },
 };
 use parking_lot::Mutex;
@@ -19,6 +19,7 @@ use crate::{
         actor::NetworkedActor,
         instance::Instance,
         network::{DestinationNetwork, NetworkState},
+        zone::change_zone_warp_to_pop_range,
     },
 };
 
@@ -284,6 +285,43 @@ fn process_debug_commands(
                 FromServer::PacketSegment(ipc, from_actor_id),
                 DestinationNetwork::ZoneClients,
             );
+
+            true
+        }
+        "!shortcut" => {
+            let mut data = data.lock();
+            if let Some((_, id)) = chat_message.split_once(' ') {
+                let shortcut_poprange_id;
+                {
+                    let Some(instance) = data.find_actor_instance(from_actor_id) else {
+                        return true;
+                    };
+
+                    let Some(director) = &instance.director else {
+                        return true;
+                    };
+
+                    shortcut_poprange_id =
+                        director.get_debug_shortcut(id.parse().unwrap_or_default());
+                }
+
+                let mut network = network.lock();
+                let mut game_data = game_data.lock();
+                // None here means we don't want them to change from their current instance.
+                change_zone_warp_to_pop_range(
+                    &mut data,
+                    &mut network,
+                    &mut game_data,
+                    None,
+                    shortcut_poprange_id,
+                    from_actor_id,
+                    from_id,
+                    WarpType::Normal,
+                    0,
+                    0,
+                    0,
+                );
+            }
 
             true
         }

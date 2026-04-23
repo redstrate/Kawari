@@ -507,11 +507,7 @@ fn server_logic_tick(
                                     }
                                 }
                                 MapGimmick::FakeExit { exit_pop_range_id } => {
-                                    actors_to_fake_zone_jump.push((
-                                        *id,
-                                        *exit_pop_range_id,
-                                        instance.zone.id,
-                                    ));
+                                    actors_to_fake_zone_jump.push((*id, *exit_pop_range_id));
                                 }
                             }
                         }
@@ -790,7 +786,7 @@ fn server_logic_tick(
         update_actor_hp_mp(network.clone(), instance, id);
     }
 
-    for (id, exit_pop_range_id, zone_id) in actors_to_fake_zone_jump {
+    for (id, exit_pop_range_id) in actors_to_fake_zone_jump {
         let mut game_data = gamedata.lock();
         let mut data = data.lock();
         let mut network = network.lock();
@@ -799,7 +795,7 @@ fn server_logic_tick(
             &mut data,
             &mut network,
             &mut game_data,
-            zone_id,
+            None, // None here means that we don't want to change their current instance
             exit_pop_range_id,
             id,
             from_id,
@@ -980,18 +976,13 @@ pub async fn server_main_loop(
                                 let mut network = network.lock();
                                 let mut game_data = game_data.lock();
 
-                                let destination_zone_id = data
-                                    .find_actor_instance(task.from_actor_id)
-                                    .unwrap()
-                                    .zone
-                                    .id;
                                 let from_id = network.find_by_actor(task.from_actor_id).unwrap();
 
                                 change_zone_warp_to_pop_range(
                                     &mut data,
                                     &mut network,
                                     &mut game_data,
-                                    destination_zone_id,
+                                    None, // Means we don't want to change their current instance
                                     *id,
                                     task.from_actor_id,
                                     from_id,

@@ -441,6 +441,24 @@ impl DirectorData {
             tracing::warn!("Syntax error during onGimmickRect: {err:?}");
         }
     }
+
+    pub fn get_debug_shortcut(&self, id: u32) -> u32 {
+        let run_script = || {
+            self.lua.0.scope(|_| {
+                let func: Function = self.lua.0.globals().get("getDebugShortcut")?;
+
+                func.call::<u32>(id)
+            })
+        };
+        match run_script() {
+            Ok(pop_range_id) => pop_range_id,
+            Err(err) => {
+                tracing::warn!("Syntax error during getDebugShortcut: {err:?}");
+
+                0
+            }
+        }
+    }
 }
 
 /// Perform any queued director tasks
