@@ -64,6 +64,7 @@ pub enum SegmentType {
 pub enum SegmentData<T: ReadWriteIpcSegment> {
     #[br(pre_assert(kind == SegmentType::None))]
     None(),
+
     #[br(pre_assert(kind == SegmentType::Setup))]
     Setup {
         #[brw(pad_before = 4)] // empty
@@ -73,39 +74,45 @@ pub enum SegmentData<T: ReadWriteIpcSegment> {
         #[bw(map = write_string)]
         actor_id: String, // square enix in their infinite wisdom has this as a STRING REPRESENTATION of an integer. what
     },
+
     #[br(pre_assert(kind == SegmentType::Initialize))]
     Initialize {
         actor_id: ObjectId,
         #[brw(pad_after = 32)]
         timestamp: u32,
     },
+
     #[br(pre_assert(kind == SegmentType::SecuritySetup))]
     SecuritySetup {
         #[brw(pad_before = 36)] // empty
         #[brw(pad_size_to = 32)]
         #[br(count = 32)]
         #[br(map = read_string)]
-        #[bw(ignore)]
+        #[bw(map = write_string)]
         phrase: String,
 
         #[brw(pad_before = 32)]
         #[brw(pad_after = 512)] // empty
         key: [u8; 4],
     },
+
     #[br(pre_assert(kind == SegmentType::Ipc))]
     Ipc(
         #[br(parse_with = decrypt, args(size, state))]
         #[bw(write_with = encrypt, args(size, state))]
         T,
     ),
+
     #[br(pre_assert(kind == SegmentType::KeepAliveRequest))]
     KeepAliveRequest { id: u32, timestamp: u32 },
+
     #[br(pre_assert(kind == SegmentType::SecurityInitialize))]
     SecurityInitialize {
-        #[br(count = 0x280)]
+        #[br(count = 640)]
         #[brw(pad_size_to = 640)]
         data: Vec<u8>,
     },
+
     #[br(pre_assert(kind == SegmentType::KeepAliveResponse))]
     KeepAliveResponse { id: u32, timestamp: u32 },
 
