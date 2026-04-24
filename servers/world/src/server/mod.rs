@@ -1292,7 +1292,7 @@ pub async fn server_main_loop(
                         ClientTriggerCommand::SetSoftTarget {} => {
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
-                                trigger.target.unwrap(),
+                                trigger.target.unwrap_or_default(),
                                 ActorControlCategory::SetSoftTarget {},
                             );
 
