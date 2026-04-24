@@ -758,8 +758,8 @@ pub enum ActorControlCategory {
     FurnitureTranslatedAck {
         /// What the furniture was stored in.
         storage_id: ContainerType,
-        /// Unknown.
-        unk1: u16,
+        /// Seems to be the plot number of the interior being modified, or zero if in an apartment. Unknown purpose.
+        plot_number: u16,
         /// The slot the furniture occupied.
         slot: u32,
     },

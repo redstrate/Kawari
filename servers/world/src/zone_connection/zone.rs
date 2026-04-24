@@ -541,10 +541,27 @@ impl ZoneConnection {
         }
     }
 
+    /// Changes the time of day in the current zone for our client.
     pub async fn set_eorzean_time(&mut self, offset: i64) {
         self.send_ipc_self(ServerZoneIpcSegment::new(
             ServerZoneIpcData::EorzeanTimeOffset { offset },
         ))
         .await;
+    }
+
+    /// Returns the intended usage of the zone the player's currently in.
+    pub fn get_zone_intended_use(&self) -> TerritoryIntendedUse {
+        let mut gamedata = self.gamedata.lock();
+        gamedata
+            .get_intended_use(self.player_data.volatile.zone_id as u32)
+            .unwrap_or(TerritoryIntendedUse::Jail)
+    }
+
+    /// Returns true if the intended use is for housing, false otherwise.
+    pub fn in_housing_area(&self, intended_use: TerritoryIntendedUse) -> bool {
+        matches!(
+            intended_use,
+            TerritoryIntendedUse::HousingIndoor | TerritoryIntendedUse::HousingOutdoor
+        )
     }
 }
