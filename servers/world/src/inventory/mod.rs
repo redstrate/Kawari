@@ -37,7 +37,7 @@ use crate::{GameData, ItemInfoQuery};
 use physis::TerritoryIntendedUse;
 
 const MAX_NORMAL_STORAGE: usize = 35;
-const MAX_LARGE_STORAGE: usize = 50;
+pub const MAX_LARGE_STORAGE: usize = 50;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Inventory {

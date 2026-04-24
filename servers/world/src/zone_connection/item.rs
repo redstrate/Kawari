@@ -140,6 +140,38 @@ impl ZoneConnection {
         self.player_data.item_sequence += 1;
     }
 
+    /// Sends two containers to the client, particularly helpful when doing various housing operations, such as moving an item from the main inventory directly to the storeroom.
+    pub async fn send_affected_containers(
+        &mut self,
+        src_container_type: ContainerType,
+        dst_container_type: ContainerType,
+    ) {
+        // This cloning is sort of ugly, but we run into numerous borrowing issues if we don't.
+        let main_inventory = self.player_data.inventory.clone();
+        let house_inventory = self.player_data.house_inventory.clone();
+
+        let get_container = |kind: &ContainerType| -> Option<&dyn Storage> {
+            if let Some(temp_container) = main_inventory.get_container(*kind) {
+                return Some(temp_container);
+            } else if let Some(temp_container) = house_inventory.get_container(*kind) {
+                return Some(temp_container);
+            }
+
+            None
+        };
+
+        let Some(src_container) = get_container(&src_container_type) else {
+            return;
+        };
+
+        let Some(dst_container) = get_container(&dst_container_type) else {
+            return;
+        };
+
+        self.send_container(src_container, src_container_type).await;
+        self.send_container(dst_container, dst_container_type).await;
+    }
+
     pub async fn update_equip(
         &mut self,
         actor_id: ObjectId,

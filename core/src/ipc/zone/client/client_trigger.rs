@@ -357,13 +357,20 @@ pub enum ClientTriggerCommand {
     /// The client places furniture from the storeroom.
     #[brw(magic = 1150u32)]
     PlaceFurnitureFromStoreroom {
-        /// The house's id.
-        house_id: HouseId,
+        unk1: u8, // Unknown, observed as 0x54/84
+        unk2: u8, // Always 1?
+        /// Seems to be the current world id.
+        world_id: u16,
+        /// Seems to be the affected plot's index.
+        plot_index: u16,
+        /// Seems to be the affected ward's index.
+        ward_index: u16,
         /// The source container to retrieve the item from.
         container_type: ContainerType,
+        unk3: u16, // Just in case, observed as zeroes but with all this stuff lately, you never know.
         /// The index into the container.
         container_index: u16,
-        unk: u16, // Just in case, observed as zeroes but with all this stuff lately, you never know.
+        unk4: u16, // Just in case, observed as zeroes but with all this stuff lately, you never know.
     },
 
     /// The client requests to repair and item at a mender.

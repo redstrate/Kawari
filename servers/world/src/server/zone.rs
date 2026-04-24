@@ -1408,6 +1408,7 @@ pub fn handle_zone_messages(
             position,
             indoors,
             rotation,
+            plot_index,
         ) => {
             let mut network = network.lock();
             let data = data.lock();
@@ -1424,6 +1425,7 @@ pub fn handle_zone_messages(
                 *position,
                 *indoors,
                 *rotation,
+                *plot_index,
             );
 
             // We *do* want to include the sender here

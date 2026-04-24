@@ -10,8 +10,8 @@ use kawari::common::{
     calculate_max_level,
 };
 use kawari::config::{FilesystemConfig, get_config};
-use kawari_world::inventory::{Item, Storage, get_next_free_slot};
-use physis::equipment::EquipSlot;
+use kawari_world::inventory::{Item, MAX_LARGE_STORAGE, Storage, get_next_free_slot};
+use physis::{TerritoryIntendedUse, equipment::EquipSlot};
 
 use kawari::ipc::chat::ClientChatIpcData;
 
@@ -52,7 +52,6 @@ use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
 use kawari::common::INVENTORY_ACTION_ACK_GENERAL;
-use physis::TerritoryIntendedUse;
 
 fn spawn_main_loop(
     game_data: Arc<Mutex<GameData>>,
@@ -1461,8 +1460,13 @@ async fn process_packet(
                                 ClientTriggerCommand::RequestApartmentList { starting_index } => {
                                     connection.send_apartment_list(starting_index).await;
                                 }
-                                // TODO: This needs to be networked
                                 ClientTriggerCommand::SetInteriorLightLevel { level, unk } => {
+                                    // TODO: Also reject if they're not the owner/shared tenant
+                                    let intended_use = connection.get_zone_intended_use();
+                                    if !connection.in_housing_area(intended_use) {
+                                        continue;
+                                    }
+
                                     connection
                                         .actor_control_self(
                                             ActorControlCategory::InteriorLightLevel {
@@ -1483,6 +1487,12 @@ async fn process_packet(
                                         .await;
                                 }
                                 ClientTriggerCommand::FurnitureMenuToggled { closed } => {
+                                    // TODO: Also reject if they're not the owner/shared tenant
+                                    let intended_use = connection.get_zone_intended_use();
+                                    if !connection.in_housing_area(intended_use) {
+                                        continue;
+                                    }
+
                                     if !closed {
                                         connection.conditions.set_condition(
                                             kawari::ipc::zone::Condition::UsingHousingFunctions,
@@ -1501,14 +1511,10 @@ async fn process_packet(
                                     connection.send_conditions().await;
                                 }
                                 ClientTriggerCommand::RequestHousingInventory { storeroom } => {
-                                    let intended_use;
-                                    {
-                                        let mut gamedata = connection.gamedata.lock();
-                                        intended_use = gamedata
-                                            .get_intended_use(
-                                                connection.player_data.volatile.zone_id as u32,
-                                            )
-                                            .unwrap_or(TerritoryIntendedUse::Jail);
+                                    // TODO: Also reject if they're not the owner/shared tenant
+                                    let intended_use = connection.get_zone_intended_use();
+                                    if !connection.in_housing_area(intended_use) {
+                                        continue;
                                     }
 
                                     let desired_pages = connection
@@ -1527,22 +1533,18 @@ async fn process_packet(
                                     slot,
                                     ..
                                 } => {
+                                    let intended_use = connection.get_zone_intended_use();
+                                    // TODO: Also reject if they're not the owner/shared tenant
+                                    if !connection.in_housing_area(intended_use) {
+                                        continue;
+                                    }
+
                                     tracing::info!(
-                                        "Client is moving item to inventory! {:#?} {:#?} {:#?}",
+                                        "Client is moving housing item to inventory! {:#?} {:#?} {:#?}",
                                         to_storeroom,
                                         storage_id,
                                         slot
                                     );
-
-                                    let intended_use;
-                                    {
-                                        let mut gamedata = connection.gamedata.lock();
-                                        intended_use = gamedata
-                                            .get_intended_use(
-                                                connection.player_data.volatile.zone_id as u32,
-                                            )
-                                            .unwrap_or(TerritoryIntendedUse::Jail);
-                                    }
 
                                     let desired_pages = connection
                                         .player_data
@@ -1560,21 +1562,21 @@ async fn process_packet(
                                         continue;
                                     };
 
-                                    if (!to_storeroom
-                                        && connection
+                                    let item_info = if !to_storeroom {
+                                        connection
                                             .player_data
                                             .inventory
                                             .add_in_next_free_slot(transfer_item)
-                                            .is_none())
-                                        || (to_storeroom
-                                            && connection
-                                                .player_data
-                                                .house_inventory
-                                                .add_in_empty_slot(transfer_item, desired_pages)
-                                                .is_none())
-                                    {
+                                    } else {
+                                        connection
+                                            .player_data
+                                            .house_inventory
+                                            .add_in_empty_slot(transfer_item, desired_pages)
+                                    };
+
+                                    let Some(item_info) = item_info else {
                                         continue;
-                                    }
+                                    };
 
                                     // Have to get this before deleting the item...
                                     let item_id = transfer_item.item_id;
@@ -1588,11 +1590,16 @@ async fn process_packet(
 
                                     *transfer_item = Item::default();
 
-                                    // TODO: We should only send the affected container, not all of the pages, but for now it doesn't hurt anything
-                                    connection.send_inventory().await;
+                                    // Next, update the client's inventory.
+                                    let src_container_type = storage_id;
+                                    let dst_container_type = item_info.container;
 
-                                    // Here we do want to send all of the housing inventory pages
-                                    connection.send_housing_inventory(desired_pages).await;
+                                    connection
+                                        .send_affected_containers(
+                                            src_container_type,
+                                            dst_container_type,
+                                        )
+                                        .await;
 
                                     // Inform the player via a log message where their item went.
                                     connection
@@ -1623,6 +1630,12 @@ async fn process_packet(
                                     container_index,
                                     ..
                                 } => {
+                                    let intended_use = connection.get_zone_intended_use();
+                                    // TODO: Also reject if they're not the owner/shared tenant
+                                    if !connection.in_housing_area(intended_use) {
+                                        continue;
+                                    }
+
                                     let catalog_id;
                                     {
                                         let mut gamedata = connection.gamedata.lock();
@@ -1642,23 +1655,52 @@ async fn process_packet(
                                         catalog_id = the_id;
                                     }
 
-                                    // This acts as a preview, it doesn't actually spawn the furniture until the client sends a PlaceFurniture. Therefore, we don't network this.
-                                    // TODO: Outdoor logic
-                                    connection
-                                        .send_ipc_self(ServerZoneIpcSegment::new(
-                                            ServerZoneIpcData::InteriorFurniturePlaced {
-                                                storage_id: container_type,
-                                                slot: container_index,
-                                                catalog_id,
-                                                unk1: 1,
-                                                stain: 0,
-                                                unk2: [0; 3],
-                                                rotation: 0.0,
-                                                position: connection.player_data.volatile.position,
-                                                unk3: [0; 4],
-                                            },
-                                        ))
-                                        .await;
+                                    // This acts as a preview, and we don't actually spawn the furniture until the client sends a PlaceFurniture. Therefore, we don't network this.
+                                    let indoors =
+                                        intended_use == TerritoryIntendedUse::HousingIndoor;
+                                    // TODO: implement dyes...
+                                    let stain = 0;
+
+                                    if indoors {
+                                        connection
+                                            .send_ipc_self(ServerZoneIpcSegment::new(
+                                                ServerZoneIpcData::InteriorFurniturePlaced {
+                                                    storage_id: container_type,
+                                                    slot: container_index,
+                                                    catalog_id,
+                                                    unk1: 1,
+                                                    stain,
+                                                    unk2: [0; 3],
+                                                    rotation: 0.0,
+                                                    position: connection
+                                                        .player_data
+                                                        .volatile
+                                                        .position,
+                                                    unk3: [0; 4],
+                                                },
+                                            ))
+                                            .await;
+                                    } else {
+                                        connection
+                                            .send_ipc_self(ServerZoneIpcSegment::new(
+                                                ServerZoneIpcData::ExteriorFurniturePlaced {
+                                                    plot_index: 0xFF, // During preview mode, the plot index and slot are 0xFF.
+                                                    slot: 0xFF,
+                                                    unk1: [0; 2],
+                                                    catalog_id,
+                                                    unk2: 0,
+                                                    stain,
+                                                    unk3: [0; 3],
+                                                    rotation: 0.0,
+                                                    position: connection
+                                                        .player_data
+                                                        .volatile
+                                                        .position,
+                                                    unk4: 0,
+                                                },
+                                            ))
+                                            .await;
+                                    }
                                 }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
@@ -3204,8 +3246,19 @@ async fn process_packet(
                             position,
                             rotation,
                             spawn_furniture,
+                            plot_index,
                             ..
                         } => {
+                            let intended_use = connection.get_zone_intended_use();
+
+                            // TODO: Also reject if they're not the owner/shared tenant
+                            if !connection.in_housing_area(intended_use) {
+                                tracing::error!(
+                                    "The player attempted to place furniture while not within a housing zone! Rejecting request!"
+                                );
+                                continue;
+                            }
+
                             tracing::info!(
                                 "Client placed furniture! {:#?} {:#?} {:#?} {:#?} {:#?}",
                                 container,
@@ -3214,25 +3267,6 @@ async fn process_packet(
                                 rotation,
                                 spawn_furniture,
                             );
-
-                            let intended_use;
-                            {
-                                let mut gamedata = connection.gamedata.lock();
-                                intended_use = gamedata
-                                    .get_intended_use(
-                                        connection.player_data.volatile.zone_id as u32,
-                                    )
-                                    .unwrap_or(TerritoryIntendedUse::Jail);
-                            }
-
-                            if intended_use != TerritoryIntendedUse::HousingIndoor
-                                && intended_use != TerritoryIntendedUse::HousingOutdoor
-                            {
-                                tracing::error!(
-                                    "The player attempted to place furniture while not within a housing zone! Rejecting request!"
-                                );
-                                continue;
-                            }
 
                             let transfer_item = if let Some(the_item) =
                                 connection.player_data.inventory.get_item(*container, *slot)
@@ -3306,8 +3340,12 @@ async fn process_packet(
                                 connection.send_ipc_self(ipc).await;
                             }
 
-                            // Then send the refreshed housing inventory.
-                            connection.send_housing_inventory(desired_pages).await;
+                            // Next, update the client's inventory.
+                            let src_container_type = container;
+                            let dst_container_type = result.container;
+                            connection
+                                .send_affected_containers(*src_container_type, dst_container_type)
+                                .await;
 
                             // If the client opted to move furniture to the storeroom, there's nothing further to do here.
                             if !spawn_furniture {
@@ -3316,7 +3354,7 @@ async fn process_packet(
 
                             // Finally, acknowledge the placement.
                             // TODO: We need to store the coordinates when things are persistent
-                            let indoors = true; // TODO: Logic for outdoors
+                            let indoors = intended_use == TerritoryIntendedUse::HousingIndoor;
                             // TODO: implement dyes...
                             let stain = 0;
 
@@ -3331,6 +3369,7 @@ async fn process_packet(
                                     *position,
                                     indoors,
                                     *rotation,
+                                    *plot_index,
                                 ))
                                 .await;
 
@@ -3352,6 +3391,16 @@ async fn process_packet(
                             unk2,
                             unk3,
                         } => {
+                            let intended_use = connection.get_zone_intended_use();
+
+                            // TODO: Also reject if they're not the owner/shared tenant
+                            if !connection.in_housing_area(intended_use) {
+                                tracing::warn!(
+                                    "Client attempted to move furniture when not in a housing area! Rejecting request!"
+                                );
+                                continue;
+                            }
+
                             tracing::info!(
                                 "Client moved furniture! {:#?} {:#?}, {:#?}, {:#?} {:#?} {:#?}",
                                 house_id,
@@ -3361,8 +3410,47 @@ async fn process_packet(
                                 unk2,
                                 unk3
                             );
+
                             // TODO: We need to store the new coordinates and rotation when making everything persistent!
-                            let indoors = true;
+                            let indoors = intended_use == TerritoryIntendedUse::HousingIndoor;
+
+                            // Determine which container the moved item belongs to.
+                            // TODO: This will need to be expanded in 7.5
+                            let storage_id;
+                            if indoors {
+                                if *slot < 50 {
+                                    storage_id = ContainerType::HousingInteriorPlacedItems1;
+                                } else if *slot < 100 {
+                                    storage_id = ContainerType::HousingInteriorPlacedItems2;
+                                } else if *slot < 150 {
+                                    storage_id = ContainerType::HousingInteriorPlacedItems3;
+                                } else if *slot < 200 {
+                                    storage_id = ContainerType::HousingInteriorPlacedItems4;
+                                } else if *slot < 250 {
+                                    storage_id = ContainerType::HousingInteriorPlacedItems5;
+                                } else if *slot < 300 {
+                                    storage_id = ContainerType::HousingInteriorPlacedItems6;
+                                } else if *slot < 350 {
+                                    storage_id = ContainerType::HousingInteriorPlacedItems7;
+                                } else if *slot < 400 {
+                                    storage_id = ContainerType::HousingInteriorPlacedItems8;
+                                } else {
+                                    tracing::warn!(
+                                        "Client tried to move furniture beyond the bounds of current housing limits! Rejecting request!"
+                                    );
+                                    continue;
+                                }
+                            } else {
+                                if *slot < 50 {
+                                    storage_id = ContainerType::HousingExteriorPlacedItems;
+                                } else {
+                                    tracing::warn!(
+                                        "Client tried to move furniture beyond the bounds of current housing limits! Rejecting request!"
+                                    );
+                                    continue;
+                                }
+                            };
+
                             connection
                                 .handle
                                 .send(ToServer::TranslateFurniture(
@@ -3382,9 +3470,13 @@ async fn process_packet(
                             // This ack doesn't need to be networked
                             connection
                                 .actor_control_self(ActorControlCategory::FurnitureTranslatedAck {
-                                    storage_id: ContainerType::HousingInteriorPlacedItems1, // TODO: This storage_id is wrong!
-                                    slot: *slot as u32,
-                                    unk1: 0,
+                                    storage_id,
+                                    slot: (*slot % MAX_LARGE_STORAGE as u16) as u32,
+                                    plot_number: if !house_id.unit.apartment_flag {
+                                        house_id.unit.apartment_division_plot_index as u16
+                                    } else {
+                                        0
+                                    },
                                 })
                                 .await;
                         }
@@ -3814,7 +3906,6 @@ async fn process_server_msg(
                     .await;
             }
             FromServer::NewLetterArrived() => {
-                // TODO: We probably also need to check if the client is in the mail window and send them an update? Need a capture to see if this happens.
                 connection.send_mailbox_status().await;
             }
             FromServer::PlayDirectorCutscene(cutscene_id) => {
@@ -3850,34 +3941,55 @@ async fn process_server_msg(
                 catalog_id,
                 stain,
                 position,
-                _indoors,
+                indoors,
                 rotation,
+                plot_index,
             ) => {
-                // TODO: needs outdoor logic to send ExteriorFurniturePlaced instead when relevant
-                connection
-                    .send_ipc_self(ServerZoneIpcSegment::new(
-                        ServerZoneIpcData::InteriorFurniturePlaced {
-                            storage_id,
-                            slot,
-                            catalog_id,
-                            unk1: 1,
-                            stain,
-                            unk2: [0; 3],
-                            rotation,
-                            position,
-                            unk3: [0; 4],
-                        },
-                    ))
-                    .await;
+                if indoors {
+                    connection
+                        .send_ipc_self(ServerZoneIpcSegment::new(
+                            ServerZoneIpcData::InteriorFurniturePlaced {
+                                storage_id,
+                                slot,
+                                catalog_id,
+                                unk1: 1,
+                                stain,
+                                unk2: [0; 3],
+                                rotation,
+                                position,
+                                unk3: [0; 4],
+                            },
+                        ))
+                        .await;
+                } else {
+                    connection
+                        .send_ipc_self(ServerZoneIpcSegment::new(
+                            ServerZoneIpcData::ExteriorFurniturePlaced {
+                                plot_index,
+                                slot: slot as u8,
+                                unk1: [0; 2],
+                                catalog_id,
+                                unk2: 0,
+                                stain,
+                                unk3: [0; 3],
+                                rotation,
+                                position,
+                                unk4: 0,
+                            },
+                        ))
+                        .await;
+                }
             }
-            FromServer::FurnitureTranslated(_plot_info, slot, position, rotation, _indoors) => {
-                // TODO: needs outdoor logic for `plot_and_index`
+            FromServer::FurnitureTranslated(plot_info, slot, position, rotation, indoors) => {
+                // TODO: This might need adjustment after double checking it in 7.5
+                let plot = (plot_info.1 as u16) << 8;
+                let index = slot & 0x00FF;
                 connection
                     .send_ipc_self(ServerZoneIpcSegment::new(
                         ServerZoneIpcData::FurnitureTranslatedForObserver(
                             FurnitureTranslatedForObserver {
                                 rotation,
-                                plot_and_index: slot,
+                                plot_and_index: if indoors { slot } else { plot | index },
                                 unk1: [0; 2],
                                 position,
                                 unk2: [0; 4],
