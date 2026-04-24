@@ -102,13 +102,13 @@ pub fn value_to_flag_byte_index_value_quests(in_value: u32) -> (u8, u16) {
 }
 
 // Just based off of Sapphire's version
-pub fn euler_to_direction(euler: [f32; 3]) -> f32 {
-    let sin_z = f32::sin(euler[2]);
-    let cos_z = f32::cos(euler[2]);
-    let sin_y = f32::sin(euler[1]);
-    let cos_y = f32::cos(euler[1]);
-    let sin_x = f32::sin(euler[0]);
-    let cos_x = f32::cos(euler[0]);
+pub fn euler_to_direction(euler: (f32, f32, f32)) -> f32 {
+    let sin_z = f32::sin(euler.2);
+    let cos_z = f32::cos(euler.2);
+    let sin_y = f32::sin(euler.1);
+    let cos_y = f32::cos(euler.1);
+    let sin_x = f32::sin(euler.0);
+    let cos_x = f32::cos(euler.0);
 
     let m00 = cos_z * cos_y;
     let m02 = sin_z * sin_x + (-cos_z * sin_y) * cos_x;
@@ -254,13 +254,13 @@ mod tests {
 
     #[test]
     fn test_euler_to_direction() {
-        assert_eq!(euler_to_direction([0.0, 0.0, 0.0]), 0.0);
-        assert_eq!(euler_to_direction([90.0, 0.0, 0.0]), 3.1415927);
-        assert_eq!(euler_to_direction([0.0, 90.0, 0.0]), 2.0354056);
-        assert_eq!(euler_to_direction([0.0, 0.0, 90.0]), 0.0);
-        assert_eq!(euler_to_direction([-90.0, 0.0, 0.0]), 3.1415927);
-        assert_eq!(euler_to_direction([0.0, -90.0, 0.0]), -2.0354056);
-        assert_eq!(euler_to_direction([0.0, 0.0, -90.0]), 0.0);
+        assert_eq!(euler_to_direction((0.0, 0.0, 0.0)), 0.0);
+        assert_eq!(euler_to_direction((90.0, 0.0, 0.0)), 3.1415927);
+        assert_eq!(euler_to_direction((0.0, 90.0, 0.0)), 2.0354056);
+        assert_eq!(euler_to_direction((0.0, 0.0, 90.0)), 0.0);
+        assert_eq!(euler_to_direction((-90.0, 0.0, 0.0)), 3.1415927);
+        assert_eq!(euler_to_direction((0.0, -90.0, 0.0)), -2.0354056);
+        assert_eq!(euler_to_direction((0.0, 0.0, -90.0)), 0.0);
     }
 
     // Helper macros so we don't repeat ourselves in tests a bunch of times

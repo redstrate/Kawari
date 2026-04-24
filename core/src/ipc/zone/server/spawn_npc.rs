@@ -114,9 +114,9 @@ mod tests {
         assert_eq!(npc_spawn.common.resource_points, 10000);
         assert_eq!(npc_spawn.common.max_resource_points, 10000);
         //assert_eq!(npc_spawn.common.display_flags, DisplayFlag::NONE);
-        assert_eq!(npc_spawn.common.position.x, 4.883462);
-        assert_eq!(npc_spawn.common.position.y, 40.04264);
-        assert_eq!(npc_spawn.common.position.z, 11.821917);
+        assert_eq!(npc_spawn.common.position.0.x, 4.883462);
+        assert_eq!(npc_spawn.common.position.0.y, 40.04264);
+        assert_eq!(npc_spawn.common.position.0.z, 11.821917);
         assert_eq!(npc_spawn.common.model_chara, 411);
         assert_eq!(npc_spawn.common.base_id, 13498);
         assert_eq!(npc_spawn.common.name_id, 10261);
@@ -153,9 +153,9 @@ mod tests {
         assert_eq!(npc_spawn.common.resource_points, 0);
         assert_eq!(npc_spawn.common.max_resource_points, 0);
         assert_eq!(npc_spawn.common.display_flags, DisplayFlag::NONE);
-        assert_eq!(npc_spawn.common.position.x, 61.169727);
-        assert_eq!(npc_spawn.common.position.y, 64.56608);
-        assert_eq!(npc_spawn.common.position.z, -168.08115);
+        assert_eq!(npc_spawn.common.position.0.x, 61.169727);
+        assert_eq!(npc_spawn.common.position.0.y, 64.56608);
+        assert_eq!(npc_spawn.common.position.0.z, -168.08115);
         assert_eq!(npc_spawn.common.model_chara, 297);
         assert_eq!(npc_spawn.common.base_id, 118);
         assert_eq!(npc_spawn.common.name_id, 405);

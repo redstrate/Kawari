@@ -40,7 +40,7 @@ panic = "abort"
 
 [workspace.dependencies]
 # Used to read game data
-physis = { git = "https://github.com/redstrate/physis", default-features = false }
+physis = { git = "https://github.com/redstrate/physis", features = ["glam"], default-features = false }
 
 # Serialization used everywhere
 serde = { version = "1.0", features = ["derive"], default-features = false }
@@ -116,3 +116,6 @@ libsqlite3-sys = { version = "*", features = ["bundled"], default-features = fal
 
 # Used for EventHandlers since stable Rust doesn't have this yet
 async-trait = { version = "0.1", default-features = false }
+
+# 3D math primitives
+glam = { version = "0.32", features = ["std"], default-features = false }

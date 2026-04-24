@@ -1,6 +1,7 @@
 use std::{io::Cursor, ptr::null_mut};
 
 use binrw::{BinRead, BinWrite, binrw};
+use glam::Vec3;
 use recastnavigation_sys::{
     DT_SUCCESS, dtAllocNavMesh, dtAllocNavMeshQuery, dtNavMesh, dtNavMesh_addTile, dtNavMesh_init,
     dtNavMeshParams, dtNavMeshQuery, dtNavMeshQuery_findNearestPoly, dtNavMeshQuery_findPath,
@@ -129,7 +130,7 @@ impl Navmesh {
     }
 
     /// Calculates a path from `start_pos` to `end_pos`.
-    pub fn calculate_path(&self, start_pos: [f32; 3], end_pos: [f32; 3]) -> Vec<[f32; 3]> {
+    pub fn calculate_path(&self, start_pos: Vec3, end_pos: Vec3) -> Vec<Vec3> {
         unsafe {
             let mut filter = dtQueryFilter {
                 m_areaCost: [1.0; 64],
@@ -149,8 +150,8 @@ impl Navmesh {
                 self.navmesh_query,
                 start_poly,
                 end_poly,
-                start_poly_pos.as_ptr(),
-                end_poly_pos.as_ptr(),
+                &start_poly_pos.x,
+                &end_poly_pos.x,
                 &filter,
                 path.as_mut_ptr(),
                 &mut path_count,
@@ -163,8 +164,8 @@ impl Navmesh {
             // now calculate the positions in the path
             dtNavMeshQuery_findStraightPath(
                 self.navmesh_query,
-                start_poly_pos.as_ptr(),
-                end_poly_pos.as_ptr(),
+                &start_poly_pos.x,
+                &end_poly_pos.x,
                 path.as_ptr(),
                 path_count,
                 straight_path.as_mut_ptr(),
@@ -177,7 +178,7 @@ impl Navmesh {
 
             let mut path = Vec::new();
             for pos in straight_path[..straight_path_count as usize * 3].chunks(3) {
-                path.push([pos[0], pos[1], pos[2]]);
+                path.push(Vec3::from_slice(pos));
             }
 
             path
@@ -186,9 +187,9 @@ impl Navmesh {
 
     fn get_polygon_at_location(
         query: *const dtNavMeshQuery,
-        position: [f32; 3],
+        position: Vec3,
         filter: &dtQueryFilter,
-    ) -> (dtPolyRef, [f32; 3]) {
+    ) -> (dtPolyRef, Vec3) {
         let extents = [2.0, 4.0, 2.0];
 
         unsafe {
@@ -197,7 +198,7 @@ impl Navmesh {
             assert!(
                 dtNavMeshQuery_findNearestPoly(
                     query,
-                    position.as_ptr(),
+                    &position.x,
                     extents.as_ptr(),
                     filter,
                     &mut nearest_ref,
@@ -205,7 +206,7 @@ impl Navmesh {
                 ) == DT_SUCCESS
             );
 
-            (nearest_ref, nearest_pt)
+            (nearest_ref, Vec3::from_array(nearest_pt))
         }
     }
 

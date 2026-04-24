@@ -1,6 +1,7 @@
 //! Specialized, but overall generic functions for mapping values to bytes should go here.
 
 use bstr::{BString, ByteSlice};
+use glam::Vec3;
 
 use crate::common::Position;
 
@@ -70,18 +71,18 @@ pub(crate) fn write_packed_float(float: &f32) -> u16 {
 }
 
 pub(crate) fn read_packed_position(packed: [u16; 3]) -> Position {
-    Position {
+    Position(Vec3 {
         x: read_packed_float(packed[0]),
         y: read_packed_float(packed[1]),
         z: read_packed_float(packed[2]),
-    }
+    })
 }
 
 pub(crate) fn write_packed_position(pos: &Position) -> [u16; 3] {
     [
-        write_packed_float(&pos.x),
-        write_packed_float(&pos.y),
-        write_packed_float(&pos.z),
+        write_packed_float(&pos.0.x),
+        write_packed_float(&pos.0.y),
+        write_packed_float(&pos.0.z),
     ]
 }
 

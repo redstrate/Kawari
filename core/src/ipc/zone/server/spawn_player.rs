@@ -70,9 +70,9 @@ mod tests {
         assert_eq!(player_spawn.common.spawn_index, 0);
         assert_eq!(player_spawn.common.level, 1);
         assert_eq!(player_spawn.common.class_job, 1); // adventurer
-        assert_eq!(player_spawn.common.position.x, 40.360653);
-        assert_eq!(player_spawn.common.position.y, 4.0);
-        assert_eq!(player_spawn.common.position.z, -152.85175);
+        assert_eq!(player_spawn.common.position.0.x, 40.360653);
+        assert_eq!(player_spawn.common.position.0.y, 4.0);
+        assert_eq!(player_spawn.common.position.0.z, -152.85175);
         assert_eq!(player_spawn.common.name, "Lavenaa Warren");
         assert_eq!(player_spawn.common.look.race, 1);
         assert_eq!(player_spawn.common.look.gender, 1);

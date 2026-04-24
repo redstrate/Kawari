@@ -1,3 +1,4 @@
+use glam::Vec3;
 use serde::Deserialize;
 use std::io::Read;
 
@@ -441,11 +442,11 @@ impl WorldDatabase {
         player_data.quest.completed.data = character.completed_quests.clone();
 
         // volatile
-        player_data.volatile.position = Position {
+        player_data.volatile.position = Position(Vec3 {
             x: character.position_x,
             y: character.position_y,
             z: character.position_z,
-        };
+        });
         player_data.volatile.rotation = character.rotation as f64;
 
         self.commit_player_data(&player_data);

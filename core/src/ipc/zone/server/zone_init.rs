@@ -109,6 +109,7 @@ mod tests {
     use std::{fs::read, io::Cursor, path::PathBuf};
 
     use binrw::BinRead;
+    use glam::Vec3;
 
     use crate::server_zone_tests_dir;
 
@@ -144,11 +145,11 @@ mod tests {
                 game_festival_phases: [0, 0, 0, 0, 0, 0, 0, 0],
                 ui_festival_ids: [165, 0, 0, 0, 0, 0, 0, 0].map(|x| FestivalId(x)),
                 ui_festival_phases: [0, 0, 0, 0, 0, 0, 0, 0],
-                position: Position {
+                position: Position(Vec3 {
                     x: -33.66853,
                     y: 0.044279873,
                     z: 12.595009
-                },
+                }),
                 content_roulette_bonuses: [0, 1, 1, 4, 4, 1, 2, 1, 1, 4, 1],
                 penalty_timestamps: [0, 0]
             }

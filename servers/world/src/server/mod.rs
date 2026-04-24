@@ -1,3 +1,4 @@
+use glam::{Affine3A, EulerRot, Vec3};
 use parking_lot::Mutex;
 use physis::TerritoryIntendedUse;
 use std::{
@@ -445,7 +446,8 @@ fn server_logic_tick(
                 };
 
                 // Check for overlapping map ranges
-                let overlapping_ranges = instance.zone.get_overlapping_map_ranges(actor.position());
+                let overlapping_ranges =
+                    instance.zone.get_overlapping_map_ranges(actor.position().0);
                 let in_sanctuary = overlapping_ranges.iter().filter(|x| x.sanctuary).count() > 0;
 
                 // We're on the 10 second mark, and you're in a sanctuary...
@@ -571,8 +573,8 @@ fn server_logic_tick(
                     let a_position = a.1.position();
                     let b_position = b.1.position();
 
-                    let a_distance = Position::distance(actor.position(), a_position);
-                    let b_distance = Position::distance(actor.position(), b_position);
+                    let a_distance = Vec3::distance(actor.position().0, a_position.0);
+                    let b_distance = Vec3::distance(actor.position().0, b_position.0);
 
                     a_distance.total_cmp(&b_distance)
                 });
@@ -1117,12 +1119,10 @@ pub async fn server_main_loop(
                             .zone
                             .find_pop_range(determine_initial_pop_range(city_state))
                         {
-                            exit_position = Position {
-                                x: object.transform.translation[0],
-                                y: object.transform.translation[1],
-                                z: object.transform.translation[2],
-                            };
-                            exit_rotation = euler_to_direction(object.transform.rotation);
+                            let (_, rotation, translation) =
+                                Affine3A::from(object.transform).to_scale_rotation_translation();
+                            exit_position = Position(translation);
+                            exit_rotation = euler_to_direction(rotation.to_euler(EulerRot::XYZ));
                         } else {
                             exit_position = position;
                             exit_rotation = rotation;

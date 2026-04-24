@@ -4,6 +4,7 @@ use crate::{
     StatusEffects,
     zone_connection::{BaseParameters, TeleportQuery},
 };
+use glam::Vec3;
 use kawari::{
     common::{DistanceRange, ObjectId, Position, Timeline},
     ipc::zone::{CommonSpawn, Conditions, SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure},
@@ -55,10 +56,10 @@ pub enum NetworkedActor {
     },
     Npc {
         state: NpcState,
-        navmesh_path: VecDeque<[f32; 3]>,
+        navmesh_path: VecDeque<Vec3>,
         navmesh_path_lerp: f32,
         navmesh_target: Option<ObjectId>,
-        last_position: Option<Position>,
+        last_position: Option<Vec3>,
         spawn: SpawnNpc,
         timeline: Timeline,
         /// In half-seconds (the current server logic tick.)
@@ -129,19 +130,13 @@ impl NetworkedActor {
         // This only makes sense for players
         if let NetworkedActor::Player { distance_range, .. } = self {
             // Retail doesn't take into account Y
-            let self_pos = Position {
-                x: self.position().x,
-                y: 0.0,
-                z: self.position().z,
-            };
+            let mut self_pos = self.position().0;
+            self_pos.y = 0.0;
 
-            let other_pos = Position {
-                x: other.position().x,
-                y: 0.0,
-                z: other.position().z,
-            };
+            let mut other_pos = other.position().0;
+            other_pos.y = 0.0;
 
-            let distance = Position::distance(self_pos, other_pos);
+            let distance = Vec3::distance(self_pos, other_pos);
             distance < distance_range.distance()
         } else {
             false

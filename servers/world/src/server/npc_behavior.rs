@@ -5,6 +5,7 @@ use std::{
     time::Duration,
 };
 
+use glam::Vec3;
 use kawari::{
     common::{
         ENEMY_AUTO_ATTACK_RATE, JumpState, MINIMUM_PATHFINDING_DISTANCE, MoveAnimationState,
@@ -67,15 +68,15 @@ pub fn npc_behavior(
 
                 let target_pos;
                 if let Some(target_actor) = instance.find_actor(current_target) {
-                    target_pos = target_actor.get_common_spawn().position;
+                    target_pos = target_actor.get_common_spawn().position.0;
                 } else {
                     // If we can't find the target actor for some reason (despawn, disconnect, left zone), fall back on a sane-ish destination
-                    target_pos = last_position.unwrap_or(spawn.common.position);
+                    target_pos = last_position.unwrap_or(spawn.common.position.0);
                 }
 
-                let distance = Position::distance(spawn.common.position, target_pos);
+                let distance = Vec3::distance(spawn.common.position.0, target_pos);
 
-                let rotate = |from_pos: Position, to_pos: Position| {
+                let rotate = |from_pos: Vec3, to_pos: Vec3| {
                     let rotation = f32::atan2(to_pos.x - from_pos.x, to_pos.z - from_pos.z);
                     if rotation >= PI { -PI } else { rotation }
                 };
@@ -85,22 +86,18 @@ pub fn npc_behavior(
                 // If we are in distance, rotate towards target
                 if distance <= MINIMUM_PATHFINDING_DISTANCE {
                     position = Some(spawn.common.position);
-                    rotation = Some(rotate(spawn.common.position, target_pos));
+                    rotation = Some(rotate(spawn.common.position.0, target_pos));
                 } else if !current_path.is_empty() {
                     // otherwise, Follow current path
-                    let next_position = Position {
-                        x: current_path[0][0],
-                        y: current_path[0][1],
-                        z: current_path[0][2],
-                    };
+                    let next_position = current_path[0];
 
-                    let current_position = last_position.unwrap_or(spawn.common.position);
+                    let current_position = last_position.unwrap_or(spawn.common.position.0);
 
-                    position = Some(Position::lerp(
+                    position = Some(Position(Vec3::lerp(
                         current_position,
                         next_position,
                         *current_path_lerp,
-                    ));
+                    )));
                     rotation = Some(rotate(current_position, next_position));
                 } else {
                     position = None;
@@ -154,11 +151,7 @@ pub fn npc_behavior(
                 if *current_path_lerp >= 1.0 {
                     *current_path_lerp = 0.0;
                     if !current_path.is_empty() {
-                        *last_position = Some(Position {
-                            x: current_path[0][0],
-                            y: current_path[0][1],
-                            z: current_path[0][2],
-                        });
+                        *last_position = Some(current_path[0]);
                         current_path.pop_front();
                     }
                 }
@@ -189,7 +182,7 @@ pub fn npc_behavior(
                             }
 
                             // TODO: hardcoded sensing range
-                            if Position::distance(*position, spawn.common.position) < 15.0 {
+                            if Vec3::distance(position.0, spawn.common.position.0) < 15.0 {
                                 *state = NpcState::Hate;
                                 *current_target = Some(*target_id);
 
@@ -202,13 +195,9 @@ pub fn npc_behavior(
                         *current_target = Some(spawn.common.owner_id);
                     }
                 } else if !current_path.is_empty() {
-                    let next_position = Position {
-                        x: current_path[0][0],
-                        y: current_path[0][1],
-                        z: current_path[0][2],
-                    };
-                    let current_position = last_position.unwrap_or(spawn.common.position);
-                    let distance = Position::distance(current_position, next_position);
+                    let next_position = current_path[0];
+                    let current_position = last_position.unwrap_or(spawn.common.position.0);
+                    let distance = Vec3::distance(current_position, next_position);
 
                     *current_path_lerp =
                         f32::clamp(*current_path_lerp + (2.0 / distance), 0.0, 1.0);
@@ -222,18 +211,15 @@ pub fn npc_behavior(
 
                     if !reset_target && target_actor_pos.contains_key(current_target) {
                         let target_pos = target_actor_pos[current_target];
-                        let distance = Position::distance(spawn.common.position, target_pos);
+                        let distance = Vec3::distance(spawn.common.position.0, target_pos);
                         let needs_repath =
                             current_path.is_empty() && distance > MINIMUM_PATHFINDING_DISTANCE;
                         can_take_action = distance <= MINIMUM_PATHFINDING_DISTANCE;
 
-                        let current_pos = spawn.common.position;
-                        let path: VecDeque<[f32; 3]> = instance
+                        let current_pos = spawn.common.position.0;
+                        let path: VecDeque<Vec3> = instance
                             .navmesh
-                            .calculate_path(
-                                [current_pos.x, current_pos.y, current_pos.z],
-                                [target_pos.x, target_pos.y, target_pos.z],
-                            )
+                            .calculate_path(current_pos, target_pos)
                             .into();
 
                         if needs_repath {

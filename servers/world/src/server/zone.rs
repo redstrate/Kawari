@@ -1,5 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
+use glam::{Affine3A, EulerRot, Vec3};
 use parking_lot::Mutex;
 use physis::{
     TerritoryIntendedUse,
@@ -43,7 +44,7 @@ pub enum MapGimmick {
     /// Jump pads like the ones in Gold Saucer.
     Jump {
         /// The position to land on.
-        to_position: Position,
+        to_position: Vec3,
         /// The GimmickJump type.
         gimmick_jump_type: u32,
         /// The animation ID to play for the EObj.
@@ -62,9 +63,9 @@ pub struct MapRange {
     /// Trigger box shape.
     pub trigger_box_shape: TriggerBoxShape,
     /// Position of this range in the world.
-    pub position: Position,
+    pub position: Vec3,
     /// Relative scale of this range.
-    pub scale: [f32; 3],
+    pub scale: Vec3,
     /// Whether this map range represents a sanctuary.
     pub sanctuary: bool,
     /// Whether this map range represents a PvP duel area.
@@ -81,7 +82,7 @@ pub struct MapRange {
 
 #[derive(Debug)]
 struct HousingPlot {
-    entrance_position: Position,
+    entrance_position: Vec3,
 }
 
 /// Represents a loaded zone
@@ -212,6 +213,9 @@ impl Zone {
                     }
 
                     for object in &layer.objects {
+                        let (scale, _, translation) =
+                            Affine3A::from(object.transform).to_scale_rotation_translation();
+
                         if let LayerEntryData::EventNPC(npc) = &object.data {
                             zone.cached_npc_base_ids
                                 .insert(object.instance_id, npc.parent_data.parent_data.base_id);
@@ -219,12 +223,8 @@ impl Zone {
                         if let LayerEntryData::MapRange(map_range) = &object.data {
                             zone.map_ranges.push(MapRange {
                                 trigger_box_shape: map_range.parent_data.trigger_box_shape,
-                                position: Position {
-                                    x: object.transform.translation[0],
-                                    y: object.transform.translation[1],
-                                    z: object.transform.translation[2],
-                                },
-                                scale: object.transform.scale,
+                                position: translation,
+                                scale,
                                 sanctuary: map_range.rest_bonus_enabled,
                                 duel: false,
                                 gimmick: None,
@@ -240,12 +240,8 @@ impl Zone {
                         if let LayerEntryData::EventRange(event_range) = &object.data {
                             zone.map_ranges.push(MapRange {
                                 trigger_box_shape: event_range.parent_data.trigger_box_shape,
-                                position: Position {
-                                    x: object.transform.translation[0],
-                                    y: object.transform.translation[1],
-                                    z: object.transform.translation[2],
-                                },
-                                scale: object.transform.scale,
+                                position: translation,
+                                scale,
                                 sanctuary: false,
                                 // This is guesswork since there's only one dueling location in-game
                                 duel: event_range.unk_flags[0] == 1
@@ -285,12 +281,12 @@ impl Zone {
 
                                     // 8 seems to indicate a jumping pad
                                     if gimmick_rect_info.TriggerIn() == 8 {
+                                        let (_, _, translation) =
+                                            Affine3A::from(target_pop_range.0.transform)
+                                                .to_scale_rotation_translation();
+
                                         let map_gimmick = MapGimmick::Jump {
-                                            to_position: Position {
-                                                x: target_pop_range.0.transform.translation[0],
-                                                y: target_pop_range.0.transform.translation[1],
-                                                z: target_pop_range.0.transform.translation[2],
-                                            },
+                                            to_position: translation,
                                             gimmick_jump_type,
                                             sgb_animation_id,
                                             eobj_instance_id: object.instance_id,
@@ -521,6 +517,9 @@ impl Zone {
                 }
 
                 for object in &layer.objects {
+                    let (_, rotation, translation) =
+                        Affine3A::from(object.transform).to_scale_rotation_translation();
+
                     if let LayerEntryData::EventObject(eobj) = &object.data {
                         let unselectable = if let Some(event_type) = HandlerType::from_repr(
                             game_data.get_eobj_data(eobj.parent_data.base_id) >> 16,
@@ -557,12 +556,8 @@ impl Zone {
                             layout_id: object.instance_id,
                             bind_layout_id: eobj.bound_instance_id,
                             radius: 1.0,
-                            rotation: euler_to_direction(object.transform.rotation),
-                            position: Position {
-                                x: object.transform.translation[0],
-                                y: object.transform.translation[1],
-                                z: object.transform.translation[2],
-                            },
+                            rotation: euler_to_direction(rotation.to_euler(EulerRot::XYZ)),
+                            position: Position(translation),
                             ..Default::default()
                         };
                         self.cached_objects.insert(eobj.parent_data.base_id, spawn);
@@ -579,12 +574,8 @@ impl Zone {
                                 base_id: treasure.base_id as u32,
                                 entity_id: ObjectId(fastrand::u32(..)),
                                 layout_id: object.instance_id,
-                                rotation: euler_to_direction(object.transform.rotation),
-                                position: Position {
-                                    x: object.transform.translation[0],
-                                    y: object.transform.translation[1],
-                                    z: object.transform.translation[2],
-                                },
+                                rotation: euler_to_direction(rotation.to_euler(EulerRot::XYZ)),
+                                position: Position(translation),
                                 ..Default::default()
                             },
                         );
@@ -620,7 +611,7 @@ impl Zone {
                 base_id: EOBJ_HOUSING_ENTRANCE,
                 entity_id: ObjectId(fastrand::u32(..)),
                 radius: 1.0,
-                position: plot.entrance_position,
+                position: Position(plot.entrance_position),
                 args2: u32::from_le_bytes([0, i as u8, 0, 0]),
                 ..Default::default()
             };
@@ -759,7 +750,7 @@ impl Zone {
     }
 
     /// Returns a list of MapRanges that overlap this position.
-    pub fn get_overlapping_map_ranges(&self, position: Position) -> Vec<&MapRange> {
+    pub fn get_overlapping_map_ranges(&self, position: Vec3) -> Vec<&MapRange> {
         let mut overlapping = Vec::new();
 
         for map_range in &self.map_ranges {
@@ -790,12 +781,12 @@ impl Zone {
                     let length = map_range.scale[1] * 2.0;
                     let length_sq = f32::powi(length, 2);
 
-                    let pt1 = Position {
+                    let pt1 = Vec3 {
                         x: map_range.position.x,
                         y: map_range.position.y - map_range.scale[1],
                         z: map_range.position.z,
                     };
-                    let pt2 = Position {
+                    let pt2 = Vec3 {
                         x: map_range.position.x,
                         y: map_range.position.y + map_range.scale[1],
                         z: map_range.position.z,
@@ -816,13 +807,7 @@ impl Zone {
     }
 
     // From https://www.flipcode.com/archives/Fast_Point-In-Cylinder_Test.shtml
-    fn cylinder_test(
-        pt1: Position,
-        pt2: Position,
-        length_sq: f32,
-        radius_sq: f32,
-        test_pt: Position,
-    ) -> f32 {
+    fn cylinder_test(pt1: Vec3, pt2: Vec3, length_sq: f32, radius_sq: f32, test_pt: Vec3) -> f32 {
         let dx = pt2.x - pt1.x;
         let dy = pt2.y - pt1.y;
         let dz = pt2.z - pt1.z;
@@ -947,12 +932,10 @@ pub fn change_zone_warp_to_pop_range(
     if let Some((destination_object, _)) =
         target_instance.zone.find_pop_range(destination_instance_id)
     {
-        exit_position = Some(Position {
-            x: destination_object.transform.translation[0],
-            y: destination_object.transform.translation[1],
-            z: destination_object.transform.translation[2],
-        });
-        exit_rotation = Some(euler_to_direction(destination_object.transform.rotation));
+        let (_, rotation, translation) =
+            Affine3A::from(destination_object.transform).to_scale_rotation_translation();
+        exit_position = Some(Position(translation));
+        exit_rotation = Some(euler_to_direction(rotation.to_euler(EulerRot::XYZ)));
     } else {
         exit_position = None;
         exit_rotation = None;
@@ -979,12 +962,10 @@ pub fn change_zone_warp_to_entrance(
     let exit_position;
     let exit_rotation;
     if let Some(destination_object) = target_instance.zone.find_entrance() {
-        exit_position = Some(Position {
-            x: destination_object.transform.translation[0],
-            y: destination_object.transform.translation[1],
-            z: destination_object.transform.translation[2],
-        });
-        exit_rotation = Some(euler_to_direction(destination_object.transform.rotation));
+        let (_, rotation, translation) =
+            Affine3A::from(destination_object.transform).to_scale_rotation_translation();
+        exit_position = Some(Position(translation));
+        exit_rotation = Some(euler_to_direction(rotation.to_euler(EulerRot::XYZ)));
     } else {
         tracing::warn!(
             "Failed to find instanced content entrance?! This is a bug in Kawari, please report it!"
