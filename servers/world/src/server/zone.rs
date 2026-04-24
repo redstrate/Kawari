@@ -359,19 +359,18 @@ impl Zone {
 
         // create housing plot cache
         if zone.intended_use == TerritoryIntendedUse::HousingOutdoor as u8 {
-            // 60 is the maximum number of plots
-            for i in 0..60 {
-                let map_range_id = game_data
-                    .get_land_set_map_range(internal_housing_row(id).unwrap(), i)
-                    .unwrap();
+            let land_sets = game_data
+                .get_land_sets(internal_housing_row(id).unwrap())
+                .unwrap();
+            for land_set in land_sets {
                 let map_ranges: Vec<&MapRange> = zone
                     .map_ranges
                     .iter()
-                    .filter(|x| x.instance_id == map_range_id)
+                    .filter(|x| x.instance_id == land_set.UnknownRange1) // NOTE: Will be MapRange in the future
                     .collect();
                 if map_ranges.is_empty() {
                     tracing::warn!(
-                        "Failed to find map range for plot {i}! The entrance won't spawn!"
+                        "Failed to find map range for a plot! The entrance won't spawn!"
                     );
                 } else {
                     let map_range = map_ranges.first().unwrap();

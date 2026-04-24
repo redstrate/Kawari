@@ -27,7 +27,7 @@ use icarus::GilShopItem::GilShopItemSheet;
 use icarus::GimmickRect::{GimmickRectRow, GimmickRectSheet};
 use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
 use icarus::HousingAethernet::HousingAethernetSheet;
-use icarus::HousingLandSet::HousingLandSetSheet;
+use icarus::HousingLandSet::{HousingLandSetSheet, LandSetElement};
 use icarus::InstanceContent::InstanceContentSheet;
 use icarus::Item::ItemSheet;
 use icarus::ItemAction::ItemActionSheet;
@@ -1521,12 +1521,12 @@ impl GameData {
         PlotSize::from_repr(row.LandSet()[plot_index].PlotSize)
     }
 
-    /// Returns the map range for a given land set in a housing district.
-    pub fn get_land_set_map_range(&mut self, housing_id: u32, plot_index: usize) -> Option<u32> {
+    /// Returns the land sets in a housing district.
+    pub fn get_land_sets(&mut self, housing_id: u32) -> Option<Vec<LandSetElement>> {
         let sheet = HousingLandSetSheet::read_from(&mut self.resource, Language::None).ok()?;
         let row = sheet.row(housing_id)?;
 
-        Some(row.LandSet()[plot_index].UnknownRange1) // NOTE: Will be MapRange in the future
+        Some(row.LandSet().to_vec())
     }
 
     /// Returns a CommonSpawn with the NPC's equipment.
