@@ -1150,7 +1150,11 @@ pub fn is_private_area(intended_use: TerritoryIntendedUse) -> bool {
 /// Returns the internal housing row used for certain sheets.
 pub fn internal_housing_row(zone_id: u16) -> Option<u32> {
     match zone_id {
-        340 => Some(1),
+        339 => Some(0), // Mist
+        340 => Some(1), // The Lavender Beds
+        418 => Some(2), // The Goblet
+        641 => Some(3), // Shirogane
+        979 => Some(4), // Empyreum
         _ => None,
     }
 }
