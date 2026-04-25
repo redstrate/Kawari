@@ -12,5 +12,7 @@ function doAction(player)
         effects:gain_effect_self(EFFECT_SILKEN_SYMMETRY, 0, 30.0)
     end
 
+    effects:begin_combo() -- Comboes with Fountain
+
     return effects
 end

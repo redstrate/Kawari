@@ -275,6 +275,9 @@ pub fn execute_action(
                             DestinationNetwork::ZoneClients,
                         );
                     }
+                    EffectKind::BeginCombo { action_id, .. } => {
+                        *action_id = request.action_key as u16;
+                    }
                     _ => {}
                 }
             }

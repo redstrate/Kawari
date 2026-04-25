@@ -106,6 +106,19 @@ impl UserData for EffectsBuilder {
             });
             Ok(())
         });
+        methods.add_method_mut("begin_combo", |_, this, _: ()| {
+            this.effects.push(ActionEffect {
+                kind: EffectKind::BeginCombo {
+                    unk1: 0,
+                    unk2: 0,
+                    unk3: 0,
+                    unk4: 0,
+                    unk5: 128,
+                    action_id: 0, // Filled in later
+                },
+            });
+            Ok(())
+        });
     }
 }
 

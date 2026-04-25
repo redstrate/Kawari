@@ -79,7 +79,15 @@ pub enum EffectKind {
     InterruptAction {},
     /// Begins a combo?
     #[brw(magic = 27u8)]
-    BeginCombo,
+    BeginCombo {
+        unk1: u8,
+        unk2: u8,
+        unk3: u8,
+        unk4: u8,
+        unk5: u8,
+        /// Which action begun this combo, I guess.
+        action_id: u16,
+    },
     /// Seen during Sprint.
     #[brw(magic = 14u8)]
     GainEffect {
@@ -291,7 +299,17 @@ mod tests {
         );
 
         // effect 1: start action combo
-        assert_eq!(action_result.effects[1].kind, EffectKind::BeginCombo);
+        assert_eq!(
+            action_result.effects[1].kind,
+            EffectKind::BeginCombo {
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+                unk4: 0,
+                unk5: 128,
+                action_id: 31
+            }
+        );
 
         assert_eq!(
             action_result.target_id_again.object_id,
