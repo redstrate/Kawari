@@ -810,7 +810,7 @@ pub fn execute_normal_action(
             })
             .unwrap();
     } else {
-        tracing::warn!("Action {key} isn't scripted yet! Ignoring {:#?}", request);
+        tracing::warn!("Action {key} isn't scripted yet!");
     }
 
     effects_builder

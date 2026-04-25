@@ -316,8 +316,6 @@ impl Instance {
     }
 
     pub fn cancel_task(&mut self, network: Arc<Mutex<NetworkState>>, task: &QueuedTask) {
-        tracing::info!("Removing task {task:#?} from the schedule!");
-
         // Delete the selected task:
         self.queued_task.retain(|x| x != task);
 
@@ -335,8 +333,6 @@ impl Instance {
 
     /// Cancels all queued actions for this actor.
     pub fn cancel_actor_tasks(&mut self, actor_id: ObjectId) {
-        tracing::info!("Removing tasks for {actor_id} from the schedule!");
-
         // Delete the selected task:
         self.queued_task.retain(|x| x.from_actor_id != actor_id);
     }
