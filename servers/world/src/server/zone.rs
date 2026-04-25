@@ -190,13 +190,19 @@ impl Zone {
                     .expect("Didn't find dropins directory?")
                     .flatten()
                 {
-                    if let Ok(contents) = std::fs::read_to_string(entry.path())
-                        && let Ok(mut dropin) = serde_json::from_str::<DropIn>(&contents)
-                        && lvb.sections[0].lgb_paths.contains(&dropin.appends)
-                    {
-                        tracing::info!("Loaded dropin from {:?}", entry.path());
-                        zone.dropin_layers.append(&mut dropin.layers);
-                        break 'outer;
+                    if let Ok(contents) = std::fs::read_to_string(entry.path()) {
+                        match serde_json::from_str::<DropIn>(&contents) {
+                            Ok(mut dropin) => {
+                                if lvb.sections[0].lgb_paths.contains(&dropin.appends) {
+                                    tracing::info!("Loaded dropin from {:?}", entry.path());
+                                    zone.dropin_layers.append(&mut dropin.layers);
+                                    break 'outer;
+                                }
+                            }
+                            Err(err) => {
+                                tracing::warn!("Failed to load drop-in {:?}: {err:?}", entry.path())
+                            }
+                        }
                     }
                 }
             }
