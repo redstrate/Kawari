@@ -14,8 +14,6 @@ struct GateStatus {
 }
 
 async fn get_login_status() -> Json<GateStatus> {
-    tracing::info!("Requesting login status...");
-
     let config = get_config();
     Json(GateStatus {
         status: config.frontier.login_open.into(),
@@ -23,8 +21,6 @@ async fn get_login_status() -> Json<GateStatus> {
 }
 
 async fn get_world_status() -> Json<GateStatus> {
-    tracing::info!("Requesting world status...");
-
     let config = get_config();
     Json(GateStatus {
         status: config.frontier.worlds_open.into(),
@@ -55,8 +51,6 @@ struct Headline {
 }
 
 async fn get_headline() -> Json<Headline> {
-    tracing::info!("Requesting headline...");
-
     Json(Headline {
         banner: vec![],
         news: vec![NewsItem {

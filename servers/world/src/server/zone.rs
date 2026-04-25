@@ -614,7 +614,6 @@ impl Zone {
                 args2: u32::from_le_bytes([0, i as u8, 0, 0]),
                 ..Default::default()
             };
-            tracing::info!("Spawn for {i}: {spawn:#?}");
             object_spawns.push(spawn);
         }
 

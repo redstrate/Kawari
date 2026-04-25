@@ -159,8 +159,6 @@ fn main() {
     }
 
     for path in &scene.lgb_paths {
-        tracing::info!("Processing {path}...");
-
         let lgb = resolver.parsed::<Lgb>(path);
         let lgb = match lgb {
             Ok(lgb) => lgb,
@@ -175,6 +173,11 @@ fn main() {
         // TODO: i think we know which layer is specifically used for navmesh gen, better check that LVB
         for chunk in &lgb.chunks {
             for layer in &chunk.layers {
+                // Exclude festival objects which *usually* don't have collision, but this is to exclude non-Global festivals that include non-existent SGBs.
+                if layer.header.festival_id != 0 {
+                    continue;
+                }
+
                 let transform = Transformation {
                     translation: [0.0; 3],
                     rotation: [0.0; 3],
