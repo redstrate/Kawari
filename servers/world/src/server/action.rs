@@ -432,17 +432,7 @@ pub fn execute_action(
                     ..
                 } = effect.kind
                 {
-                    entries[num_entries as usize] = EffectEntry {
-                        index: num_entries,
-                        id: effect_id,
-                        param,
-                        duration,
-                        source_actor_id,
-                        ..Default::default()
-                    };
-                    num_entries += 1;
-
-                    gain_effect(
+                    let index = gain_effect(
                         network.clone(),
                         data.clone(),
                         from_id,
@@ -451,9 +441,20 @@ pub fn execute_action(
                         param,
                         duration,
                         source_actor_id,
-                        false, // ACS isn't needed as EffectsResult will show it for us
+                        false, // EffectsResult will show it for us
                     );
+
+                    entries[num_entries as usize] = EffectEntry {
+                        index,
+                        id: effect_id,
+                        param,
+                        duration,
+                        source_actor_id,
+                        ..Default::default()
+                    };
+                    num_entries += 1;
                 }
+
                 if let EffectKind::GainEffectSelf {
                     effect_id,
                     duration,
@@ -461,17 +462,7 @@ pub fn execute_action(
                     ..
                 } = effect.kind
                 {
-                    entries[num_entries as usize] = EffectEntry {
-                        index: num_entries,
-                        id: effect_id,
-                        param,
-                        duration,
-                        source_actor_id: from_actor_id,
-                        ..Default::default()
-                    };
-                    num_entries += 1;
-
-                    gain_effect(
+                    let index = gain_effect(
                         network.clone(),
                         data.clone(),
                         from_id,
@@ -480,8 +471,18 @@ pub fn execute_action(
                         param,
                         duration,
                         from_actor_id,
-                        false, // ACS isn't needed as EffectsResult will show it for us
+                        false, // EffectsResult will show it for us
                     );
+
+                    entries[num_entries as usize] = EffectEntry {
+                        index,
+                        id: effect_id,
+                        param,
+                        duration,
+                        source_actor_id: from_actor_id,
+                        ..Default::default()
+                    };
+                    num_entries += 1;
                 }
 
                 // To lose effects, we just omit them from the list but increase the entry count!

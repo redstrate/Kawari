@@ -166,11 +166,11 @@ pub fn gain_effect(
     effect_param: u16,
     effect_duration: f32,
     effect_source_actor_id: ObjectId,
-    send_acs: bool,
-) {
+    inform_players: bool,
+) -> u8 {
     let mut data = data.lock();
     let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-        return;
+        return 0;
     };
 
     gain_effect_instance(
@@ -182,8 +182,8 @@ pub fn gain_effect(
         effect_param,
         effect_duration,
         effect_source_actor_id,
-        send_acs,
-    );
+        inform_players,
+    )
 }
 
 /// Gives the actor a new effect. You can also optionally send an ACS, if needed.
@@ -196,41 +196,40 @@ pub fn gain_effect_instance(
     effect_param: u16,
     effect_duration: f32,
     effect_source_actor_id: ObjectId,
-    send_acs: bool,
-) {
-    {
-        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-            return;
-        };
+    inform_players: bool,
+) -> u8 {
+    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+        return 0;
+    };
 
-        let NetworkedActor::Player { status_effects, .. } = actor else {
-            return;
-        };
+    let NetworkedActor::Player { status_effects, .. } = actor else {
+        return 0;
+    };
 
-        status_effects.add(effect_id, effect_param, effect_duration);
+    let index = status_effects.len() as u8;
+    status_effects.add(effect_id, effect_param, effect_duration);
 
-        let mut network = network.lock();
+    if inform_players {
+        {
+            let mut network = network.lock();
 
-        let ipc = ActorControlCategory::GainEffect {
-            effect_id: effect_id as u32,
-            param: effect_param as u32,
-            source_actor_id: effect_source_actor_id,
-        };
+            let ipc = ActorControlCategory::GainEffect {
+                effect_id: effect_id as u32,
+                param: effect_param as u32,
+                source_actor_id: effect_source_actor_id,
+            };
 
-        // Then, Send an actor control to inform the client if needed
-        if send_acs {
+            // Then, Send an actor control to inform the client if needed
             network.send_ac_in_range_inclusive_instance(instance, from_actor_id, ipc);
-        } else {
-            network.send_ac_in_range_instance(instance, from_actor_id, ipc);
         }
-    }
 
-    // We also need to send them an updated StatusEffectsList
-    process_effects_list(network.clone(), instance, from_actor_id);
+        // We also need to send them an updated StatusEffectsList
+        process_effects_list(network.clone(), instance, from_actor_id);
+    }
 
     // Scheduling doesn't make sense when the effect never ends.
     if effect_duration == 0.0 {
-        return;
+        return index;
     }
 
     instance.insert_task(
@@ -243,6 +242,8 @@ pub fn gain_effect_instance(
             effect_source_actor_id,
         },
     );
+
+    index
 }
 
 /// Removes an effect from the actor.

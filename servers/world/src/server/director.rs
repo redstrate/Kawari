@@ -648,7 +648,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     *param,
                     *duration,
                     ObjectId::default(),
-                    false,
+                    false, // Don't need to inform players here
                 );
             }
             LuaDirectorTask::SetBGM { id } => {

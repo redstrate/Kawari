@@ -64,6 +64,15 @@ impl StatusEffects {
     pub fn reset_dirty(&mut self) {
         self.dirty = false;
     }
+
+    /// Number of status effects.
+    pub fn len(&self) -> usize {
+        self.status_effects.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.status_effects.is_empty()
+    }
 }
 
 #[cfg(test)]
