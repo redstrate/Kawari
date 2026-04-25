@@ -193,6 +193,16 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 450u32)]
     RequestRepair { actor_id: ObjectId },
 
+    /// When equipping using the Facewear window.
+    #[brw(magic = 455u32)]
+    EquipGlasses {
+        unk1: u32,
+        id: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
     /// The player begins an emote.
     #[brw(magic = 500u32)]
     Emote {
