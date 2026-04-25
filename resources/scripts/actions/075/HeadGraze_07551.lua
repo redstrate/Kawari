@@ -1,4 +1,4 @@
-function doAction(player)
+function doAction(player, in_combo)
     effects = EffectsBuilder()
     effects:interrupt()
 

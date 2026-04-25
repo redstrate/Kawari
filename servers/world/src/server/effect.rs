@@ -233,9 +233,6 @@ pub fn gain_effect_instance(
         return;
     }
 
-    // Eventually tell the player they lost this effect
-    tracing::info!("Effect {effect_id} lasts for {effect_duration} seconds");
-
     instance.insert_task(
         from_id,
         from_actor_id,

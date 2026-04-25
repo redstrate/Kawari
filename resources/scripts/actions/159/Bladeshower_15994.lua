@@ -1,7 +1,5 @@
-POTENCY = 120
-COMBO_POTENCY = 280
-
-EFFECT_SILKEN_SYMMETRY = 2693
+POTENCY = 100
+COMBO_POTENCY = 160
 
 function doAction(player, in_combo)
     effects = EffectsBuilder()

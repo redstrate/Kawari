@@ -1,6 +1,6 @@
 EFFECT_HEAVY = 14
 
-function doAction(player)
+function doAction(player, in_combo)
     effects = EffectsBuilder()
     -- TODO: add amount, it's under unk2 i think
     effects:gain_effect(EFFECT_HEAVY, 0, 10.0)

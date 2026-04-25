@@ -77,10 +77,11 @@ pub enum EffectKind {
     /// Seen during Head Graze.
     #[brw(magic = 8u8)]
     InterruptAction {},
-    /// Begins a combo?
+    /// Executes/combies an action combo.
     #[brw(magic = 27u8)]
-    BeginCombo {
-        unk1: u8,
+    ExecuteCombo {
+        /// Unknown, but seen set to 1 during Fountain (which comboes with Cascade.)
+        sequence: u8,
         unk2: u8,
         unk3: u8,
         unk4: u8,
@@ -301,8 +302,8 @@ mod tests {
         // effect 1: start action combo
         assert_eq!(
             action_result.effects[1].kind,
-            EffectKind::BeginCombo {
-                unk1: 0,
+            EffectKind::ExecuteCombo {
+                sequence: 0,
                 unk2: 0,
                 unk3: 0,
                 unk4: 0,

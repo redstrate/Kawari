@@ -1,6 +1,6 @@
 EFFECT_PROSPECT = 225
 
-function doAction(player)
+function doAction(player, in_combo)
     effects = EffectsBuilder()
     effects:gain_effect(EFFECT_PROSPECT, 0, 0.0)
 

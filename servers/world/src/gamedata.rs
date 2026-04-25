@@ -1583,6 +1583,13 @@ impl GameData {
 
         DamageElement::from_repr(row.Aspect()).unwrap() // Should never fail under normal circumstances
     }
+
+    /// Returns the id of the action this action comboes with.
+    pub fn get_combo_action(&mut self, id: u32) -> u16 {
+        let row = self.action_sheet.row(id).unwrap();
+
+        row.ActionCombo()
+    }
 }
 
 impl mlua::UserData for GameData {

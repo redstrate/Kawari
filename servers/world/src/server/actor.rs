@@ -53,6 +53,10 @@ pub enum NetworkedActor {
         dueling_opponent_id: ObjectId,
         /// Whether or not cooldowns should be cheatily removed.
         remove_cooldowns: bool,
+        /// Whether the player can execute a combo action. If so, contains a Some of the last action used.
+        last_combo_action: u16,
+        /// Sequence into the current combo.
+        combo_sequence: u8,
     },
     Npc {
         state: NpcState,

@@ -77,6 +77,10 @@ pub const MINIMUM_PATHFINDING_DISTANCE: f32 = 5.0;
 /// The delay from PrepareZoning to an ActorSetPos being sent by the server.
 pub const WARP_DELAY: Duration = Duration::from_secs(2);
 
+/// How long a combo will last until it decays from not excuting the action.
+/// Since this is reflected in the client alone, I measured it from there.
+pub const COMBO_TIMEOUT: Duration = Duration::from_secs(30);
+
 #[binrw]
 #[brw(repr(u32))]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

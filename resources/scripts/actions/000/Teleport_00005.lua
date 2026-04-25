@@ -1,4 +1,4 @@
-function doAction(player)
+function doAction(player, in_combo)
     -- get the aetheryte they requested
     local id = player.teleport_query.aetheryte_id
 

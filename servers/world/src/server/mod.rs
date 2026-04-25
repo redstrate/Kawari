@@ -948,7 +948,7 @@ pub async fn server_main_loop(
                                     director.event_action_cast(task.from_actor_id, *target);
                                 }
                             }
-                            QueuedTaskData::FishBite {} => {
+                            QueuedTaskData::FishBite => {
                                 let mut network = network.lock();
                                 network.send_to(
                                     task.from_id,
@@ -993,6 +993,20 @@ pub async fn server_main_loop(
                                     0,
                                     0,
                                 );
+                            }
+                            QueuedTaskData::ResetCombo => {
+                                let mut data = data.lock();
+                                if let Some(instance) =
+                                    data.find_actor_instance_mut(task.from_actor_id)
+                                    && let Some(NetworkedActor::Player {
+                                        last_combo_action,
+                                        combo_sequence,
+                                        ..
+                                    }) = instance.find_actor_mut(task.from_actor_id)
+                                {
+                                    *last_combo_action = 0;
+                                    *combo_sequence = 0;
+                                }
                             }
                         }
                     }

@@ -19,7 +19,10 @@ use crate::{
     zone_connection::BaseParameters,
 };
 use kawari::{
-    common::{CharacterMode, DEAD_FADE_OUT_TIME, ObjectId, STRIKING_DUMMY_NAME_ID, TimepointData},
+    common::{
+        COMBO_TIMEOUT, CharacterMode, DEAD_FADE_OUT_TIME, ObjectId, STRIKING_DUMMY_NAME_ID,
+        TimepointData,
+    },
     config::FilesystemConfig,
     ipc::zone::{
         ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControlCategory,
@@ -42,11 +45,6 @@ pub fn handle_action_messages(
         }
 
         let delay_milliseconds = cast_time as u64 * 100;
-
-        tracing::info!(
-            "Delaying spell cast for {} milliseconds",
-            delay_milliseconds
-        );
 
         let mut data = data.lock();
         let Some(instance) = data.find_actor_instance_mut(*from_actor_id) else {
@@ -111,6 +109,31 @@ pub fn execute_action(
         }
     }
 
+    let in_combo;
+    let combo_action_id;
+    {
+        let mut game_data = game_data.lock();
+        combo_action_id = game_data.get_combo_action(request.action_key);
+
+        let data = data.lock();
+        let Some(instance) = data.find_actor_instance(from_actor_id) else {
+            return;
+        };
+
+        let Some(actor) = instance.find_actor(from_actor_id) else {
+            return;
+        };
+
+        if let NetworkedActor::Player {
+            last_combo_action, ..
+        } = actor
+        {
+            in_combo = combo_action_id == *last_combo_action;
+        } else {
+            in_combo = false;
+        }
+    }
+
     let effects_builder;
     let common_spawn;
     {
@@ -137,7 +160,9 @@ pub fn execute_action(
 
         effects_builder = match &request.action_kind {
             ActionKind::Nothing => None,
-            ActionKind::Normal => execute_normal_action(lua.clone(), &request, &mut lua_player),
+            ActionKind::Normal => {
+                execute_normal_action(lua.clone(), &request, &mut lua_player, in_combo)
+            }
             ActionKind::Item => {
                 execute_item_action(game_data.clone(), lua.clone(), &request, &mut lua_player)
             }
@@ -194,6 +219,58 @@ pub fn execute_action(
                         })
                         .collect();
                 }
+            }
+
+            // Handle combos
+            {
+                // TODO: don't send this for auto-attacks. it should be harmless in the mean time
+
+                let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                    return;
+                };
+
+                let sequence;
+                if let NetworkedActor::Player {
+                    last_combo_action,
+                    combo_sequence,
+                    ..
+                } = actor
+                {
+                    *last_combo_action = request.action_key as u16;
+                    sequence = *combo_sequence;
+
+                    if combo_action_id == *last_combo_action {
+                        *combo_sequence += 1;
+                    }
+                } else {
+                    sequence = 0;
+                }
+
+                // Ensure we cancel any pending combo resets
+                // We *intentionally* cancel all combos here because they're mutually exclusive with each other.
+                instance.retain_tasks(|task| {
+                    task.from_actor_id == from_actor_id
+                        && matches!(task.data, QueuedTaskData::ResetCombo)
+                });
+
+                // Add a new combo reset
+                instance.insert_task(
+                    from_id,
+                    from_actor_id,
+                    COMBO_TIMEOUT,
+                    QueuedTaskData::ResetCombo,
+                );
+
+                effects_builder.effects.push(ActionEffect {
+                    kind: EffectKind::ExecuteCombo {
+                        sequence,
+                        unk2: 0,
+                        unk3: 0,
+                        unk4: 0,
+                        unk5: 128,
+                        action_id: request.action_key as u16,
+                    },
+                });
             }
 
             for effect in &mut effects_builder.effects {
@@ -274,9 +351,6 @@ pub fn execute_action(
                             }),
                             DestinationNetwork::ZoneClients,
                         );
-                    }
-                    EffectKind::BeginCombo { action_id, .. } => {
-                        *action_id = request.action_key as u16;
                     }
                     _ => {}
                 }
@@ -513,7 +587,9 @@ pub fn execute_enemy_action(
         common_spawn = actor.get_common_spawn().clone();
 
         effects_builder = match &request.action_kind {
-            ActionKind::Normal => execute_normal_action(lua.clone(), &request, &mut lua_player),
+            ActionKind::Normal => {
+                execute_normal_action(lua.clone(), &request, &mut lua_player, false)
+            }
             _ => unreachable!(),
         };
     }
@@ -659,6 +735,7 @@ pub fn execute_normal_action(
     lua: Arc<Mutex<KawariLua>>,
     request: &ActionRequest,
     lua_player: &mut LuaPlayer,
+    in_combo: bool,
 ) -> Option<EffectsBuilder> {
     let mut effects_builder = None;
     let lua = lua.lock();
@@ -680,7 +757,10 @@ pub fn execute_normal_action(
 
                 let func: Function = lua.0.globals().get("doAction").unwrap();
 
-                effects_builder = Some(func.call::<EffectsBuilder>(connection_data).unwrap());
+                effects_builder = Some(
+                    func.call::<EffectsBuilder>((connection_data, in_combo))
+                        .unwrap(),
+                );
 
                 Ok(())
             })

@@ -1119,6 +1119,8 @@ pub fn handle_zone_messages(
                 parameters: BaseParameters::default(),
                 dueling_opponent_id: ObjectId::default(),
                 remove_cooldowns: false,
+                last_combo_action: 0,
+                combo_sequence: 0,
             };
 
             true

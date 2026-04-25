@@ -1,4 +1,4 @@
-function doAction(player)
+function doAction(player, in_combo)
     effects = EffectsBuilder()
 
     -- we have to send it with the param, so we need to fetch the effect first

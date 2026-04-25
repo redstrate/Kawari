@@ -65,7 +65,7 @@ pub enum QueuedTaskData {
         target: ObjectId,
     },
     /// Make a fish bite.
-    FishBite {},
+    FishBite,
     /// Seal a boss wall.
     SealBossWall {
         id: u32,
@@ -79,6 +79,8 @@ pub enum QueuedTaskData {
     WarpToPopRange {
         id: u32,
     },
+    /// Reset a player's action combo status.
+    ResetCombo,
 }
 
 #[derive(Debug, Clone)]
@@ -271,6 +273,8 @@ impl Instance {
                 parameters: BaseParameters::default(),
                 dueling_opponent_id: ObjectId::default(),
                 remove_cooldowns: false,
+                last_combo_action: 0,
+                combo_sequence: 0,
             },
         );
     }
@@ -320,6 +324,12 @@ impl Instance {
         if let QueuedTaskData::CastAction { .. } = task.data {
             cancel_action(network.clone(), task.from_id)
         }
+    }
+
+    // NOTE: this currently does *not* call cancel_action, so be careful if you're porting from cancel_task!
+    pub fn retain_tasks(&mut self, f: impl Fn(&QueuedTask) -> bool) {
+        // Delete the selected tasks
+        self.queued_task.retain(f);
     }
 
     /// Cancels all queued actions for this actor.
