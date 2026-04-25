@@ -935,6 +935,10 @@ pub fn change_zone_warp_to_pop_range(
         exit_position = Some(Position(translation));
         exit_rotation = Some(euler_to_direction(rotation.to_euler(EulerRot::XYZ)));
     } else {
+        tracing::warn!(
+            "Failed to find pop range {destination_instance_id} in zone {}",
+            target_instance.zone.id
+        );
         exit_position = None;
         exit_rotation = None;
     }
