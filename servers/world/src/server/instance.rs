@@ -227,6 +227,7 @@ impl Instance {
                 timeline_position: 0,
                 newly_hated_actor: None,
                 currently_invulnerable: false,
+                status_effects: StatusEffects::default(),
             },
         );
     }

@@ -420,39 +420,41 @@ pub fn execute_action(
         // EffectResult
         // TODO: is this always sent? needs investigation
         {
-            let mut num_entries = 0u8;
-            let mut entries = [EffectEntry::default(); 4];
+            let mut num_self_entries = 0u8;
+            let mut self_entries = [EffectEntry::default(); 4];
+
+            let mut num_target_entries = 0u8;
+            let mut target_entries = [EffectEntry::default(); 4];
 
             for effect in &effects_builder.effects {
                 if let EffectKind::GainEffect {
                     effect_id,
                     duration,
                     param,
-                    source_actor_id,
                     ..
                 } = effect.kind
                 {
                     let index = gain_effect(
                         network.clone(),
                         data.clone(),
-                        from_id,
-                        from_actor_id,
+                        ClientId::default(),
+                        request.target.object_id,
                         effect_id,
                         param,
                         duration,
-                        source_actor_id,
-                        false, // EffectsResult will show it for us
+                        from_actor_id, // It's always given by this player.
+                        false,         // EffectsResult will show it for us
                     );
 
-                    entries[num_entries as usize] = EffectEntry {
+                    target_entries[num_target_entries as usize] = EffectEntry {
                         index,
                         id: effect_id,
                         param,
                         duration,
-                        source_actor_id,
+                        source_actor_id: from_actor_id,
                         ..Default::default()
                     };
-                    num_entries += 1;
+                    num_target_entries += 1;
                 }
 
                 if let EffectKind::GainEffectSelf {
@@ -474,7 +476,7 @@ pub fn execute_action(
                         false, // EffectsResult will show it for us
                     );
 
-                    entries[num_entries as usize] = EffectEntry {
+                    self_entries[num_self_entries as usize] = EffectEntry {
                         index,
                         id: effect_id,
                         param,
@@ -482,41 +484,82 @@ pub fn execute_action(
                         source_actor_id: from_actor_id,
                         ..Default::default()
                     };
-                    num_entries += 1;
+                    num_self_entries += 1;
                 }
 
                 // To lose effects, we just omit them from the list but increase the entry count!
                 if let EffectKind::LoseEffect { .. } = effect.kind {
-                    entries[num_entries as usize] = EffectEntry::default();
-                    num_entries += 1;
+                    self_entries[num_self_entries as usize] = EffectEntry::default();
+                    num_self_entries += 1;
 
-                    //self.status_effects.remove(effect_id);
+                    // TODO: need to re-review and restore this...
+                    // self.status_effects.remove(effect_id);
                 }
             }
 
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EffectResult(EffectResult {
-                unk1: 1,
-                unk2: 776386,
-                target_id: request.target.object_id,
-                health_points: common_spawn.health_points,
-                max_health_points: common_spawn.max_health_points,
-                resource_points: common_spawn.resource_points,
-                class_id: common_spawn.class_job,
-                entry_count: num_entries,
-                statuses: entries,
-                ..Default::default()
-            }));
-            let mut network = network.lock();
-            let mut data = data.lock();
-            let Some(instance) = data.find_actor_instance_mut(request.target.object_id) else {
-                return;
-            };
-            network.send_in_range_inclusive_instance(
-                from_actor_id,
-                instance,
-                FromServer::PacketSegment(ipc, from_actor_id),
-                DestinationNetwork::ZoneClients,
-            );
+            if num_self_entries > 0 {
+                let ipc =
+                    ServerZoneIpcSegment::new(ServerZoneIpcData::EffectResult(EffectResult {
+                        unk1: 1,
+                        unk2: 776386,
+                        target_id: request.target.object_id,
+                        health_points: common_spawn.health_points,
+                        max_health_points: common_spawn.max_health_points,
+                        resource_points: common_spawn.resource_points,
+                        class_id: common_spawn.class_job,
+                        entry_count: num_self_entries,
+                        statuses: self_entries,
+                        ..Default::default()
+                    }));
+                let mut data = data.lock();
+                let mut network = network.lock();
+                let Some(instance) = data.find_actor_instance_mut(request.target.object_id) else {
+                    return;
+                };
+                network.send_in_range_inclusive_instance(
+                    from_actor_id,
+                    instance,
+                    FromServer::PacketSegment(ipc, from_actor_id),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
+
+            if num_target_entries > 0 {
+                let mut data = data.lock();
+                let Some(instance) = data.find_actor_instance_mut(request.target.object_id) else {
+                    return;
+                };
+
+                let Some(actor) = instance.find_actor(request.target.object_id) else {
+                    return;
+                };
+
+                let common_spawn = actor.get_common_spawn();
+
+                let ipc =
+                    ServerZoneIpcSegment::new(ServerZoneIpcData::EffectResult(EffectResult {
+                        unk1: 1,
+                        unk2: 776386,
+                        target_id: from_actor_id, // TODO: unsure if this is correct?
+                        health_points: common_spawn.health_points,
+                        max_health_points: common_spawn.max_health_points,
+                        resource_points: common_spawn.resource_points,
+                        class_id: common_spawn.class_job,
+                        entry_count: num_target_entries,
+                        statuses: target_entries,
+                        ..Default::default()
+                    }));
+                let mut network = network.lock();
+                let Some(instance) = data.find_actor_instance_mut(request.target.object_id) else {
+                    return;
+                };
+                network.send_in_range_inclusive_instance(
+                    request.target.object_id,
+                    instance,
+                    FromServer::PacketSegment(ipc, request.target.object_id),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
         }
     }
 

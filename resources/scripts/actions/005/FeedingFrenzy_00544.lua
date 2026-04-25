@@ -4,7 +4,7 @@ function doAction(player, in_combo)
     -- TODO: give to other enemies in range, this is an AoE
 
     effects = EffectsBuilder()
-    effects:gain_effect(EFFECT_PHYSICAL_DAMAGE_UP, 0, 15.0)
+    effects:gain_effect_self(EFFECT_PHYSICAL_DAMAGE_UP, 0, 15.0)
 
     return effects
 end

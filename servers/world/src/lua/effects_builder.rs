@@ -37,7 +37,6 @@ impl UserData for EffectsBuilder {
                         effect_id,
                         duration,
                         param,
-                        source_actor_id: Default::default(),
                     },
                 });
                 Ok(())

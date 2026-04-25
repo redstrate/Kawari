@@ -10,7 +10,6 @@ use crate::{
     lua::{KawariLua, KawariLuaState, LuaContent, LuaPlayer, LuaZone},
     server::{
         WorldServer,
-        actor::NetworkedActor,
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
@@ -87,14 +86,10 @@ pub fn send_effects_list(
         return;
     };
 
-    let NetworkedActor::Player {
-        status_effects,
-        spawn,
-        ..
-    } = actor
-    else {
+    let Some(status_effects) = actor.status_effects() else {
         return;
     };
+    let common_spawn = actor.get_common_spawn();
 
     let mut statuses = [StatusEffect::default(); 30];
     let status_data = status_effects.data();
@@ -102,13 +97,13 @@ pub fn send_effects_list(
 
     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::StatusEffectList(StatusEffectList {
         statuses,
-        classjob_id: spawn.common.class_job,
-        level: spawn.common.level,
-        unk1: spawn.common.level,
-        health_points: spawn.common.health_points,
-        max_health_points: spawn.common.max_health_points,
-        resource_points: spawn.common.resource_points,
-        max_resource_points: spawn.common.max_resource_points,
+        classjob_id: common_spawn.class_job,
+        level: common_spawn.level,
+        unk1: common_spawn.level,
+        health_points: common_spawn.health_points,
+        max_health_points: common_spawn.max_health_points,
+        resource_points: common_spawn.resource_points,
+        max_resource_points: common_spawn.max_resource_points,
         ..Default::default()
     }));
 
@@ -133,7 +128,7 @@ fn process_effects_list(
             return;
         };
 
-        let NetworkedActor::Player { status_effects, .. } = actor else {
+        let Some(status_effects) = actor.status_effects() else {
             return;
         };
 
@@ -148,11 +143,7 @@ fn process_effects_list(
             return;
         };
 
-        let NetworkedActor::Player { status_effects, .. } = actor else {
-            return;
-        };
-
-        status_effects.reset_dirty();
+        actor.status_effects_mut().unwrap().reset_dirty();
     }
 }
 
@@ -202,7 +193,7 @@ pub fn gain_effect_instance(
         return 0;
     };
 
-    let NetworkedActor::Player { status_effects, .. } = actor else {
+    let Some(status_effects) = actor.status_effects_mut() else {
         return 0;
     };
 
@@ -269,7 +260,7 @@ pub fn remove_effect(
             return;
         };
 
-        let NetworkedActor::Player { status_effects, .. } = actor else {
+        let Some(status_effects) = actor.status_effects_mut() else {
             return;
         };
 

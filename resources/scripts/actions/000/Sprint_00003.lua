@@ -2,7 +2,7 @@ EFFECT_SPRINT = 50
 
 function doAction(player, in_combo)
     effects = EffectsBuilder()
-    effects:gain_effect(EFFECT_SPRINT, 30, 20.0)
+    effects:gain_effect_self(EFFECT_SPRINT, 30, 20.0)
 
     return effects
 end

@@ -2,7 +2,7 @@ use binrw::binrw;
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumIter, FromRepr};
 
-use crate::common::{ObjectId, ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
+use crate::common::{ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
 
 // TODO: this might be a flag?
 #[binrw]
@@ -104,8 +104,6 @@ pub enum EffectKind {
         // TODO: this shouldn't be here, instead we should maybe create a lua-specific struct for all of this information
         #[brw(ignore)]
         duration: f32,
-        #[brw(ignore)]
-        source_actor_id: ObjectId,
     },
     /// Seen during Cascade (and gaining Silken Symmetry.)
     /// Guessed at it's purpose, not 100% certain it's for applying to yourself.
@@ -351,7 +349,6 @@ mod tests {
                 effect_id: 50,
                 duration: 0.0,
                 param: 30,
-                source_actor_id: Default::default()
             }
         );
 

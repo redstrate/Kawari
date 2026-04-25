@@ -39,7 +39,7 @@ impl NpcState {
 pub enum NetworkedActor {
     Player {
         spawn: SpawnPlayer,
-        // TODO: of course, Npcs will need status effects as well!
+        /// This actor's status effects.
         status_effects: StatusEffects,
         teleport_query: TeleportQuery,
         distance_range: DistanceRange,
@@ -72,6 +72,8 @@ pub enum NetworkedActor {
         newly_hated_actor: Option<ObjectId>,
         /// Whether this NPC is currently invulnerable to all attacks.
         currently_invulnerable: bool,
+        /// This actor's status effects.
+        status_effects: StatusEffects,
     },
     Object {
         object: SpawnObject,
@@ -153,6 +155,24 @@ impl NetworkedActor {
             !spawn.common.name.is_empty()
         } else {
             true
+        }
+    }
+
+    /// Returns this actor's status effects list.
+    pub fn status_effects(&self) -> Option<&StatusEffects> {
+        match self {
+            NetworkedActor::Player { status_effects, .. } => Some(status_effects),
+            NetworkedActor::Npc { status_effects, .. } => Some(status_effects),
+            _ => None,
+        }
+    }
+
+    /// Returns this actor's status effects list.
+    pub fn status_effects_mut(&mut self) -> Option<&mut StatusEffects> {
+        match self {
+            NetworkedActor::Player { status_effects, .. } => Some(status_effects),
+            NetworkedActor::Npc { status_effects, .. } => Some(status_effects),
+            _ => None,
         }
     }
 }
