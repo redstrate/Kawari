@@ -196,9 +196,13 @@ pub fn execute_action(
                 }
             }
 
-            for effect in &effects_builder.effects {
-                match &effect.kind {
-                    EffectKind::Damage { amount, .. } => {
+            for effect in &mut effects_builder.effects {
+                match &mut effect.kind {
+                    EffectKind::Damage {
+                        amount,
+                        damage_element,
+                        ..
+                    } => {
                         let Some(actor) = instance.find_actor_mut(request.target.object_id) else {
                             return;
                         };
@@ -207,6 +211,10 @@ pub fn execute_action(
                             common_spawn.health_points =
                                 common_spawn.health_points.saturating_sub(*amount as u32);
                         }
+
+                        // Update from game data
+                        let mut game_data = game_data.lock();
+                        *damage_element = game_data.get_action_damage_element(request.action_key);
                     }
                     EffectKind::InterruptAction {} => {
                         // TODO: this could cancel more than just casting, so we need to be more specific eventually

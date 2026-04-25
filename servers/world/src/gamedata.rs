@@ -49,7 +49,7 @@ use icarus::TopicSelect::TopicSelectSheet;
 use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
-use kawari::ipc::zone::{CommonSpawn, PlotSize};
+use kawari::ipc::zone::{CommonSpawn, DamageElement, PlotSize};
 use physis::equipment::EquipSlotCategory;
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
 use physis::{Language, TerritoryIntendedUse};
@@ -1575,6 +1575,13 @@ impl GameData {
         }
 
         None
+    }
+
+    /// Returns the damage element of this action.
+    pub fn get_action_damage_element(&mut self, id: u32) -> DamageElement {
+        let row = self.action_sheet.row(id).unwrap();
+
+        DamageElement::from_repr(row.Aspect()).unwrap() // Should never fail under normal circumstances
     }
 }
 
