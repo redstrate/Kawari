@@ -43,6 +43,22 @@ impl UserData for EffectsBuilder {
                 Ok(())
             },
         );
+        methods.add_method_mut(
+            "gain_effect_self",
+            |_, this, (effect_id, param, duration): (u16, u16, f32)| {
+                this.effects.push(ActionEffect {
+                    kind: EffectKind::GainEffectSelf {
+                        unk1: 0,
+                        unk2: 0,
+                        unk3: 0,
+                        effect_id,
+                        duration,
+                        param,
+                    },
+                });
+                Ok(())
+            },
+        );
         // TODO: if we ever decide to redo the effectbuilder to not directly push actioneffects, this should also be redone
         // so we can remove the param arg. Assuming there isn't effects with the same ID but different params?
         methods.add_method_mut(

@@ -80,7 +80,7 @@ pub enum EffectKind {
     /// Begins a combo?
     #[brw(magic = 27u8)]
     BeginCombo,
-    /// Seen during sprint.
+    /// Seen during Sprint.
     #[brw(magic = 14u8)]
     GainEffect {
         unk1: u8,
@@ -98,9 +98,23 @@ pub enum EffectKind {
         #[brw(ignore)]
         source_actor_id: ObjectId,
     },
-    /// Seen during mounting.
-    #[brw(magic = 39u8)]
-    Mount { unk1: u8, unk2: u32, id: u16 },
+    /// Seen during Cascade (and gaining Silken Symmetry.)
+    /// Guessed at it's purpose, not 100% certain it's for applying to yourself.
+    #[brw(magic = 15u8)]
+    GainEffectSelf {
+        unk1: u8,
+        unk2: u8,
+        /// Status-specific parameter.
+        param: u16,
+        unk3: u8,
+        /// Index into the Status Excel sheet.
+        effect_id: u16,
+
+        // NOTE: the following is for our internal usage, this is not an actual part of the packet
+        // TODO: this shouldn't be here, instead we should maybe create a lua-specific struct for all of this information
+        #[brw(ignore)]
+        duration: f32,
+    },
     /// Seen during the Unveil action.
     #[brw(magic = 16u8)]
     LoseEffect {
@@ -108,6 +122,9 @@ pub enum EffectKind {
         unk: [u8; 3], // empty?
         effect_id: u16,
     },
+    /// Seen during mounting.
+    #[brw(magic = 39u8)]
+    Mount { unk1: u8, unk2: u32, id: u16 },
     /// Play this VFX.
     #[brw(magic = 59u8)]
     PlayVFX { unk: [u8; 5], effect_id: u16 },

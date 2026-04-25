@@ -357,12 +357,11 @@ pub fn execute_action(
                 {
                     entries[num_entries as usize] = EffectEntry {
                         index: num_entries,
-                        unk1: 0,
                         id: effect_id,
                         param,
-                        unk2: 0,
                         duration,
-                        source_actor_id: Default::default(),
+                        source_actor_id,
+                        ..Default::default()
                     };
                     num_entries += 1;
 
@@ -375,8 +374,37 @@ pub fn execute_action(
                         param,
                         duration,
                         source_actor_id,
-                        false,
-                    ); // ACS isn't needed as EffectsResult will show it for us
+                        false, // ACS isn't needed as EffectsResult will show it for us
+                    );
+                }
+                if let EffectKind::GainEffectSelf {
+                    effect_id,
+                    duration,
+                    param,
+                    ..
+                } = effect.kind
+                {
+                    entries[num_entries as usize] = EffectEntry {
+                        index: num_entries,
+                        id: effect_id,
+                        param,
+                        duration,
+                        source_actor_id: from_actor_id,
+                        ..Default::default()
+                    };
+                    num_entries += 1;
+
+                    gain_effect(
+                        network.clone(),
+                        data.clone(),
+                        from_id,
+                        from_actor_id,
+                        effect_id,
+                        param,
+                        duration,
+                        from_actor_id,
+                        false, // ACS isn't needed as EffectsResult will show it for us
+                    );
                 }
 
                 // To lose effects, we just omit them from the list but increase the entry count!
@@ -395,12 +423,10 @@ pub fn execute_action(
                 health_points: common_spawn.health_points,
                 max_health_points: common_spawn.max_health_points,
                 resource_points: common_spawn.resource_points,
-                unk3: 0,
                 class_id: common_spawn.class_job,
-                shield: 0,
                 entry_count: num_entries,
-                unk4: 0,
                 statuses: entries,
+                ..Default::default()
             }));
             let mut network = network.lock();
             let mut data = data.lock();
