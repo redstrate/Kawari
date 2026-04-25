@@ -414,7 +414,6 @@ impl Zone {
         &self,
         instance_id: u32,
     ) -> Option<(&InstanceObject, &PopRangeInstanceObject)> {
-        // TODO: also check position!
         for layer_group in &self.layer_groups {
             for layer in &layer_group.chunks[0].layers {
                 if !layer.header.has_layer_set(self.layer_set as u32) {
