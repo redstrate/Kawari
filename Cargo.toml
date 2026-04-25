@@ -5,13 +5,11 @@ members = [
 
     # Servers
     "servers/admin",
-    "servers/datacentertravel",
     "servers/frontier",
     "servers/launcher",
     "servers/lobby",
     "servers/login",
     "servers/patch",
-    "servers/savedatabank",
     "servers/web",
     "servers/world",
 

@@ -69,7 +69,6 @@ async fn auto_config() -> String {
             lobby_server => config.lobby.server_name,
             lobby_port => config.lobby.port,
             frontier_server => config.frontier.server_name,
-            datacenter_travel_server => config.datacenter_travel.server_name,
         })
         .unwrap()
 }

@@ -497,80 +497,6 @@ impl LauncherConfig {
     }
 }
 
-/// Configuration for the save data bank server.
-#[derive(Serialize, Deserialize)]
-pub struct SaveDataBankConfig {
-    #[serde(default = "SaveDataBankConfig::default_port")]
-    pub port: u16,
-
-    #[serde(default = "default_listen_address")]
-    pub listen_address: String,
-}
-
-impl Default for SaveDataBankConfig {
-    fn default() -> Self {
-        Self {
-            port: Self::default_port(),
-            listen_address: default_listen_address(),
-        }
-    }
-}
-
-impl SaveDataBankConfig {
-    /// Returns the configured IP address & port as a `SocketAddr`.
-    pub fn get_socketaddr(&self) -> SocketAddr {
-        SocketAddr::from((
-            IpAddr::from_str(&self.listen_address).expect("Invalid IP address format in config!"),
-            self.port,
-        ))
-    }
-
-    fn default_port() -> u16 {
-        21066
-    }
-}
-
-/// Configuration for the data center travel server.
-#[derive(Serialize, Deserialize)]
-pub struct DataCenterTravelConfig {
-    #[serde(default = "DataCenterTravelConfig::default_port")]
-    pub port: u16,
-
-    #[serde(default = "default_listen_address")]
-    pub listen_address: String,
-
-    #[serde(default = "DataCenterTravelConfig::default_server_name")]
-    pub server_name: String,
-}
-
-impl Default for DataCenterTravelConfig {
-    fn default() -> Self {
-        Self {
-            port: Self::default_port(),
-            listen_address: default_listen_address(),
-            server_name: Self::default_server_name(),
-        }
-    }
-}
-
-impl DataCenterTravelConfig {
-    /// Returns the configured IP address & port as a `SocketAddr`.
-    pub fn get_socketaddr(&self) -> SocketAddr {
-        SocketAddr::from((
-            IpAddr::from_str(&self.listen_address).expect("Invalid IP address format in config!"),
-            self.port,
-        ))
-    }
-
-    fn default_port() -> u16 {
-        21067
-    }
-
-    fn default_server_name() -> String {
-        format!("http://dctravel.ffxiv.localhost:{}", Self::default_port())
-    }
-}
-
 /// Configuration for the game filesystem.
 #[derive(Serialize, Deserialize, Default)]
 pub struct FilesystemConfig {
@@ -694,12 +620,6 @@ pub struct Config {
 
     #[serde(default)]
     pub launcher: LauncherConfig,
-
-    #[serde(default)]
-    pub save_data_bank: SaveDataBankConfig,
-
-    #[serde(default)]
-    pub datacenter_travel: DataCenterTravelConfig,
 
     #[serde(default)]
     pub tweaks: TweaksConfig,

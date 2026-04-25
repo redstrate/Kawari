@@ -8,5 +8,5 @@
     "frontier_server": "{{ frontier_server }}",
     "savedata_bank_server": "",
     "savedata_bank_port": "",
-    "datacenter_travel_server": "{{ datacenter_travel_server }}"
+    "datacenter_travel_server": ""
 }

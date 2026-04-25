@@ -792,17 +792,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kawari-datacentertravel"
-version = "7.45.2"
-dependencies = [
- "axum",
- "kawari",
- "tokio",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "kawari-frontier"
 version = "7.45.2"
 dependencies = [
@@ -899,16 +888,6 @@ name = "kawari-run"
 version = "7.45.2"
 dependencies = [
  "tokio",
-]
-
-[[package]]
-name = "kawari-savedatabank"
-version = "7.45.2"
-dependencies = [
- "kawari",
- "tokio",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
