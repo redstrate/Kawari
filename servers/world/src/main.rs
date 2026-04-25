@@ -1702,6 +1702,16 @@ async fn process_packet(
                                             .await;
                                     }
                                 }
+                                ClientTriggerCommand::RequestPlayerName {} => {
+                                    connection
+                                        .send_ipc_self(ServerZoneIpcSegment::new(
+                                            ServerZoneIpcData::PlayerName {
+                                                content_id: trigger.content_id.unwrap_or_default(),
+                                                name: "It's a mystery".to_string(), // Dummied out name for now
+                                            },
+                                        ))
+                                        .await;
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection
