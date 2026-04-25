@@ -1975,11 +1975,11 @@ pub async fn server_main_loop(
                     );
                 }
                 ToServer::Equip(
-                    _from_id,
                     from_actor_id,
                     main_weapon_id,
                     sub_weapon_id,
                     model_ids,
+                    second_model_stain_ids,
                 ) => {
                     let mut data = data.lock();
 
@@ -1999,6 +1999,7 @@ pub async fn server_main_loop(
                     spawn.common.main_weapon_model = main_weapon_id;
                     spawn.common.sec_weapon_model = sub_weapon_id;
                     spawn.common.models = model_ids;
+                    spawn.common.second_model_stain_ids = second_model_stain_ids;
 
                     // Inform all clients about their new equipped model ids
                     let msg = FromServer::ActorEquip(
@@ -2006,6 +2007,7 @@ pub async fn server_main_loop(
                         main_weapon_id,
                         sub_weapon_id,
                         model_ids,
+                        second_model_stain_ids,
                     );
 
                     let mut network = network.lock();

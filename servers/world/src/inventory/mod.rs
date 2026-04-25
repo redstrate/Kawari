@@ -1,6 +1,6 @@
 use icarus::{ClassJob::ClassJobSheet, Race::RaceSheet};
 use kawari::{
-    common::{ContainerType, ItemOperationKind},
+    common::{ContainerType, ItemOperationKind, LegacyEquipmentModelId, WeaponModelId},
     config::get_config,
     ipc::zone::ItemInfo,
 };
@@ -420,55 +420,77 @@ impl Inventory {
         }
     }
 
-    pub fn get_main_weapon_id(&self, game_data: &mut GameData) -> u64 {
-        game_data
-            .get_primary_model_id(self.equipped.main_hand.apparent_id())
-            .unwrap_or(0)
+    /// Returns the model ID for the equipped main weapon.
+    pub fn get_main_weapon_id(&self, game_data: &mut GameData) -> WeaponModelId {
+        let mut model = WeaponModelId::from(
+            game_data
+                .get_primary_model_id(self.equipped.main_hand.apparent_id())
+                .unwrap_or(0),
+        );
+        model.stains = self.equipped.main_hand.stains;
+
+        model
     }
 
-    pub fn get_sub_weapon_id(&self, game_data: &mut GameData) -> u64 {
+    /// Returns the model ID for the equipped sub weapon.
+    pub fn get_sub_weapon_id(&self, game_data: &mut GameData) -> WeaponModelId {
         // Use sub model from main hand (if available), e.g. quivers for bows. Otherwise fall back to off-hand, e.g. shields.
         if let Some(model) = game_data.get_sub_model_id(self.equipped.main_hand.apparent_id()) {
+            let mut model = WeaponModelId::from(model);
+            model.stains = self.equipped.main_hand.stains;
+
             model
         } else {
-            game_data
-                .get_primary_model_id(self.equipped.off_hand.apparent_id())
-                .unwrap_or(0)
+            let mut model = WeaponModelId::from(
+                game_data
+                    .get_primary_model_id(self.equipped.off_hand.apparent_id())
+                    .unwrap_or(0),
+            );
+            model.stains = self.equipped.off_hand.stains;
+
+            model
         }
     }
 
-    pub fn get_model_ids(&self, game_data: &mut GameData) -> [u32; 10] {
+    /// Creates a LegacyEquipmentModelId from an Item, taking into account the first dye slot.
+    fn legacy_model_id(game_data: &mut GameData, item: &Item) -> LegacyEquipmentModelId {
+        let mut model = LegacyEquipmentModelId::from(
+            game_data
+                .get_primary_model_id(item.apparent_id())
+                .unwrap_or(0) as u32,
+        );
+        model.stain = item.stains[0];
+
+        model
+    }
+
+    pub fn legacy_model_ids(&self, game_data: &mut GameData) -> [LegacyEquipmentModelId; 10] {
         [
-            game_data
-                .get_primary_model_id(self.equipped.head.apparent_id())
-                .unwrap_or(0) as u32,
-            game_data
-                .get_primary_model_id(self.equipped.body.apparent_id())
-                .unwrap_or(0) as u32,
-            game_data
-                .get_primary_model_id(self.equipped.hands.apparent_id())
-                .unwrap_or(0) as u32,
-            game_data
-                .get_primary_model_id(self.equipped.legs.apparent_id())
-                .unwrap_or(0) as u32,
-            game_data
-                .get_primary_model_id(self.equipped.feet.apparent_id())
-                .unwrap_or(0) as u32,
-            game_data
-                .get_primary_model_id(self.equipped.ears.apparent_id())
-                .unwrap_or(0) as u32,
-            game_data
-                .get_primary_model_id(self.equipped.neck.apparent_id())
-                .unwrap_or(0) as u32,
-            game_data
-                .get_primary_model_id(self.equipped.wrists.apparent_id())
-                .unwrap_or(0) as u32,
-            game_data
-                .get_primary_model_id(self.equipped.left_ring.apparent_id())
-                .unwrap_or(0) as u32,
-            game_data
-                .get_primary_model_id(self.equipped.right_ring.apparent_id())
-                .unwrap_or(0) as u32,
+            Self::legacy_model_id(game_data, &self.equipped.head),
+            Self::legacy_model_id(game_data, &self.equipped.body),
+            Self::legacy_model_id(game_data, &self.equipped.hands),
+            Self::legacy_model_id(game_data, &self.equipped.legs),
+            Self::legacy_model_id(game_data, &self.equipped.feet),
+            Self::legacy_model_id(game_data, &self.equipped.ears),
+            Self::legacy_model_id(game_data, &self.equipped.neck),
+            Self::legacy_model_id(game_data, &self.equipped.wrists),
+            Self::legacy_model_id(game_data, &self.equipped.left_ring),
+            Self::legacy_model_id(game_data, &self.equipped.right_ring),
+        ]
+    }
+
+    pub fn second_model_stain_ids(&self) -> [u8; 10] {
+        [
+            self.equipped.head.stains[1],
+            self.equipped.body.stains[1],
+            self.equipped.hands.stains[1],
+            self.equipped.legs.stains[1],
+            self.equipped.feet.stains[1],
+            self.equipped.ears.stains[1],
+            self.equipped.neck.stains[1],
+            self.equipped.wrists.stains[1],
+            self.equipped.left_ring.stains[1],
+            self.equipped.right_ring.stains[1],
         ]
     }
 

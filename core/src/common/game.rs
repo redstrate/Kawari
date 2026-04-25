@@ -1,8 +1,8 @@
 //! Useful game types should be kept here. Functions should probably not.
 
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, io::Cursor, time::Duration};
 
-use binrw::binrw;
+use binrw::{BinReaderExt, BinWrite, binrw};
 use bitflags::bitflags;
 use physis::TerritoryIntendedUse;
 use serde::{Deserialize, Serialize};
@@ -1202,6 +1202,57 @@ impl std::fmt::Debug for FestivalId {
             festival_name(self.0).unwrap_or("Unknown Festival"),
             self.0
         ))
+    }
+}
+
+#[binrw]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Default, Debug)]
+pub struct WeaponModelId {
+    pub id: u16,
+    pub model_type: u16,
+    pub variant: u16,
+    pub stains: [u8; 2],
+}
+
+impl From<u64> for WeaponModelId {
+    fn from(value: u64) -> Self {
+        // TODO: unsure if there's a beter way to do this, maybe if im not lazy to write bitwise ops
+        let mut cursor = Cursor::new(value.to_le_bytes());
+        cursor.read_le().unwrap_or_default()
+    }
+}
+
+impl From<WeaponModelId> for u64 {
+    fn from(value: WeaponModelId) -> Self {
+        let mut cursor = Cursor::new(Vec::new());
+        value.write_le(&mut cursor).unwrap();
+
+        u64::from_le_bytes(cursor.into_inner().try_into().unwrap_or_default())
+    }
+}
+
+#[binrw]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Default, Debug)]
+pub struct LegacyEquipmentModelId {
+    pub id: u16,
+    pub variant: u8,
+    pub stain: u8,
+}
+
+impl From<u32> for LegacyEquipmentModelId {
+    fn from(value: u32) -> Self {
+        // TODO: unsure if there's a beter way to do this, maybe if im not lazy to write bitwise ops
+        let mut cursor = Cursor::new(value.to_le_bytes());
+        cursor.read_le().unwrap_or_default()
+    }
+}
+
+impl From<LegacyEquipmentModelId> for u32 {
+    fn from(value: LegacyEquipmentModelId) -> Self {
+        let mut cursor = Cursor::new(Vec::new());
+        value.write_le(&mut cursor).unwrap();
+
+        u32::from_le_bytes(cursor.into_inner().try_into().unwrap_or_default())
     }
 }
 

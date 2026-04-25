@@ -11,8 +11,8 @@ use tokio::sync::mpsc::Sender;
 use crate::{StatusEffects, lua::LuaTask, server::Party, zone_connection::BaseParameters};
 use kawari::{
     common::{
-        CharacterMode, ContainerType, JumpState, LogMessageType, MoveAnimationState,
-        MoveAnimationType, ObjectId, ObjectTypeId, Position,
+        CharacterMode, ContainerType, JumpState, LegacyEquipmentModelId, LogMessageType,
+        MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId, Position, WeaponModelId,
     },
     ipc::{
         chat::{CWLinkshellMessage, ChatChannelType, PartyMessage, TellMessage},
@@ -109,7 +109,13 @@ pub enum FromServer {
     /// Update an actor's equip display flags.
     UpdateConfig(ObjectId, Config),
     /// Update an actor's model IDs.
-    ActorEquip(ObjectId, u64, u64, [u32; 10]),
+    ActorEquip(
+        ObjectId,
+        WeaponModelId,
+        WeaponModelId,
+        [LegacyEquipmentModelId; 10],
+        [u8; 10],
+    ),
     /// We need to summon a player's minion, and tell other clients
     ActorSummonsMinion(u32),
     /// We need to despawn a player's minion, and tell other clients
@@ -304,7 +310,13 @@ pub enum ToServer {
     /// We want to update our own equip display flags.
     Config(ClientId, ObjectId, Config),
     /// Tell the server what models IDs we have equipped.
-    Equip(ClientId, ObjectId, u64, u64, [u32; 10]),
+    Equip(
+        ObjectId,
+        WeaponModelId,
+        WeaponModelId,
+        [LegacyEquipmentModelId; 10],
+        [u8; 10],
+    ),
     /// The player gains an effect.
     GainEffect(ClientId, ObjectId, u16, u16, f32, ObjectId),
     /// The player loses an effect.

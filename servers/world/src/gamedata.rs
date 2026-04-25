@@ -54,7 +54,7 @@ use physis::equipment::EquipSlotCategory;
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
 use physis::{Language, TerritoryIntendedUse};
 
-use kawari::common::{CustomizeData, timestamp_secs};
+use kawari::common::{CustomizeData, LegacyEquipmentModelId, WeaponModelId, timestamp_secs};
 use kawari::common::{InstanceContentType, get_aether_current_comp_flg_set_to_screenimage};
 use kawari::config::get_config;
 use strum::FromRepr;
@@ -1536,19 +1536,19 @@ impl GameData {
 
         // TODO: support dyes
         Some(CommonSpawn {
-            main_weapon_model: row.ModelMainHand(),
-            sec_weapon_model: row.ModelOffHand(),
+            main_weapon_model: WeaponModelId::from(row.ModelMainHand()),
+            sec_weapon_model: WeaponModelId::from(row.ModelOffHand()),
             models: [
-                row.ModelHead(),
-                row.ModelBody(),
-                row.ModelHands(),
-                row.ModelLegs(),
-                row.ModelFeet(),
-                row.ModelEars(),
-                row.ModelNeck(),
-                row.ModelWrists(),
-                row.ModelLeftRing(),
-                row.ModelRightRing(),
+                LegacyEquipmentModelId::from(row.ModelHead()),
+                LegacyEquipmentModelId::from(row.ModelBody()),
+                LegacyEquipmentModelId::from(row.ModelHands()),
+                LegacyEquipmentModelId::from(row.ModelLegs()),
+                LegacyEquipmentModelId::from(row.ModelFeet()),
+                LegacyEquipmentModelId::from(row.ModelEars()),
+                LegacyEquipmentModelId::from(row.ModelNeck()),
+                LegacyEquipmentModelId::from(row.ModelWrists()),
+                LegacyEquipmentModelId::from(row.ModelLeftRing()),
+                LegacyEquipmentModelId::from(row.ModelRightRing()),
             ],
             glasses_ids: [
                 row.Unknown_70_1(), // NOTE: will be Glasses in the future

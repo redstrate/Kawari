@@ -6,10 +6,14 @@ use crate::{
     inventory::Inventory,
 };
 use kawari::{
-    common::{BasicCharacterData, ObjectId, WORLD_NAME, determine_initial_homepoint},
-    ipc::lobby::{CharacterDetails, CharacterFlag},
-    ipc::zone::{
-        GameMasterRank, GrandCompany as IpcGrandCompany, OnlineStatus, SocialListUILanguages,
+    common::{
+        BasicCharacterData, ObjectId, WORLD_NAME, WeaponModelId, determine_initial_homepoint,
+    },
+    ipc::{
+        lobby::{CharacterDetails, CharacterFlag},
+        zone::{
+            GameMasterRank, GrandCompany as IpcGrandCompany, OnlineStatus, SocialListUILanguages,
+        },
     },
 };
 
@@ -294,9 +298,14 @@ impl WorldDatabase {
                 zone_id: volatile.zone_id,
                 content_finder_condition: 0,
                 customize: customize.chara_make.customize,
-                model_main_weapon: inventory.get_main_weapon_id(game_data),
-                model_sub_weapon: inventory.get_sub_weapon_id(game_data) as i32,
-                model_ids: inventory.get_model_ids(game_data).to_vec(),
+                model_main_weapon: inventory.get_main_weapon_id(game_data).into(),
+                model_sub_weapon: <WeaponModelId as Into<u64>>::into(
+                    inventory.get_sub_weapon_id(game_data),
+                ) as i32,
+                model_ids: inventory
+                    .legacy_model_ids(game_data)
+                    .map(|x| x.into())
+                    .to_vec(),
                 equip_stain: [0; 10].to_vec(),
                 glasses: [0; 2].to_vec(),
                 remake_mode: RemakeMode::from_repr(customize.remake_mode).unwrap(),

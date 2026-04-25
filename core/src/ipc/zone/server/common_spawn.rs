@@ -3,8 +3,8 @@ use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, CharacterMode, CrestData, CustomizeData, EquipDisplayFlag, HandlerId,
-    ObjectId, ObjectTypeId, Position, read_quantized_rotation, read_string,
-    write_quantized_rotation, write_string,
+    LegacyEquipmentModelId, ObjectId, ObjectTypeId, Position, WeaponModelId,
+    read_quantized_rotation, read_string, write_quantized_rotation, write_string,
 };
 use bitflags::bitflags;
 
@@ -193,11 +193,11 @@ pub struct CommonSpawn {
     /// Free Company Crest data.
     pub crest_data: CrestData,
     /// Model ID for their main weapon.
-    pub main_weapon_model: u64,
+    pub main_weapon_model: WeaponModelId,
     /// Model ID for their secondary weapon.
-    pub sec_weapon_model: u64,
+    pub sec_weapon_model: WeaponModelId,
     /// Model ID for their craft weapon.
-    pub craft_tool_model: u64,
+    pub craft_tool_model: WeaponModelId,
     /// Unknown purpose, but seen filled with enemy data that a Player has aggro'd. Also seen for Quests that spawn an enemy the player must fight (filled on the enemy's CommonSpawn.)
     pub combat_tagger_id: ObjectTypeId,
     /// See BNpcBase/ENpcBase Excel sheet.
@@ -296,9 +296,9 @@ pub struct CommonSpawn {
     /// Their initial position.
     pub position: Position,
     /// Equipment model IDs if humanoid.
-    pub models: [u32; 10],
-    /// Unknown purpose.
-    pub model_stain_ids: [u8; 10],
+    pub models: [LegacyEquipmentModelId; 10],
+    /// Second dye stains for the given `models`.
+    pub second_model_stain_ids: [u8; 10],
     /// Unknown purpose.
     pub glasses_ids: [u16; 2],
     /// Their name, for non-player characters this is the usually the original Japanese name.

@@ -3590,9 +3590,21 @@ async fn process_server_msg(
             FromServer::UpdateConfig(actor_id, config) => {
                 connection.update_config(actor_id, config).await
             }
-            FromServer::ActorEquip(actor_id, main_weapon_id, sub_weapon_id, model_ids) => {
+            FromServer::ActorEquip(
+                actor_id,
+                main_weapon_id,
+                sub_weapon_id,
+                model_ids,
+                second_model_stain_ids,
+            ) => {
                 connection
-                    .update_equip(actor_id, main_weapon_id, sub_weapon_id, model_ids)
+                    .update_equip(
+                        actor_id,
+                        main_weapon_id,
+                        sub_weapon_id,
+                        model_ids,
+                        second_model_stain_ids,
+                    )
                     .await
             }
             FromServer::LoseEffect(effect_id, effect_param, effect_source_actor_id) => {
