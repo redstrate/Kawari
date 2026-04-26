@@ -686,7 +686,7 @@ impl Zone {
                             &param_grow,
                             &modifiers,
                         );
-                        base_parameters.calculate_potencies(level, &param_grow);
+                        base_parameters.calculate_potencies(level, &param_grow, None); // TODO: If NPCs have classjob modifiers and such, change that None!
 
                         usable_hp = base_parameters.hp;
                     }

@@ -8,7 +8,6 @@ use crate::{
 use icarus::ParamGrow::ParamGrowRow;
 use kawari::{
     common::{MAXIMUM_RESTED_EXP, ObjectId},
-    constants::LEVEL_MAIN,
     ipc::zone::{
         ActorControlCategory, PlayerStats, ServerZoneIpcData, ServerZoneIpcSegment, UpdateClassInfo,
     },
@@ -177,28 +176,28 @@ impl BaseParameters {
     pub fn calculate_based_on_level(
         &mut self,
         attributes: &Attributes,
-        level: u32,
+        _level: u32,
         param_grow: &ParamGrowRow,
         modifiers: &Modifiers,
     ) {
-        // TODO: Is there any way to extrapolate LEVEL_MAIN from Excel? How does AkhMorning do it?
+        // Akh Morning data can't be extrapolated from game sheets, and it's missing a significant amount of entries from 50-70, so let's try making a decent approximation with the BaseSpeed, HpModifier and LevelModifier columns.
         self.strength = modifiers
-            .apply_to(1, LEVEL_MAIN[level as usize - 1])
+            .apply_to(1, param_grow.BaseSpeed() as u32)
             .saturating_add_signed(attributes.strength as i32);
         self.dexterity = modifiers
-            .apply_to(2, LEVEL_MAIN[level as usize - 1])
+            .apply_to(2, param_grow.BaseSpeed() as u32)
             .saturating_add_signed(attributes.dexterity as i32);
         self.vitality = modifiers
-            .apply_to(3, LEVEL_MAIN[level as usize - 1])
+            .apply_to(3, param_grow.BaseSpeed() as u32)
             .saturating_add_signed(attributes.vitality as i32);
         self.intelligence = modifiers
-            .apply_to(4, LEVEL_MAIN[level as usize - 1])
+            .apply_to(4, param_grow.BaseSpeed() as u32)
             .saturating_add_signed(attributes.intelligence as i32);
         self.mind = modifiers
-            .apply_to(5, LEVEL_MAIN[level as usize - 1])
+            .apply_to(5, param_grow.BaseSpeed() as u32)
             .saturating_add_signed(attributes.mind as i32);
         self.piety = modifiers
-            .apply_to(6, LEVEL_MAIN[level as usize - 1])
+            .apply_to(6, param_grow.BaseSpeed() as u32)
             .saturating_add_signed(attributes.piety as i32);
 
         self.spell_speed = param_grow.BaseSpeed() as u32;
@@ -211,14 +210,38 @@ impl BaseParameters {
     }
 
     // This should be called after item stat calculations.
-    pub fn calculate_potencies(&mut self, _level: u32, param_grow: &ParamGrowRow) {
+    pub fn calculate_potencies(
+        &mut self,
+        _level: u32,
+        param_grow: &ParamGrowRow,
+        modifiers: Option<&Modifiers>,
+    ) {
         self.physical_damage = self.strength;
         self.attack_magic_potency = self.intelligence;
         self.healing_magic_potency = self.mind;
 
-        let factor = 20.25; // FIXME: This is wrong, but whatever for now.
-        self.hp = (param_grow.HpModifier() as u32)
-            .wrapping_add((self.vitality as f32 * factor).round() as u32);
+        // To calculate HP, we use a formula loosely inspired by Akh Morning and take some liberties to keep it fairly simple, at least for now.
+        // TODO: This formula isn't the greatest for 1-50, as near the end of that range it's fairly low compared to retail. For level 80+ though it's pretty close.
+        // In clearer terms without all the casts: (100 + hp_modifier + (total_vit - base_vit) * (level_mod / 100)) * job_hp_modifier
+        let classjob_hp_mod;
+        let classjob_vit_mod;
+
+        if let Some(modifiers) = modifiers {
+            classjob_hp_mod = modifiers.hp as f32 / 100.0;
+            classjob_vit_mod = modifiers.vitality as f32 / 100.0;
+        } else {
+            classjob_hp_mod = 1.0;
+            classjob_vit_mod = 1.0;
+        };
+
+        let hp_mod = param_grow.HpModifier() as f32;
+        let base_vit = (param_grow.BaseSpeed() as f32) * classjob_vit_mod; // TODO: Tribe adjustments, if we care about such a minimal change?
+        let lv_mod = param_grow.LevelModifier() as f32;
+
+        self.hp = (100.0
+            + hp_mod
+            + ((self.vitality as f32 - base_vit) * (lv_mod / 100.0)) * classjob_hp_mod)
+            .round() as u32;
     }
 
     /// Calculates amount of physical damage to apply based on potency.
@@ -390,7 +413,7 @@ impl ZoneConnection {
                 None
             },
         );
-        base_parameters.calculate_potencies(level as u32, &param_grow);
+        base_parameters.calculate_potencies(level as u32, &param_grow, Some(&modifiers));
 
         base_parameters
     }
