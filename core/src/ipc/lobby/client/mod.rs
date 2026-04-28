@@ -27,6 +27,7 @@ pub enum ClientLobbyIpcData {
         unk2: u16,
         unk3: u32, // TODO: probably multiple params
         account_id: u64,
+        unk4: [u8; 64],
     },
     GameLogin {
         sequence: u64,

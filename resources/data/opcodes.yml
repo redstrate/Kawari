@@ -1,1295 +1,1295 @@
 ServerZoneIpcType:
-  - name: ZoneInit
-    comment: Inform the client which zone to load, along with some other miscellaneous information.
-    opcode: 754
-    size: 136
-  - name: ActorControlSelf
-    comment: Control player actor state, from playing emotes to making them invisible.
-    opcode: 969
-    size: 32
-  - name: PlayerStats
-    comment: Contains various character statistics like Strength and HP.
-    opcode: 682
-    size: 144
-  - name: PlayerSetup
-    comment: Lots of useful and persistent information like which dungeons are unlocked.
-    opcode: 142
-    size: 2912
-  - name: UpdateClassInfo
-    comment: Updates class-specific information, like your currently synced level.
-    opcode: 161
-    size: 16
-  - name: SpawnPlayer
-    comment: Used to spawn players actors in.
-    opcode: 265
-    size: 664
-  - name: InitResponse
-    comment: Sent by the server as response to ZoneInitRequest.
-    opcode: 448
-    size: 16
-  - name: LogOutComplete
-    comment: Informs the client that the server-side log out preparations are complete, and it's safe to disconnect.
-    opcode: 798
-    size: 8
-  - name: ActorSetPos
-    comment: Teleport to another position in the current zone.
-    opcode: 133
-    size: 24
-  - name: ServerNoticeMessage
-    comment: Display a purple server notice message in the chat window, or in some cases, on-screen. Usually used for login messages and imminent maintenance notices.
-    opcode: 757
-    size: 776
-  - name: PrepareZoning
-    comment: Inform the client to display next loading screen, how long it should last and other information.
-    opcode: 416
-    size: 16
-  - name: ActorControl
-    comment: Control another actor's state, from playing emotes to making them invisible.
-    opcode: 785
-    size: 24
-  - name: ActorMove
-    comment: Move actors other than the current player. The client animates the actor to this new position.
-    opcode: 688
-    size: 16
-  - name: Blacklist
-    comment: Sent by the server in response to RequestBlacklist.
-    opcode: 219
-    size: 968
-  - name: SocialList
-    comment: Sent by the server in response to SocialListRequest.
-    opcode: 426
-    size: 1136
-  - name: SpawnNpc
-    comment: Used to spawn friendly or battle NPCs.
-    opcode: 808
-    size: 656
-  - name: StatusEffectList
-    comment: Update an actor's status effect list.
-    opcode: 564
-    size: 384
-  - name: WeatherId
-    comment: Change the weather in the current zone.
-    opcode: 770
-    size: 8
-  - name: UpdateItem
-    comment: Update a specific inventory slot.
-    opcode: 345
-    size: 64
-  - name: ContainerInfo
-    comment: Update the status of one container, for example the amount of items contained within.
-    opcode: 637
-    size: 16
-  - name: EventResume2
-    comment: Start a scene for the current event.
-    opcode: 386
-    size: 16
-  - name: EventResume4
-    comment: Unknown, seen in Out on a Limb.
-    opcode: 192
-    size: 24
-  - name: EventResume8
-    comment: Unknown, seen in Out on a Limb.
-    opcode: 607
-    size: 40
-  - name: EventScene2
-    comment: Start a scene for the current event.
-    opcode: 766
-    size: 40
-  - name: EventScene4
-    comment: Start a scene for the current event.
-    opcode: 588
-    size: 48
-  - name: EventScene8
-    comment: Start a scene for the current event.
-    opcode: 660
-    size: 64
-  - name: EventScene16
-    comment: Start a scene for the current event.
-    opcode: 832
-    size: 96
-  - name: EventScene32
-    comment: Start a scene for the current event.
-    opcode: 115
-    size: 160
-  - name: EventScene64
-    comment: Start a scene for the current event.
-    opcode: 968
-    size: 288
-  - name: EventScene128
-    comment: Start a scene for the current event.
-    opcode: 817
-    size: 544
-  - name: EventScene255
-    comment: Start a scene for the current event.
-    opcode: 364
-    size: 1052
-  - name: EventStart
-    comment: Have the client to load this event.
-    opcode: 385
-    size: 24
-  - name: UpdateHpMpTp
-    comment: Update an actor's HP & MP values.
-    opcode: 612
-    size: 8
-  - name: ActionResult
-    comment: Results of an action, in response to ActionRequest.
-    opcode: 676
-    size: 124
-  - name: Equip
-    comment: List of model IDs to apply to yourself or another actor.
-    opcode: 530
-    size: 72
-  - name: DeleteActor
-    comment: Free up the specified spawn index of an actor.
-    opcode: 726
-    size: 8
-  - name: EventFinish
-    comment: Stop an event that was previously playing.
-    opcode: 447
-    size: 16
-  - name: Condition
-    comment: List of networked conditions applied to the player.
-    opcode: 457
-    size: 16
-  - name: ActorControlTarget
-    comment: Unknown purpose.
-    opcode: 369
-    size: 32
-  - name: CurrencyCrystalInfo
-    comment: Update the player's currencies, used instead of UpdateItem.
-    opcode: 719
-    size: 24
-  - name: Config
-    comment: Update an actor's equip display flags.
-    opcode: 941
-    size: 8
-  - name: PingSyncReply
-    comment: Sent by the server in response to PingReply.
-    opcode: 728
-    size: 32
-  - name: InventoryActionAck
-    comment: Acknowledging when the client is updating their inventory in some way (typically when interacting with shops.)
-    opcode: 173
-    size: 16
-  - name: QuestCompleteList
-    comment: List of already completed quests.
-    opcode: 888
-    size: 816
-  - name: UnkResponse2
-    comment: Unsure the true purpose of this, but it's needed for the Unending Journey to function.
-    opcode: 905
-    size: 8
-  - name: InventoryTransaction
-    comment: Informs the client of when the inventory is being updated (typically when interacting with shops.)
-    opcode: 699
-    size: 48
-  - name: InventoryTransactionFinish
-    comment: Sent at the end of a sequence of InventoryTransaction packets.
-    opcode: 765
-    size: 16
-  - name: ContentFinderUpdate
-    comment: Update the duty finder state.
-    opcode: 809
-    size: 40
-  - name: ContentFinderFound
-    comment: Show a dialog that the duty finder content was found.
-    opcode: 436
-    size: 40
-  - name: SpawnObject
-    comment: Used to spawn objects in.
-    opcode: 622
-    size: 64
-  - name: ActorGauge
-    comment: Contains classjob-specific gauge information.
-    opcode: 984
-    size: 16
-  - name: FreeCompanyInfo
-    comment: Presumably contains information about the current free company.
-    opcode: 326
-    size: 80
-  - name: TitleList
-    comment: Contains the acquired title list.
-    opcode: 567
-    size: 111
-  - name: QuestActiveList
-    comment: Contains the list of active (or in-progress quests.
-    opcode: 867
-    size: 480
-  - name: LevequestCompleteList
-    comment: Contains the list of completed levequests.
-    opcode: 599
-    size: 232
-  - name: ShopLogMessage
-    comment: Sent by the server when an item is obtained from shops that accept gil.
-    opcode: 185
-    size: 32
-  - name: UpdateInventorySlot
-    comment: Sent by the server typically when a shop transaction takes place, usually to update currency.
-    opcode: 736
-    size: 64
-  - name: EffectResult
-    comment: Unknown purpose.
-    opcode: 390
-    size: 96
-  - name: LogMessage
-    comment: Sent by the server to send a predefined log message in chat.
-    opcode: 212
-    size: 24
-  - name: ContentFinderCommencing
-    comment: Sent to give you the green checkmark before entering a CF zone.
-    opcode: 124
-    size: 24
-  - name: StatusEffectList3
-    comment: Unknown purpose.
-    opcode: 904
-    size: 360
-  - name: CrossworldLinkshells
-    comment: Unknown purpose.
-    opcode: 254
-    size: 456
-  - name: SetSearchInfo
-    comment: Updates the search info for the client in response to RequestOwnSearchInfo.
-    opcode: 595
-    size: 216
-  - name: WalkInEvent
-    comment: Sent by the server when walking over a trigger (e.g. the teleport pads in Solution Nine.)
-    opcode: 853
-    size: 24
-  - name: GrandCompanyInfo
-    comment: Unknown purpose.
-    opcode: 371
-    size: 8
-  - name: CraftingLog
-    comment: Unknown purpose.
-    opcode: 322
-    size: 808
-  - name: GatheringLog
-    comment: Unknown purpose.
-    opcode: 903
-    size: 104
-  - name: Fellowships
-    comment: The fellowships you have joined.
-    opcode: 443
-    size: 808
-  - name: DailyQuests
-    comment: Sent shortly after the server sends InitZone, this with UnkZoneLoad2 it makes everything load faster.
-    opcode: 693
-    size: 56
-  - name: DailyQuestRepeatFlags
-    comment: Sent shortly after the server sends InitZone, this with UnkZoneLoad1 it makes everything load faster.
-    opcode: 408
-    size: 8
-  - name: Linkshells
-    comment: Sent to inform the client about server-local Linkshells, not to be confused with cross-world ones.
-    opcode: 189
-    size: 448
-  - name: ChatMessage
-    comment: Sent to nearby clients when a client sends a chat message in the say, yell, or shout channels.
-    opcode: 372
-    size: 1080
-  - name: LocationDiscovered
-    comment: Sent by the server in response to NewDiscovery.
-    opcode: 628
-    size: 8
-  - name: Mount
-    comment: Sent by the server to mount the player.
-    opcode: 123
-    size: 16
-  - name: SetOnlineStatus
-    comment: Sent by the server to update your online status.
-    opcode: 214
-    size: 8
-  - name: FreeCompanyHierarchy
-    comment: Sent by the server to inform clients about their free company's hierarchy info.
-    opcode: 597
-    size: 1440
-  - name: FreeCompanyGreeting
-    comment: Sent by the server to inform clients about their free company's message of the day.
-    opcode: 534
-    size: 200
-  - name: FreeCompanyShortMessage
-    comment: Sent by the server to inform clients about a short message from a character (including their own) in their free company.
-    opcode: 764
-    size: 120
-  - name: FreeCompanyHeader
-    comment: Sent by the server to inform clients about the free company's header (top portion of the free company UI).
-    opcode: 990
-    size: 80
-  - name: FreeCompanyActivityList
-    comment: Sent by the server to inform clients about the free company's recent activity history.
-    opcode: 296
-    size: 528
-  - name: CharaInfoFromContentIds
-    comment: Sent by the server in response to RequestCharaInfoFromContentIds.
-    opcode: 976
-    size: 568
-  - name: InviteCharacterResult
-    comment: Sent by the server to inform the client about their own new invite to another character. This can display a pre-defined log message if anything goes wrong, like the recipient going offline.
-    opcode: 844
-    size: 48
-  - name: InviteUpdate
-    comment: Sent by the server to inform the client of an invitation changing state.
-    opcode: 918
-    size: 72
-  - name: PartyUpdate
-    comment: Sent by the server when the party needs to be updated.
-    opcode: 653
-    size: 104
-  - name: PartyList
-    comment: Sent by the server when the party list needs to be updated.
-    opcode: 325
-    size: 3672
-  - name: InviteReplyResult
-    comment: Sent by the server to inform the client about its own invite reply.
-    opcode: 180
-    size: 48
-  - name: PartyMemberPositions
-    comment: Sent by the server to inform the client about the party's positions in the world.
-    opcode: 150
-    size: 64
-  - name: AcceptQuest
-    comment: Sent by the server to add a quest to your journal, I think.
-    opcode: 213
-    size: 8
-  - name: UpdateQuest
-    comment: Sent by the server to update a quest.
-    opcode: 909
-    size: 24
-  - name: FinishQuest
-    comment: Sent by the server when finshing a quest.
-    opcode: 635
-    size: 8
-  - name: UpdateMapMarkers8
-    comment: Unknown purpose.
-    opcode: 516
-    size: 112
-  - name: UpdateMapMarkers16
-    comment: Unknown purpose.
-    opcode: 165
-    size: 216
-  - name: UpdateMapMarkers32
-    comment: Unknown purpose.
-    opcode: 624
-    size: 424
-  - name: QuestTracker
-    comment: A list of active or pinned quests, shows up under the duty list.
-    opcode: 619
-    size: 24
-  - name: HouseList
-    comment: A list of basic house information.
-    opcode: 922
-    size: 1216
-  - name: HousingWardInfo
-    comment: Sent by the server in response to the client requesting housing ward info on the residential aetheryte menu.
-    opcode: 132
-    size: 2416
-  - name: SupportDeskNotification
-    comment: Sent by the server to indicate you have a support desk notification(?) !! Out of date as of 7.40.
-    opcode: 3260
-    size: 16
-  - name: ScenarioGuide
-    comment: Sent by the server to update the scenario guide UI.
-    opcode: 917
-    size: 32
-  - name: LegacyQuestList
-    comment: Sent by the server to send a list of completed FFXIV 1.x quests.
-    opcode: 207
-    size: 40
-  - name: DirectorVars
-    comment: Unknown purpose.
-    opcode: 297
-    size: 24
-  - name: UnkDirector1
-    comment: Unknown purpose.
-    opcode: 226
-    size: 32
-  - name: PartyMemberPortraits
-    comment: Displays the party member portraits for this duty.
-    opcode: 552
-    size: 184
-  - name: FieldMarkerPreset
-    comment: A player in the client's party has applied a waymark preset.
-    opcode: 572
-    size: 104
-  - name: DeleteObject
-    comment: Sent to the client to free up an object spawn index.
-    opcode: 675
-    size: 8
-  - name: GoldSaucerInformation
-    comment: Sent to the client when opening the Gold Saucer window.
-    opcode: 738
-    size: 40
-  - name: UnkContentFinder
-    comment: Unknown purpose, but it clears the currently operating content finder.
-    opcode: 656
-    size: 16
-  - name: TrustInformation
-    comment: Sent to the client to initialize the Trust window.
-    opcode: 301
-    size: 728
-  - name: DutySupportInformation
-    comment: Sent to the client to initialize the Duty Support window.
-    opcode: 294
-    size: 80
-  - name: PortraitsInformation
-    comment: Sent to the client to initialize the Portraits window.
-    opcode: 200
-    size: 56
-  - name: InitializeObfuscation
-    comment: Initialize the packet obfuscation system.
-    opcode: 263
-    size: 16
-  - name: BeginStrategyBoardSession
-    comment: A client starts a strategy board sharing session with their party.
-    opcode: 742
-    size: 16
-  - name: StrategyBoard
-    comment: The content id of the real-time sharing host, and the actual strategy board data to be shared.
-    opcode: 271
-    size: 1184
-  - name: StrategyBoardReceivedAck
-    comment: The server informs the sharing client that a client in the party has received a strategy board.
-    opcode: 153
-    size: 16
-  - name: StrategyBoardUpdate
-    comment: The client updates their strategy board during real-time sharing, and other party members are informed.
-    opcode: 768
-    size: 64
-  - name: EndStrategyBoardSession
-    comment: The client stopped sharing their strategy board, or if it wasn't real-time, the transfer has completed.
-    opcode: 147
-    size: 16
-  - name: WaymarkUpdate
-    comment: A client updated a waymark, and now their party needs to be informed.
-    opcode: 257
-    size: 16
-  - name: UnkContentFinder2
-    comment: Unknown purpose, but it controls something like hiding the Join button.
-    opcode: 745
-    size: 16
-  - name: Playtime
-    comment: A client requested their playtime, and now they need to be informed.
-    opcode: 365
-    size: 8
-  - name: Countdown
-    comment: A client initiated a countdown from the Party menu, and now their party needs to be informed.
-    opcode: 518
-    size: 64
-  - name: DirectorPopupMessage
-    comment: Shows a popup message (usually reserved for NPCs and bosses.) Not sure if it's the only thing this does.
-    opcode: 837
-    size: 40
-  - name: DirectorSetupMapEffects64
-    comment: Seems to animate stuff like the train moving in the Tower of Babil. Unsure of its purpose elsewhere.
-    opcode: 833
-    size: 136
-  - name: DirectorSetupMapEffects128
-    comment: Seems to animate stuff like the train moving in the Tower of Babil. Unsure of its purpose elsewhere.
-    opcode: 951
-    size: 264
-  - name: DirectorMapEffect
-    comment: Updates a map effect.
-    opcode: 746
-    size: 16
-  - name: FurnitureList
-    comment: Sent by the server to inform the client about furniture (both indoor & outdoor) that exists in this ward or housing interior.
-    opcode: 376
-    size: 2416
-  - name: OwnedHousing
-    comment: Sent to inform you of which housing you own/have access to.
-    opcode: 404
-    size: 136
-  - name: UpdateFittingShop
-    comment: Sent to inform the client which items are listed under Latest Trends in Dreamfitting.
-    opcode: 341
-    size: 16
-  - name: UnkSocialResponse
-    comment: Unknown purpose, but allows you to load in while sending the search info packet.
-    opcode: 638
-    size: 80
-  - name: UnkClassRelated
-    comment: Seems to control the client's hotbars.
-    opcode: 183
-    size: 8
-  - name: EnmityList
-    comment: Sent to update the enemity of the party.
-    opcode: 484
-    size: 72
-  - name: HaterList
-    comment: Sent to update the people who hate you.
-    opcode: 135
-    size: 264
-  - name: DuelInformation
-    comment: Information about an upcoming duel.
-    opcode: 715
-    size: 64
-  - name: MarketBoardItems
-    comment: Sent to fill out the list of items on the Market Board.
-    opcode: 112
-    size: 176
-  - name: EffectResultBasic
-    comment: Unknown purpose.
-    opcode: 636
-    size: 24
-  - name: AoeEffect8
-    comment: Unknown purpose.
-    opcode: 643
-    size: 636
-  - name: ActorCast
-    comment: Unknown purpose.
-    opcode: 953
-    size: 32
-  - name: SearchPlayersResult
-    comment: Sent to inform the client about how many search results were found.
-    opcode: 814
-    size: 8
-  - name: FriendGroupIcon
-    comment: Sent to inform the client that SetFriendGroupIcon request has been acknowledged.
-    opcode: 857
-    size: 16
-  - name: DeepDungeonParty
-    comment: Unknown purpose.
-    opcode: 420
-    size: 20
-  - name: DeepDungeonChests
-    comment: Unknown purpose.
-    opcode: 235
-    size: 32
-  - name: DeepDungeonSetup
-    comment: Unknown purpose.
-    opcode: 222
-    size: 24
-  - name: DeepDungeonMap
-    comment: Unknown purpose.
-    opcode: 331
-    size: 56
-  - name: ExamineCharacterInformation
-    comment: Sent to show character information in the Examine window.
-    opcode: 333
-    size: 944
-  - name: OtherSearchInfo
-    comment: Used when the player requests someone else's search info.
-    opcode: 467
-    size: 424
-  - name: SetPlayerCustomizeData
-    comment: Unknown purpose.
-    opcode: 138
-    size: 26
-  - name: CrossworldLinkshellsEx
-    comment: Sent in response to the client opening the Crossworld Linkshell menu. It has additional information the login list does not.
-    opcode: 245
-    size: 520
-  - name: CrossworldLinkshellMemberList
-    comment: Sent in response to CrossworldLinkshellMemberList. Sends the member list of this CWLS.
-    opcode: 307
-    size: 464
-  - name: SpawnTreasure
-    comment: Unknown purpose.
-    opcode: 141
-    size: 112
-  - name: OpenedTreasure
-    comment: Unknown purpose.
-    opcode: 148
-    size: 24
-  - name: TreasureFadeOut
-    comment: Unknown purpose.
-    opcode: 761
-    size: 8
-  - name: FirstAttack
-    comment: Unknown purpose.
-    opcode: 335
-    size: 16
-  - name: UnkFate
-    comment: Seen while fates were initializing.
-    opcode: 432
-    size: 24
-  - name: CrossRealmListings
-    comment: Sent to fill out the Party Finder.
-    opcode: 810
-    size: 1616
-  - name: CrossRealmListingsOverview
-    comment: Sent to fill out the information for Party Finder tabs and other overview information.
-    opcode: 800
-    size: 48
-  - name: CrossRealmListingInformation
-    comment: Sent in response to ViewCrossRealmListing
-    opcode: 735
-    size: 464
-  - name: CWLinkshellNameAvailability
-    comment: The server responds to CheckCWLinkshellNameAvailability, informing the client if the desired name was available or not.
-    opcode: 906
-    size: 40
-  - name: NewCrossworldLinkshell
-    comment: The server responds to NewCrossworldLinkshellInfoRequest, providing some information on the newly created/joined cwls.
-    opcode: 855
-    size: 64
-  - name: RetainerInfo
-    comment: Sent when the client requests retainer information through the bell.
-    opcode: 646
-    size: 80
-  - name: RetainerInfoEnd
-    comment: Seen after a sequence of RetainerInfo packets.
-    opcode: 863
-    size: 24
-  - name: CrossworldLinkshellDisbanded
-    comment: The server informs the client that the linkshell has been disbanded.
-    opcode: 519
-    size: 40
-  - name: CrossworldLinkshellMemberLeft
-    comment: The server informs the client that a member in the linkshell has left (including themself if it was them).
-    opcode: 694
-    size: 64
-  - name: CrossworldLinkshellRenamed
-    comment: The server informs the client that the linkshell has been renamed.
-    opcode: 234
-    size: 88
-  - name: CrossworldLinkshellMemberRank
-    comment: The server informs the client that a member in the linkshell has had their rank changed.
-    opcode: 129
-    size: 64
-  - name: CrossworldLinkshellInvite
-    comment: The server informs the client about an invitation to a cross-world linkshell.
-    opcode: 462
-    size: 128
-  - name: CrossworldLinkshellJoinedSelf
-    comment: The server informs the client about the linkshell they just joined.
-    opcode: 712
-    size: 48
-  - name: CrossworldLinkshellJoined2
-    comment: The server informs the rest of the linkshell about the member that just joined.
-    opcode: 996
-    size: 56
-  - name: MailboxStatus
-    comment: Upon login, the server informs the client of how many letters they have in their mailbox, along with any that are from support/GMs.
-    opcode: 119
-    size: 16
-  - name: MailboxPreview
-    comment: The server sends the client previews of letters they have received.
-    opcode: 240
-    size: 1168
-  - name: ShowLinkshellError
-    comment: The server sends the client an error message due to something going wrong with a linkshell.
-    opcode: 190
-    size: 24
-  - name: HousingInteriorDetails
-    comment: The server sends the client exhaustive information (wall/floor textures, window models, etc.) about the housing interior they entered.
-    opcode: 389
-    size: 56
-  - name: ApartmentList
-    comment: The server sends the client a list of apartments in the current apartment building.
-    opcode: 576
-    size: 1584
-  - name: FriendRemoved
-    comment: The server informs the client about the result of their RemoveFriend request.
-    opcode: 569
-    size: 48
-  - name: Letter
-    comment: The server sends the full contents of a letter to the client.
-    opcode: 337
-    size: 616
-  - name: LetterUpdate
-    comment: The server informs the client about a letter being sent or deleted.
-    opcode: 696
-    size: 144
-  - name: HousingOccupiedLandInfo
-    comment: Contains owner information of an occupied housing plot. This packet is sent when clicking a placard of an occupied plot, when clicking an occupied plot in the house list, or when viewing FC estate information.
-    opcode: 709
-    size: 280
-  - name: HousingVacantLandInfo
-    comment: Contains lottery information of a vacant housing plot. This packet is sent when clicking the placard of a vacant plot.
-    opcode: 720
-    size: 40
-  - name: HousingEstateGreeting
-    comment: Contains the greeting text for a specific housing plot. This packet is sent when hovering the greeting text bubble in the house list.
-    opcode: 604
-    size: 208
-  - name: NpcYell
-    comment: Seen during Gold Saucer GATE announcements.
-    opcode: 556
-    size: 32
-  - name: InteriorFurniturePlaced
-    comment: The server informs the client about a piece of furniture that was placed in the current housing interior.
-    opcode: 429
-    size: 32
-  - name: Mogpendium
-    comment: Contains character specific Mogpendium progress data.
-    opcode: 535
-    size: 144
-  - name: PlayerName
-    comment: Sent in response to the RequestPlayerName client trigger.
-    opcode: 338
-    size: 40
-  - name: ExteriorFurniturePlaced
-    comment: The server informs the client about a piece of furniture that was placed in the current housing ward.
-    opcode: 227
-    size: 32
-  - name: EorzeanTimeOffset
-    comment: Probably a GM-only opcode, it sets the time of day in the current zone.
-    opcode: 285
-    size: 8
-  - name: FurnitureTranslatedForObserver
-    comment: The server informs the client about a piece of furniture being moved/rotated indoors or outdoors. This is only sent to observing clients.
-    opcode: 125
-    size: 24
+- name: ZoneInit
+  comment: Inform the client which zone to load, along with some other miscellaneous information.
+  opcode: 152
+  size: 136
+- name: ActorControlSelf
+  comment: Control player actor state, from playing emotes to making them invisible.
+  opcode: 999
+  size: 32
+- name: PlayerStats
+  comment: Contains various character statistics like Strength and HP.
+  opcode: 114
+  size: 144
+- name: PlayerSetup
+  comment: Lots of useful and persistent information like which dungeons are unlocked.
+  opcode: 852
+  size: 2952
+- name: UpdateClassInfo
+  comment: Updates class-specific information, like your currently synced level.
+  opcode: 556
+  size: 16
+- name: SpawnPlayer
+  comment: Used to spawn players actors in.
+  opcode: 835
+  size: 664
+- name: InitResponse
+  comment: Sent by the server as response to ZoneInitRequest.
+  opcode: 936
+  size: 16
+- name: LogOutComplete
+  comment: Informs the client that the server-side log out preparations are complete, and it's safe to disconnect.
+  opcode: 820
+  size: 8
+- name: ActorSetPos
+  comment: Teleport to another position in the current zone.
+  opcode: 340
+  size: 24
+- name: ServerNoticeMessage
+  comment: Display a purple server notice message in the chat window, or in some cases, on-screen. Usually used for login messages and imminent maintenance notices.
+  opcode: 162
+  size: 776
+- name: PrepareZoning
+  comment: Inform the client to display next loading screen, how long it should last and other information.
+  opcode: 812
+  size: 16
+- name: ActorControl
+  comment: Control another actor's state, from playing emotes to making them invisible.
+  opcode: 808
+  size: 24
+- name: ActorMove
+  comment: Move actors other than the current player. The client animates the actor to this new position.
+  opcode: 211
+  size: 16
+- name: Blacklist
+  comment: Sent by the server in response to RequestBlacklist.
+  opcode: 147
+  size: 968
+- name: SocialList
+  comment: Sent by the server in response to SocialListRequest.
+  opcode: 650
+  size: 1136
+- name: SpawnNpc
+  comment: Used to spawn friendly or battle NPCs.
+  opcode: 686
+  size: 656
+- name: StatusEffectList
+  comment: Update an actor's status effect list.
+  opcode: 279
+  size: 384
+- name: WeatherId
+  comment: Change the weather in the current zone.
+  opcode: 288
+  size: 8
+- name: UpdateItem
+  comment: Update a specific inventory slot.
+  opcode: 315
+  size: 64
+- name: ContainerInfo
+  comment: Update the status of one container, for example the amount of items contained within.
+  opcode: 476
+  size: 16
+- name: EventResume2
+  comment: Start a scene for the current event.
+  opcode: 976
+  size: 16
+- name: EventResume4
+  comment: Unknown, seen in Out on a Limb.
+  opcode: 452
+  size: 24
+- name: EventResume8
+  comment: Unknown, seen in Out on a Limb.
+  opcode: 575
+  size: 40
+- name: EventScene2
+  comment: Start a scene for the current event.
+  opcode: 953
+  size: 40
+- name: EventScene4
+  comment: Start a scene for the current event.
+  opcode: 373
+  size: 48
+- name: EventScene8
+  comment: Start a scene for the current event.
+  opcode: 560
+  size: 64
+- name: EventScene16
+  comment: Start a scene for the current event.
+  opcode: 846
+  size: 96
+- name: EventScene32
+  comment: Start a scene for the current event.
+  opcode: 662
+  size: 160
+- name: EventScene64
+  comment: Start a scene for the current event.
+  opcode: 195
+  size: 288
+- name: EventScene128
+  comment: Start a scene for the current event.
+  opcode: 194
+  size: 544
+- name: EventScene255
+  comment: Start a scene for the current event.
+  opcode: 178
+  size: 1052
+- name: EventStart
+  comment: Have the client to load this event.
+  opcode: 705
+  size: 24
+- name: UpdateHpMpTp
+  comment: Update an actor's HP & MP values.
+  opcode: 957
+  size: 8
+- name: ActionResult
+  comment: Results of an action, in response to ActionRequest.
+  opcode: 922
+  size: 124
+- name: Equip
+  comment: List of model IDs to apply to yourself or another actor.
+  opcode: 158
+  size: 72
+- name: DeleteActor
+  comment: Free up the specified spawn index of an actor.
+  opcode: 593
+  size: 8
+- name: EventFinish
+  comment: Stop an event that was previously playing.
+  opcode: 527
+  size: 16
+- name: Condition
+  comment: List of networked conditions applied to the player.
+  opcode: 515
+  size: 16
+- name: ActorControlTarget
+  comment: Unknown purpose.
+  opcode: 938
+  size: 32
+- name: CurrencyCrystalInfo
+  comment: Update the player's currencies, used instead of UpdateItem.
+  opcode: 259
+  size: 24
+- name: Config
+  comment: Update an actor's equip display flags.
+  opcode: 724
+  size: 8
+- name: PingSyncReply
+  comment: Sent by the server in response to PingReply.
+  opcode: 668
+  size: 32
+- name: InventoryActionAck
+  comment: Acknowledging when the client is updating their inventory in some way (typically when interacting with shops.)
+  opcode: 778
+  size: 16
+- name: QuestCompleteList
+  comment: List of already completed quests.
+  opcode: 490
+  size: 816
+- name: UnkResponse2
+  comment: Unsure the true purpose of this, but it's needed for the Unending Journey to function.
+  opcode: 116
+  size: 8
+- name: InventoryTransaction
+  comment: Informs the client of when the inventory is being updated (typically when interacting with shops.)
+  opcode: 991
+  size: 48
+- name: InventoryTransactionFinish
+  comment: Sent at the end of a sequence of InventoryTransaction packets.
+  opcode: 517
+  size: 16
+- name: ContentFinderUpdate
+  comment: Update the duty finder state.
+  opcode: 961
+  size: 40
+- name: ContentFinderFound
+  comment: Show a dialog that the duty finder content was found.
+  opcode: 607
+  size: 40
+- name: SpawnObject
+  comment: Used to spawn objects in.
+  opcode: 581
+  size: 64
+- name: ActorGauge
+  comment: Contains classjob-specific gauge information.
+  opcode: 802
+  size: 16
+- name: FreeCompanyInfo
+  comment: Presumably contains information about the current free company.
+  opcode: 624
+  size: 80
+- name: TitleList
+  comment: Contains the acquired title list.
+  opcode: 698
+  size: 111
+- name: QuestActiveList
+  comment: Contains the list of active (or in-progress quests.
+  opcode: 890
+  size: 480
+- name: LevequestCompleteList
+  comment: Contains the list of completed levequests.
+  opcode: 709
+  size: 232
+- name: ShopLogMessage
+  comment: Sent by the server when an item is obtained from shops that accept gil.
+  opcode: 721
+  size: 32
+- name: UpdateInventorySlot
+  comment: Sent by the server typically when a shop transaction takes place, usually to update currency.
+  opcode: 188
+  size: 64
+- name: EffectResult
+  comment: Unknown purpose.
+  opcode: 234
+  size: 96
+- name: LogMessage
+  comment: Sent by the server to send a predefined log message in chat.
+  opcode: 482
+  size: 24
+- name: ContentFinderCommencing
+  comment: Sent to give you the green checkmark before entering a CF zone.
+  opcode: 486
+  size: 24
+- name: StatusEffectList3
+  comment: Unknown purpose.
+  opcode: 822
+  size: 360
+- name: CrossworldLinkshells
+  comment: Unknown purpose.
+  opcode: 920
+  size: 456
+- name: SetSearchInfo
+  comment: Updates the search info for the client in response to RequestOwnSearchInfo.
+  opcode: 171
+  size: 216
+- name: WalkInEvent
+  comment: Sent by the server when walking over a trigger (e.g. the teleport pads in Solution Nine.)
+  opcode: 748
+  size: 24
+- name: GrandCompanyInfo
+  comment: Unknown purpose.
+  opcode: 392
+  size: 8
+- name: CraftingLog
+  comment: Unknown purpose.
+  opcode: 620
+  size: 808
+- name: GatheringLog
+  comment: Unknown purpose.
+  opcode: 516
+  size: 104
+- name: Fellowships
+  comment: The fellowships you have joined.
+  opcode: 940
+  size: 808
+- name: DailyQuests
+  comment: Sent shortly after the server sends InitZone, this with UnkZoneLoad2 it makes everything load faster.
+  opcode: 388
+  size: 56
+- name: DailyQuestRepeatFlags
+  comment: Sent shortly after the server sends InitZone, this with UnkZoneLoad1 it makes everything load faster.
+  opcode: 257
+  size: 8
+- name: Linkshells
+  comment: Sent to inform the client about server-local Linkshells, not to be confused with cross-world ones.
+  opcode: 179
+  size: 448
+- name: ChatMessage
+  comment: Sent to nearby clients when a client sends a chat message in the say, yell, or shout channels.
+  opcode: 656
+  size: 1080
+- name: LocationDiscovered
+  comment: Sent by the server in response to NewDiscovery.
+  opcode: 466
+  size: 8
+- name: Mount
+  comment: Sent by the server to mount the player.
+  opcode: 771
+  size: 16
+- name: SetOnlineStatus
+  comment: Sent by the server to update your online status.
+  opcode: 873
+  size: 8
+- name: FreeCompanyHierarchy
+  comment: Sent by the server to inform clients about their free company's hierarchy info.
+  opcode: 821
+  size: 1440
+- name: FreeCompanyGreeting
+  comment: Sent by the server to inform clients about their free company's message of the day.
+  opcode: 707
+  size: 200
+- name: FreeCompanyShortMessage
+  comment: Sent by the server to inform clients about a short message from a character (including their own) in their free company.
+  opcode: 300
+  size: 120
+- name: FreeCompanyHeader
+  comment: Sent by the server to inform clients about the free company's header (top portion of the free company UI).
+  opcode: 185
+  size: 80
+- name: FreeCompanyActivityList
+  comment: Sent by the server to inform clients about the free company's recent activity history.
+  opcode: 687
+  size: 528
+- name: CharaInfoFromContentIds
+  comment: Sent by the server in response to RequestCharaInfoFromContentIds.
+  opcode: 342
+  size: 568
+- name: InviteCharacterResult
+  comment: Sent by the server to inform the client about their own new invite to another character. This can display a pre-defined log message if anything goes wrong, like the recipient going offline.
+  opcode: 799
+  size: 48
+- name: InviteUpdate
+  comment: Sent by the server to inform the client of an invitation changing state.
+  opcode: 243
+  size: 72
+- name: PartyUpdate
+  comment: Sent by the server when the party needs to be updated.
+  opcode: 293
+  size: 104
+- name: PartyList
+  comment: Sent by the server when the party list needs to be updated.
+  opcode: 569
+  size: 3672
+- name: InviteReplyResult
+  comment: Sent by the server to inform the client about its own invite reply.
+  opcode: 305
+  size: 48
+- name: PartyMemberPositions
+  comment: Sent by the server to inform the client about the party's positions in the world.
+  opcode: 685
+  size: 64
+- name: AcceptQuest
+  comment: Sent by the server to add a quest to your journal, I think.
+  opcode: 283
+  size: 8
+- name: UpdateQuest
+  comment: Sent by the server to update a quest.
+  opcode: 637
+  size: 24
+- name: FinishQuest
+  comment: Sent by the server when finshing a quest.
+  opcode: 678
+  size: 8
+- name: UpdateMapMarkers8
+  comment: Unknown purpose.
+  opcode: 928
+  size: 112
+- name: UpdateMapMarkers16
+  comment: Unknown purpose.
+  opcode: 140
+  size: 216
+- name: UpdateMapMarkers32
+  comment: Unknown purpose.
+  opcode: 193
+  size: 424
+- name: QuestTracker
+  comment: A list of active or pinned quests, shows up under the duty list.
+  opcode: 113
+  size: 24
+- name: HouseList
+  comment: A list of basic house information.
+  opcode: 623
+  size: 1216
+- name: HousingWardInfo
+  comment: Sent by the server in response to the client requesting housing ward info on the residential aetheryte menu.
+  opcode: 239
+  size: 2416
+- name: SupportDeskNotification
+  comment: Sent by the server to indicate you have a support desk notification(?) !! Out of date as of 7.40.
+  opcode: 3260
+  size: 16
+- name: ScenarioGuide
+  comment: Sent by the server to update the scenario guide UI.
+  opcode: 180
+  size: 32
+- name: LegacyQuestList
+  comment: Sent by the server to send a list of completed FFXIV 1.x quests.
+  opcode: 648
+  size: 40
+- name: DirectorVars
+  comment: Unknown purpose.
+  opcode: 751
+  size: 24
+- name: UnkDirector1
+  comment: Unknown purpose.
+  opcode: 462
+  size: 32
+- name: PartyMemberPortraits
+  comment: Displays the party member portraits for this duty.
+  opcode: 810
+  size: 184
+- name: FieldMarkerPreset
+  comment: A player in the client's party has applied a waymark preset.
+  opcode: 565
+  size: 104
+- name: DeleteObject
+  comment: Sent to the client to free up an object spawn index.
+  opcode: 608
+  size: 8
+- name: GoldSaucerInformation
+  comment: Sent to the client when opening the Gold Saucer window.
+  opcode: 450
+  size: 40
+- name: UnkContentFinder
+  comment: Unknown purpose, but it clears the currently operating content finder.
+  opcode: 455
+  size: 16
+- name: TrustInformation
+  comment: Sent to the client to initialize the Trust window.
+  opcode: 309
+  size: 728
+- name: DutySupportInformation
+  comment: Sent to the client to initialize the Duty Support window.
+  opcode: 941
+  size: 80
+- name: PortraitsInformation
+  comment: Sent to the client to initialize the Portraits window.
+  opcode: 786
+  size: 56
+- name: InitializeObfuscation
+  comment: Initialize the packet obfuscation system.
+  opcode: 264
+  size: 16
+- name: BeginStrategyBoardSession
+  comment: A client starts a strategy board sharing session with their party.
+  opcode: 640
+  size: 16
+- name: StrategyBoard
+  comment: The content id of the real-time sharing host, and the actual strategy board data to be shared.
+  opcode: 133
+  size: 1184
+- name: StrategyBoardReceivedAck
+  comment: The server informs the sharing client that a client in the party has received a strategy board.
+  opcode: 690
+  size: 16
+- name: StrategyBoardUpdate
+  comment: The client updates their strategy board during real-time sharing, and other party members are informed.
+  opcode: 931
+  size: 64
+- name: EndStrategyBoardSession
+  comment: The client stopped sharing their strategy board, or if it wasn't real-time, the transfer has completed.
+  opcode: 865
+  size: 16
+- name: WaymarkUpdate
+  comment: A client updated a waymark, and now their party needs to be informed.
+  opcode: 727
+  size: 16
+- name: UnkContentFinder2
+  comment: Unknown purpose, but it controls something like hiding the Join button.
+  opcode: 814
+  size: 16
+- name: Playtime
+  comment: A client requested their playtime, and now they need to be informed.
+  opcode: 604
+  size: 8
+- name: Countdown
+  comment: A client initiated a countdown from the Party menu, and now their party needs to be informed.
+  opcode: 738
+  size: 64
+- name: DirectorPopupMessage
+  comment: Shows a popup message (usually reserved for NPCs and bosses.) Not sure if it's the only thing this does.
+  opcode: 971
+  size: 40
+- name: DirectorSetupMapEffects64
+  comment: Seems to animate stuff like the train moving in the Tower of Babil. Unsure of its purpose elsewhere.
+  opcode: 183
+  size: 136
+- name: DirectorSetupMapEffects128
+  comment: Seems to animate stuff like the train moving in the Tower of Babil. Unsure of its purpose elsewhere.
+  opcode: 435
+  size: 264
+- name: DirectorMapEffect
+  comment: Updates a map effect.
+  opcode: 511
+  size: 16
+- name: FurnitureList
+  comment: Sent by the server to inform the client about furniture (both indoor & outdoor) that exists in this ward or housing interior.
+  opcode: 696
+  size: 2416
+- name: OwnedHousing
+  comment: Sent to inform you of which housing you own/have access to.
+  opcode: 571
+  size: 136
+- name: UpdateFittingShop
+  comment: Sent to inform the client which items are listed under Latest Trends in Dreamfitting.
+  opcode: 327
+  size: 16
+- name: UnkSocialResponse
+  comment: Unknown purpose, but allows you to load in while sending the search info packet.
+  opcode: 190
+  size: 80
+- name: UnkClassRelated
+  comment: Seems to control the client's hotbars.
+  opcode: 863
+  size: 8
+- name: EnmityList
+  comment: Sent to update the enemity of the party.
+  opcode: 268
+  size: 72
+- name: HaterList
+  comment: Sent to update the people who hate you.
+  opcode: 613
+  size: 264
+- name: DuelInformation
+  comment: Information about an upcoming duel.
+  opcode: 649
+  size: 64
+- name: MarketBoardItems
+  comment: Sent to fill out the list of items on the Market Board.
+  opcode: 227
+  size: 176
+- name: EffectResultBasic
+  comment: Unknown purpose.
+  opcode: 451
+  size: 24
+- name: AoeEffect8
+  comment: Unknown purpose.
+  opcode: 498
+  size: 636
+- name: ActorCast
+  comment: Unknown purpose.
+  opcode: 837
+  size: 32
+- name: SearchPlayersResult
+  comment: Sent to inform the client about how many search results were found.
+  opcode: 245
+  size: 8
+- name: FriendGroupIcon
+  comment: Sent to inform the client that SetFriendGroupIcon request has been acknowledged.
+  opcode: 858
+  size: 16
+- name: DeepDungeonParty
+  comment: Unknown purpose.
+  opcode: 467
+  size: 20
+- name: DeepDungeonChests
+  comment: Unknown purpose.
+  opcode: 590
+  size: 32
+- name: DeepDungeonSetup
+  comment: Unknown purpose.
+  opcode: 788
+  size: 24
+- name: DeepDungeonMap
+  comment: Unknown purpose.
+  opcode: 310
+  size: 56
+- name: ExamineCharacterInformation
+  comment: Sent to show character information in the Examine window.
+  opcode: 256
+  size: 944
+- name: OtherSearchInfo
+  comment: Used when the player requests someone else's search info.
+  opcode: 275
+  size: 424
+- name: SetPlayerCustomizeData
+  comment: Unknown purpose.
+  opcode: 691
+  size: 26
+- name: CrossworldLinkshellsEx
+  comment: Sent in response to the client opening the Crossworld Linkshell menu. It has additional information the login list does not.
+  opcode: 531
+  size: 520
+- name: CrossworldLinkshellMemberList
+  comment: Sent in response to CrossworldLinkshellMemberList. Sends the member list of this CWLS.
+  opcode: 851
+  size: 464
+- name: SpawnTreasure
+  comment: Unknown purpose.
+  opcode: 251
+  size: 112
+- name: OpenedTreasure
+  comment: Unknown purpose.
+  opcode: 237
+  size: 24
+- name: TreasureFadeOut
+  comment: Unknown purpose.
+  opcode: 587
+  size: 8
+- name: FirstAttack
+  comment: Unknown purpose.
+  opcode: 276
+  size: 16
+- name: UnkFate
+  comment: Seen while fates were initializing.
+  opcode: 947
+  size: 24
+- name: CrossRealmListings
+  comment: Sent to fill out the Party Finder.
+  opcode: 439
+  size: 1616
+- name: CrossRealmListingsOverview
+  comment: Sent to fill out the information for Party Finder tabs and other overview information.
+  opcode: 641
+  size: 48
+- name: CrossRealmListingInformation
+  comment: Sent in response to ViewCrossRealmListing
+  opcode: 644
+  size: 464
+- name: CWLinkshellNameAvailability
+  comment: The server responds to CheckCWLinkshellNameAvailability, informing the client if the desired name was available or not.
+  opcode: 743
+  size: 40
+- name: NewCrossworldLinkshell
+  comment: The server responds to NewCrossworldLinkshellInfoRequest, providing some information on the newly created/joined cwls.
+  opcode: 877
+  size: 64
+- name: RetainerInfo
+  comment: Sent when the client requests retainer information through the bell.
+  opcode: 749
+  size: 80
+- name: RetainerInfoEnd
+  comment: Seen after a sequence of RetainerInfo packets.
+  opcode: 881
+  size: 24
+- name: CrossworldLinkshellDisbanded
+  comment: The server informs the client that the linkshell has been disbanded.
+  opcode: 203
+  size: 40
+- name: CrossworldLinkshellMemberLeft
+  comment: The server informs the client that a member in the linkshell has left (including themself if it was them).
+  opcode: 986
+  size: 64
+- name: CrossworldLinkshellRenamed
+  comment: The server informs the client that the linkshell has been renamed.
+  opcode: 415
+  size: 88
+- name: CrossworldLinkshellMemberRank
+  comment: The server informs the client that a member in the linkshell has had their rank changed.
+  opcode: 843
+  size: 64
+- name: CrossworldLinkshellInvite
+  comment: The server informs the client about an invitation to a cross-world linkshell.
+  opcode: 115
+  size: 128
+- name: CrossworldLinkshellJoinedSelf
+  comment: The server informs the client about the linkshell they just joined.
+  opcode: 413
+  size: 48
+- name: CrossworldLinkshellJoined2
+  comment: The server informs the rest of the linkshell about the member that just joined.
+  opcode: 626
+  size: 56
+- name: MailboxStatus
+  comment: Upon login, the server informs the client of how many letters they have in their mailbox, along with any that are from support/GMs.
+  opcode: 762
+  size: 16
+- name: MailboxPreview
+  comment: The server sends the client previews of letters they have received.
+  opcode: 932
+  size: 1168
+- name: ShowLinkshellError
+  comment: The server sends the client an error message due to something going wrong with a linkshell.
+  opcode: 104
+  size: 24
+- name: HousingInteriorDetails
+  comment: The server sends the client exhaustive information (wall/floor textures, window models, etc.) about the housing interior they entered.
+  opcode: 855
+  size: 56
+- name: ApartmentList
+  comment: The server sends the client a list of apartments in the current apartment building.
+  opcode: 220
+  size: 1584
+- name: FriendRemoved
+  comment: The server informs the client about the result of their RemoveFriend request.
+  opcode: 330
+  size: 48
+- name: Letter
+  comment: The server sends the full contents of a letter to the client.
+  opcode: 554
+  size: 616
+- name: LetterUpdate
+  comment: The server informs the client about a letter being sent or deleted.
+  opcode: 496
+  size: 144
+- name: HousingOccupiedLandInfo
+  comment: Contains owner information of an occupied housing plot. This packet is sent when clicking a placard of an occupied plot, when clicking an occupied plot in the house list, or when viewing FC estate information.
+  opcode: 612
+  size: 280
+- name: HousingVacantLandInfo
+  comment: Contains lottery information of a vacant housing plot. This packet is sent when clicking the placard of a vacant plot.
+  opcode: 700
+  size: 40
+- name: HousingEstateGreeting
+  comment: Contains the greeting text for a specific housing plot. This packet is sent when hovering the greeting text bubble in the house list.
+  opcode: 322
+  size: 208
+- name: NpcYell
+  comment: Seen during Gold Saucer GATE announcements.
+  opcode: 904
+  size: 32
+- name: InteriorFurniturePlaced
+  comment: The server informs the client about a piece of furniture that was placed in the current housing interior.
+  opcode: 308
+  size: 32
+- name: Mogpendium
+  comment: Contains character specific Mogpendium progress data.
+  opcode: 491
+  size: 144
+- name: PlayerName
+  comment: Sent in response to the RequestPlayerName client trigger.
+  opcode: 295
+  size: 40
+- name: ExteriorFurniturePlaced
+  comment: The server informs the client about a piece of furniture that was placed in the current housing ward.
+  opcode: 177
+  size: 32
+- name: EorzeanTimeOffset
+  comment: Probably a GM-only opcode, it sets the time of day in the current zone.
+  opcode: 419
+  size: 8
+- name: FurnitureTranslatedForObserver
+  comment: The server informs the client about a piece of furniture being moved/rotated indoors or outdoors. This is only sent to observing clients.
+  opcode: 362
+  size: 24
 ClientZoneIpcType:
-  - name: InitRequest
-    comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
-    opcode: 290
-    size: 120
-  - name: FinishLoading
-    comment: Sent by the client when they're done loading and they need to be spawned in.
-    opcode: 609
-    size: 72
-  - name: ClientTrigger
-    comment: Sent for a variety of actions from the client, e.g. sheathing a weapon.
-    opcode: 534
-    size: 32
-  - name: SocialListRequest
-    comment: Sent by the client when it requests the friends list and other related info.
-    opcode: 286
-    size: 16
-  - name: UpdatePositionHandler
-    comment: Contains the client's new position after the player moves their character.
-    opcode: 270
-    size: 24
-  - name: LogOut
-    comment: Sent by the client when the user requests to log out.
-    opcode: 745
-    size: 8
-  - name: Disconnected
-    comment: Sent by the client when it's actually disconnecting.
-    opcode: 271
-    size: 8
-  - name: SendChatMessage
-    comment: Sent by the client when they send a chat message.
-    opcode: 153
-    size: 1056
-  - name: GMCommand
-    comment: Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
-    opcode: 958
-    size: 32
-  - name: ZoneJump
-    comment: Sent by the client when the character walks into a zone transistion.
-    opcode: 990
-    size: 24
-  - name: ActionRequest
-    comment: Sent by the client when a character performs an action.
-    opcode: 811
-    size: 32
-  - name: PingSync
-    comment: Occasionally sent by the client, purpose is unknown.
-    opcode: 303
-    size: 32
-  - name: UnkSocialEvent
-    comment: Unknown purpose.
-    opcode: 582
-    size: 8
-  - name: ItemOperation
-    comment: Unknown purpose.
-    opcode: 585
-    size: 48
-  - name: StartTalkEvent
-    comment: Unknown purpose.
-    opcode: 225
-    size: 16
-  - name: EventReturnHandler2
-    comment: Unknown purpose.
-    opcode: 785
-    size: 16
-  - name: EventReturnHandler8
-    comment: Unknown purpose.
-    opcode: 369
-    size: 40
-  - name: Config
-    comment: Unknown purpose.
-    opcode: 752
-    size: 8
-  - name: EventYieldHandler2
-    comment: Unknown purpose, but seen when trying to play a Gold Saucer arcade machine.
-    opcode: 512
-    size: 16
-  - name: EventYieldHandler4
-    comment: Unknown purpose.
-    opcode: 969
-    size: 24
-  - name: EventYieldHandler16
-    comment: Unknown purpose.
-    opcode: 612
-    size: 72
-  - name: EventYieldHandler128
-    comment: Unknown purpose.
-    opcode: 859
-    size: 520
-  - name: UnkCall2
-    comment: Unsure the true purpose of this, but it's needed for the Unending Journey to function.
-    opcode: 413
-    size: 8
-  - name: StandardControlsPivot
-    comment: This packet is sent by the client when they pivot left or right on standard controls. It is sent once when beginning to pivot, and once when pivoting ends.
-    opcode: 163
-    size: 8
-  - name: QueueDuties
-    comment: Queue for the selected duties.
-    opcode: 877
-    size: 40
-  - name: ContentFinderAction
-    comment: Unknown purpose.
-    opcode: 217
-    size: 8
-  - name: EquipGearset
-    comment: Unknown purpose.
-    opcode: 553
-    size: 72
-  - name: EquipGearset2
-    comment: Unknown purpose, and also unsure why it's different from EquipGearset.
-    opcode: 209
-    size: 128
-  - name: StartWalkInEvent
-    comment: Unknown purpose.
-    opcode: 575
-    size: 24
-  - name: NewDiscovery
-    comment: Sent by the client when they discover a new location on the map.
-    opcode: 597
-    size: 16
-  - name: GMCommandName
-    comment: Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
-    opcode: 764
-    size: 52
-  - name: GMCommandName2
-    comment: Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank. Seen in //gm buddy_name.
-    opcode: 850
-    size: 40
-  - name: RequestBlacklist
-    comment: Seems to happen when opening the Blacklist window.
-    opcode: 468
-    size: 8
-  - name: RequestFellowships
-    comment: Seems to happen when opening the Fellowships window.
-    opcode: 462
-    size: 8
-  - name: RequestCrossworldLinkshells
-    comment: Seems to happen when opening the Cross-world Linkshells window. This requests the extended version of the list, CrossworldLinkshellsEx.
-    opcode: 788
-    size: 8
-  - name: SearchFellowships
-    comment: Seems to happen when opening the Fellowship Finder.
-    opcode: 245
-    size: 112
-  - name: StartCountdown
-    comment: Happens when starting a countdown through the Countdown window.
-    opcode: 337
-    size: 40
-  - name: RequestPlaytime
-    comment: Happens when the client requests the playtime using the /playtime command.
-    opcode: 706
-    size: 8
-  - name: SetFreeCompanyGreeting
-    comment: Happens when the client sets their free company's message of the day. May have additional uses?
-    opcode: 431
-    size: 200
-  - name: SetClientLanguage
-    comment: Happens during initialization, informs the server what the client's language is set to.
-    opcode: 728
-    size: 8
-  - name: RequestCharaInfoFromContentIds
-    comment: Happens when the client requests more information about other characters, and only has their content id.
-    opcode: 622
-    size: 80
-  - name: PartyLeave
-    comment: Happens when the client leaves their party.
-    opcode: 880
-    size: 8
-  - name: PartyDisband
-    comment: Happens when the client disbands their party.
-    opcode: 427
-    size: 8
-  - name: InviteCharacter
-    comment: Happens when the client invites another player to a party, adds them to their friend list, etc.
-    opcode: 818
-    size: 48
-  - name: InviteReply
-    comment: Happens when the client responds to another player's party invitation.
-    opcode: 169
-    size: 16
-  - name: InviteReply2
-    comment: Happens when the client responds to another player's friend invitation.
-    opcode: 767
-    size: 48
-  - name: PartyMemberKick
-    comment: Sent by the client to remove another player from their party.
-    opcode: 350
-    size: 48
-  - name: PartyChangeLeader
-    comment: Sent by the client to relinquish leadership to another player in their party.
-    opcode: 744
-    size: 48
-  - name: RequestSearchInfo
-    comment: Happens when the client requests search info for any player.
-    opcode: 167
-    size: 24
-  - name: RequestAdventurerPlate
-    comment: Happens when the client requests the adventurer plate for any player.
-    opcode: 947
-    size: 16
-  - name: SearchPlayers
-    comment: Happens when the client searches for players under the Social window.
-    opcode: 714
-    size: 176
-  - name: EditSearchInfo
-    comment: Happens when the client wants to update the search info of the player.
-    opcode: 634
-    size: 216
-  - name: RequestOwnSearchInfo
-    comment: Seems to happen when the client wants to know its own search info.
-    opcode: 102
-    size: 8
-  - name: WalkOutsideEvent
-    comment: Sent by the client when walking outside a trigger (e.g. exiting Ul'dah in the opening.)
-    opcode: 636
-    size: 24
-  - name: EnterTerritoryEvent
-    comment: Sent by the client when requesting to play an event (because we entered a territory.)
-    opcode: 510
-    size: 8
-  - name: Trade
-    comment: Sent by the client while trading.
-    opcode: 514
-    size: 16
-  - name: ShareStrategyBoard
-    comment: The client wishes to share a strategy board with their party.
-    opcode: 663
-    size: 1184
-  - name: StrategyBoardReceived
-    comment: The client acknowledges receipt of a strategy board from another player.
-    opcode: 264
-    size: 16
-  - name: StrategyBoardUpdate
-    comment: The client updates their strategy board during real-time sharing.
-    opcode: 162
-    size: 64
-  - name: RealtimeStrategyBoardFinished
-    comment: The client finishes their real-time sharing session.
-    opcode: 261
-    size: 8
-  - name: ApplyFieldMarkerPreset
-    comment: The client wants to apply a waymarker preset for their party.
-    opcode: 457
-    size: 104
-  - name: RequestFreeCompanyShortMessage
-    comment: The client requests a character's short message in their free company.
-    opcode: 494
-    size: 16
-  - name: QueueRoulette
-    comment: The client queues into a roulette.
-    opcode: 281
-    size: 24
-  - name: InitiateReadyCheck
-    comment: The client initiates a ready check for their party.
-    opcode: 701
-    size: 8
-  - name: ReadyCheckResponse
-    comment: The client responds to an ongoing ready check from their party.
-    opcode: 189
-    size: 8
-  - name: RequestMarketBoardItems
-    comment: When the client requests a list of specific items on the Market Board.
-    opcode: 844
-    size: 136
-  - name: SetFriendGroupIcon
-    comment: When the client assigns a friend group icon to someone on their friend list.
-    opcode: 177
-    size: 16
-  - name: CreateLocalLinkshellRequest
-    comment: The client requests the creation of a local linkshell.
-    opcode: 150
-    size: 40
-  - name: CrossworldLinkshellMemberListRequest
-    comment: The client requests the member list for this cross-world linkshell.
-    opcode: 292
-    size: 16
-  - name: OpenTreasure
-    comment: Unknown purpose.
-    opcode: 493
-    size: 8
-  - name: CrossRealmListingsRequest1
-    comment: Seen while opening the Party Finder.
-    opcode: 610
-    size: 56
-  - name: CrossRealmListingsRequest2
-    comment: Seen while opening the Party Finder.
-    opcode: 686
-    size: 40
-  - name: ViewCrossRealmListing
-    comment: Seen while viewing information for a specific Party Finder listing.
-    opcode: 810
-    size: 16
-  - name: CheckCWLinkshellNameAvailability
-    comment: The client requests if this name is available for use with a new cross-world linkshell.
-    opcode: 591
-    size: 40
-  - name: CreateNewCrossworldLinkshell
-    comment: The client requests for the server to commence with creating the new cross-world linkshell after confirming its name's availability.
-    opcode: 587
-    size: 32
-  - name: DisbandCrossworldLinkshell
-    comment: The client requests the deletion of a cross-world linkshell.
-    opcode: 421
-    size: 8
-  - name: LeaveCrossworldLinkshell
-    comment: The client requests to leave a cross-world linkshell. Masters cannot do this, they first have to appoint a new Master or disband the linkshell entirely.
-    opcode: 357
-    size: 8
-  - name: RenameCrossworldLinkshell
-    comment: The client requests to rename a cross-world linkshell. Only Masters can do this.
-    opcode: 190
-    size: 40
-  - name: SetCWLSMemberRank
-    comment: The client promotes a member in their linkshell to a higher rank. Only Masters can do this if the target is another player, and only Leaders can target themselves to resign. Masters resign when they leave the linkshell.
-    opcode: 661
-    size: 24
-  - name: RemoveCWLSMember
-    comment: The client kicks a member from one of their cross-world Linkshells. Only Leaders and Masters can do this.
-    opcode: 993
-    size: 16
-  - name: InviteCharacterToCWLS
-    comment: The client invites another character to join their cross-world linkshell. Only Leaders and Masters can do this.
-    opcode: 305
-    size: 24
-  - name: LinkshellInviteReply
-    comment: The client invites another character to join their cross-world linkshell.
-    opcode: 807
-    size: 16
-  - name: RequestMailbox
-    comment: The client requests the contents of their mailbox from the server.
-    opcode: 247
-    size: 8
-  - name: SendLetter
-    comment: The client sends a letter to a friend.
-    opcode: 221
-    size: 688
-  - name: RemoveFriend
-    comment: The client removes a player from their friend list.
-    opcode: 203
-    size: 48
-  - name: ViewLetter
-    comment: The client opens a letter in their mailbox.
-    opcode: 372
-    size: 16
-  - name: DeleteLetter
-    comment: The client deletes a letter in their mailbox.
-    opcode: 870
-    size: 16
-  - name: RewardDeliveryRequest
-    comment: The client requests that any pending reward letters be sent to them.
-    opcode: 633
-    size: 8
-  - name: TakeLetterAttachments
-    comment: The client requests that any attachments in this letter be given to them.
-    opcode: 590
-    size: 64
-  - name: Dive
-    comment: The client dives underwater.
-    opcode: 631
-    size: 32
-  - name: WorldInteraction
-    comment: The client interacts with the world in some way.
-    opcode: 296
-    size: 32
-  - name: PlaceFurniture
-    comment: The client places furniture on their property (indoors or outdoors), or into the relevant storeroom (the furniture is not spawned in that case).
-    opcode: 191
-    size: 40
-  - name: TranslateFurniture
-    comment: The client moves or rotates a piece of furniture.
-    opcode: 546
-    size: 32
+- name: InitRequest
+  comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
+  opcode: 304
+  size: 120
+- name: FinishLoading
+  comment: Sent by the client when they're done loading and they need to be spawned in.
+  opcode: 680
+  size: 72
+- name: ClientTrigger
+  comment: Sent for a variety of actions from the client, e.g. sheathing a weapon.
+  opcode: 185
+  size: 32
+- name: SocialListRequest
+  comment: Sent by the client when it requests the friends list and other related info.
+  opcode: 666
+  size: 16
+- name: UpdatePositionHandler
+  comment: Contains the client's new position after the player moves their character.
+  opcode: 300
+  size: 24
+- name: LogOut
+  comment: Sent by the client when the user requests to log out.
+  opcode: 814
+  size: 8
+- name: Disconnected
+  comment: Sent by the client when it's actually disconnecting.
+  opcode: 931
+  size: 8
+- name: SendChatMessage
+  comment: Sent by the client when they send a chat message.
+  opcode: 494
+  size: 1056
+- name: GMCommand
+  comment: Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
+  opcode: 964
+  size: 32
+- name: ZoneJump
+  comment: Sent by the client when the character walks into a zone transistion.
+  opcode: 1185
+  size: 24
+- name: ActionRequest
+  comment: Sent by the client when a character performs an action.
+  opcode: 687
+  size: 32
+- name: PingSync
+  comment: Occasionally sent by the client, purpose is unknown.
+  opcode: 758
+  size: 32
+- name: UnkSocialEvent
+  comment: Unknown purpose.
+  opcode: 529
+  size: 8
+- name: ItemOperation
+  comment: Unknown purpose.
+  opcode: 891
+  size: 48
+- name: StartTalkEvent
+  comment: Unknown purpose.
+  opcode: 244
+  size: 16
+- name: EventReturnHandler2
+  comment: Unknown purpose.
+  opcode: 808
+  size: 16
+- name: EventReturnHandler8
+  comment: Unknown purpose.
+  opcode: 938
+  size: 40
+- name: Config
+  comment: Unknown purpose.
+  opcode: 631
+  size: 8
+- name: EventYieldHandler2
+  comment: Unknown purpose, but seen when trying to play a Gold Saucer arcade machine.
+  opcode: 458
+  size: 16
+- name: EventYieldHandler4
+  comment: Unknown purpose.
+  opcode: 999
+  size: 24
+- name: EventYieldHandler16
+  comment: Unknown purpose.
+  opcode: 957
+  size: 72
+- name: EventYieldHandler128
+  comment: Unknown purpose.
+  opcode: 942
+  size: 520
+- name: UnkCall2
+  comment: Unsure the true purpose of this, but it's needed for the Unending Journey to function.
+  opcode: 875
+  size: 8
+- name: StandardControlsPivot
+  comment: This packet is sent by the client when they pivot left or right on standard controls. It is sent once when beginning to pivot, and once when pivoting ends.
+  opcode: 280
+  size: 8
+- name: QueueDuties
+  comment: Queue for the selected duties.
+  opcode: 877
+  size: 40
+- name: ContentFinderAction
+  comment: Unknown purpose.
+  opcode: 217
+  size: 8
+- name: EquipGearset
+  comment: Unknown purpose.
+  opcode: 594
+  size: 72
+- name: EquipGearset2
+  comment: Unknown purpose, and also unsure why it's different from EquipGearset.
+  opcode: 725
+  size: 128
+- name: StartWalkInEvent
+  comment: Unknown purpose.
+  opcode: 126
+  size: 24
+- name: NewDiscovery
+  comment: Sent by the client when they discover a new location on the map.
+  opcode: 821
+  size: 16
+- name: GMCommandName
+  comment: Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
+  opcode: 1300
+  size: 52
+- name: GMCommandName2
+  comment: Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank. Seen in //gm buddy_name.
+  opcode: 148
+  size: 40
+- name: RequestBlacklist
+  comment: Seems to happen when opening the Blacklist window.
+  opcode: 332
+  size: 8
+- name: RequestFellowships
+  comment: Seems to happen when opening the Fellowships window.
+  opcode: 115
+  size: 8
+- name: RequestCrossworldLinkshells
+  comment: Seems to happen when opening the Cross-world Linkshells window. This requests the extended version of the list, CrossworldLinkshellsEx.
+  opcode: 929
+  size: 8
+- name: SearchFellowships
+  comment: Seems to happen when opening the Fellowship Finder.
+  opcode: 531
+  size: 112
+- name: StartCountdown
+  comment: Happens when starting a countdown through the Countdown window.
+  opcode: 554
+  size: 40
+- name: RequestPlaytime
+  comment: Happens when the client requests the playtime using the /playtime command.
+  opcode: 706
+  size: 8
+- name: SetFreeCompanyGreeting
+  comment: Happens when the client sets their free company's message of the day. May have additional uses?
+  opcode: 784
+  size: 200
+- name: SetClientLanguage
+  comment: Happens during initialization, informs the server what the client's language is set to.
+  opcode: 668
+  size: 8
+- name: RequestCharaInfoFromContentIds
+  comment: Happens when the client requests more information about other characters, and only has their content id.
+  opcode: 581
+  size: 80
+- name: PartyLeave
+  comment: Happens when the client leaves their party.
+  opcode: 997
+  size: 8
+- name: PartyDisband
+  comment: Happens when the client disbands their party.
+  opcode: 427
+  size: 8
+- name: InviteCharacter
+  comment: Happens when the client invites another player to a party, adds them to their friend list, etc.
+  opcode: 818
+  size: 48
+- name: InviteReply
+  comment: Happens when the client responds to another player's party invitation.
+  opcode: 169
+  size: 16
+- name: InviteReply2
+  comment: Happens when the client responds to another player's friend invitation.
+  opcode: 1666
+  size: 48
+- name: PartyMemberKick
+  comment: Sent by the client to remove another player from their party.
+  opcode: 614
+  size: 48
+- name: PartyChangeLeader
+  comment: Sent by the client to relinquish leadership to another player in their party.
+  opcode: 744
+  size: 48
+- name: RequestSearchInfo
+  comment: Happens when the client requests search info for any player.
+  opcode: 167
+  size: 24
+- name: RequestAdventurerPlate
+  comment: Happens when the client requests the adventurer plate for any player.
+  opcode: 842
+  size: 16
+- name: SearchPlayers
+  comment: Happens when the client searches for players under the Social window.
+  opcode: 746
+  size: 176
+- name: EditSearchInfo
+  comment: Happens when the client wants to update the search info of the player.
+  opcode: 773
+  size: 216
+- name: RequestOwnSearchInfo
+  comment: Seems to happen when the client wants to know its own search info.
+  opcode: 477
+  size: 8
+- name: WalkOutsideEvent
+  comment: Sent by the client when walking outside a trigger (e.g. exiting Ul'dah in the opening.)
+  opcode: 451
+  size: 24
+- name: EnterTerritoryEvent
+  comment: Sent by the client when requesting to play an event (because we entered a territory.)
+  opcode: 1210
+  size: 8
+- name: Trade
+  comment: Sent by the client while trading.
+  opcode: 562
+  size: 16
+- name: ShareStrategyBoard
+  comment: The client wishes to share a strategy board with their party.
+  opcode: 935
+  size: 1184
+- name: StrategyBoardReceived
+  comment: The client acknowledges receipt of a strategy board from another player.
+  opcode: 919
+  size: 16
+- name: StrategyBoardUpdate
+  comment: The client updates their strategy board during real-time sharing.
+  opcode: 162
+  size: 64
+- name: RealtimeStrategyBoardFinished
+  comment: The client finishes their real-time sharing session.
+  opcode: 261
+  size: 8
+- name: ApplyFieldMarkerPreset
+  comment: The client wants to apply a waymarker preset for their party.
+  opcode: 515
+  size: 104
+- name: RequestFreeCompanyShortMessage
+  comment: The client requests a character's short message in their free company.
+  opcode: 338
+  size: 16
+- name: QueueRoulette
+  comment: The client queues into a roulette.
+  opcode: 281
+  size: 24
+- name: InitiateReadyCheck
+  comment: The client initiates a ready check for their party.
+  opcode: 391
+  size: 8
+- name: ReadyCheckResponse
+  comment: The client responds to an ongoing ready check from their party.
+  opcode: 179
+  size: 8
+- name: RequestMarketBoardItems
+  comment: When the client requests a list of specific items on the Market Board.
+  opcode: 799
+  size: 136
+- name: SetFriendGroupIcon
+  comment: When the client assigns a friend group icon to someone on their friend list.
+  opcode: 870
+  size: 16
+- name: CreateLocalLinkshellRequest
+  comment: The client requests the creation of a local linkshell.
+  opcode: 685
+  size: 40
+- name: CrossworldLinkshellMemberListRequest
+  comment: The client requests the member list for this cross-world linkshell.
+  opcode: 235
+  size: 16
+- name: OpenTreasure
+  comment: Unknown purpose.
+  opcode: 200
+  size: 8
+- name: CrossRealmListingsRequest1
+  comment: Seen while opening the Party Finder.
+  opcode: 229
+  size: 56
+- name: CrossRealmListingsRequest2
+  comment: Seen while opening the Party Finder.
+  opcode: 686
+  size: 40
+- name: ViewCrossRealmListing
+  comment: Seen while viewing information for a specific Party Finder listing.
+  opcode: 439
+  size: 16
+- name: CheckCWLinkshellNameAvailability
+  comment: The client requests if this name is available for use with a new cross-world linkshell.
+  opcode: 854
+  size: 40
+- name: CreateNewCrossworldLinkshell
+  comment: The client requests for the server to commence with creating the new cross-world linkshell after confirming its name's availability.
+  opcode: 357
+  size: 32
+- name: DisbandCrossworldLinkshell
+  comment: The client requests the deletion of a cross-world linkshell.
+  opcode: 325
+  size: 8
+- name: LeaveCrossworldLinkshell
+  comment: The client requests to leave a cross-world linkshell. Masters cannot do this, they first have to appoint a new Master or disband the linkshell entirely.
+  opcode: 1357
+  size: 8
+- name: RenameCrossworldLinkshell
+  comment: The client requests to rename a cross-world linkshell. Only Masters can do this.
+  opcode: 104
+  size: 40
+- name: SetCWLSMemberRank
+  comment: The client promotes a member in their linkshell to a higher rank. Only Masters can do this if the target is another player, and only Leaders can target themselves to resign. Masters resign when they leave the linkshell.
+  opcode: 247
+  size: 24
+- name: RemoveCWLSMember
+  comment: The client kicks a member from one of their cross-world Linkshells. Only Leaders and Masters can do this.
+  opcode: 993
+  size: 16
+- name: InviteCharacterToCWLS
+  comment: The client invites another character to join their cross-world linkshell. Only Leaders and Masters can do this.
+  opcode: 1281
+  size: 24
+- name: LinkshellInviteReply
+  comment: The client invites another character to join their cross-world linkshell.
+  opcode: 478
+  size: 16
+- name: RequestMailbox
+  comment: The client requests the contents of their mailbox from the server.
+  opcode: 326
+  size: 8
+- name: SendLetter
+  comment: The client sends a letter to a friend.
+  opcode: 287
+  size: 688
+- name: RemoveFriend
+  comment: The client removes a player from their friend list.
+  opcode: 335
+  size: 48
+- name: ViewLetter
+  comment: The client opens a letter in their mailbox.
+  opcode: 656
+  size: 16
+- name: DeleteLetter
+  comment: The client deletes a letter in their mailbox.
+  opcode: 796
+  size: 16
+- name: RewardDeliveryRequest
+  comment: The client requests that any pending reward letters be sent to them.
+  opcode: 747
+  size: 8
+- name: TakeLetterAttachments
+  comment: The client requests that any attachments in this letter be given to them.
+  opcode: 213
+  size: 64
+- name: Dive
+  comment: The client dives underwater.
+  opcode: 141
+  size: 32
+- name: WorldInteraction
+  comment: The client interacts with the world in some way.
+  opcode: 1687
+  size: 32
+- name: PlaceFurniture
+  comment: The client places furniture on their property (indoors or outdoors), or into the relevant storeroom (the furniture is not spawned in that case).
+  opcode: 988
+  size: 40
+- name: TranslateFurniture
+  comment: The client moves or rotates a piece of furniture.
+  opcode: 978
+  size: 32
 ServerLobbyIpcType:
-  - name: NackReply
-    comment: Sent by the server to indicate an lobby error occured.
-    opcode: 2
-    size: 536
-  - name: LoginReply
-    comment: Sent by the server to inform the client of their service accounts.
-    opcode: 12
-    size: 656
-  - name: ServiceLoginReply
-    comment: Sent by the server to inform the client of their characters.
-    opcode: 13
-    size: 2472
-  - name: CharaMakeReply
-    comment: Sent by the server to inform the client of their characters.
-    opcode: 14
-    size: 2568
-  - name: GameLoginReply
-    comment: Sent by the server to tell the client how to connect to the world server.
-    opcode: 15
-    size: 160
-  - name: DistWorldInfo
-    comment: Sent by the server to inform the client of their servers.
-    opcode: 21
-    size: 528
-  - name: DistRetainerInfo
-    comment: Sent by the server to inform the client of their retainers.
-    opcode: 23
-    size: 536
-  - name: XiCharacterInfo
-    comment: Unknown purpose
-    opcode: 22
-    size: 496
+- name: NackReply
+  comment: Sent by the server to indicate an lobby error occured.
+  opcode: 2
+  size: 536
+- name: LoginReply
+  comment: Sent by the server to inform the client of their service accounts.
+  opcode: 12
+  size: 656
+- name: ServiceLoginReply
+  comment: Sent by the server to inform the client of their characters.
+  opcode: 13
+  size: 2472
+- name: CharaMakeReply
+  comment: Sent by the server to inform the client of their characters.
+  opcode: 14
+  size: 2568
+- name: GameLoginReply
+  comment: Sent by the server to tell the client how to connect to the world server.
+  opcode: 15
+  size: 160
+- name: DistWorldInfo
+  comment: Sent by the server to inform the client of their servers.
+  opcode: 21
+  size: 528
+- name: DistRetainerInfo
+  comment: Sent by the server to inform the client of their retainers.
+  opcode: 23
+  size: 536
+- name: XiCharacterInfo
+  comment: Unknown purpose
+  opcode: 22
+  size: 496
 ClientLobbyIpcType:
-  - name: ServiceLogin
-    comment: Sent by the client when it requests the character list in the lobby.
-    opcode: 3
-    size: 24
-  - name: GameLogin
-    comment: Sent by the client when it requests to enter a world.
-    opcode: 4
-    size: 32
-  - name: LoginEx
-    comment: Sent by the client after exchanging encryption information with the lobby server.
-    opcode: 5
-    size: 1144
-  - name: ShandaLogin
-    comment: Used by the Chinese and Korean client to login.
-    opcode: 6
-    size: 1456
-  - name: CharaMake
-    comment: Sent by the client when they request something about the character (e.g. deletion.)
-    opcode: 11
-    size: 496
+- name: ServiceLogin
+  comment: Sent by the client when it requests the character list in the lobby.
+  opcode: 3
+  size: 88
+- name: GameLogin
+  comment: Sent by the client when it requests to enter a world.
+  opcode: 4
+  size: 32
+- name: LoginEx
+  comment: Sent by the client after exchanging encryption information with the lobby server.
+  opcode: 5
+  size: 1144
+- name: ShandaLogin
+  comment: Used by the Chinese and Korean client to login.
+  opcode: 6
+  size: 1456
+- name: CharaMake
+  comment: Sent by the client when they request something about the character (e.g. deletion.)
+  opcode: 11
+  size: 496
 ServerChatIpcType:
-  - name: LoginReply
-    comment: Sent by the server to Initialize something chat-related?
-    opcode: 2
-    size: 8
-  - name: TellMessage
-    comment: Sent by the server in response to a client sending a private message to another client that is online.
-    opcode: 100
-    size: 1080
-  - name: PartyMessage
-    comment: Sent by the server in response to a client sending a private message to their party or a local linkshell.
-    opcode: 101
-    size: 1088
-  - name: TellNotFoundError
-    comment: Sent by the server in response to a client sending a private message to another client that is offline.
-    opcode: 112
-    size: 56
-  - name: JoinChannelResult
-    comment: "Presumably sent by the server in response to the client joining a chat channel: fc. linkshell, etc. Doesn't seem to be needed for party chat."
-    opcode: 200
-    size: 32
-  - name: FreeCompanyEvent
-    comment: "Sent by the server in response to a free company-related event taking place: member logging in, logging out, etc."
-    opcode: 300
-    size: 104
-  - name: GetChannelListResponse
-    comment: Sent by the server in response to GetChannelList, presumably.
-    opcode: 105
-    size: 768
-  - name: AllianceMessage
-    comment: Sent by the client when sending a message to their alliance.
-    opcode: 108
-    size: 1056
-  - name: AllianceMessageEcho
-    comment: Sent in response to SendAllianceMessage. It just echoes back the message the client sent. Unknown purpose.
-    opcode: 109
-    size: 1032
-  - name: CWLinkshellMessageEcho
-    comment: Sent in response to SendCWLinkshellMessage. It just echoes back the message the client sent. Unknown purpose.
-    opcode: 113
-    size: 1040
-  - name: CWLinkshellMessage
-    comment: Sent by the server in response to a client sending a private message to the specified crossworld linkshell.
-    opcode: 114
-    size: 1096
+- name: LoginReply
+  comment: Sent by the server to Initialize something chat-related?
+  opcode: 2
+  size: 8
+- name: TellMessage
+  comment: Sent by the server in response to a client sending a private message to another client that is online.
+  opcode: 100
+  size: 1080
+- name: PartyMessage
+  comment: Sent by the server in response to a client sending a private message to their party or a local linkshell.
+  opcode: 101
+  size: 1088
+- name: TellNotFoundError
+  comment: Sent by the server in response to a client sending a private message to another client that is offline.
+  opcode: 112
+  size: 56
+- name: JoinChannelResult
+  comment: "Presumably sent by the server in response to the client joining a chat channel: fc. linkshell, etc. Doesn't seem to be needed for party chat."
+  opcode: 200
+  size: 32
+- name: FreeCompanyEvent
+  comment: "Sent by the server in response to a free company-related event taking place: member logging in, logging out, etc."
+  opcode: 300
+  size: 104
+- name: GetChannelListResponse
+  comment: Sent by the server in response to GetChannelList, presumably.
+  opcode: 105
+  size: 768
+- name: AllianceMessage
+  comment: Sent by the client when sending a message to their alliance.
+  opcode: 108
+  size: 1056
+- name: AllianceMessageEcho
+  comment: Sent in response to SendAllianceMessage. It just echoes back the message the client sent. Unknown purpose.
+  opcode: 109
+  size: 1032
+- name: CWLinkshellMessageEcho
+  comment: Sent in response to SendCWLinkshellMessage. It just echoes back the message the client sent. Unknown purpose.
+  opcode: 113
+  size: 1040
+- name: CWLinkshellMessage
+  comment: Sent by the server in response to a client sending a private message to the specified crossworld linkshell.
+  opcode: 114
+  size: 1096
 ClientChatIpcType:
-  - name: SendTellMessage
-    comment: Sent by the client when sending a private message to another client.
-    opcode: 100
-    size: 1080
-  - name: SendPartyMessage
-    comment: Sent by the client when sending a message to party chat or a local linkshell.
-    opcode: 101
-    size: 1032
-  - name: GetChannelList
-    comment: Sent by the client, but its purpose is unknown at this time.
-    opcode: 104
-    size: 8
-  - name: SendAllianceMessage
-    comment: Sent by the client when sending a message to their alliance.
-    opcode: 107
-    size: 1032
-  - name: SendCWLinkshellMessage
-    comment: Sent by the client when sending a message to a cross-world linkshell.
-    opcode: 109
-    size: 1040
+- name: SendTellMessage
+  comment: Sent by the client when sending a private message to another client.
+  opcode: 100
+  size: 1080
+- name: SendPartyMessage
+  comment: Sent by the client when sending a message to party chat or a local linkshell.
+  opcode: 101
+  size: 1032
+- name: GetChannelList
+  comment: Sent by the client, but its purpose is unknown at this time.
+  opcode: 104
+  size: 8
+- name: SendAllianceMessage
+  comment: Sent by the client when sending a message to their alliance.
+  opcode: 107
+  size: 1032
+- name: SendCWLinkshellMessage
+  comment: Sent by the client when sending a message to a cross-world linkshell.
+  opcode: 109
+  size: 1040
 CustomIpcType:
-  - name: RequestCreateCharacter
-    comment: Request the world server to create a character
-    opcode: 1
-    size: 1064
-  - name: CharacterCreated
-    comment: Response from the world server when the character is created
-    opcode: 2
-    size: 12
-  - name: GetActorId
-    comment: Request the actor id from the content id of a character
-    opcode: 3
-    size: 8
-  - name: ActorIdFound
-    comment: Response from the world server when the actor id is found
-    opcode: 4
-    size: 4
-  - name: CheckNameIsAvailable
-    comment: Check if a name is available on the world server
-    opcode: 5
-    size: 32
-  - name: NameIsAvailableResponse
-    comment: Response to CheckNameIsAvailable
-    opcode: 6
-    size: 1
-  - name: RequestCharacterList
-    comment: Request the character list from the world server
-    opcode: 7
-    size: 8
-  - name: RequestCharacterListResponse
-    comment: Response to RequestCharacterList
-    opcode: 8
-    size: 9473
-  - name: DeleteCharacter
-    comment: Request that a character be deleted from the world server
-    opcode: 9
-    size: 8
-  - name: CharacterDeleted
-    comment: Response to DeleteCharacter
-    opcode: 10
-    size: 1
-  - name: ImportCharacter
-    comment: Request to import a character backup
-    opcode: 11
-    size: 136
-  - name: RemakeCharacter
-    comment: Remake a character
-    opcode: 12
-    size: 1032
-  - name: CharacterRemade
-    comment: Character has been remade
-    opcode: 13
-    size: 8
-  - name: CharacterImported
-    comment: Response to importing a character.
-    opcode: 14
-    size: 128
-  - name: DeleteServiceAccount
-    comment: Removes the characters associated with a given service account.
-    opcode: 15
-    size: 8
-  - name: RequestFullCharacterList
-    comment: Requests information about all characters on this world.
-    opcode: 16
-    size: 0
-  - name: FullCharacterListResponse
-    comment: Response to requesting the full character list.
-    opcode: 17
-    size: 1024
+- name: RequestCreateCharacter
+  comment: Request the world server to create a character
+  opcode: 1
+  size: 1064
+- name: CharacterCreated
+  comment: Response from the world server when the character is created
+  opcode: 2
+  size: 12
+- name: GetActorId
+  comment: Request the actor id from the content id of a character
+  opcode: 3
+  size: 8
+- name: ActorIdFound
+  comment: Response from the world server when the actor id is found
+  opcode: 4
+  size: 4
+- name: CheckNameIsAvailable
+  comment: Check if a name is available on the world server
+  opcode: 5
+  size: 32
+- name: NameIsAvailableResponse
+  comment: Response to CheckNameIsAvailable
+  opcode: 6
+  size: 1
+- name: RequestCharacterList
+  comment: Request the character list from the world server
+  opcode: 7
+  size: 8
+- name: RequestCharacterListResponse
+  comment: Response to RequestCharacterList
+  opcode: 8
+  size: 9473
+- name: DeleteCharacter
+  comment: Request that a character be deleted from the world server
+  opcode: 9
+  size: 8
+- name: CharacterDeleted
+  comment: Response to DeleteCharacter
+  opcode: 10
+  size: 1
+- name: ImportCharacter
+  comment: Request to import a character backup
+  opcode: 11
+  size: 136
+- name: RemakeCharacter
+  comment: Remake a character
+  opcode: 12
+  size: 1032
+- name: CharacterRemade
+  comment: Character has been remade
+  opcode: 13
+  size: 8
+- name: CharacterImported
+  comment: Response to importing a character.
+  opcode: 14
+  size: 128
+- name: DeleteServiceAccount
+  comment: Removes the characters associated with a given service account.
+  opcode: 15
+  size: 8
+- name: RequestFullCharacterList
+  comment: Requests information about all characters on this world.
+  opcode: 16
+  size: 0
+- name: FullCharacterListResponse
+  comment: Response to requesting the full character list.
+  opcode: 17
+  size: 1024

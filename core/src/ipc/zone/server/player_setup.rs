@@ -163,14 +163,14 @@ pub struct PlayerSetup {
     #[br(count = ORNAMENT_BITMASK_SIZE)]
     #[bw(pad_size_to = ORNAMENT_BITMASK_SIZE)]
     pub ornament_mask: Vec<u8>,
-    pub unknown281: u8, // probably an unused ornament bit
     #[br(count = GLASSES_STYLES_BITMASK_SIZE)]
     #[bw(pad_size_to = GLASSES_STYLES_BITMASK_SIZE)]
     pub glasses_styles_mask: Vec<u8>,
+    pub padding_probably_after_glasses_styles: u8,
     #[br(count = FRAMERS_KIT_BITMASK_SIZE)]
     #[bw(pad_size_to = FRAMERS_KIT_BITMASK_SIZE)]
     pub framers_kits_mask: Vec<u8>,
-    pub padding_probably_after_framers_kit: [u8; 5],
+    pub padding_probably_after_framers_kit: [u8; 11],
     // NOTE: It seems this name is bigger than normal, but bytes >=40 may contain the online ID...?
     #[br(count = 64)]
     #[bw(pad_size_to = 64)]
@@ -189,12 +189,14 @@ pub struct PlayerSetup {
     pub favorite_aetheryte_ids: [u16; 4],
     pub free_aetheryte_id: u16,
     pub ps_plus_free_aetheryte_id: u16,
+    pub padding_probably_after_ps_plus: [u8; 2],
     #[br(count = 162)]
     #[bw(pad_size_to = 162 * 2)]
     pub discovery_related_unk1: Vec<u16>,
     #[br(count = 48)]
     #[bw(pad_size_to = 48 * 4)]
     pub discovery_related_unk2: Vec<u32>,
+    pub padding_probably_after_discovery_related_unk2: [u8; 4],
     /// Which Active Help guides the player has seen.
     #[br(count = ACTIVE_HELP_BITMASK_SIZE)]
     #[bw(pad_size_to = ACTIVE_HELP_BITMASK_SIZE)]
@@ -210,6 +212,7 @@ pub struct PlayerSetup {
     #[bw(pad_size_to = CUTSCENE_SEEN_BITMASK_SIZE)]
     pub cutscene_seen_mask: Vec<u8>,
     pub unknown6ff: u16,
+    pub padding_probably_after_unknown6ff: [u8; 3],
     #[br(count = BUDDY_EQUIP_BITMASK_SIZE)]
     #[bw(pad_size_to = BUDDY_EQUIP_BITMASK_SIZE)]
     pub buddy_equip_mask: Vec<u8>,
@@ -223,6 +226,7 @@ pub struct PlayerSetup {
     #[br(count = CAUGHT_FISH_BITMASK_SIZE)]
     #[bw(pad_size_to = CAUGHT_FISH_BITMASK_SIZE)]
     pub caught_fish_mask: Vec<u8>,
+    pub padding_probably_after_caught_fish: [u8; 2],
     #[br(count = UNLOCKED_FISHING_SPOTS_BITMASK_SIZE)]
     #[bw(pad_size_to = UNLOCKED_FISHING_SPOTS_BITMASK_SIZE)]
     pub unlocked_fishing_spots: Vec<u8>,
@@ -238,6 +242,7 @@ pub struct PlayerSetup {
     pub beast_reputation_rank: [u8; BEAST_TRIBE_ARRAY_SIZE],
     pub content_roulette_completion: [u8; 10],
     pub unknown_mask6f7: [u8; 9],
+    pub padding_after_unknown_mask6f7: u8,
     pub player_state_flags1: PlayerStateFlags1,
     pub player_state_flags2: PlayerStateFlags2,
     pub player_state_flags3: PlayerStateFlags3,
@@ -274,7 +279,6 @@ pub struct PlayerSetup {
     #[br(count = ORCHESTRION_ROLL_BITMASK_SIZE)]
     #[bw(pad_size_to = ORCHESTRION_ROLL_BITMASK_SIZE)]
     pub orchestrion_roll_mask: Vec<u8>,
-    pub orchestrion_padding: u8,
     #[br(count = BEGINNER_TRAINING_ARRAY_SIZE)]
     #[bw(pad_size_to = BEGINNER_TRAINING_ARRAY_SIZE)]
     pub completed_beginner_training: Vec<u8>, // TODO: not confirmed because I can't access this menu right now
@@ -354,5 +358,5 @@ pub struct PlayerSetup {
     #[bw(pad_size_to = MISC_CONTENT_ARRAY_SIZE)]
     pub cleared_misc_content: Vec<u8>,
 
-    pub unknown949: [u8; 4],
+    pub unknown949: [u8; 3],
 }
