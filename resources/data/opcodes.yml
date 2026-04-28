@@ -1090,11 +1090,11 @@ ClientZoneIpcType:
   size: 64
 - name: Dive
   comment: The client dives underwater.
-  opcode: 141
+  opcode: 340
   size: 32
 - name: WorldInteraction
   comment: The client interacts with the world in some way.
-  opcode: 1687
+  opcode: 821
   size: 32
 - name: PlaceFurniture
   comment: The client places furniture on their property (indoors or outdoors), or into the relevant storeroom (the furniture is not spawned in that case).
