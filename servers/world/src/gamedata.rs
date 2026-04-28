@@ -86,6 +86,7 @@ pub struct GameData {
     pub classjob_sheet: ClassJobSheet,
     pub battalion_sheet: BattalionSheet,
     pub enpc_base_sheet: ENpcBaseSheet,
+    pub equip_slot_category_sheet: EquipSlotCategorySheet,
 }
 
 impl Default for GameData {
@@ -311,6 +312,9 @@ impl GameData {
         let enpc_base_sheet =
             ENpcBaseSheet::read_from(&mut resource_resolver, Language::None).unwrap();
 
+        let equip_slot_category_sheet =
+            EquipSlotCategorySheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
         Self {
             resource: resource_resolver,
             item_sheet,
@@ -334,6 +338,7 @@ impl GameData {
             classjob_sheet,
             battalion_sheet,
             enpc_base_sheet,
+            equip_slot_category_sheet,
         }
     }
 
@@ -509,8 +514,7 @@ impl GameData {
 
     /// Turn an equip slot category id into a slot for the equipped inventory
     pub fn get_equipslot_category(&mut self, equipslot_id: u8) -> Option<u16> {
-        let sheet = EquipSlotCategorySheet::read_from(&mut self.resource, Language::None).ok()?;
-        let row = sheet.row(equipslot_id as u32)?;
+        let row = self.equip_slot_category_sheet.row(equipslot_id as u32)?;
 
         let main_hand = row.MainHand();
         if main_hand == 1 {
@@ -583,8 +587,7 @@ impl GameData {
     // Returns information on what item slots, if any, this equipslot configuration blocks.
     // For example, a two-handed weapon (MainHand = 1, OffHand = -1) will always block an off-hand from being equipped.
     fn get_equipslot_restrictions(&mut self, equipslot_id: u8) -> Option<ItemEquipRestrictions> {
-        let sheet = EquipSlotCategorySheet::read_from(&mut self.resource, Language::None).ok()?;
-        let row = sheet.row(equipslot_id as u32)?;
+        let row = self.equip_slot_category_sheet.row(equipslot_id as u32)?;
 
         Some(ItemEquipRestrictions {
             main_hand: row.MainHand(),
