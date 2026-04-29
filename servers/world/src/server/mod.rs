@@ -1559,16 +1559,16 @@ pub async fn server_main_loop(
                                 WaymarkPreset::default(),
                             );
                         }
-                        ClientTriggerCommand::ToggleSign {
-                            sign_id,
-                            target_actor,
-                            ..
-                        } => {
+                        ClientTriggerCommand::ToggleSign { sign_id, .. } => {
+                            let Some(target_actor) = trigger.target else {
+                                continue;
+                            };
+
                             let mut network = network.lock();
                             let msg = FromServer::TargetSignToggled(
                                 *sign_id,
                                 from_actor_id,
-                                *target_actor,
+                                target_actor,
                             );
 
                             network.send_to_party_or_self(from_actor_id, msg);
@@ -1580,7 +1580,7 @@ pub async fn server_main_loop(
                                 let party = network.parties.get_mut(&party_id).unwrap();
                                 let sign_id = *sign_id as usize;
                                 if sign_id < NUM_TARGET_SIGNS {
-                                    party.target_signs[sign_id] = *target_actor;
+                                    party.target_signs[sign_id] = target_actor;
                                 } else {
                                     tracing::error!(
                                         "Client tried to assign target sign id {sign_id}, but there are only {NUM_TARGET_SIGNS} currently known. Update the constant if necessary!"
