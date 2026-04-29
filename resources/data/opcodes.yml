@@ -946,11 +946,11 @@ ClientZoneIpcType:
   size: 8
 - name: WalkOutsideEvent
   comment: Sent by the client when walking outside a trigger (e.g. exiting Ul'dah in the opening.)
-  opcode: 451
+  opcode: 126
   size: 24
 - name: EnterTerritoryEvent
   comment: Sent by the client when requesting to play an event (because we entered a territory.)
-  opcode: 1210
+  opcode: 451
   size: 8
 - name: Trade
   comment: Sent by the client while trading.
