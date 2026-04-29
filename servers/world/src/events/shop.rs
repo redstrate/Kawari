@@ -9,7 +9,7 @@ use kawari::{
 
 use crate::{
     Event, EventHandler, ItemInfoQuery, ZoneConnection,
-    inventory::{CurrencyKind, Item, get_container_type},
+    inventory::{CurrencyKind, CurrencyStorage, Item, get_container_type},
     lua::LuaPlayer,
 };
 
@@ -91,7 +91,7 @@ impl ShopEventHandler {
             ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
                 sequence: connection.player_data.shop_sequence,
                 container: ContainerType::Currency,
-                slot: 0,
+                slot: CurrencyStorage::get_slot_for_id(CurrencyKind::Gil),
                 quantity: new_gil,
                 item_id: CurrencyKind::Gil as u32,
                 ..Default::default()
@@ -158,7 +158,7 @@ impl ShopEventHandler {
                             connection,
                             ItemInfo {
                                 container: ContainerType::Currency,
-                                slot: CurrencyKind::Gil as u16,
+                                slot: CurrencyStorage::get_slot_for_id(CurrencyKind::Gil),
                                 ..connection.player_data.inventory.currency.gil.into()
                             },
                         )
@@ -237,7 +237,7 @@ impl ShopEventHandler {
                     connection,
                     ItemInfo {
                         container: ContainerType::Currency,
-                        slot: CurrencyKind::Gil as u16,
+                        slot: CurrencyStorage::get_slot_for_id(CurrencyKind::Gil),
                         ..connection.player_data.inventory.currency.gil.into()
                     },
                 )
