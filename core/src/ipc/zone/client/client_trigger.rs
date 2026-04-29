@@ -104,8 +104,6 @@ pub enum ClientTriggerCommand {
         /// These two unknowns contain data but seemingly don't matter to the server. The server response doesn't repeat these at all.
         unk1: u16,
         unk2: u16,
-        /// The actor to apply the sign to.
-        target_actor: ObjectTypeId,
     },
 
     /// The client sets a specific title.
@@ -525,5 +523,45 @@ impl Default for ClientTrigger {
             target: None,
             content_id: None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use binrw::BinRead;
+    use std::{fs::read, io::Cursor, path::PathBuf};
+
+    use super::*;
+    use crate::common::{ObjectId, ObjectTypeId, ObjectTypeKind};
+
+    use crate::client_zone_tests_dir;
+
+    #[test]
+    fn read_toggle_sign() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push(client_zone_tests_dir!("toggle_sign.bin"));
+
+        let buffer = read(d).unwrap();
+        let mut buffer = Cursor::new(&buffer);
+
+        let toggle_sign = ClientTrigger::read_le(&mut buffer).unwrap();
+        assert_eq!(
+            toggle_sign.trigger,
+            ClientTriggerCommand::ToggleSign {
+                sign_id: 4,
+                unk1: 0,
+                unk2: 0,
+            }
+        );
+        // For this CT command, there should never be a content id in this field.
+        assert!(toggle_sign.content_id.is_none());
+        assert!(toggle_sign.target.is_some());
+        assert_eq!(
+            toggle_sign.target.unwrap(),
+            ObjectTypeId {
+                object_id: ObjectId(1140471), // Random NPC in New Gridania
+                object_type: ObjectTypeKind::EObjOrNpc,
+            }
+        )
     }
 }

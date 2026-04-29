@@ -129,16 +129,36 @@ impl TryFrom<u64> for ObjectTypeId {
     fn try_from(value: u64) -> Result<Self, Self::Error> {
         Ok(Self {
             object_id: ObjectId(value as u32),
-            object_type: ObjectTypeKind::from_repr((value << 4) as u32).ok_or(())?,
+            object_type: ObjectTypeKind::from_repr((value >> 32) as u32).ok_or(())?,
         })
     }
 }
 
 impl From<ObjectTypeId> for u64 {
     fn from(value: ObjectTypeId) -> Self {
-        value.object_id.0 as u64 | value.object_type as u64 >> 4
+        (value.object_type as u64) << 32 | value.object_id.0 as u64
     }
 }
 
 /// An invalid actor/object id.
 const INVALID_OBJECT_ID: ObjectId = ObjectId(0xE0000000);
+
+#[cfg(test)]
+mod tests {
+    use crate::common::{ObjectId, ObjectTypeId, ObjectTypeKind};
+
+    // NOTE: `impl TryFrom<u64> for ObjectTypeId` is exercised in core/src/ipc/zone/client/client_trigger.rs unit tests.
+
+    #[test]
+    fn test_objecttypeid_into_u64() {
+        let target = ObjectTypeId {
+            object_id: ObjectId(1140471), // Random NPC in New Gridania
+            object_type: ObjectTypeKind::EObjOrNpc,
+        };
+
+        let test_value: u64 = target.into();
+        // Leading zeroes are included to make it explicitly clear the top 3 bytes should be empty
+        let expected: u64 = 0x00000001001166f7;
+        assert_eq!(test_value, expected);
+    }
+}
