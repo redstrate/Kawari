@@ -445,19 +445,19 @@ ServerZoneIpcType:
   size: 16
 - name: StrategyBoard
   comment: The content id of the real-time sharing host, and the actual strategy board data to be shared.
-  opcode: 133
+  opcode: 135
   size: 1184
 - name: StrategyBoardReceivedAck
   comment: The server informs the sharing client that a client in the party has received a strategy board.
-  opcode: 690
+  opcode: 931
   size: 16
 - name: StrategyBoardUpdate
   comment: The client updates their strategy board during real-time sharing, and other party members are informed.
-  opcode: 931
+  opcode: 133
   size: 64
 - name: EndStrategyBoardSession
   comment: The client stopped sharing their strategy board, or if it wasn't real-time, the transfer has completed.
-  opcode: 865
+  opcode: 690
   size: 16
 - name: WaymarkUpdate
   comment: A client updated a waymark, and now their party needs to be informed.
@@ -962,7 +962,7 @@ ClientZoneIpcType:
   size: 1184
 - name: StrategyBoardReceived
   comment: The client acknowledges receipt of a strategy board from another player.
-  opcode: 1919
+  opcode: 919
   size: 16
 - name: StrategyBoardUpdate
   comment: The client updates their strategy board during real-time sharing.
