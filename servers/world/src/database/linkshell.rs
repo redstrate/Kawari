@@ -8,8 +8,9 @@ use kawari::{
     config::get_config,
     ipc::chat::{ChatChannel, ChatChannelType},
     ipc::zone::{
-        CWLSCommon, CWLSCommonIdentifiers, CWLSMemberListEntry, CWLSNameAvailability,
-        CWLSPermissionRank, CrossworldLinkshellEx, OnlineStatusMask,
+        CWLS_MAX_MEMBERS, CWLSCommon, CWLSCommonIdentifiers, CWLSMemberListEntry,
+        CWLSNameAvailability, CWLSPermissionRank, CrossworldLinkshellEx, LWLS_MAX_MEMBERS,
+        OnlineStatusMask,
     },
 };
 
@@ -245,6 +246,41 @@ impl WorldDatabase {
         Some(members)
     }
 
+    pub fn is_linkshell_crossworld(&mut self, for_linkshell_id: u64) -> Option<bool> {
+        use schema::linkshells::dsl::*;
+
+        if let Ok(crossworld) = linkshells
+            .select(is_crossworld)
+            .filter(id.eq(for_linkshell_id as i64))
+            .first::<bool>(&mut self.connection)
+        {
+            return Some(crossworld);
+        }
+
+        None
+    }
+
+    pub fn is_linkshell_full(&mut self, for_linkshell_id: u64) -> Option<bool> {
+        if let Some(crossworld) = self.is_linkshell_crossworld(for_linkshell_id) {
+            use schema::linkshell_members::dsl::*;
+            if let Ok(members) = linkshell_members
+                .select(models::LinkshellMembers::as_select())
+                .filter(linkshell_id.eq(for_linkshell_id as i64))
+                .load(&mut self.connection)
+            {
+                if (crossworld && members.len() >= CWLS_MAX_MEMBERS)
+                    || (!crossworld && members.len() >= LWLS_MAX_MEMBERS)
+                {
+                    return Some(true);
+                } else {
+                    return Some(false);
+                }
+            }
+        }
+        None
+    }
+
+    // TODO: Change return type from a bool to a LogMessageType so the ZoneConnection can tell the client what happened.
     pub fn add_member_to_linkshell(
         &mut self,
         for_linkshell_id: i64,

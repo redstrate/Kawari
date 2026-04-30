@@ -28,7 +28,7 @@ impl ZoneConnection {
         )
     }
 
-    async fn is_in_linkshell(&mut self, for_linkshell_id: u64) -> bool {
+    pub async fn is_in_linkshell(&mut self, for_linkshell_id: u64) -> bool {
         let mut db = self.database.lock();
         db.is_in_linkshell(
             self.player_data.character.content_id as u64,
@@ -139,7 +139,20 @@ impl ZoneConnection {
         self.send_ipc_self(ipc).await;
     }
 
-    pub async fn invite_to_linkshell(&mut self, target_content_id: u64, linkshell_id: u64) {
+    pub async fn send_linkshell_error(&mut self, message: LogMessageType) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ShowLinkshellError {
+            log_message: message as u16,
+            unk: 0,
+        });
+
+        self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn invite_to_linkshell(
+        &mut self,
+        target_content_id: u64,
+        linkshell_id: u64,
+    ) -> LogMessageType {
         let successful_invite;
         let target_actor_id;
         let target_name;
@@ -151,7 +164,11 @@ impl ZoneConnection {
                 self.player_data.character.content_id as u64,
                 linkshell_id,
             ) else {
-                return;
+                tracing::error!(
+                    "Unable to determine player {}'s permissions for linkshell {linkshell_id}! Rejecting request!",
+                    self.player_data.character.content_id as u64
+                );
+                return LogMessageType::UnableToInviteToCWLS;
             };
 
             if our_perms < CWLSPermissionRank::Leader {
@@ -160,17 +177,60 @@ impl ZoneConnection {
                     self.player_data.character.content_id as u64,
                     target_content_id
                 );
-                return;
+                return LogMessageType::UnableToInviteToCWLS;
             }
+
+            let Some(target_ids) = db.find_character_ids(Some(target_content_id), None) else {
+                return LogMessageType::UnableToInviteToCWLS;
+            };
+
+            // If the target is already in this linkshell, report as such to the inviter. No need to log a warn or error for this, it's not an error state.
+            if db.is_in_linkshell(target_content_id, linkshell_id) {
+                return LogMessageType::PlayerAlreadyInYourCWLS;
+            }
+
+            // Next, see how many shells the target is in, and don't continue if they're in too many.
+            let linkshell_count =
+                if let Some(linkshells) = db.find_linkshells(target_content_id as i64) {
+                    linkshells
+                        .iter()
+                        .filter(|shell| shell.ids.linkshell_id != 0)
+                        .count()
+                } else {
+                    0
+                };
+
+            if linkshell_count >= CrossworldLinkshell::COUNT {
+                tracing::info!(
+                    "{} tried to invite {} to linkshell {linkshell_id}, but the invitee cannot join any more linkshells! Rejecting request!",
+                    self.player_data.character.content_id as u64,
+                    target_content_id
+                );
+                return LogMessageType::PlayerInTooManyCWLSes;
+            }
+
+            // Then check if the target linkshell is full.
+            let Some(linkshell_full) = db.is_linkshell_full(linkshell_id) else {
+                tracing::error!(
+                    "invite_to_linkshell: Unable to determine if the linkshell is full! Rejecting request!"
+                );
+                return LogMessageType::UnableToInviteToCWLS;
+            };
+
+            if linkshell_full {
+                tracing::info!(
+                    "{} tried to invite {} to linkshell {linkshell_id}, but the linkshell is full! Rejecting request!",
+                    self.player_data.character.content_id as u64,
+                    target_content_id
+                );
+                return LogMessageType::CWLSIsFull;
+            }
+
             successful_invite = db.add_member_to_linkshell(
                 linkshell_id as i64,
                 target_content_id as i64,
                 CWLSPermissionRank::Invitee,
             );
-
-            let Some(target_ids) = db.find_character_ids(Some(target_content_id), None) else {
-                return;
-            };
 
             target_actor_id = target_ids.actor_id;
             target_name = target_ids.name;
@@ -199,14 +259,10 @@ impl ZoneConnection {
                 .send(ToServer::SendLinkshellInvite(target_actor_id, ipc))
                 .await;
         } else {
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ShowLinkshellError {
-                // TODO: Probably display other errors if some other error occurs while adding the member. For now, add_member_to_linkshell only returns a bool...
-                log_message: LogMessageType::PlayerAlreadyInYourCWLS as u16,
-                unk: 0,
-            });
-
-            self.send_ipc_self(ipc).await;
+            return LogMessageType::UnableToInviteToCWLS;
         }
+
+        LogMessageType::Default
     }
 
     pub async fn received_linkshell_invite(&mut self, invite_info: CrossworldLinkshellInvite) {
