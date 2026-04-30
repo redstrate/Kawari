@@ -67,7 +67,7 @@ minijinja = { version = "2.19", features = ["serde", "loader", "multi_template"]
 mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false }
 
 # For character backup decompression
-zip = { version = "8.5", features = ["deflate", "lzma", "bzip2"], default-features = false }
+zip = { version = "8.6", features = ["deflate", "lzma", "bzip2"], default-features = false }
 
 # For inter-server HTTP communication
 ureq = { version = "3.3", default-features = false }
@@ -98,7 +98,7 @@ binrw = { version = "0.15", features = ["std"], default-features = false }
 bstr = { version = "1.12" }
 
 # Reading Excel sheet data
-icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2026.01.21.0000.0000", features = ["Warp", "Tribe", "ClassJob", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName", "GilShopItem", "InstanceContent", "ContentFinderCondition", "BNpcBase", "Mount", "AetherCurrentCompFlgSet", "WarpLogic", "Item", "AetherCurrentCompFlgSet", "CustomTalk", "Opening", "ItemAction", "PreHandler", "SwitchTalkVariation", "HalloweenNpcSelect", "Quest", "TopicSelect", "ParamGrow", "FateShop", "EObj", "GimmickRect", "SpecialShop", "BaseParam", "ContentDirectorManagedSG", "FittingShopCategoryItem", "RecastNavimesh", "AetheryteSystemDefine", "GatheringPoint", "GatheringPointBase", "BNpcCustomize", "Recipe", "CraftAction", "GatheringItem", "OnlineStatus", "ItemLevel", "HousingAethernet", "Emote", "Battalion", "NpcYell", "HousingLandSet", "NpcEquip", "HousingFurniture", "ENpcBase"], default-features = false }
+icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2026.04.21.0000.0000", features = ["Warp", "Tribe", "ClassJob", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName", "GilShopItem", "InstanceContent", "ContentFinderCondition", "BNpcBase", "Mount", "AetherCurrentCompFlgSet", "WarpLogic", "Item", "AetherCurrentCompFlgSet", "CustomTalk", "Opening", "ItemAction", "PreHandler", "SwitchTalkVariation", "HalloweenNpcSelect", "Quest", "TopicSelect", "ParamGrow", "FateShop", "EObj", "GimmickRect", "SpecialShop", "BaseParam", "ContentDirectorManagedSG", "FittingShopCategoryItem", "RecastNavimesh", "AetheryteSystemDefine", "GatheringPoint", "GatheringPointBase", "BNpcCustomize", "Recipe", "CraftAction", "GatheringItem", "OnlineStatus", "ItemLevel", "HousingAethernet", "Emote", "Battalion", "NpcYell", "HousingLandSet", "NpcEquip", "HousingFurniture", "ENpcBase"], default-features = false }
 
 # Used in encryption of lobby packets
 md5 = { version = "0.8", default-features = false }

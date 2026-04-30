@@ -47,8 +47,8 @@ fn main() {
     };
 
     // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
-    let bg_path = row.Bg();
-    let name = row.Name();
+    let bg_path = row.Bg;
+    let name = row.Name;
 
     let path = format!("bg/{}.lvb", &bg_path);
     let lvb = resolver.parsed::<Lvb>(&path).unwrap();
@@ -59,8 +59,7 @@ fn main() {
         .row(0)
         .expect("No default row in RecastNavimesh sheet?");
     for (_, row) in navimesh_sheet.into_iter().flatten_subrows() {
-        // FIXME: Will be called Name in the future.
-        if row.Unknown0() == name {
+        if row.Name == name {
             tracing::info!("Using navimesh settings override for this zone!");
             navimesh_row = row;
         }
@@ -71,10 +70,10 @@ fn main() {
         context = CreateContext(true);
     }
 
-    let cell_size = navimesh_row.CellSize();
-    let cell_height = navimesh_row.CellHeight();
+    let cell_size = navimesh_row.CellSize;
+    let cell_height = navimesh_row.CellHeight;
 
-    let tile_width = navimesh_row.TileSize();
+    let tile_width = navimesh_row.TileSize;
     let tile_height = tile_width;
 
     let tile_origin_x = -(tile_width * 2.0);
@@ -144,8 +143,8 @@ fn main() {
             scene.general.bg_path.value
         ))
         .unwrap();
-    let max_slope = navimesh_row.AgentMaxSlope();
-    let walkable_climb = navimesh_row.AgentMaxClimb();
+    let max_slope = navimesh_row.AgentMaxSlope;
+    let walkable_climb = navimesh_row.AgentMaxClimb;
     for entry in pcblist.entries {
         add_plate(
             &entry,
@@ -203,8 +202,8 @@ fn main() {
         unsafe {
             // Step 3: Build a compact heightfield out of the normal heightfield
             let compact_heightfield = rcAllocCompactHeightfield();
-            let walkable_height = navimesh_row.AgentHeight();
-            let walkable_radius = navimesh_row.AgentRadius();
+            let walkable_height = navimesh_row.AgentHeight;
+            let walkable_radius = navimesh_row.AgentRadius;
             assert!(!tile.height_field.is_null());
             assert!(rcBuildCompactHeightfield(
                 context,
@@ -227,8 +226,8 @@ fn main() {
             assert!(rcBuildDistanceField(context, compact_heightfield));
 
             let border_size = 0;
-            let min_region_area = navimesh_row.RegionMinSize();
-            let merge_region_area = navimesh_row.RegionMergedSize();
+            let min_region_area = navimesh_row.RegionMinSize;
+            let merge_region_area = navimesh_row.RegionMergedSize;
             assert!(rcBuildRegions(
                 context,
                 compact_heightfield,
@@ -239,8 +238,8 @@ fn main() {
 
             // Step 4: Build the contour set from the compact heightfield
             let contour_set = rcAllocContourSet();
-            let max_error = navimesh_row.MaxEdgeError();
-            let max_edge_len = (navimesh_row.MaxEdgeLength() / cell_size) as i32; // in VX units
+            let max_error = navimesh_row.MaxEdgeError;
+            let max_edge_len = (navimesh_row.MaxEdgeLength / cell_size) as i32; // in VX units
             let build_flags = rcBuildContoursFlags_RC_CONTOUR_TESS_WALL_EDGES as i32;
             assert!(rcBuildContours(
                 context,
@@ -258,7 +257,7 @@ fn main() {
 
             // Step 5: Build the polymesh out of the contour set
             let poly_mesh = rcAllocPolyMesh();
-            let nvp = navimesh_row.VertsPerPoly() as i32;
+            let nvp = navimesh_row.VertsPerPoly as i32;
             assert!(rcBuildPolyMesh(context, contour_set, nvp, poly_mesh));
             assert!(!(*poly_mesh).verts.is_null());
             assert!((*poly_mesh).nverts > 0);
@@ -271,8 +270,8 @@ fn main() {
 
             // Step 6: Build the polymesh detail
             let poly_mesh_detail = rcAllocPolyMeshDetail();
-            let sample_dist = navimesh_row.DetailMeshSampleDistance();
-            let sample_max_error = navimesh_row.DetailMeshMaxSampleError();
+            let sample_dist = navimesh_row.DetailMeshSampleDistance;
+            let sample_max_error = navimesh_row.DetailMeshMaxSampleError;
             assert!(rcBuildPolyMeshDetail(
                 context,
                 poly_mesh,

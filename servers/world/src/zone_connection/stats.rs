@@ -182,31 +182,31 @@ impl BaseParameters {
     ) {
         // Akh Morning data can't be extrapolated from game sheets, and it's missing a significant amount of entries from 50-70, so let's try making a decent approximation with the BaseSpeed, HpModifier and LevelModifier columns.
         self.strength = modifiers
-            .apply_to(1, param_grow.BaseSpeed() as u32)
+            .apply_to(1, param_grow.BaseSpeed as u32)
             .saturating_add_signed(attributes.strength as i32);
         self.dexterity = modifiers
-            .apply_to(2, param_grow.BaseSpeed() as u32)
+            .apply_to(2, param_grow.BaseSpeed as u32)
             .saturating_add_signed(attributes.dexterity as i32);
         self.vitality = modifiers
-            .apply_to(3, param_grow.BaseSpeed() as u32)
+            .apply_to(3, param_grow.BaseSpeed as u32)
             .saturating_add_signed(attributes.vitality as i32);
         self.intelligence = modifiers
-            .apply_to(4, param_grow.BaseSpeed() as u32)
+            .apply_to(4, param_grow.BaseSpeed as u32)
             .saturating_add_signed(attributes.intelligence as i32);
         self.mind = modifiers
-            .apply_to(5, param_grow.BaseSpeed() as u32)
+            .apply_to(5, param_grow.BaseSpeed as u32)
             .saturating_add_signed(attributes.mind as i32);
         self.piety = modifiers
-            .apply_to(6, param_grow.BaseSpeed() as u32)
+            .apply_to(6, param_grow.BaseSpeed as u32)
             .saturating_add_signed(attributes.piety as i32);
 
-        self.spell_speed = param_grow.BaseSpeed() as u32;
-        self.tenacity = param_grow.BaseSpeed() as u32;
+        self.spell_speed = param_grow.BaseSpeed as u32;
+        self.tenacity = param_grow.BaseSpeed as u32;
         self.attack_power = *self.get_mut(4); // TODO: don't hardcode PrimaryStat
         self.skill_speed = self.tenacity;
 
         // This is fixed and isn't modified by any items in retail, so it's safe to be set here.
-        self.mp = param_grow.MpModifier() as u32;
+        self.mp = param_grow.MpModifier as u32;
     }
 
     // This should be called after item stat calculations.
@@ -234,9 +234,9 @@ impl BaseParameters {
             classjob_vit_mod = 1.0;
         };
 
-        let hp_mod = param_grow.HpModifier() as f32;
-        let base_vit = (param_grow.BaseSpeed() as f32) * classjob_vit_mod; // TODO: Tribe adjustments, if we care about such a minimal change?
-        let lv_mod = param_grow.LevelModifier() as f32;
+        let hp_mod = param_grow.HpModifier as f32;
+        let base_vit = (param_grow.BaseSpeed as f32) * classjob_vit_mod; // TODO: Tribe adjustments, if we care about such a minimal change?
+        let lv_mod = param_grow.LevelModifier as f32;
 
         self.hp = (100.0
             + hp_mod
@@ -385,7 +385,7 @@ impl ZoneConnection {
                 .expect("Failed to read param grow");
 
             if self.synced_level.is_some() {
-                item_level_sync = Some(param_grow.ItemLevelSync());
+                item_level_sync = Some(param_grow.ItemLevelSync);
             } else {
                 item_level_sync = None;
             }

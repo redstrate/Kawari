@@ -460,8 +460,8 @@ impl LuaPlayer {
         let subrows = game_data.get_switch_talk_subrows(switch_talk_id);
         // Higher subrows take precedence
         for (_, row) in subrows.iter().rev() {
-            let quest0 = adjust_quest_id(row.Quest0());
-            let quest1 = adjust_quest_id(row.Quest1());
+            let quest0 = adjust_quest_id(row.Quest0);
+            let quest1 = adjust_quest_id(row.Quest1);
 
             let should_check_quest0 = quest0 != 0;
             let should_check_quest1 = quest1 != 0;
@@ -481,7 +481,7 @@ impl LuaPlayer {
             };
 
             if quest0_passed && quest1_passed {
-                return Some(row.DefaultTalk());
+                return Some(row.DefaultTalk);
             }
         }
 

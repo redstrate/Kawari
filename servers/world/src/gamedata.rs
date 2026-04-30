@@ -245,7 +245,7 @@ impl GameData {
             ClassJobSheet::read_from(&mut resource_resolver, config.world.language())
                 .expect("Failed to read ClassJobSheet, does the Excel files exist?");
         for (_, row) in classjob_sheet.into_iter().flatten_subrows() {
-            classjob_exp_indexes.push(row.ExpArrayIndex());
+            classjob_exp_indexes.push(row.ExpArrayIndex);
         }
 
         let item_sheet = ItemSheet::read_from(&mut resource_resolver, config.world.language())
@@ -345,20 +345,19 @@ impl GameData {
     /// Gets the starting city-state from a given class/job id.
     pub fn get_citystate(&mut self, classjob_id: u16) -> Option<u8> {
         let row = self.classjob_sheet.row(classjob_id as u32)?;
-
-        Some(row.StartingTown())
+        Some(row.StartingTown)
     }
 
     pub fn get_racial_base_attributes(&mut self, tribe_id: u8) -> Option<Attributes> {
         let row = self.tribe_sheet.row(tribe_id as u32)?;
 
         Some(Attributes {
-            strength: row.STR(),
-            dexterity: row.DEX(),
-            vitality: row.VIT(),
-            intelligence: row.INT(),
-            mind: row.MND(),
-            piety: row.PIE(),
+            strength: row.STR,
+            dexterity: row.DEX,
+            vitality: row.VIT,
+            intelligence: row.INT,
+            mind: row.MND,
+            piety: row.PIE,
         })
     }
 
@@ -375,7 +374,7 @@ impl GameData {
             ItemInfoQuery::ByName(ref query_item_name) => {
                 for (id, row) in self.item_sheet.into_iter().flatten_subrows() {
                     if row
-                        .Name()
+                        .Name
                         .to_lowercase()
                         .contains(&query_item_name.to_lowercase())
                     {
@@ -389,22 +388,22 @@ impl GameData {
         if let Some((matched_row, item_id)) = result {
             let item_info = ItemRow {
                 id: item_id,
-                name: matched_row.Name().to_string(),
-                price_mid: matched_row.PriceMid(),
-                price_low: matched_row.PriceLow(),
-                equip_category: EquipSlotCategory::from_repr(matched_row.EquipSlotCategory())
+                name: matched_row.Name,
+                price_mid: matched_row.PriceMid,
+                price_low: matched_row.PriceLow,
+                equip_category: EquipSlotCategory::from_repr(matched_row.EquipSlotCategory)
                     .unwrap_or_default(),
-                primary_model_id: matched_row.ModelMain(),
-                sub_model_id: matched_row.ModelSub(),
-                stack_size: matched_row.StackSize(),
-                item_level: matched_row.LevelItem(),
-                classjob_category: matched_row.ClassJobCategory(),
-                base_param_ids: matched_row.BaseParam(),
-                base_param_values: matched_row.BaseParamValue(),
-                defense: matched_row.DefensePhys(),
-                magic_defense: matched_row.DefenseMag(),
+                primary_model_id: matched_row.ModelMain,
+                sub_model_id: matched_row.ModelSub,
+                stack_size: matched_row.StackSize,
+                item_level: matched_row.LevelItem,
+                classjob_category: matched_row.ClassJobCategory,
+                base_param_ids: matched_row.BaseParam,
+                base_param_values: matched_row.BaseParamValue,
+                defense: matched_row.DefensePhys,
+                magic_defense: matched_row.DefenseMag,
                 equip_restrictions: self
-                    .get_equipslot_restrictions(matched_row.EquipSlotCategory())
+                    .get_equipslot_restrictions(matched_row.EquipSlotCategory)
                     .unwrap(),
             };
 
@@ -439,21 +438,21 @@ impl GameData {
     pub fn get_warp(&mut self, warp_id: u32) -> Option<(u32, u16)> {
         let row = self.warp_sheet.row(warp_id)?;
 
-        Some((row.PopRange(), row.TerritoryType()))
+        Some((row.PopRange, row.TerritoryType))
     }
 
     /// Returns the warp logic name (if any) for this Warp.
     pub fn get_warp_logic_name(&mut self, warp_id: u32) -> String {
         let row = self.warp_sheet.row(warp_id).unwrap();
 
-        let warp_logic_id = row.WarpLogic();
+        let warp_logic_id = row.WarpLogic;
 
         let config = get_config();
         let warp_logic_sheet =
             WarpLogicSheet::read_from(&mut self.resource, config.world.language()).unwrap();
         let warp_logic_row = warp_logic_sheet.row(warp_logic_id as u32).unwrap();
 
-        warp_logic_row.WarpName().to_string()
+        warp_logic_row.WarpName
     }
 
     pub fn get_aetheryte(
@@ -469,8 +468,8 @@ impl GameData {
             let row = sheet.row(aetheryte_id)?;
 
             // TODO: just look in the level sheet?
-            let pop_range_id = row.Level()[0];
-            let zone_id = row.Territory();
+            let pop_range_id = row.Level[0];
+            let zone_id = row.Territory;
 
             Some((pop_range_id, zone_id))
         } else {
@@ -480,8 +479,8 @@ impl GameData {
 
             // TODO: just look in the level sheet?
             // Note that the HousingAethernet sheet's Level column isn't an array.
-            let pop_range_id = row.Level();
-            let zone_id = row.TerritoryType();
+            let pop_range_id = row.Level;
+            let zone_id = row.TerritoryType;
 
             Some((pop_range_id, zone_id))
         }
@@ -493,7 +492,7 @@ impl GameData {
         let sheet = AetheryteSheet::read_from(&mut self.resource, config.world.language()).unwrap();
         let row = sheet.row(aetheryte_id).unwrap();
 
-        row.IsAetheryte()
+        row.IsAetheryte
     }
 
     /// Retrieves a zone's internal name, place name or parent region name.
@@ -502,81 +501,81 @@ impl GameData {
 
         let offset = match which {
             TerritoryNameKind::Internal => {
-                return Some(row.Name().to_string());
+                return Some(row.Name);
             }
-            TerritoryNameKind::Region => row.PlaceNameRegion(),
-            TerritoryNameKind::Place => row.PlaceName(),
+            TerritoryNameKind::Region => row.PlaceNameRegion,
+            TerritoryNameKind::Place => row.PlaceName,
         };
 
         let row = self.place_name_sheet.row(offset as u32)?;
-        Some(row.Name().to_string())
+        Some(row.Name)
     }
 
     /// Turn an equip slot category id into a slot for the equipped inventory
     pub fn get_equipslot_category(&mut self, equipslot_id: u8) -> Option<u16> {
         let row = self.equip_slot_category_sheet.row(equipslot_id as u32)?;
 
-        let main_hand = row.MainHand();
+        let main_hand = row.MainHand;
         if main_hand == 1 {
             return Some(0);
         }
 
-        let off_hand = row.OffHand();
+        let off_hand = row.OffHand;
         if off_hand == 1 {
             return Some(1);
         }
 
-        let head = row.Head();
+        let head = row.Head;
         if head == 1 {
             return Some(2);
         }
 
-        let body = row.Body();
+        let body = row.Body;
         if body == 1 {
             return Some(3);
         }
 
-        let gloves = row.Gloves();
+        let gloves = row.Gloves;
         if gloves == 1 {
             return Some(4);
         }
 
-        let legs = row.Legs();
+        let legs = row.Legs;
         if legs == 1 {
             return Some(6);
         }
 
-        let feet = row.Feet();
+        let feet = row.Feet;
         if feet == 1 {
             return Some(7);
         }
 
-        let ears = row.Ears();
+        let ears = row.Ears;
         if ears == 1 {
             return Some(8);
         }
 
-        let neck = row.Neck();
+        let neck = row.Neck;
         if neck == 1 {
             return Some(9);
         }
 
-        let wrists = row.Wrists();
+        let wrists = row.Wrists;
         if wrists == 1 {
             return Some(10);
         }
 
-        let right_finger = row.FingerR();
+        let right_finger = row.FingerR;
         if right_finger == 1 {
             return Some(11);
         }
 
-        let left_finger = row.FingerL();
+        let left_finger = row.FingerL;
         if left_finger == 1 {
             return Some(12);
         }
 
-        let soul_crystal = row.SoulCrystal();
+        let soul_crystal = row.SoulCrystal;
         if soul_crystal == 1 {
             return Some(13);
         }
@@ -590,20 +589,20 @@ impl GameData {
         let row = self.equip_slot_category_sheet.row(equipslot_id as u32)?;
 
         Some(ItemEquipRestrictions {
-            main_hand: row.MainHand(),
-            off_hand: row.OffHand(),
-            head: row.Head(),
-            body: row.Body(),
-            hands: row.Gloves(),
-            legs: row.Legs(),
-            feet: row.Feet(),
+            main_hand: row.MainHand,
+            off_hand: row.OffHand,
+            head: row.Head,
+            body: row.Body,
+            hands: row.Gloves,
+            legs: row.Legs,
+            feet: row.Feet,
         })
     }
 
     pub fn get_casttime(&mut self, action_id: u32) -> Option<u16> {
         let row = self.action_sheet.row(action_id)?;
 
-        Some(row.Cast100ms())
+        Some(row.Cast100ms)
     }
 
     /// Calculates the current weather at the current time
@@ -612,7 +611,7 @@ impl GameData {
         let row = self.weather_rate_sheet.row(weather_rate_id)?;
 
         // sum up the rates
-        let mut rates = row.Rate();
+        let mut rates = row.Rate;
         let mut sum = 0;
         for rate in &mut rates {
             sum += *rate;
@@ -621,7 +620,7 @@ impl GameData {
 
         let target = Self::calculate_target();
         let weather_and_rates: Vec<(i32, i32)> = row
-            .Weather()
+            .Weather
             .iter()
             .cloned()
             .zip(rates)
@@ -660,7 +659,7 @@ impl GameData {
     pub fn get_weather(&mut self, zone_id: u32) -> Option<i32> {
         let row = self.territory_type_sheet.row(zone_id)?;
 
-        let weather_rate_id = row.WeatherRate();
+        let weather_rate_id = row.WeatherRate;
         self.get_weather_rate(weather_rate_id as u32)
     }
 
@@ -676,14 +675,14 @@ impl GameData {
     pub fn get_job_index(&mut self, classjob_id: u16) -> Option<u8> {
         let row = self.classjob_sheet.row(classjob_id as u32)?;
 
-        Some(row.JobIndex())
+        Some(row.JobIndex)
     }
 
     /// Gets the item and its cost from the specified shop.
     pub fn get_gilshop_item(&mut self, gilshop_id: u32, index: u16) -> Option<ItemRow> {
         let sheet = GilShopItemSheet::read_from(&mut self.resource, Language::None).ok()?;
         let row = sheet.subrow(gilshop_id, index)?;
-        let item_id = row.Item();
+        let item_id = row.Item;
 
         self.get_item_info(ItemInfoQuery::ById(item_id as u32))
     }
@@ -694,7 +693,7 @@ impl GameData {
         let sheet =
             SpecialShopSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(gilshop_id)?;
-        let item_id = row.Item()[index as usize].Item[0]; // TODO: why are there two items?
+        let item_id = row.Item[index as usize].Item[0]; // TODO: why are there two items?
 
         self.get_item_info(ItemInfoQuery::ById(item_id as u32))
     }
@@ -707,89 +706,89 @@ impl GameData {
                 .unwrap();
         let content_finder_row = content_finder_sheet.row(content_id as u32)?;
 
-        Some(content_finder_row.TerritoryType())
+        Some(content_finder_row.TerritoryType)
     }
 
     /// Grabs needed BattleNPC information such as their name, model id and more.
     pub fn find_bnpc(&mut self, id: u32) -> Option<(u16, u8, CustomizeData, u8, u16)> {
         let bnpc_row = self.bnpc_base_sheet.row(id)?;
-        let model_row_id = bnpc_row.ModelChara();
-        let customize_row_id = bnpc_row.BNpcCustomize();
+        let model_row_id = bnpc_row.ModelChara;
+        let customize_row_id = bnpc_row.BNpcCustomize;
         let customize_row = self.bnpc_customize_sheet.row(customize_row_id as u32)?;
 
         let customize = CustomizeData {
-            race: customize_row.Race(),
-            gender: customize_row.Gender(),
-            age: customize_row.BodyType(),
-            height: customize_row.Height(),
-            subrace: customize_row.Tribe(),
-            face: customize_row.Face(),
-            hair: customize_row.HairStyle(),
-            enable_highlights: customize_row.HairHighlight(),
-            skin_tone: customize_row.SkinColor(),
-            right_eye_color: customize_row.EyeColor(),
-            hair_tone: customize_row.HairColor(),
-            highlights: customize_row.HairHighlightColor(),
-            facial_features: customize_row.FacialFeature(),
-            facial_feature_color: customize_row.FacialFeatureColor(),
-            eyebrows: customize_row.Eyebrows(),
-            left_eye_color: customize_row.EyeHeterochromia(),
-            eyes: customize_row.EyeShape(),
-            nose: customize_row.Nose(),
-            jaw: customize_row.Jaw(),
-            mouth: customize_row.Mouth(),
-            lips_tone_fur_pattern: customize_row.LipColor(),
-            race_feature_size: customize_row.BustOrTone1(),
-            race_feature_type: customize_row.ExtraFeature1(),
-            bust: customize_row.ExtraFeature2OrBust(),
-            face_paint: customize_row.FacePaint(),
-            face_paint_color: customize_row.FacePaintColor(),
+            race: customize_row.Race,
+            gender: customize_row.Gender,
+            age: customize_row.BodyType,
+            height: customize_row.Height,
+            subrace: customize_row.Tribe,
+            face: customize_row.Face,
+            hair: customize_row.HairStyle,
+            enable_highlights: customize_row.HairHighlight,
+            skin_tone: customize_row.SkinColor,
+            right_eye_color: customize_row.EyeColor,
+            hair_tone: customize_row.HairColor,
+            highlights: customize_row.HairHighlightColor,
+            facial_features: customize_row.FacialFeature,
+            facial_feature_color: customize_row.FacialFeatureColor,
+            eyebrows: customize_row.Eyebrows,
+            left_eye_color: customize_row.EyeHeterochromia,
+            eyes: customize_row.EyeShape,
+            nose: customize_row.Nose,
+            jaw: customize_row.Jaw,
+            mouth: customize_row.Mouth,
+            lips_tone_fur_pattern: customize_row.LipColor,
+            race_feature_size: customize_row.BustOrTone1,
+            race_feature_type: customize_row.ExtraFeature1,
+            bust: customize_row.ExtraFeature2OrBust,
+            face_paint: customize_row.FacePaint,
+            face_paint_color: customize_row.FacePaintColor,
         };
 
         Some((
             model_row_id,
-            bnpc_row.Battalion(),
+            bnpc_row.Battalion,
             customize,
-            bnpc_row.Rank(),
-            bnpc_row.NpcEquip(),
+            bnpc_row.Rank,
+            bnpc_row.NpcEquip,
         ))
     }
 
     /// Grabs needed EventNpc information such as their name, model id and more.
     pub fn find_enpc(&mut self, id: u32) -> Option<(u16, CustomizeData, u16)> {
         let row = self.enpc_base_sheet.row(id)?;
-        let model_row_id = row.ModelChara();
+        let model_row_id = row.ModelChara;
 
         let customize = CustomizeData {
-            race: row.Race(),
-            gender: row.Gender(),
-            age: row.BodyType(),
-            height: row.Height(),
-            subrace: row.Tribe(),
-            face: row.Face(),
-            hair: row.HairStyle(),
-            enable_highlights: row.HairHighlight(),
-            skin_tone: row.SkinColor(),
-            right_eye_color: row.EyeColor(),
-            hair_tone: row.HairColor(),
-            highlights: row.HairHighlightColor(),
-            facial_features: row.FacialFeature(),
-            facial_feature_color: row.FacialFeatureColor(),
-            eyebrows: row.Eyebrows(),
-            left_eye_color: row.EyeHeterochromia(),
-            eyes: row.EyeShape(),
-            nose: row.Nose(),
-            jaw: row.Jaw(),
-            mouth: row.Mouth(),
-            lips_tone_fur_pattern: row.LipColor(),
-            race_feature_size: row.BustOrTone1(),
-            race_feature_type: row.ExtraFeature1(),
-            bust: row.ExtraFeature2OrBust(),
-            face_paint: row.FacePaint(),
-            face_paint_color: row.FacePaintColor(),
+            race: row.Race,
+            gender: row.Gender,
+            age: row.BodyType,
+            height: row.Height,
+            subrace: row.Tribe,
+            face: row.Face,
+            hair: row.HairStyle,
+            enable_highlights: row.HairHighlight,
+            skin_tone: row.SkinColor,
+            right_eye_color: row.EyeColor,
+            hair_tone: row.HairColor,
+            highlights: row.HairHighlightColor,
+            facial_features: row.FacialFeature,
+            facial_feature_color: row.FacialFeatureColor,
+            eyebrows: row.Eyebrows,
+            left_eye_color: row.EyeHeterochromia,
+            eyes: row.EyeShape,
+            nose: row.Nose,
+            jaw: row.Jaw,
+            mouth: row.Mouth,
+            lips_tone_fur_pattern: row.LipColor,
+            race_feature_size: row.BustOrTone1,
+            race_feature_type: row.ExtraFeature1,
+            bust: row.ExtraFeature2OrBust,
+            face_paint: row.FacePaint,
+            face_paint_color: row.FacePaintColor,
         };
 
-        Some((model_row_id, customize, row.NpcEquip()))
+        Some((model_row_id, customize, row.NpcEquip))
     }
 
     /// Gets the content type for the given InstanceContent.
@@ -798,7 +797,7 @@ impl GameData {
             InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
         let instance_content_row = instance_content_sheet.row(content_id as u32)?;
 
-        InstanceContentType::from_repr(instance_content_row.InstanceContentType())
+        InstanceContentType::from_repr(instance_content_row.InstanceContentType)
     }
 
     /// Gets the order of the mount.
@@ -808,18 +807,18 @@ impl GameData {
             MountSheet::read_from(&mut self.resource, config.world.language()).unwrap();
         let mount_row = instance_content_sheet.row(mount_id)?;
 
-        Some(mount_row.Order())
+        Some(mount_row.Order)
     }
 
     /// Gets the Item ID of the Orchestrion Roll.
     pub fn find_orchestrion_item_id(&mut self, orchestrion_id: u32) -> Option<u32> {
         for (id, row) in self.item_sheet.into_iter().flatten_subrows() {
             // If filter_group is 32, then this item is an Orchestrion Roll...
-            if row.FilterGroup() != 32 {
+            if row.FilterGroup != 32 {
                 continue;
             }
 
-            if row.AdditionalData() == orchestrion_id {
+            if row.AdditionalData == orchestrion_id {
                 return Some(id);
             }
         }
@@ -834,7 +833,7 @@ impl GameData {
 
         // Start searching for Zone ID
         for (id, row) in sheet.into_iter().flatten_subrows() {
-            let aether_currents = row.AetherCurrents();
+            let aether_currents = row.AetherCurrents;
             if aether_currents.contains(&aether_current_id) {
                 return Some(id);
             }
@@ -853,7 +852,7 @@ impl GameData {
 
         let row = aether_current_comp_flg_set_sheet.row(aether_current_comp_flg_set_id)?;
 
-        let aether_currents_from_zone = row.AetherCurrents();
+        let aether_currents_from_zone = row.AetherCurrents;
         Some(aether_currents_from_zone.to_vec())
     }
 
@@ -870,7 +869,7 @@ impl GameData {
     pub fn get_custom_talk_name(&mut self, custom_talk_id: u32) -> String {
         let row = self.custom_talk_sheet.row(custom_talk_id).unwrap();
 
-        row.Name().to_string()
+        row.Name
     }
 
     /// Returns the internal script name for this Opening event.
@@ -878,21 +877,21 @@ impl GameData {
         let sheet = OpeningSheet::read_from(&mut self.resource, Language::None).unwrap();
         let row = sheet.row(opening_id).unwrap();
 
-        row.Name().to_string()
+        row.Name
     }
 
     /// Returns data useful for performing item actions.
     pub fn lookup_item_action_data(&mut self, item_id: u32) -> Option<(u16, [u16; 9], u32)> {
         if let Some(row) = self.item_sheet.row(item_id) {
-            let additional_data = row.AdditionalData();
+            let additional_data = row.AdditionalData;
 
             let item_action_sheet =
                 ItemActionSheet::read_from(&mut self.resource, Language::None).ok()?;
-            let item_action_row = item_action_sheet.row(row.ItemAction() as u32)?;
+            let item_action_row = item_action_sheet.row(row.ItemAction as u32)?;
 
             return Some((
-                item_action_row.Action(),
-                item_action_row.Data(),
+                item_action_row.Action,
+                item_action_row.Data,
                 additional_data,
             ));
         }
@@ -906,14 +905,14 @@ impl GameData {
         let sheet = PreHandlerSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(pre_handler_id)?;
 
-        Some(row.Target())
+        Some(row.Target)
     }
 
     /// Returns a list of SwitchTalkRows for a given id.
     pub fn get_switch_talk_subrows(
         &mut self,
         switch_talk_id: u32,
-    ) -> Vec<(u16, SwitchTalkVariationRow<'_>)> {
+    ) -> Vec<(u16, SwitchTalkVariationRow)> {
         let subrows = self
             .switch_talk_sheet
             .into_iter()
@@ -930,14 +929,14 @@ impl GameData {
             HalloweenNpcSelectSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(npc_id)?;
 
-        Some(row.Transformation())
+        Some(row.Transformation)
     }
 
     /// Returns the internal script name for this Quest event.
     pub fn get_quest_name(&mut self, quest_id: u32) -> String {
         let row = self.quest_sheet.row(quest_id).unwrap();
 
-        row.Id().to_string()
+        row.Id
     }
 
     /// Returns the target event of a TopicSelect event.
@@ -951,21 +950,21 @@ impl GameData {
             TopicSelectSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(topic_select_id)?;
 
-        Some(row.Shop()[selected_index])
+        Some(row.Shop[selected_index])
     }
 
     /// Returns the rewards for this Quest, EXP and Gil respectively.
     pub fn get_quest_rewards(&mut self, quest_id: u32) -> (u16, u32) {
         let row = self.quest_sheet.row(quest_id).unwrap();
 
-        (row.ExpFactor(), row.GilReward())
+        (row.ExpFactor, row.GilReward)
     }
 
     /// Returns the max EXP or the exp "needed to grow" for a given level.
     pub fn get_max_exp(&mut self, level: u32) -> i32 {
         let row = self.param_grow_sheet.row(level).unwrap();
 
-        row.ExpToNext()
+        row.ExpToNext
     }
 
     /// Gets the short name for a given content finder condition.
@@ -976,7 +975,7 @@ impl GameData {
                 .unwrap();
         let content_finder_row = content_finder_sheet.row(content_finder_row_id as u32)?;
 
-        Some(content_finder_row.ShortCode().to_string())
+        Some(content_finder_row.ShortCode)
     }
 
     /// Returns the DefaultTalk for a given FateShop and rank.
@@ -984,14 +983,14 @@ impl GameData {
         let sheet = FateShopSheet::read_from(&mut self.resource, Language::None).unwrap();
         let row = sheet.row(fate_shop_id).unwrap();
 
-        row.DefaultTalk()[rank as usize]
+        row.DefaultTalk[rank as usize]
     }
 
     /// Returns the pop type for this EObj.
     pub fn get_eobj_pop_type(&mut self, eobj_id: u32) -> u8 {
         let row = self.eobj_sheet.row(eobj_id).unwrap();
 
-        row.PopType()
+        row.PopType
     }
 
     /// Returns the InstanceContent for a given ContentFinderCondition id.
@@ -1005,7 +1004,7 @@ impl GameData {
                 .unwrap();
         let content_finder_row = content_finder_sheet.row(content_finder_row_id as u32)?;
 
-        Some(content_finder_row.Content())
+        Some(content_finder_row.Content)
     }
 
     /// Returns the time limit in minutes for a given InstanceContent id.
@@ -1013,40 +1012,39 @@ impl GameData {
         let sheet = InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
         let row = sheet.row(instance_content_id as u32)?;
 
-        Some(row.TimeLimitmin())
+        Some(row.TimeLimitmin)
     }
 
     /// Returns information about a specific GimmickRect.
-    pub fn get_gimmick_rect_info(&mut self, gimmick_rect_id: u32) -> Option<GimmickRectRow<'_>> {
+    pub fn get_gimmick_rect_info(&mut self, gimmick_rect_id: u32) -> Option<GimmickRectRow> {
         self.gimmick_rect_sheet.row(gimmick_rect_id)
     }
 
     /// Returns information about a specific GimmickRect based on the layout id.
-    pub fn lookup_gimmick_rect(&mut self, layout_id: u32) -> Option<GimmickRectRow<'_>> {
+    pub fn lookup_gimmick_rect(&mut self, layout_id: u32) -> Option<GimmickRectRow> {
         self.gimmick_rect_sheet
             .into_iter()
             .flatten_subrows()
             .map(|(_, row)| row)
-            .find(|row| row.LayoutID() == layout_id)
+            .find(|row| row.LayoutID == layout_id)
     }
 
     /// Returns the data associated with this EObj.
     pub fn get_eobj_data(&mut self, eobj_id: u32) -> u32 {
         let row = self.eobj_sheet.row(eobj_id).unwrap();
-
-        row.Data()
+        row.Data
     }
 
     /// Returns the Map column value on the TerritoryType sheet. Used for revealing portions of ingame maps.
     pub fn get_territory_info_map_data(&mut self, zone_id: u16) -> Option<u16> {
         let row = self.territory_type_sheet.row(zone_id.into())?;
-        Some(row.Map())
+        Some(row.Map)
     }
 
     /// Returns the PlaceNameZone column value on the TerritoryType sheet. Used for determining if a zone is located in a certain region in the world.
     pub fn get_territory_placenamezone_data(&mut self, zone_id: u16) -> Option<u16> {
         let row = self.territory_type_sheet.row(zone_id.into())?;
-        Some(row.PlaceNameZone())
+        Some(row.PlaceNameZone)
     }
 
     /// Returns the entrance ID for this content finder condition.
@@ -1059,10 +1057,9 @@ impl GameData {
 
         let instance_content_sheet =
             InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let instance_content_row =
-            instance_content_sheet.row(content_finder_row.Content() as u32)?;
+        let instance_content_row = instance_content_sheet.row(content_finder_row.Content as u32)?;
 
-        Some(instance_content_row.LGBEventRange())
+        Some(instance_content_row.LGBEventRange)
     }
 
     /// Returns the list of applicable classjob IDs based on the ClassJobCategory.
@@ -1095,7 +1092,7 @@ impl GameData {
     pub fn get_soul_crystal_item_id(&mut self, classjob_id: u16) -> Option<u32> {
         let row = self.classjob_sheet.row(classjob_id as u32)?;
 
-        let item_id = row.ItemSoulCrystal();
+        let item_id = row.ItemSoulCrystal;
         if item_id != 0 {
             return Some(item_id);
         }
@@ -1106,16 +1103,16 @@ impl GameData {
     pub fn get_starting_level(&mut self, classjob_id: u16) -> Option<u8> {
         let row = self.classjob_sheet.row(classjob_id as u32)?;
 
-        Some(row.StartingLevel())
+        Some(row.StartingLevel)
     }
 
     /// Returns information about the BaseParam.
-    pub fn get_base_param(&mut self, base_param_id: u16) -> Option<BaseParamRow<'_>> {
+    pub fn get_base_param(&mut self, base_param_id: u16) -> Option<BaseParamRow> {
         self.base_param_sheet.row(base_param_id as u32)
     }
 
     /// Returns the ParamGrow for this level.
-    pub fn get_param_grow(&mut self, level: u32) -> Option<ParamGrowRow<'_>> {
+    pub fn get_param_grow(&mut self, level: u32) -> Option<ParamGrowRow> {
         self.param_grow_sheet.row(level)
     }
 
@@ -1124,21 +1121,21 @@ impl GameData {
         let row = self.classjob_sheet.row(classjob_id)?;
 
         Some(Modifiers {
-            hp: row.ModifierHitPoints(),
-            mp: row.ModifierManaPoints(),
-            strength: row.ModifierStrength(),
-            vitality: row.ModifierVitality(),
-            dexterity: row.ModifierDexterity(),
-            intelligence: row.ModifierIntelligence(),
-            mind: row.ModifierMind(),
-            piety: row.ModifierPiety(),
+            hp: row.ModifierHitPoints,
+            mp: row.ModifierManaPoints,
+            strength: row.ModifierStrength,
+            vitality: row.ModifierVitality,
+            dexterity: row.ModifierDexterity,
+            intelligence: row.ModifierIntelligence,
+            mind: row.ModifierMind,
+            piety: row.ModifierPiety,
         })
     }
 
     /// Gets the classjob ID associated with this soul crystal item ID.
     pub fn get_applicable_classjob(&mut self, soul_crystal_id: u32) -> Option<u32> {
         for (id, row) in self.classjob_sheet.into_iter().flatten_subrows() {
-            if row.ItemSoulCrystal() == soul_crystal_id {
+            if row.ItemSoulCrystal == soul_crystal_id {
                 return Some(id);
             }
         }
@@ -1151,7 +1148,7 @@ impl GameData {
         let instance_content_sheet =
             InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
         let instance_content_row = instance_content_sheet.row(content_id)?;
-        let content_id = instance_content_row.ContentDirectorManagedSG();
+        let content_id = instance_content_row.ContentDirectorManagedSG;
 
         let sheet =
             ContentDirectorManagedSGSheet::read_from(&mut self.resource, Language::None).ok()?;
@@ -1159,13 +1156,7 @@ impl GameData {
             .into_iter()
             .find(|(row_id, _)| *row_id == content_id as u32)?;
 
-        Some(
-            subrows
-                .1
-                .iter()
-                .map(|(_, row)| row.Unknown0()) // FIXME: This will be renamed to LayoutId in the future.
-                .collect(),
-        )
+        Some(subrows.1.iter().map(|(_, row)| row.LayoutId).collect())
     }
 
     /// Returns a list of variable name and value pairs for this Opening.
@@ -1174,7 +1165,7 @@ impl GameData {
         let row = sheet.row(opening_id).unwrap();
 
         let mut translated_variables = Vec::new();
-        for variable in row.Variables() {
+        for variable in row.Variables {
             let name = variable.Name;
             let value = variable.Value;
 
@@ -1191,7 +1182,7 @@ impl GameData {
         let row = self.quest_sheet.row(quest_id).unwrap();
 
         let mut translated_variables = Vec::new();
-        for variable in row.QuestParams() {
+        for variable in row.QuestParams {
             let name = variable.ScriptInstruction;
             let value = variable.ScriptArg;
 
@@ -1208,7 +1199,7 @@ impl GameData {
         let row = self.custom_talk_sheet.row(custom_talk_id).unwrap();
 
         let mut translated_variables = Vec::new();
-        for variable in row.Script() {
+        for variable in row.Script {
             let name = variable.ScriptInstruction;
             let value = variable.ScriptArg;
 
@@ -1238,14 +1229,12 @@ impl GameData {
             .1;
         for (_, subrow) in subrows {
             // This is needed to weed out certain items that are invalid, but still in the Excel sheet.
-            // FIXME: Name will change to Item in the future.
-            let item_id = subrow.Unknown0();
+            let item_id = subrow.Item;
             if item_id == 0 || (item_id < 1000000 && !self.is_item_valid(item_id as u32)) {
                 continue;
             }
 
-            // FIXME: Name will change to DisplayId in the future.
-            display_id_set.insert(subrow.Unknown1());
+            display_id_set.insert(subrow.DisplayId);
         }
 
         // Sort so the highest display id is sent first.
@@ -1266,7 +1255,7 @@ impl GameData {
             return false;
         };
 
-        !row.Singular().is_empty()
+        !row.Singular.is_empty()
     }
 
     /// Returns a list of variable name and value pairs for all Aetherytes.
@@ -1276,8 +1265,8 @@ impl GameData {
 
         let mut variables = Vec::new();
         for (_, row) in sheet.into_iter().flatten_subrows() {
-            let name = row.Text();
-            let value = row.DefineValue();
+            let name = row.Text;
+            let value = row.DefineValue;
 
             if !name.is_empty() {
                 variables.push((name.to_string(), value));
@@ -1292,12 +1281,12 @@ impl GameData {
         let sheet = GatheringPointSheet::read_from(&mut self.resource, Language::None).unwrap();
         let row = sheet.row(id).unwrap();
 
-        let base_id = row.GatheringPointBase();
+        let base_id = row.GatheringPointBase;
         let base_sheet =
             GatheringPointBaseSheet::read_from(&mut self.resource, Language::None).unwrap();
         let base_row = base_sheet.row(base_id as u32).unwrap();
 
-        (base_id, base_row.GatheringLevel(), row.Count())
+        (base_id, base_row.GatheringLevel, row.Count)
     }
 
     /// Returns the item list for a gathering point.
@@ -1305,12 +1294,12 @@ impl GameData {
         let sheet = GatheringPointSheet::read_from(&mut self.resource, Language::None).unwrap();
         let row = sheet.row(id).unwrap();
 
-        let base_id = row.GatheringPointBase();
+        let base_id = row.GatheringPointBase;
         let base_sheet =
             GatheringPointBaseSheet::read_from(&mut self.resource, Language::None).unwrap();
         let base_row = base_sheet.row(base_id as u32).unwrap();
 
-        base_row.Item().map(|x| x)
+        base_row.Item
     }
 
     /// Converts from a GatheringItem to a regular Item.
@@ -1318,13 +1307,13 @@ impl GameData {
         let sheet = GatheringItemSheet::read_from(&mut self.resource, Language::None).unwrap();
         let row = sheet.row(id).unwrap();
 
-        row.Item()
+        row.Item
     }
 
     /// Returns the ClassJobCategory for this item.
     pub fn get_item_classjobcategory(&mut self, item_id: u32) -> u8 {
         let row = self.item_sheet.row(item_id).unwrap();
-        row.ClassJobCategory()
+        row.ClassJobCategory
     }
 
     /// Returns a Recipe.
@@ -1334,7 +1323,7 @@ impl GameData {
 
         Recipe {
             id,
-            item_id: row.ItemResult(),
+            item_id: row.ItemResult,
         }
     }
 
@@ -1343,7 +1332,7 @@ impl GameData {
         let sheet = CraftActionSheet::read_from(&mut self.resource, Language::English).unwrap();
         let row = sheet.row(id).unwrap();
 
-        (row.AnimationStart(), row.AnimationEnd())
+        (row.AnimationStart, row.AnimationEnd)
     }
 
     /// Returns a list of priorities for each online status.
@@ -1352,7 +1341,7 @@ impl GameData {
 
         let sheet = OnlineStatusSheet::read_from(&mut self.resource, Language::English).unwrap();
         for (_, row) in sheet.into_iter().flatten_subrows() {
-            priorities.push(row.Priority());
+            priorities.push(row.Priority);
         }
 
         priorities
@@ -1366,7 +1355,7 @@ impl GameData {
                 .unwrap();
         let content_finder_row = content_finder_sheet.row(content_finder_row_id as u32)?;
 
-        Some(content_finder_row.ClassJobLevelSync()).filter(|x| *x != 0)
+        Some(content_finder_row.ClassJobLevelSync).filter(|x| *x != 0)
     }
 
     /// Returns the attributes for a given item level;
@@ -1374,19 +1363,19 @@ impl GameData {
         let row = self.item_level_sheet.row(item_level as u32).unwrap();
 
         [
-            row.Strength(),
-            row.Dexterity(),
-            row.Vitality(),
-            row.Intelligence(),
-            row.Mind(),
-            row.Piety(),
+            row.Strength,
+            row.Dexterity,
+            row.Vitality,
+            row.Intelligence,
+            row.Mind,
+            row.Piety,
         ]
     }
 
     pub fn get_action_cooldown_group(&mut self, id: u32) -> u8 {
         let row = self.action_sheet.row(id).unwrap();
 
-        row.CooldownGroup()
+        row.CooldownGroup
     }
 
     /// Checks if this zone is associated with a ContentFinderCondition.
@@ -1394,7 +1383,7 @@ impl GameData {
         let Some(row) = self.territory_type_sheet.row(zone_id.into()) else {
             return false;
         };
-        row.ContentFinderCondition() != 0
+        row.ContentFinderCondition != 0
     }
 
     /// Tells us if this item belongs to the Seasonal Miscellany or Miscellany categories.
@@ -1403,8 +1392,8 @@ impl GameData {
             return false;
         };
 
-        let is_seasonal_misc = row.ItemUICategory() == 85;
-        let is_misc = row.ItemUICategory() == 61;
+        let is_seasonal_misc = row.ItemUICategory == 85;
+        let is_misc = row.ItemUICategory == 61;
 
         is_seasonal_misc || is_misc
     }
@@ -1414,7 +1403,7 @@ impl GameData {
         let Some(row) = self.territory_type_sheet.row(zone_id.into()) else {
             return false;
         };
-        !row.Bg().is_empty()
+        !row.Bg.is_empty()
     }
 
     /// Returns the emote mode (if any), really only relevant for persistent/loopable emotes.
@@ -1423,7 +1412,7 @@ impl GameData {
         let sheet = EmoteSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(emote_id)?;
 
-        let mode = row.EmoteMode();
+        let mode = row.EmoteMode;
         if mode != 0 {
             return Some(mode);
         }
@@ -1435,7 +1424,7 @@ impl GameData {
         let sheet = MountSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         for (id, row) in sheet.into_iter().flatten_subrows() {
             if row
-                .Singular()
+                .Singular
                 .to_lowercase()
                 .contains(&mount_name.to_lowercase())
             {
@@ -1451,23 +1440,7 @@ impl GameData {
         // TODO: will change to IsEnemyTo in the future
 
         let row = self.battalion_sheet.row(battalion_id).unwrap();
-        vec![
-            row.Unknown0(),
-            row.Unknown1(),
-            row.Unknown2(),
-            row.Unknown3(),
-            row.Unknown4(),
-            row.Unknown5(),
-            row.Unknown6(),
-            row.Unknown7(),
-            row.Unknown8(),
-            row.Unknown9(),
-            row.Unknown10(),
-            row.Unknown11(),
-            row.Unknown12(),
-            row.Unknown13(),
-            row.Unknown14(),
-        ]
+        row.IsEnemyTo.to_vec()
     }
 
     /// Returns a ContentFinderCondition for a given roulette.
@@ -1481,19 +1454,19 @@ impl GameData {
             .into_iter()
             .flatten_subrows()
             .filter(|(_, row)| match roulette {
-                Roulette::Leveling => row.LevelingRoulette(),
-                Roulette::HighLevel => row.HighLevelRoulette(),
-                Roulette::MSQ => row.MSQRoulette(),
-                Roulette::GuildHest => row.GuildHestRoulette(),
-                Roulette::Expert => row.ExpertRoulette(),
-                Roulette::Trial => row.TrialRoulette(),
-                Roulette::DailyFrontline => row.DailyFrontlineChallenge(),
-                Roulette::LevelCap => row.LevelCapRoulette(),
-                Roulette::Mentor => row.MentorRoulette(),
-                Roulette::Alliance => row.AllianceRoulette(),
-                Roulette::NormalRaid => row.NormalRaidRoulette(),
-                Roulette::CrystallineConflictCasual => row.Unknown27(), // NOTE: Will be CrystallineConflictCasualRoulette in the future
-                Roulette::CrystallineConflictRanked => row.Unknown28(), // NOTE: Will be CrystallineConflictRankedRoulette in the future
+                Roulette::Leveling => row.LevelingRoulette,
+                Roulette::HighLevel => row.HighLevelRoulette,
+                Roulette::MSQ => row.MSQRoulette,
+                Roulette::GuildHest => row.GuildHestRoulette,
+                Roulette::Expert => row.ExpertRoulette,
+                Roulette::Trial => row.TrialRoulette,
+                Roulette::DailyFrontline => row.DailyFrontlineChallenge,
+                Roulette::LevelCap => row.LevelCapRoulette,
+                Roulette::Mentor => row.MentorRoulette,
+                Roulette::Alliance => row.AllianceRoulette,
+                Roulette::NormalRaid => row.NormalRaidRoulette,
+                Roulette::CrystallineConflictCasual => row.CrystallineConflictCasualRoulette,
+                Roulette::CrystallineConflictRanked => row.CrystallineConflictRankedRoulette,
             })
             .map(|(id, _)| id)
             .collect();
@@ -1507,13 +1480,13 @@ impl GameData {
         let sheet = NpcYellSheet::read_from(&mut self.resource, config.world.language()).ok()?;
         let row = sheet.row(npc_yell_id)?;
 
-        Some(row.Unknown0()) // NOTE: will be Name in the future
+        Some(row.Name)
     }
 
     /// Returns the TerritoryIntendedUse for a given zone.
     pub fn get_intended_use(&mut self, zone_id: u32) -> Option<TerritoryIntendedUse> {
         let row = self.territory_type_sheet.row(zone_id)?;
-        TerritoryIntendedUse::from_repr(row.TerritoryIntendedUse())
+        TerritoryIntendedUse::from_repr(row.TerritoryIntendedUse)
     }
 
     /// Returns the plot size for a given land set in a housing district.
@@ -1521,7 +1494,7 @@ impl GameData {
         let sheet = HousingLandSetSheet::read_from(&mut self.resource, Language::None).ok()?;
         let row = sheet.row(housing_id)?;
 
-        PlotSize::from_repr(row.LandSet()[plot_index].PlotSize)
+        PlotSize::from_repr(row.LandSet[plot_index].PlotSize)
     }
 
     /// Returns the land sets in a housing district.
@@ -1529,7 +1502,7 @@ impl GameData {
         let sheet = HousingLandSetSheet::read_from(&mut self.resource, Language::None).ok()?;
         let row = sheet.row(housing_id)?;
 
-        Some(row.LandSet().to_vec())
+        Some(row.LandSet.to_vec())
     }
 
     /// Returns a CommonSpawn with the NPC's equipment.
@@ -1539,24 +1512,21 @@ impl GameData {
 
         // TODO: support dyes
         Some(CommonSpawn {
-            main_weapon_model: WeaponModelId::from(row.ModelMainHand()),
-            sec_weapon_model: WeaponModelId::from(row.ModelOffHand()),
+            main_weapon_model: WeaponModelId::from(row.ModelMainHand),
+            sec_weapon_model: WeaponModelId::from(row.ModelOffHand),
             models: [
-                LegacyEquipmentModelId::from(row.ModelHead()),
-                LegacyEquipmentModelId::from(row.ModelBody()),
-                LegacyEquipmentModelId::from(row.ModelHands()),
-                LegacyEquipmentModelId::from(row.ModelLegs()),
-                LegacyEquipmentModelId::from(row.ModelFeet()),
-                LegacyEquipmentModelId::from(row.ModelEars()),
-                LegacyEquipmentModelId::from(row.ModelNeck()),
-                LegacyEquipmentModelId::from(row.ModelWrists()),
-                LegacyEquipmentModelId::from(row.ModelLeftRing()),
-                LegacyEquipmentModelId::from(row.ModelRightRing()),
+                LegacyEquipmentModelId::from(row.ModelHead),
+                LegacyEquipmentModelId::from(row.ModelBody),
+                LegacyEquipmentModelId::from(row.ModelHands),
+                LegacyEquipmentModelId::from(row.ModelLegs),
+                LegacyEquipmentModelId::from(row.ModelFeet),
+                LegacyEquipmentModelId::from(row.ModelEars),
+                LegacyEquipmentModelId::from(row.ModelNeck),
+                LegacyEquipmentModelId::from(row.ModelWrists),
+                LegacyEquipmentModelId::from(row.ModelLeftRing),
+                LegacyEquipmentModelId::from(row.ModelRightRing),
             ],
-            glasses_ids: [
-                row.Unknown_70_1(), // NOTE: will be Glasses in the future
-                row.Unknown_70_2(),
-            ],
+            glasses_ids: row.Glasses,
             ..Default::default()
         })
     }
@@ -1565,12 +1535,12 @@ impl GameData {
     pub fn get_furniture_catalog_id(&mut self, item_id: u32) -> Option<u16> {
         // First, we need the item's AdditionalData column to point us to where we need to look on the HousingFurniture sheet.
         let row = self.item_sheet.row(item_id)?;
-        let item_ui_category = row.ItemUICategory();
+        let item_ui_category = row.ItemUICategory;
 
         // TODO: A better way to do this is checking if the link in AdditionalData leads to the HousingFurniture/HousingYardObject sheet or not.
         // In order: Furnishing, Outdoor Furnishing, Table, Tabletop, Wall-mounted, Rug
         let acceptable_ui_categories = [57, 76, 77, 78, 79, 80];
-        let next_row = row.AdditionalData();
+        let next_row = row.AdditionalData;
 
         // If the item is a piece of furniture, return the low 12 bits of the row number.
         if acceptable_ui_categories.contains(&item_ui_category) && next_row != 0 {
@@ -1583,15 +1553,13 @@ impl GameData {
     /// Returns the damage element of this action.
     pub fn get_action_damage_element(&mut self, id: u32) -> DamageElement {
         let row = self.action_sheet.row(id).unwrap();
-
-        DamageElement::from_repr(row.Aspect()).unwrap() // Should never fail under normal circumstances
+        DamageElement::from_repr(row.Aspect).unwrap() // Should never fail under normal circumstances
     }
 
     /// Returns the id of the action this action comboes with.
     pub fn get_combo_action(&mut self, id: u32) -> u16 {
         let row = self.action_sheet.row(id).unwrap();
-
-        row.ActionCombo()
+        row.ActionCombo
     }
 }
 

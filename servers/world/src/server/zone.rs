@@ -119,11 +119,11 @@ impl Zone {
             return zone;
         };
 
-        zone.intended_use = row.TerritoryIntendedUse();
-        zone.map_id = row.Map();
+        zone.intended_use = row.TerritoryIntendedUse;
+        zone.map_id = row.Map;
 
         // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
-        let bg_path = row.Bg();
+        let bg_path = row.Bg;
         if bg_path.is_empty() {
             tracing::warn!("Invalid zone id {id}, allowing anyway...");
             return zone;
@@ -279,14 +279,14 @@ impl Zone {
                                 if let Some(gimmick_rect_info) =
                                     game_data.get_gimmick_rect_info(eobj_data & 0xFFFF)
                                     && let Some(target_pop_range) =
-                                        zone.find_pop_range(gimmick_rect_info.Params()[1])
+                                        zone.find_pop_range(gimmick_rect_info.Params[1])
                                 {
-                                    let gimmick_jump_type = gimmick_rect_info.Params()[0];
-                                    let target_event_range = gimmick_rect_info.LayoutID();
-                                    let sgb_animation_id = gimmick_rect_info.Params()[2];
+                                    let gimmick_jump_type = gimmick_rect_info.Params[0];
+                                    let target_event_range = gimmick_rect_info.LayoutID;
+                                    let sgb_animation_id = gimmick_rect_info.Params[2];
 
                                     // 8 seems to indicate a jumping pad
-                                    if gimmick_rect_info.TriggerIn() == 8 {
+                                    if gimmick_rect_info.TriggerIn == 8 {
                                         let (_, _, translation) =
                                             Affine3A::from(target_pop_range.0.transform)
                                                 .to_scale_rotation_translation();
@@ -307,7 +307,7 @@ impl Zone {
                                     } else {
                                         tracing::warn!(
                                             "Unsupported Gimmick trigger {}",
-                                            gimmick_rect_info.TriggerIn()
+                                            gimmick_rect_info.TriggerIn
                                         );
                                     }
                                 } else {
@@ -322,7 +322,7 @@ impl Zone {
                                 game_data.lookup_gimmick_rect(object.instance_id)
                         {
                             let mut map_gimmick = None;
-                            match gimmick_rect_info.TriggerIn() {
+                            match gimmick_rect_info.TriggerIn {
                                 1 | 18 => {
                                     // FIXME: 1 is seen for cutscene triggers in Sastasha, while 18 is seen for Variant Dungeon routes in A Merchant's Tale. We should make this less "generic".
                                     map_gimmick = Some(MapGimmick::Generic {});
@@ -330,12 +330,12 @@ impl Zone {
                                 6 => {
                                     // Seen for same-zone "exit ranges" like the one in the beginning of Sycrus Tower
                                     map_gimmick = Some(MapGimmick::FakeExit {
-                                        exit_pop_range_id: gimmick_rect_info.Params()[0],
+                                        exit_pop_range_id: gimmick_rect_info.Params[0],
                                     });
                                 }
                                 _ => tracing::warn!(
                                     "Unknown GimmickRect type: {}",
-                                    gimmick_rect_info.TriggerIn()
+                                    gimmick_rect_info.TriggerIn
                                 ),
                             }
 
@@ -372,7 +372,7 @@ impl Zone {
                 let map_ranges: Vec<&MapRange> = zone
                     .map_ranges
                     .iter()
-                    .filter(|x| x.instance_id == land_set.UnknownRange1) // NOTE: Will be MapRange in the future
+                    .filter(|x| x.instance_id == land_set.MapRange)
                     .collect();
                 if map_ranges.is_empty() {
                     tracing::warn!(
