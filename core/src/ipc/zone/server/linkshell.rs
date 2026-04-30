@@ -4,6 +4,9 @@ use strum_macros::FromRepr;
 use crate::common::{read_bool_from, write_bool_as};
 use crate::ipc::zone::server::{CHAR_NAME_MAX_LENGTH, ChatChannel, read_string, write_string};
 
+pub const CWLS_MAX_MEMBERS: usize = 64;
+pub const LWLS_MAX_MEMBERS: usize = 128;
+
 /// Represents one entry in the Linkshells opcode.
 #[binrw]
 #[derive(Clone, Debug, Default)]

@@ -3125,27 +3125,40 @@ async fn process_packet(
                             linkshell_id,
                             content_id,
                         } => {
-                            connection
+                            let result = connection
                                 .invite_to_linkshell(*content_id, *linkshell_id)
                                 .await;
+
+                            if result != LogMessageType::Default {
+                                connection.send_linkshell_error(result).await;
+                            }
                         }
                         ClientZoneIpcData::LinkshellInviteReply {
                             linkshell_id,
                             response,
-                        } => match response {
-                            LinkshellInviteResponse::Accepted => {
-                                connection.accepted_linkshell_invite(*linkshell_id).await
-                            }
-                            LinkshellInviteResponse::Declined => {
+                        } => {
+                            // Guard against bogus replies by checking if the client is in the shell or not. Invitees are considered actual members, but they just can't receive chat messages.
+                            if connection.is_in_linkshell(*linkshell_id).await {
+                                match response {
+                                    LinkshellInviteResponse::Accepted => {
+                                        connection.accepted_linkshell_invite(*linkshell_id).await
+                                    }
+                                    LinkshellInviteResponse::Declined => {
+                                        connection
+                                            .remove_linkshell_member(
+                                                *linkshell_id,
+                                                connection.player_data.character.content_id as u64,
+                                                CWLSLeaveReason::DeclinedInvite,
+                                            )
+                                            .await
+                                    }
+                                }
+                            } else {
                                 connection
-                                    .remove_linkshell_member(
-                                        *linkshell_id,
-                                        connection.player_data.character.content_id as u64,
-                                        CWLSLeaveReason::DeclinedInvite,
-                                    )
-                                    .await
+                                    .send_linkshell_error(LogMessageType::UnableToAcceptLSInvite)
+                                    .await;
                             }
-                        },
+                        }
                         ClientZoneIpcData::RequestMailbox { unk1, .. } => {
                             connection.send_letter_previews(*unk1).await;
                         }

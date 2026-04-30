@@ -675,11 +675,15 @@ pub enum LogMessageType {
     Default = 0,
     PlayerAlreadyFriend = 0x138, // That player is already a friend or has been sent a request. TODO: unclear if this one is sent by the server or the client keeps track of that itself
     PlayerAlreadyInAnotherParty = 0x146, // That player is already in another party.
+    UnableToAcceptLSInvite = 0x1DD, // Unable to accept linkshell invite.
     ItemBought = 0x697,
     ItemSold = 0x698,
     ItemBoughtBack = 0x699,
     UnableToPerformPlayerOffline = 0x1617, // Unable to perform that action. That player is offline.
-    PlayerAlreadyInYourCWLS = 0x242E,      // Player is already a cross-world linkshell member.
+    CWLSIsFull = 0x242B, // Unable to add new members. Cross-world linkshell roster is full.
+    UnableToInviteToCWLS = 0x242D, // Unable to invite to cross-world linkshell.
+    PlayerAlreadyInYourCWLS = 0x242E, // Player is already a cross-world linkshell member.
+    PlayerInTooManyCWLSes = 0x242F, // The person you have invited cannot join any more cross-world linkshells.
     UnableToAcceptAttachmentInventoryFull = 0x17B, // Unable to accept attachment. Inventory is full.
     FurnitureMovedToStoreroom = 0xD9F,             // The <item name> was moved to your storeroom.
     FurnitureMovedToInventory = 0xDA0,             // The <item name> was moved to your inventory.
