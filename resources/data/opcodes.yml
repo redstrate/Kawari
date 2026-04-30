@@ -577,7 +577,7 @@ ServerZoneIpcType:
   size: 26
 - name: CrossworldLinkshellsEx
   comment: Sent in response to the client opening the Crossworld Linkshell menu. It has additional information the login list does not.
-  opcode: 531
+  opcode: 203
   size: 520
 - name: CrossworldLinkshellMemberList
   comment: Sent in response to CrossworldLinkshellMemberList. Sends the member list of this CWLS.
@@ -621,7 +621,7 @@ ServerZoneIpcType:
   size: 40
 - name: NewCrossworldLinkshell
   comment: The server responds to NewCrossworldLinkshellInfoRequest, providing some information on the newly created/joined cwls.
-  opcode: 877
+  opcode: 781
   size: 64
 - name: RetainerInfo
   comment: Sent when the client requests retainer information through the bell.
@@ -633,11 +633,11 @@ ServerZoneIpcType:
   size: 24
 - name: CrossworldLinkshellDisbanded
   comment: The server informs the client that the linkshell has been disbanded.
-  opcode: 203
+  opcode: 986
   size: 40
 - name: CrossworldLinkshellMemberLeft
   comment: The server informs the client that a member in the linkshell has left (including themself if it was them).
-  opcode: 986
+  opcode: 413
   size: 64
 - name: CrossworldLinkshellRenamed
   comment: The server informs the client that the linkshell has been renamed.
@@ -649,15 +649,15 @@ ServerZoneIpcType:
   size: 64
 - name: CrossworldLinkshellInvite
   comment: The server informs the client about an invitation to a cross-world linkshell.
-  opcode: 115
+  opcode: 877
   size: 128
 - name: CrossworldLinkshellJoinedSelf
   comment: The server informs the client about the linkshell they just joined.
-  opcode: 413
+  opcode: 626
   size: 48
 - name: CrossworldLinkshellJoined2
   comment: The server informs the rest of the linkshell about the member that just joined.
-  opcode: 626
+  opcode: 115
   size: 56
 - name: MailboxStatus
   comment: Upon login, the server informs the client of how many letters they have in their mailbox, along with any that are from support/GMs.
@@ -1038,7 +1038,7 @@ ClientZoneIpcType:
   size: 8
 - name: LeaveCrossworldLinkshell
   comment: The client requests to leave a cross-world linkshell. Masters cannot do this, they first have to appoint a new Master or disband the linkshell entirely.
-  opcode: 1357
+  opcode: 325
   size: 8
 - name: RenameCrossworldLinkshell
   comment: The client requests to rename a cross-world linkshell. Only Masters can do this.
@@ -1050,7 +1050,7 @@ ClientZoneIpcType:
   size: 24
 - name: RemoveCWLSMember
   comment: The client kicks a member from one of their cross-world Linkshells. Only Leaders and Masters can do this.
-  opcode: 993
+  opcode: 929
   size: 16
 - name: InviteCharacterToCWLS
   comment: The client invites another character to join their cross-world linkshell. Only Leaders and Masters can do this.
