@@ -838,11 +838,11 @@ ClientZoneIpcType:
   size: 8
 - name: EquipGearset
   comment: Unknown purpose.
-  opcode: 594
+  opcode: 891
   size: 72
 - name: EquipGearset2
   comment: Unknown purpose, and also unsure why it's different from EquipGearset.
-  opcode: 1725
+  opcode: 594
   size: 128
 - name: StartWalkInEvent
   comment: Unknown purpose.
