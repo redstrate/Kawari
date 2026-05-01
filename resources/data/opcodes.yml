@@ -894,7 +894,7 @@ ClientZoneIpcType:
   size: 8
 - name: RequestCharaInfoFromContentIds
   comment: Happens when the client requests more information about other characters, and only has their content id.
-  opcode: 581
+  opcode: 208
   size: 80
 - name: PartyLeave
   comment: Happens when the client leaves their party.
@@ -1062,11 +1062,11 @@ ClientZoneIpcType:
   size: 16
 - name: RequestMailbox
   comment: The client requests the contents of their mailbox from the server.
-  opcode: 326
+  opcode: 796
   size: 8
 - name: SendLetter
   comment: The client sends a letter to a friend.
-  opcode: 287
+  opcode: 536
   size: 688
 - name: RemoveFriend
   comment: The client removes a player from their friend list.
@@ -1074,19 +1074,19 @@ ClientZoneIpcType:
   size: 48
 - name: ViewLetter
   comment: The client opens a letter in their mailbox.
-  opcode: 656
+  opcode: 326
   size: 16
 - name: DeleteLetter
   comment: The client deletes a letter in their mailbox.
-  opcode: 796
+  opcode: 287
   size: 16
 - name: RewardDeliveryRequest
   comment: The client requests that any pending reward letters be sent to them.
-  opcode: 747
+  opcode: 213
   size: 8
 - name: TakeLetterAttachments
   comment: The client requests that any attachments in this letter be given to them.
-  opcode: 213
+  opcode: 656
   size: 64
 - name: Dive
   comment: The client dives underwater.
