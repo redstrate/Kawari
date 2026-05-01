@@ -802,7 +802,7 @@ ClientZoneIpcType:
   size: 40
 - name: Config
   comment: Unknown purpose.
-  opcode: 631
+  opcode: 353
   size: 8
 - name: EventYieldHandler2
   comment: Unknown purpose, but seen when trying to play a Gold Saucer arcade machine.
