@@ -8,6 +8,7 @@ use crate::{
 };
 use kawari::{
     common::{INVENTORY_ACTION_ACK_SHOP, LogMessageType},
+    constants::{MAIL_DELETE_RESULT, MAIL_SEND_RESULT, MAIL_TAKE_ATTACHMENTS_RESULT},
     ipc::zone::{
         ActorControlCategory, AttachedItemInfo, LetterPreview, LetterType, MAX_ATTACHMENTS,
         MAX_FRIEND_LETTERS, MAX_MAIL, MAX_MAIL_ATTACHMENTS_STORAGE, MAX_REWARD_LETTERS,
@@ -109,7 +110,7 @@ impl ZoneConnection {
         updated_items: [AttachedItemInfo; MAX_MAIL_ATTACHMENTS_STORAGE],
     ) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LetterUpdate {
-            unk_result: result, // TODO: What does this 0xDD mean?
+            unk_result: result, // TODO: How are these result values calculated? They seem to change with every major patch?
             unk1: 0,
             sender_content_id,
             timestamp,
@@ -129,6 +130,8 @@ impl ZoneConnection {
         let is_online;
         let recipient_info;
         let mut need_to_send_inventory = false;
+        let mut items_taken_by_attachments =
+            [AttachedItemInfo::default(); MAX_MAIL_ATTACHMENTS_STORAGE];
         {
             let mut db = self.database.lock();
             let osm = db.determine_online_status_mask(recipient_content_id as i64);
@@ -137,23 +140,77 @@ impl ZoneConnection {
             let mut items =
                 crate::inventory::GenericStorage::<{ MAX_MAIL_ATTACHMENTS_STORAGE }>::default();
 
-            for item in items.slots.iter_mut().zip(attached_items.iter()) {
-                // TODO: Maybe perform stricter validation on the item id and quantity?
+            for (i, item) in items
+                .slots
+                .iter_mut()
+                .zip(attached_items.iter())
+                .enumerate()
+            {
+                // Here we deliberately ignore the item id provided by the client as much as possible in case they're tampering with things. We also assume they mean the entire stack if they send a bogus amount (say, 65535 when they only possess 1 or 100...).
                 if item.1.item_id != 0 && item.1.item_quantity > 0 {
-                    let Some(player_item) = self
-                        .player_data
-                        .inventory
-                        .get_item_mut(item.1.src_container, item.1.src_container_index)
-                    else {
-                        tracing::warn!(
-                            "Client attempted to mail an item from an invalid container: {:#?}",
-                            item.1.src_container
-                        );
-                        return;
-                    };
-                    *item.0 = *player_item;
-                    *player_item = crate::inventory::Item::default();
-                    need_to_send_inventory = true;
+                    if let Some(currency_kind) = CurrencyKind::from_repr(item.1.item_id) {
+                        let currency = self
+                            .player_data
+                            .inventory
+                            .currency
+                            .get_item_for_id(currency_kind);
+                        item.0.item_id = currency.item_id;
+                        item.0.quantity = if item.1.item_quantity >= currency.quantity {
+                            currency.quantity
+                        } else {
+                            item.1.item_quantity
+                        };
+                        currency.quantity = currency.quantity.saturating_sub(item.1.item_quantity);
+                        need_to_send_inventory = true;
+                    } else if let Some(crystal_kind) = CrystalKind::from_repr(item.1.item_id) {
+                        let crystals = self
+                            .player_data
+                            .inventory
+                            .crystals
+                            .get_item_for_id(crystal_kind);
+                        item.0.item_id = crystals.item_id;
+
+                        item.0.quantity = if item.1.item_quantity >= crystals.quantity {
+                            crystals.quantity
+                        } else {
+                            item.1.item_quantity
+                        };
+
+                        crystals.quantity = crystals.quantity.saturating_sub(item.1.item_quantity);
+                        need_to_send_inventory = true;
+                    } else {
+                        let Some(player_item) = self
+                            .player_data
+                            .inventory
+                            .get_item_mut(item.1.src_container, item.1.src_container_index)
+                        else {
+                            tracing::warn!(
+                                "Client attempted to mail an item from an invalid container: {:#?}",
+                                item.1.src_container
+                            );
+                            return;
+                        };
+
+                        *item.0 = *player_item;
+
+                        item.0.quantity = if item.1.item_quantity >= player_item.quantity {
+                            player_item.quantity
+                        } else {
+                            item.1.item_quantity
+                        };
+
+                        player_item.quantity =
+                            player_item.quantity.saturating_sub(item.1.item_quantity);
+
+                        if player_item.quantity == 0 {
+                            *player_item = Item::default();
+                        }
+
+                        need_to_send_inventory = true;
+                    }
+
+                    items_taken_by_attachments[i].item_id = item.0.item_id;
+                    items_taken_by_attachments[i].item_quantity = item.0.quantity;
                 }
             }
 
@@ -174,13 +231,8 @@ impl ZoneConnection {
                 .await;
         }
 
-        self.send_letter_update(
-            0xDD,
-            0,
-            0,
-            [AttachedItemInfo::default(); MAX_MAIL_ATTACHMENTS_STORAGE],
-        )
-        .await;
+        self.send_letter_update(MAIL_SEND_RESULT as u32, 0, 0, items_taken_by_attachments)
+            .await;
 
         if is_online && let Some(recipient_info) = recipient_info {
             self.handle
@@ -217,7 +269,7 @@ impl ZoneConnection {
         }
 
         self.send_letter_update(
-            0x366,
+            MAIL_DELETE_RESULT as u32,
             sender_content_id,
             timestamp,
             [AttachedItemInfo::default(); MAX_MAIL_ATTACHMENTS_STORAGE],
@@ -350,7 +402,12 @@ impl ZoneConnection {
             );
         }
 
-        self.send_letter_update(0x24E, sender_content_id, timestamp, taken_items)
-            .await;
+        self.send_letter_update(
+            MAIL_TAKE_ATTACHMENTS_RESULT as u32,
+            sender_content_id,
+            timestamp,
+            taken_items,
+        )
+        .await;
     }
 }

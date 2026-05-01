@@ -8,7 +8,7 @@ use crate::ipc::zone::server::{
 };
 
 /// Letter message previews can only be up to 60 bytes in length. In-game this translates to approx. 60 characters (fewer with multi-byte glyphs).
-pub const PREVIEW_MSG_MAX_LENGTH: usize = 61;
+pub const PREVIEW_MSG_MAX_LENGTH: usize = 60;
 
 /// Letter message previews can only be up to 601 bytes in length. In-game this translates to approx. 200 characters/glpyhs.
 pub const LETTER_MSG_MAX_LENGTH: usize = 601;
@@ -54,11 +54,10 @@ pub struct LetterPreview {
     #[bw(map = write_string)]
     pub sender_name: String,
     /// A preview of this message, truncated to 60 characters (fewer if multi-byte characters are used).
-    #[brw(pad_size_to = PREVIEW_MSG_MAX_LENGTH)]
+    #[brw(pad_size_to = PREVIEW_MSG_MAX_LENGTH + 5)] // There are 5 bytes of padding after this string (pad_after is not the correct thing to use here!)
     #[br(count = PREVIEW_MSG_MAX_LENGTH)]
     #[br(map = read_sestring)]
     #[bw(map = write_sestring)]
-    #[brw(pad_after = 3)] // empty/zeroes
     pub message: BString, // NOTE: This is a BString due to the fact that SEString macros can appear in its contents.
 }
 
@@ -74,7 +73,7 @@ pub struct AttachedItemInfo {
     pub item_id: u32,
     /// The quantity of this item.
     pub item_quantity: u32,
-    pub unk: [u8; 12], // Observed as all zeroes, but this might be used for materia melds and item quality, etc.? Need to research more.
+    pub unk: [u8; 12], // Observed as all zeroes
 }
 
 #[binrw]
