@@ -20,6 +20,7 @@ If you want to implement something that's missing, [see our Contributing guide](
 
 ## Credits & Thank You
 
+* [Sapphire](https://github.com/SapphireServer/Sapphire) for reference.
 * [iolite](https://github.com/0xbbadbeef/iolite) for inspiration & reference.
 * [TemporalStasis](https://github.com/NotNite/TemporalStasis) for tooling and reference.
 * [Project Chronofoil](https://github.com/ProjectChronofoil/) for easy packet capture.
