@@ -8,7 +8,12 @@ use std::{
 
 use tokio::sync::mpsc::Sender;
 
-use crate::{StatusEffects, lua::LuaTask, server::Party, zone_connection::BaseParameters};
+use crate::{
+    StatusEffects,
+    lua::LuaTask,
+    server::Party,
+    zone_connection::{BaseParameters, TeleportQuery},
+};
 use kawari::{
     common::{
         CharacterMode, ContainerType, JumpState, LegacyEquipmentModelId, LogMessageType,
@@ -233,6 +238,8 @@ pub enum FromServer {
     FurniturePlaced(ContainerType, u16, u16, u8, Position, bool, f32, u8),
     /// Inform the client that another player has moved or rotated a piece of furniture.
     FurnitureTranslated((bool, u8), u16, Position, f32, bool),
+    /// Inform the client that another player in their party has offered them a teleport.
+    TeleportOffered(u32, TeleportQuery),
 }
 
 #[derive(Debug, Clone)]
@@ -474,6 +481,8 @@ pub enum ToServer {
     ),
     /// The client moves or rotates a piece of furniture.
     TranslateFurniture(ObjectId, (bool, u8), u16, Position, f32, bool),
+    /// The client offers a teleport to nearby party members.
+    OfferTeleportToParty(Option<u64>, ObjectId, u16, TeleportQuery),
 }
 
 #[derive(Clone, Debug)]

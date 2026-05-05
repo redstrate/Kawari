@@ -4,6 +4,7 @@ use crate::{
     ObsfucationData, TeleportReason, ToServer, ZoneConnection,
     inventory::BuyBackList,
     lua::{LuaContent, LuaZone},
+    zone_connection::TeleportQuery,
 };
 use kawari::{
     common::{
@@ -176,6 +177,8 @@ impl ZoneConnection {
 
             if !bound_by_duty {
                 flags |= ZoneInitFlags::ENABLE_FLYING;
+            } else {
+                self.offered_teleport = None; // Discard any previously offered teleports once we're in a duty.
             }
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ZoneInit(ZoneInit {
@@ -476,7 +479,12 @@ impl ZoneConnection {
             .await;
     }
 
-    pub async fn warp_aetheryte(&mut self, aetheryte_id: u32, housing_aethernet: bool) {
+    pub async fn warp_aetheryte(
+        &mut self,
+        aetheryte_id: u32,
+        housing_aethernet: bool,
+        taking_offered_teleport: bool,
+    ) {
         self.teleport_reason = TeleportReason::Aetheryte;
         self.handle
             .send(ToServer::WarpAetheryte(
@@ -486,6 +494,25 @@ impl ZoneConnection {
                 housing_aethernet,
             ))
             .await;
+
+        if self.party_id != 0 && !housing_aethernet && !taking_offered_teleport {
+            let teleport_info = TeleportQuery {
+                aetheryte_id: aetheryte_id as u16,
+            };
+
+            self.handle
+                .send(ToServer::OfferTeleportToParty(
+                    Some(self.party_id),
+                    self.player_data.character.actor_id,
+                    self.player_data.volatile.zone_id as u16,
+                    teleport_info,
+                ))
+                .await;
+        }
+
+        if taking_offered_teleport {
+            self.offered_teleport = None;
+        }
     }
 
     pub async fn change_weather(&mut self, new_weather_id: u8) {

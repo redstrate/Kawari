@@ -1348,6 +1348,55 @@ pub fn handle_party_messages(
             network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
             true
         }
+        ToServer::OfferTeleportToParty(party_id, from_actor_id, from_zone_id, teleport_info) => {
+            let Some(party_id) = party_id else {
+                return true;
+            };
+
+            let mut network = network.lock();
+
+            // We're going to offer this teleport only to people in the same area.
+            let mut members_in_same_zone = Vec::new();
+
+            // We're interested in the offeror's index into the party so their name will display correctly for other party members.
+            let mut offeror_index = None;
+            {
+                let data = data.lock();
+                let the_party = network.parties.entry(*party_id).or_default();
+
+                for (member_index, member) in the_party.members.iter().enumerate() {
+                    if member.actor_id == *from_actor_id {
+                        offeror_index = Some(member_index as u32);
+                        continue; // Don't add ourself to the same-zone list
+                    }
+
+                    // If we can't find their instance for some reason, just skip to the next member
+                    let Some(instance) = data.find_actor_instance(member.actor_id) else {
+                        continue;
+                    };
+
+                    // No point collecting them if they're offline.
+                    if member.is_online() && (instance.zone.id == *from_zone_id) {
+                        members_in_same_zone.push(member.actor_id);
+                    }
+                }
+            }
+
+            let Some(offeror_index) = offeror_index else {
+                return true;
+            };
+
+            let msg = FromServer::TeleportOffered(offeror_index, teleport_info.clone());
+            for member_actor_id in members_in_same_zone {
+                network.send_to_by_actor_id(
+                    member_actor_id,
+                    msg.clone(),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
+
+            true
+        }
         _ => false,
     }
 }

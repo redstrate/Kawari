@@ -190,6 +190,8 @@ pub struct ZoneConnection {
     pub mail_index: usize,
     /// Whether the player is spawned in or not.
     pub spawned_in: bool,
+    /// The last teleport offered to this player. Only one can be kept at a time.
+    pub offered_teleport: Option<TeleportQuery>,
 }
 
 impl ZoneConnection {
