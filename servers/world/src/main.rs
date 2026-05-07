@@ -181,6 +181,7 @@ async fn initial_setup(
                     mail_index: 0,
                     spawned_in: false,
                     offered_teleport: None,
+                    is_trading: false,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -2786,8 +2787,25 @@ async fn process_packet(
                                 event.0.on_enter_territory(&event.1, lua_player).await;
                             }
                         }
-                        ClientZoneIpcData::Trade { .. } => {
-                            tracing::info!("Trading is unimplemented");
+                        ClientZoneIpcData::Trade { sequence, unk1, .. } => {
+                            // TODO: This needs a lot more research, but it's good enough for now to act as a stub to prevent client softlocks
+                            // When trading, the client sends the trade opcode twice for unknown (at this time) reasons, so we need to keep track of where we're at in the sequence
+                            let action_type;
+                            if !connection.is_trading {
+                                tracing::info!("Trading is unimplemented");
+                                action_type = 0x1607; // Some ack to let the client proceed with the trade sequence
+                                connection.is_trading = true;
+                            } else {
+                                action_type = 0x207; // Some ack to tell the client that the target can't trade at this time
+                                connection.is_trading = false;
+                            }
+
+                            connection
+                                .send_inventory_ack(
+                                    ((*unk1 as u32) << 16) | *sequence as u32,
+                                    action_type,
+                                )
+                                .await;
                         }
                         ClientZoneIpcData::ShareStrategyBoard {
                             content_id,

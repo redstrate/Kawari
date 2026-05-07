@@ -192,6 +192,8 @@ pub struct ZoneConnection {
     pub spawned_in: bool,
     /// The last teleport offered to this player. Only one can be kept at a time.
     pub offered_teleport: Option<TeleportQuery>,
+    /// Whether the player is trading with another player or not.
+    pub is_trading: bool,
 }
 
 impl ZoneConnection {

@@ -387,7 +387,11 @@ pub enum ClientZoneIpcData {
         handler_id: HandlerId,
     },
     Trade {
-        unk: [u8; 16],
+        sequence: u16,
+        unk1: u16, // Some value echoed back to the client
+        unk2: u32, // Observed as 1 when beginning a trade, and 7 when doing the second trade opcode
+        target_actor_id: ObjectId,
+        unk3: [u8; 4],
     },
     ShareStrategyBoard {
         /// When the content id is 0, the client is starting a non-real-time session, or is initiating one but isn't ready yet.
