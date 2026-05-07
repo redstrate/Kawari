@@ -32,6 +32,7 @@ When a new patch is released and you're testing in-game, it's easy to forget all
 - [ ] Ensure weapon and hat toggles work: their visibility should change for both you and nearby players.
 - [ ] Ensure equipping gear works: changing gear should be visible for both you and nearby players.
 - [ ] Ensure consumable visual effect (vfx) items like the DAM or any fireworks function as intended.
+- [ ] Equip a gearset, and ensure that your gear is changed correctly.
 
 ## Debug and GM Commands
 - [ ] Run the `!inspect` command to ensure debug commands can be invoked.
@@ -56,6 +57,7 @@ Test party functionality:
 - [ ] Send a message from both players to ensure party chat is functional.
 - [ ] Mark a target with a sign (party menu -> Target Signs). These should be visible to everyone in the party if they're in the same zone.
 - [ ] Place a waymarker (party menu -> Waymarks), and ideally, a waymarker preset if you're in a duty finder instance. These should be visible to everyone in the party if they're in the same zone. Clearing all waymarks should also remove them all in the same area.
+- [ ] Share a teleport and ensure accepting it allows the recipient to change zones.
 - [ ] Kick a party member: the console should report the target was kicked, not that they left or disbanded.
 - [ ] Disband the party: the console should report the party was disbanded, not that anyone left or was kicked.
 
@@ -90,6 +92,7 @@ Test Moogle Mail:
 - [ ] The intro cutscene should start as normal.
 - [ ] Once the duty begins, play through it as normal or use debug/GM commands to speed things up if desired.
 - [ ] Also test that Abandon Duty works.
+- [ ] Open a treasure chest.
 
 ## Housing
 - [ ] Enter a housing ward and ensure the zone loads correctly.
