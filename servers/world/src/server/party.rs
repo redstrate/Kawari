@@ -971,6 +971,8 @@ pub fn handle_party_messages(
                 party_list = build_party_list(party, &data);
             }
 
+            let chatchannel_id = party.chatchannel_id;
+
             let msg = FromServer::PartyUpdate(
                 PartyUpdateTargets {
                     execute_account_id: member.account_id,
@@ -983,6 +985,10 @@ pub fn handle_party_messages(
             );
 
             network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
+
+            // Inform the returner about their party's chatchannel.
+            let msg = FromServer::SetPartyChatChannel(chatchannel_id);
+            network.send_to_by_actor_id(*execute_actor_id, msg, DestinationNetwork::ChatClients);
 
             // Next, inform the player about the party's target markers/signs, and waymarks.
             send_party_target_signs(&mut network, *party_id, *execute_actor_id);
