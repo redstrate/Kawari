@@ -41,8 +41,10 @@ impl ZoneConnection {
         // These are to run functions that could possibly generate more tasks.
         // We can't do this in the loop!'
         let mut run_finish_event = false;
+        let mut continue_nesting = false;
 
         let tasks = player.queued_tasks.clone();
+        player.queued_tasks.clear();
         for task in &tasks {
             match task {
                 LuaTask::ChangeTerritory {
@@ -578,6 +580,8 @@ impl ZoneConnection {
                                 player,
                             )
                             .await;
+
+                        continue_nesting = true;
                     }
                 }
                 LuaTask::AcceptQuest { id } => {
@@ -818,7 +822,6 @@ impl ZoneConnection {
                 }
             }
         }
-        player.queued_tasks.clear();
 
         // We want to process again, since we probably added more tasks.
         // If we *don't* do this there is a pretty big delay before this can happen again.
@@ -829,7 +832,7 @@ impl ZoneConnection {
             return true;
         }
 
-        false
+        continue_nesting
     }
 
     /// Reloads Global.lua
