@@ -1,6 +1,6 @@
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, ObjectId, Position, read_packed_position, read_string,
-    write_packed_position, write_string,
+    CHAR_NAME_MAX_LENGTH, ObjectId, Position, read_bool_from, read_packed_position, read_string,
+    write_bool_as, write_packed_position, write_string,
 };
 use crate::ipc::zone::StatusEffect;
 use binrw::binrw;
@@ -100,7 +100,9 @@ impl PartyMemberEntry {
 #[derive(Clone, Debug, Default)]
 pub struct MemberPosition {
     #[brw(pad_after = 1)]
-    pub valid: u8, // Assumed, it's what Sapphire calls it. Seems to be set to 1 when there's position info, and 0 when there's not.
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub valid: bool, // Assumed, it's what Sapphire calls it. Seems to be set to 1 when there's position info, and 0 when there's not.
     #[br(map = read_packed_position)]
     #[bw(map = write_packed_position)]
     pub pos: Position,

@@ -329,10 +329,9 @@ pub fn send_party_positions(network: &mut NetworkState) {
 
         let mut member_positions = PartyMemberPositions::default();
 
-        // TODO: Can this also be done without cloning?
-        for (index, member) in party.members.clone().iter().enumerate() {
+        for (index, member) in party.members.iter().enumerate() {
             if member.is_online() {
-                member_positions.positions[index].valid = 1;
+                member_positions.positions[index].valid = true;
                 // If the party member is riding pillion, their position is broadcasted as the *driver*'s! Otherwise just use that member's current known position.
                 if let Some(driver_position) = get_pillion_driver_position(party, index) {
                     member_positions.positions[index].pos = driver_position;
