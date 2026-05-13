@@ -144,7 +144,9 @@ impl WorldServer {
 
         // TODO: This duplicates a lot of code with ZoneConnection::handle_zone_change :-(
         let intended_use = TerritoryIntendedUse::from_repr(instance.zone.intended_use).unwrap();
-        let director_type = HandlerType::from_intended_use(intended_use).unwrap();
+        let Some(director_type) = HandlerType::from_intended_use(intended_use) else {
+            panic!("Unknown director for {intended_use}!");
+        };
         let content_id = game_data
             .find_content_for_content_finder_id(content_finder_condition)
             .unwrap();

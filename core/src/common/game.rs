@@ -412,6 +412,7 @@ impl HandlerType {
             TerritoryIntendedUse::LeapOfFaith => Some(Self::PublicContent),
             TerritoryIntendedUse::GoldSaucer => Some(Self::GoldSaucer),
             TerritoryIntendedUse::OceanFishing => Some(Self::InstanceContent),
+            TerritoryIntendedUse::OccultCrescent => Some(Self::PublicContent), // TODO: Also initializes a FATE director but we can't do that currently!
             _ => None,
         }
     }
