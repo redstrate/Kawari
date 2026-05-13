@@ -1418,6 +1418,12 @@ pub enum ServerZoneIpcData {
         offset: i64, // TODO: Not 100% sure this is an i64, but setting it to negative values does make the time to go back to an extent.
     },
     FurnitureTranslatedForObserver(FurnitureTranslatedForObserver),
+    SharedFATEInformation {
+        /// The page index, starting from zero.
+        page: u8,
+        /// Unsure what this means yet.
+        unk1: [u8; 15],
+    },
 }
 
 #[cfg(test)]

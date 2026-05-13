@@ -1729,6 +1729,16 @@ async fn process_packet(
                                         connection.offered_teleport = None;
                                     }
                                 }
+                                ClientTriggerCommand::OpenSharedFATEWindow { page } => {
+                                    connection
+                                        .send_ipc_self(ServerZoneIpcSegment::new(
+                                            ServerZoneIpcData::SharedFATEInformation {
+                                                page: page as u8,
+                                                unk1: [0; 15], // Dummied out for now
+                                            },
+                                        ))
+                                        .await;
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection

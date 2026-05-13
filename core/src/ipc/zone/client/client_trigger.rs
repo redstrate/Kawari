@@ -300,6 +300,13 @@ pub enum ClientTriggerCommand {
         unk1: u32,
     },
 
+    /// When a player opens the Shared FATE window.
+    #[brw(magic = 1009u32)]
+    OpenSharedFATEWindow {
+        /// The page index, starting at 0.
+        page: u32,
+    },
+
     #[brw(magic = 1107u32)]
     RequestHousingWardInfo {
         /// The zone id of the housing ward.

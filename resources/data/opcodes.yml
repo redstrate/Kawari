@@ -731,6 +731,9 @@ ServerZoneIpcType:
   comment: The server informs the client about a piece of furniture being moved/rotated indoors or outdoors. This is only sent to observing clients.
   opcode: 290
   size: 24
+- name: SharedFATEInformation
+  opcode: 626
+  size: 16
 ClientZoneIpcType:
 - name: InitRequest
   comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
