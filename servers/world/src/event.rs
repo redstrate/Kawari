@@ -82,10 +82,11 @@ fn folder_from_script_id(id: u32) -> String {
 /// Finds and creates the relevant `EventHandler` for this event.
 pub fn dispatch_event(
     handler_id: HandlerId,
+    base_id: Option<u32>,
     game_data: Arc<Mutex<GameData>>,
 ) -> Option<Box<dyn EventHandler>> {
     let generic_lua_event = |path: &str| -> Option<Box<dyn EventHandler>> {
-        if let Some(event) = LuaEventHandler::new(handler_id, path, game_data.clone()) {
+        if let Some(event) = LuaEventHandler::new(handler_id, base_id, path, game_data.clone()) {
             Some(Box::new(event))
         } else {
             tracing::warn!("{path} was not found!");

@@ -3,6 +3,7 @@
 use crate::{
     Event, ZoneConnection,
     event::{EventHandler, dispatch_event},
+    lua::LuaPlayer,
 };
 use kawari::{
     common::{CharacterMode, HandlerId, ObjectTypeId},
@@ -87,6 +88,7 @@ impl ZoneConnection {
         event_type: EventType,
         event_arg: u32,
         events: &mut Vec<(Box<dyn EventHandler>, Event)>,
+        lua_player: &LuaPlayer,
     ) -> bool {
         let old_event_handler_id = self.event_handler_id;
         self.event_handler_id = Some(HandlerId(event_id));
@@ -103,8 +105,20 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
+        // Find the ENpc or EObj base ID which is used in some scripts.
+        let base_id = lua_player
+            .zone_data
+            .cached_eobj_base_ids
+            .get(&actor_id.object_id)
+            .copied()
+            .or(lua_player
+                .zone_data
+                .cached_npc_base_ids
+                .get(&actor_id.object_id)
+                .copied());
+
         // call into the event dispatcher, get the event
-        let handler = dispatch_event(HandlerId(event_id), self.gamedata.clone());
+        let handler = dispatch_event(HandlerId(event_id), base_id, self.gamedata.clone());
 
         if let Some(handler) = handler {
             let condition = handler.condition();

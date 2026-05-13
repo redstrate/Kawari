@@ -1269,6 +1269,7 @@ async fn process_packet(
                                                 EventType::Fishing,
                                                 0,
                                                 events,
+                                                lua_player,
                                             )
                                             .await;
 
@@ -1351,6 +1352,7 @@ async fn process_packet(
                                                 EventType::Craft,
                                                 0,
                                                 events,
+                                                lua_player,
                                             )
                                             .await;
 
@@ -2143,7 +2145,14 @@ async fn process_packet(
                             handler_id,
                         } => {
                             if connection
-                                .start_event(*actor_id, handler_id.0, EventType::Talk, 0, events)
+                                .start_event(
+                                    *actor_id,
+                                    handler_id.0,
+                                    EventType::Talk,
+                                    0,
+                                    events,
+                                    lua_player,
+                                )
                                 .await
                             {
                                 // begin talk function if it exists
@@ -2473,6 +2482,7 @@ async fn process_packet(
                                     EventType::WithinRange,
                                     *event_arg,
                                     events,
+                                    lua_player,
                                 )
                                 .await;
 
@@ -2513,6 +2523,7 @@ async fn process_packet(
                                     EventType::OutsideRange,
                                     *event_arg,
                                     events,
+                                    lua_player,
                                 )
                                 .await;
 
@@ -2791,6 +2802,7 @@ async fn process_packet(
                                     EventType::EnterTerritory,
                                     connection.player_data.volatile.zone_id as u32,
                                     events,
+                                    lua_player,
                                 )
                                 .await;
                             if let Some(event) = events.last_mut() {
@@ -3836,7 +3848,14 @@ async fn process_server_msg(
                 let handler_id = HandlerId::new(HandlerType::GimmickRect, 1).0;
 
                 connection
-                    .start_event(object, handler_id, EventType::WithinRange, arg, events)
+                    .start_event(
+                        object,
+                        handler_id,
+                        EventType::WithinRange,
+                        arg,
+                        events,
+                        lua_player,
+                    )
                     .await;
 
                 connection
@@ -4022,6 +4041,7 @@ async fn process_server_msg(
                         EventType::GameProgress,
                         1,
                         events,
+                        lua_player,
                     )
                     .await;
                 if events.last_mut().is_some() {

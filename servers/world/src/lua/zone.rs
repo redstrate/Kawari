@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use mlua::{UserData, UserDataFields, UserDataMethods};
+use mlua::{UserData, UserDataFields};
 
-use kawari::{ipc::zone::ServerZoneIpcSegment, packet::PacketSegment};
+use kawari::{common::ObjectId, ipc::zone::ServerZoneIpcSegment, packet::PacketSegment};
 
 use super::QueueSegments;
 
@@ -16,8 +16,9 @@ pub struct LuaZone {
     pub intended_use: u8,
     pub map_id: u16,
     pub queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
-    // TODO: lol, this is only here for the get_npc_base_id function
-    pub cached_npc_base_ids: HashMap<u32, u32>,
+    // NOTE: These are here to be accessed in Lua via the injected BASE_ID
+    pub cached_npc_base_ids: HashMap<ObjectId, u32>,
+    pub cached_eobj_base_ids: HashMap<ObjectId, u32>,
 }
 
 impl UserData for LuaZone {
@@ -28,12 +29,6 @@ impl UserData for LuaZone {
         fields.add_field_method_get("region_name", |_, this| Ok(this.region_name.clone()));
         fields.add_field_method_get("place_name", |_, this| Ok(this.place_name.clone()));
         fields.add_field_method_get("intended_use", |_, this| Ok(this.intended_use));
-    }
-
-    fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method("get_npc_base_id", |_, this, instance_id: u32| {
-            Ok(this.cached_npc_base_ids.get(&instance_id).copied())
-        });
     }
 }
 

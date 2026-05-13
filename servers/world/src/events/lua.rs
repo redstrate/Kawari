@@ -22,7 +22,12 @@ pub struct LuaEventHandler {
 }
 
 impl LuaEventHandler {
-    pub fn new(id: HandlerId, path: &str, game_data: Arc<Mutex<GameData>>) -> Option<Self> {
+    pub fn new(
+        id: HandlerId,
+        base_id: Option<u32>,
+        path: &str,
+        game_data: Arc<Mutex<GameData>>,
+    ) -> Option<Self> {
         let mut lua = KawariLua::new();
 
         // inject parameters as necessary
@@ -51,6 +56,9 @@ impl LuaEventHandler {
         }
 
         lua.0.globals().set("EVENT_ID", id.0).unwrap();
+        if let Some(base_id) = base_id {
+            lua.0.globals().set("BASE_ID", base_id).unwrap();
+        }
         lua.0.globals().set("GAME_DATA", game_data).unwrap();
 
         Some(Self { file_name, lua })

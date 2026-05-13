@@ -1155,7 +1155,8 @@ pub struct CrestData {
 /// Returns whether or not new instances of this `TerritoryIntendedUse` should be "private" (i.e. no other players are allowed to enter.)
 pub fn is_private_area(intended_use: TerritoryIntendedUse) -> bool {
     // TODO: Maybe this exists on the Excel sheet?
-    matches!(intended_use, TerritoryIntendedUse::Inn)
+    intended_use == TerritoryIntendedUse::Inn
+        || intended_use == TerritoryIntendedUse::FreeCompanyGarrison
 }
 
 /// Returns the internal housing row used for certain sheets.

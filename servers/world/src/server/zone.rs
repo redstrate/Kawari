@@ -96,7 +96,7 @@ pub struct Zone {
     pub layer_groups: Vec<Lgb>,
     pub navimesh_path: String,
     pub map_id: u16,
-    cached_npc_base_ids: HashMap<u32, u32>,
+    cached_npc_base_ids: HashMap<ObjectId, u32>,
     pub map_ranges: Vec<MapRange>,
     dropin_layers: Vec<DropInLayer>,
     cached_objects: HashMap<u32, SpawnObject>,
@@ -105,6 +105,7 @@ pub struct Zone {
     layer_set: i32,
     bg_path: String,
     cached_housing_plots: Vec<HousingPlot>,
+    cached_eobj_base_ids: HashMap<ObjectId, u32>,
 }
 
 impl Zone {
@@ -223,8 +224,10 @@ impl Zone {
                             Affine3A::from(object.transform).to_scale_rotation_translation();
 
                         if let LayerEntryData::EventNPC(npc) = &object.data {
-                            zone.cached_npc_base_ids
-                                .insert(object.instance_id, npc.parent_data.parent_data.base_id);
+                            zone.cached_npc_base_ids.insert(
+                                ObjectId(object.instance_id),
+                                npc.parent_data.parent_data.base_id,
+                            );
                         }
                         if let LayerEntryData::MapRange(map_range) = &object.data {
                             zone.map_ranges.push(MapRange {
@@ -265,6 +268,7 @@ impl Zone {
 
                     // Second pass for eobjs
                     for object in &layer.objects {
+                        // TODO: restore
                         // if !layer.header.has_layer_set(zone.layer_set as u32) {
                         //     continue;
                         // }
@@ -449,6 +453,7 @@ impl Zone {
             intended_use: self.intended_use,
             map_id: self.map_id,
             cached_npc_base_ids: self.cached_npc_base_ids.clone(),
+            cached_eobj_base_ids: self.cached_eobj_base_ids.clone(),
             ..Default::default()
         }
     }
@@ -556,7 +561,7 @@ impl Zone {
                             base_id,
                             unselectable,
                             visibility,
-                            entity_id: ObjectId(fastrand::u32(..)),
+                            entity_id: ObjectId(object.instance_id),
                             layout_id: object.instance_id,
                             bind_layout_id: eobj.bound_instance_id,
                             radius: 1.0,
@@ -565,6 +570,8 @@ impl Zone {
                             ..Default::default()
                         };
                         self.cached_objects.insert(eobj.parent_data.base_id, spawn);
+                        self.cached_eobj_base_ids
+                            .insert(spawn.entity_id, spawn.base_id);
 
                         if game_data.get_eobj_pop_type(eobj.parent_data.base_id) == 1 {
                             object_spawns.push(spawn);
