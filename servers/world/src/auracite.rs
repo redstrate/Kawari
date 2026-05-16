@@ -111,6 +111,7 @@ struct CharacterJson {
     armory_body: InventoryContainer,
     armory_hands: InventoryContainer,
     armory_legs: InventoryContainer,
+    armory_feets: InventoryContainer,
     armory_ear: InventoryContainer,
     armory_neck: InventoryContainer,
     armory_wrist: InventoryContainer,
@@ -358,6 +359,10 @@ impl WorldDatabase {
         process_inventory_container(
             &character.armory_legs,
             &mut player_data.inventory.armoury_legs,
+        );
+        process_inventory_container(
+            &character.armory_feets,
+            &mut player_data.inventory.armoury_feet,
         );
         process_inventory_container(
             &character.armory_ear,
