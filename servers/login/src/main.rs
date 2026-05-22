@@ -10,6 +10,7 @@ use axum_extra::extract::CookieJar;
 use axum_extra::extract::cookie::{Cookie, Expiration};
 use kawari::common::{ACCOUNT_MANAGEMENT_SERVICE, GAME_SERVICE};
 use kawari::config::get_config;
+use kawari::constants::SUPPORTED_GAME_VERSION;
 use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment};
 use kawari::packet::send_custom_world_packet;
 use kawari::web_static_dir;
@@ -411,7 +412,7 @@ async fn login_history(State(state): State<LoginServerState>, jar: CookieJar) ->
 
         return Html(
             template
-                .render(context! { past_logins => past_logins, game_service_name => GAME_SERVICE })
+                .render(context! { past_logins => past_logins, game_service_name => GAME_SERVICE})
                 .unwrap(),
         );
     }
@@ -433,10 +434,11 @@ async fn login_history_with_sid(
         let environment = setup_default_environment();
         let template = environment.get_template("loginhistory.html").unwrap();
         let past_logins = database.get_sessions(user_id);
+        let config = get_config();
 
         return Html(
                 template
-                    .render(context! { past_logins => past_logins, generated_sid => generated_sid, game_service_name => GAME_SERVICE })
+                    .render(context! { past_logins => past_logins, generated_sid => generated_sid, game_service_name => GAME_SERVICE, login_server => config.login.server_name, lobby_port => config.lobby.port, lobby_host => config.lobby.server_name, game_version => SUPPORTED_GAME_VERSION, frontier_host => config.frontier.server_name, login_host => config.login.server_name, server_url => config.web.server_name, enable_registration => config.login.enable_registration  })
                     .unwrap(),
             );
     }
@@ -444,21 +446,10 @@ async fn login_history_with_sid(
     Html("You need to be logged in!".to_string())
 }
 
-#[derive(Deserialize, Debug)]
-#[allow(dead_code)]
-struct SIDInput {
-    service: Option<String>,
-}
-
 async fn manual_generate_sid(
     State(state): State<LoginServerState>,
     jar: CookieJar,
-    Form(input): Form<SIDInput>,
 ) -> Response<Body> {
-    let Some(service) = input.service else {
-        panic!("Expected service!");
-    };
-
     {
         let Some(session_id) = jar.get("cis_sessid") else {
             return login_history(State(state), jar).await.into_response();
@@ -477,7 +468,7 @@ async fn manual_generate_sid(
             let new_sid = state
                 .database
                 .lock()
-                .create_session(&service, user_id)
+                .create_session(GAME_SERVICE, user_id)
                 .expect("Failed to create new SID?!");
 
             return login_history_with_sid(State(state), jar, &new_sid)

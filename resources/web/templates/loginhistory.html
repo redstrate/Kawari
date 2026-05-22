@@ -6,7 +6,7 @@
 {% block accountbody %}
 {% if generated_sid is defined %}
 <div class="alert alert-primary" role="alert" id="alert">
-    <p id="statusMessage">SID successfully generated: <code>{{ generated_sid }}</code>. It won't be shown again, so be sure to save it!</p>
+    <p id="statusMessage">Give these arguments to the game EXE: <code>DEV.TestSID={{ generated_sid }} DEV.UseSqPack=1 DEV.DataPathType=1 SYS.region=3 language=1 version={{ game_version }} DEV.MaxEntitledExpansionID=5 DEV.LobbyHost01={{ lobby_host }} DEV.LobbyPort01={{ lobby_port }} DEV.LobbyHost02={{ lobby_host }} DEV.LobbyPort02={{ lobby_port }} DEV.LobbyHost03={{ lobby_host }} DEV.LobbyPort03={{ lobby_port }} DEV.LobbyHost04={{ lobby_host }} DEV.LobbyPort04={{ lobby_port }} DEV.LobbyHost05={{ lobby_host }} DEV.LobbyPort05={{ lobby_port }} DEV.LobbyHost06={{ lobby_host }} DEV.LobbyPort06={{ lobby_port }} DEV.LobbyHost07={{ lobby_host }} DEV.LobbyPort07={{ lobby_port }} DEV.LobbyHost08={{ lobby_host }} DEV.LobbyPort08={{ lobby_port }} DEV.LobbyHost09={{ lobby_host }} DEV.LobbyPort09={{ lobby_port }} DEV.LobbyHost10={{ lobby_host }} DEV.LobbyPort10={{ lobby_port }} DEV.LobbyHost11={{ lobby_host }} DEV.LobbyPort11={{ lobby_port }} DEV.LobbyHost12={{ lobby_host }} DEV.LobbyPort12={{ lobby_port }}</code>. This won't be shown again, so be sure to save it!</p>
 </div>
 {% endif %}
 <h2>Login History</h2>
@@ -32,14 +32,9 @@
         </tr>
     {% endfor %}
 </table>
-<h3>Generate SID</h3>
-<p>You can manually generate an SID here. Useful for logging into the game manually, for example.</p>
-<div class="alert alert-secondary" role="alert" id="alert">
-    <p id="statusMessage">If you want to login to the game, you must use the service name '{{ game_service_name }}'!</p>
-</div>
+<h3>Command Line</h3>
+<p>You can generate arguments to pass to the game executable manually here. This will invalidate your previous game session!</p>
 <form method='post' action='login_generate'>
-    <label for="service" class="form-label">Service</label><br>
-    <input type='text' id='service' name='service' class="form-control" placeholder="Unique name for this SID (e.g. 'Login Test')"/><br>
     <button type='submit'  class="btn btn-primary">Generate</button>
 </form>
 {% endblock %}
