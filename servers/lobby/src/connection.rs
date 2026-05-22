@@ -685,6 +685,15 @@ impl LobbyConnection {
     }
 
     pub async fn login(&mut self, sequence: u64, session_id: &str, version_info: &str) {
+        // This works around a weird bug where entering the SID on the command line includes the next arg, which throws this whole thing off.
+        // For example: "h1x4vkjpuqeazqdtmuco9cqwikyebrjklwucifln4jqq7inxkmq7xqw1 DEV.Use"
+        // So we'll just cut out the stuff we don't care about for now, and properly fix the bug later:
+        let session_id = if session_id.contains(" ") {
+            session_id.split_once(' ').unwrap_or_default().0
+        } else {
+            session_id
+        };
+
         tracing::info!("Client {session_id} ({version_info}) logging in!");
 
         let config = get_config();
