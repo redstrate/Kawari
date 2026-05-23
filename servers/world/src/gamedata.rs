@@ -1648,8 +1648,8 @@ impl SqPackResourceSpy {
 }
 
 impl Resource for SqPackResourceSpy {
-    fn read(&mut self, path: &str) -> Option<physis::ByteBuffer> {
-        if let Some(buffer) = self.sqpack_resource.read(path) {
+    fn read(&mut self, path: &str) -> physis::Result<physis::ByteBuffer> {
+        if let Ok(buffer) = self.sqpack_resource.read(path) {
             if !self.output_directory.is_empty() {
                 let mut new_path = PathBuf::from(&self.output_directory);
                 new_path.push(path.to_lowercase());
@@ -1666,10 +1666,10 @@ impl Resource for SqPackResourceSpy {
                 }
             }
 
-            return Some(buffer);
+            return Ok(buffer);
         }
 
-        None
+        Ok(Vec::new()) // TODO: probably wrong
     }
 
     fn exists(&mut self, path: &str) -> bool {

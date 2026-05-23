@@ -61,7 +61,7 @@ tokio = { version = "1.52", features = ["macros", "rt", "rt-multi-thread", "io-u
 fastrand = { version = "2.4", features = ["std"], default-features = false }
 
 # HTML templates used in the web servers
-minijinja = { version = "2.19", features = ["serde", "loader", "multi_template"], default-features = false }
+minijinja = { version = "2.20", features = ["serde", "loader", "multi_template"], default-features = false }
 
 # For server-side scripting
 mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false }
@@ -116,4 +116,4 @@ libsqlite3-sys = { version = "*", features = ["bundled"], default-features = fal
 async-trait = { version = "0.1", default-features = false }
 
 # 3D math primitives
-glam = { version = "0.32", features = ["std"], default-features = false }
+glam = { version = "0.33", features = ["std"], default-features = false }
