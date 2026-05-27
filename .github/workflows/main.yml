@@ -38,6 +38,24 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest]
+        target: [x86_64-unknown-linux-gnu, x86_64-pc-windows-msvc, aarch64-unknown-linux-gnu]
+        exclude:
+        - os: windows-latest
+          target: x86_64-unknown-linux-gnu
+        - os: windows-latest
+          target: aarch64-unknown-linux-gnu
+        - os: ubuntu-latest
+          target: x86_64-pc-windows-msvc
+        include:
+        - target: x86_64-unknown-linux-gnu
+          target_name: x86_64
+          os_name: linux
+        - target: aarch64-unknown-linux-gnu
+          target_name: aarch64
+          os_name: linux
+        - target: x86_64-pc-windows-msvc
+          target_name: x86_64
+          os_name: windows
 
     steps:
     - uses: actions/checkout@v6
@@ -47,41 +65,59 @@ jobs:
         path: |
           ~/.cargo
           target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - run: |
+        key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - if: steps.cache-deps.outputs.cache-hit != 'true'
+      run: |
         cargo install --git https://github.com/rust-lang/mdBook.git mdbook
+    - if: matrix.target == 'aarch64-unknown-linux-gnu'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross
+    - name: Add Target
+      run: |
+        rustup target add ${{ matrix.target }}
     - uses: robinraju/release-downloader@v1
-      if: runner.os == 'Linux'
+      if: matrix.target == 'x86_64-unknown-linux-gnu'
       with:
         repository: 'WorkingRobot/OodleUE'
         fileName: 'clang-x64-release.zip'
         latest: true
         extract: true
-    - if: runner.os == 'Linux'
+    - uses: robinraju/release-downloader@v1
+      if: matrix.target == 'aarch64-unknown-linux-gnu'
+      with:
+        repository: 'WorkingRobot/OodleUE'
+        fileName: 'clang-arm64-release.zip'
+        latest: true
+        extract: true
+    - if: matrix.os == 'ubuntu-latest'
       run: |
         mkdir oodle
         cp lib/liboodle-network-shared.so oodle/
     - uses: robinraju/release-downloader@v1
-      if: runner.os == 'Windows'
+      if: matrix.os == 'windows-latest'
       with:
         repository: 'WorkingRobot/OodleUE'
         fileName: 'clang-cl-x64-release.zip'
         latest: true
         extract: true
-    - if: runner.os == 'Windows'
+    - if: runner.os == 'windows-latest'
       run: |
         mkdir oodle
         cp ar/oodle-network-shared.lib oodle/
     - name: Build
-      run: cargo build --release --verbose --features oodle
+      env:
+        CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+      run: cargo build --release --verbose --features oodle --target ${{ matrix.target }}
     - name: Run Clippy
-      if: runner.os == 'Linux'
-      run: cargo clippy --features oodle -- -Dwarnings
+      if: matrix.target == 'x86_64-unknown-linux-gnu'
+      run: cargo clippy --features oodle -- -Dwarnings --target ${{ matrix.target }}
     - name: Run Cargo fmt
-      if: runner.os == 'Linux'
+      if: matrix.target == 'x86_64-unknown-linux-gnu'
       run: cargo fmt --check
     - name: Run tests
-      run: cargo test --verbose
+      if: matrix.target != 'aarch64-unknown-linux-gnu'
+      run: cargo test --verbose --target ${{ matrix.target }}
     - name: Build documentation
       run: |
         mdbook build --dest-dir=docs-build ./docs
@@ -89,12 +125,12 @@ jobs:
         mv docs-build docs
     - name: Prepare artifacts
       run: |
-        mv target/release/* .
+        mv target/${{ matrix.target }}/release/* .
         echo "${{ github.sha }}" >> version.txt
     - name: Archive artifacts
       uses: actions/upload-artifact@v5
       with:
-        name: Kawari-${{ runner.os }}
+        name: kawari-${{ matrix.os_name }}-${{ matrix.target_name }}
         path: |
           LICENSE
           README.md
@@ -123,7 +159,7 @@ jobs:
           !docs/book.toml
 
     - name: Set up SSH key
-      if: runner.os == 'Linux' && github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+      if: matrix.target == 'x86_64-unknown-linux-gnu' && github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.DEPLOY_PRIVATE_KEY }}" > ~/.ssh/id_rsa
@@ -133,7 +169,7 @@ jobs:
         chmod 644 ~/.ssh/config
 
     - name: Upload API documentation
-      if: runner.os == 'Linux' && github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+      if: matrix.target == 'x86_64-unknown-linux-gnu' && github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
       run: |
         cargo doc --release --no-deps --lib
         rsync -e "ssh -p 38901 -o StrictHostKeyChecking=no" --recursive target/doc/ deploy@ryne.moe:/srv/http/kawari-api-docs
@@ -159,16 +195,21 @@ jobs:
         chmod 644 ~/.ssh/config
     - name: Upload artifacts
       run: |
-        pushd Kawari-Linux
-        zip -r ../Kawari-Linux.zip *
+        pushd kawari-linux-x86_64
+        zip -r ../kawari-linux-x86_64.zip *
         popd
 
-        pushd Kawari-Windows
-        zip -r ../Kawari-Windows.zip *
+        pushd kawari-linux-aarch64
+        zip -r ../kawari-linux-aarch64.zip *
         popd
 
-        rsync --recursive "Kawari-Linux.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
-        rsync --recursive "Kawari-Windows.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
-        unzip "Kawari-Linux.zip"
+        pushd kawari-windows-x86_64
+        zip -r ../kawari-windows-x86_64.zip *
+        popd
+
+        rsync --recursive "kawari-linux-x86_64.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
+        rsync --recursive "kawari-linux-aarch64.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
+        rsync --recursive "kawari-windows-x86_64.zip" deploy@ryne.moe:/srv/http/astra-distrib/kawari/
+        unzip "kawari-linux-x86_64.zip"
         rsync --recursive --delete docs/ deploy@ryne.moe:/srv/http/kawari-docs
 
