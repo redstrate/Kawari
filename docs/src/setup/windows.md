@@ -2,6 +2,9 @@
 
 This guide covers how to setup Kawari on Windows, which also includes Wine.
 
+> [!NOTE]
+> We only provide pre-compiled binaries for x86-64 currently. If you want to run it natively on ARM64, you'll need to compile from source.
+
 ## Requirements
 
 * Legally obtained copy of the game that's updated to a supported version
@@ -11,7 +14,7 @@ This guide covers how to setup Kawari on Windows, which also includes Wine.
 
 ## Downloading Kawari
 
-Download the [latest build for Windows from xiv.zone](https://xiv.zone/distrib/kawari/Kawari-Windows.zip) (or pick a specific build from [Github Actions](https://github.com/redstrate/Kawari/actions).)
+Download the [latest build for Windows x86_64 from xiv.zone](https://xiv.zone/distrib/kawari/kawari-windows-x86_64.zip) (or pick a specific build from [Github Actions](https://github.com/redstrate/Kawari/actions).)
 
 ## Setup
 
