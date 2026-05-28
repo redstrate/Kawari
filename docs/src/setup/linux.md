@@ -6,11 +6,11 @@ This guide covers how to setup Kawari on Linux.
 
 * Legally obtained copy of the game that's updated to a supported version
 * Oodle Network Compression
-    * You can download the [latest release of Oodle from this repository](https://github.com/WorkingRobot/OodleUE/releases/latest). Download the "gcc-x64-release.zip" file.
+    * You can download the [latest release of Oodle from this repository](https://github.com/WorkingRobot/OodleUE/releases/latest). Download the "gcc-x64-release.zip" or "gcc-arm64-release" file depending on your architecture.
 
 ## Downloading Kawari
 
-Download the [latest build for Linux from xiv.zone](https://xiv.zone/distrib/kawari/Kawari-Linux.zip) (or pick a specific build from [Github Actions](https://github.com/redstrate/Kawari/actions).)
+Download the [latest build for Linux x86_64](https://xiv.zone/distrib/kawari/kawari-linux-x86_64.zip) or [ARM64](https://xiv.zone/distrib/kawari/kawari-linux-aarch64.zip) (or pick a specific build from [Github Actions](https://github.com/redstrate/Kawari/actions).)
 
 ## Setup
 
