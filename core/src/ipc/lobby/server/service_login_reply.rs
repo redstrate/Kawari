@@ -99,9 +99,13 @@ pub struct ServiceLoginReply {
     #[brw(pad_after = 12)]
     pub entitled_expansion: u32,
     #[brw(pad_after = 24)]
-    #[br(count = 2)]
-    #[brw(pad_size_to = (CharacterDetails::SIZE * 2))]
+    #[br(count = Self::MAX_CHARACTERS)]
+    #[brw(pad_size_to = (CharacterDetails::SIZE * Self::MAX_CHARACTERS))]
     pub characters: Vec<CharacterDetails>,
+}
+
+impl ServiceLoginReply {
+    pub const MAX_CHARACTERS: usize = 2;
 }
 
 #[cfg(test)]

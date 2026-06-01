@@ -325,17 +325,20 @@ impl LobbyConnection {
 
             for i in 0..4 {
                 let mut characters_in_packet = Vec::new();
-                for _ in 0..min(characters.len(), 2) {
+                for _ in 0..min(characters.len(), ServiceLoginReply::MAX_CHARACTERS) {
                     characters_in_packet.push(characters.swap_remove(0));
                 }
                 // add any empty boys
-                characters_in_packet.resize(2, CharacterDetails::default());
+                characters_in_packet.resize(
+                    ServiceLoginReply::MAX_CHARACTERS,
+                    CharacterDetails::default(),
+                );
 
                 let lobby_character_list = if i == 3 {
                     // On the last packet, add the account-wide information
                     ServiceLoginReply {
                         sequence,
-                        counter: (i * 4) + 1, // TODO: why the + 1 here?
+                        counter: (i * (ServiceLoginReply::MAX_CHARACTERS as u8 * 2)) + 1, // TODO: why the + 1 here?
                         num_in_packet: characters_in_packet.len() as u8,
                         unk3: 0,
                         unk4: 0,
@@ -352,7 +355,7 @@ impl LobbyConnection {
                 } else {
                     ServiceLoginReply {
                         sequence,
-                        counter: i * 4,
+                        counter: i * (ServiceLoginReply::MAX_CHARACTERS as u8 * 2),
                         num_in_packet: characters_in_packet.len() as u8,
                         characters: characters_in_packet,
                         ..Default::default()
