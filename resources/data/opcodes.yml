@@ -732,7 +732,7 @@ ServerZoneIpcType:
   opcode: 787
   size: 24
 - name: SharedFATEInformation
-  comment: ""
+  comment: Unknown purpose.
   opcode: 159
   size: 16
 ClientZoneIpcType:
