@@ -194,7 +194,7 @@ impl std::fmt::Display for ImportError {
             ImportError::ReadError => "Error while reading files",
             ImportError::ParseError => "Error while parsing files",
             ImportError::MissingData => {
-                "Not all required data can be found. You need to use the Dalamud integration in Auracite!"
+                "Not all required data can be found for some reason. Please report this as a bug!"
             }
         };
 
