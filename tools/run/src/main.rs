@@ -31,6 +31,10 @@ async fn start_server(name: &str) {
 
 #[tokio::main]
 async fn main() {
+    // Enables ANSI code support on Windows. See https://github.com/tokio-rs/tracing/issues/3068
+    #[cfg(windows)]
+    nu_ansi_term::enable_ansi_support().ok();
+
     // If being invoked by Cargo, build the workspace first.
     if let Ok(cargo) = std::env::var("CARGO") {
         let build_exit_status = Command::new(cargo)
