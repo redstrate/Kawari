@@ -117,3 +117,6 @@ async-trait = { version = "0.1", default-features = false }
 
 # 3D math primitives
 glam = { version = "0.33", features = ["std"], default-features = false }
+
+# For Windows ANSI support
+nu-ansi-term = "0.46"
