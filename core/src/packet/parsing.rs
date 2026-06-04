@@ -228,6 +228,15 @@ pub fn parse_packet<T: ReadWriteIpcSegment>(
         Ok(packet) => packet.segments,
         Err(err) => {
             tracing::error!("{err}");
+            match state {
+                ConnectionState::Lobby { .. } => tracing::warn!(
+                    "Parsing most likely failed because our lobby encryption doesn't match what the client expects!"
+                ),
+                ConnectionState::Zone { .. } => tracing::warn!(
+                    "Parsing most likely failed because we desynced with the client's Oodle state! This usually means that the server was processing something for too long."
+                ),
+                _ => {}
+            }
 
             Vec::new()
         }
