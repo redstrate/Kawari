@@ -81,7 +81,7 @@ async fn verify_session(
 
             if Version(expansion_version) > Version(SUPPORTED_EXPAC_VERSIONS[expansion_index]) {
                 tracing::warn!(
-                    "{} {expansion_version} is above supported version {}!",
+                    "{} {expansion_version} is above supported version {}! This means that Kawari needs to be updated to support this version, if you don't know how to please be patient with us. Thanks!",
                     expac_version_parts[0],
                     SUPPORTED_EXPAC_VERSIONS[expansion_index]
                 );
@@ -92,7 +92,7 @@ async fn verify_session(
         // Their version is too new
         if game_version > Version(SUPPORTED_GAME_VERSION) {
             tracing::warn!(
-                "{game_version} is above supported game version {SUPPORTED_GAME_VERSION}!"
+                "{game_version} is above supported game version {SUPPORTED_GAME_VERSION}! This means that Kawari needs to be updated to support this version, if you don't know how to please be patient with us. Thanks!"
             );
             return StatusCode::INTERNAL_SERVER_ERROR.into_response();
         }
@@ -103,6 +103,12 @@ async fn verify_session(
             headers.insert("X-Patch-Unique-Id", sid.parse().unwrap());
 
             return (headers).into_response();
+        }
+
+        if game_version < Version(SUPPORTED_GAME_VERSION) {
+            tracing::warn!(
+                "{game_version} is below supported game version {SUPPORTED_GAME_VERSION}!"
+            );
         }
 
         // Their game version is too old, serve them patch files
@@ -190,6 +196,13 @@ async fn verify_session(
             };
             let patch_list_str = patch_list.to_string(PatchListType::Game);
             return (headers, patch_list_str).into_response();
+        } else {
+            tracing::warn!(
+                "We don't have the patch files to update the game client! Telling them its unsupported instead..."
+            );
+
+            // Tells the launcher that this version is unsupported
+            return StatusCode::from_u16(410).unwrap().into_response();
         }
     }
 
@@ -245,7 +258,7 @@ async fn verify_boot(
         // Their version is too new
         if boot_version > Version(SUPPORTED_BOOT_VERSION) {
             tracing::warn!(
-                "{boot_version} is above supported boot version {SUPPORTED_BOOT_VERSION}!"
+                "{boot_version} is above supported boot version {SUPPORTED_BOOT_VERSION}! This means that Kawari needs to be updated to support this version, if you don't know how to please be patient with us. Thanks!"
             );
             return StatusCode::INTERNAL_SERVER_ERROR.into_response();
         }
@@ -296,6 +309,13 @@ async fn verify_boot(
             };
             let patch_list_str = patch_list.to_string(PatchListType::Boot);
             return (headers, patch_list_str).into_response();
+        } else {
+            tracing::warn!(
+                "We don't have the patch files to update the boot client! Telling them its unsupported instead..."
+            );
+
+            // Tells the launcher that this version is unsupported
+            return StatusCode::from_u16(410).unwrap().into_response();
         }
     }
 
