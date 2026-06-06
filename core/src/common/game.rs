@@ -497,7 +497,6 @@ pub enum ClientLanguage {
     Korean = 6,
     /// (Traditional) Chinese language. Only available in the Taiwanese client.
     TraditionalChinese = 7,
-    // TODO: what about client languages in other regions?
     /// Seen when a player in the social list is offline (possibly uncached or on another world?).
     OfflineInvalid = 255,
 }
