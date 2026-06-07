@@ -399,6 +399,17 @@ impl ZoneConnection {
 
                 true
             }
+            "!emptypacket" => {
+                let parts: Vec<&str> = chat_message.split(' ').collect();
+
+                self.send_arbitrary_packet(
+                    parts.get(1).unwrap().parse().unwrap(),
+                    vec![0; parts.get(2).unwrap().parse().unwrap()],
+                )
+                .await;
+
+                true
+            }
             _ => false,
         }
     }

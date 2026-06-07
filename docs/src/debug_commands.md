@@ -10,6 +10,7 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!cf <id>` | Joins the Content Finder ID specified as if you'd queued. |
 | `!classjob <id>` | Unlocks said class/job at level 1, and gives you a job crystal (if applicable). |
 | `!clearconditions` | Forcefully clears all conditions set on your character. |
+| `!emptypacket <opcode> <size>` | Sends an empty IPC packet with a given opcode and size. |
 | `!equip <name>` | Forcefully equip an item, useful for bypassing class/job and other client restrictions. This will *overwrite* any item in that slot! |
 | `!fate <id>` | Spawns a temporary, test FATE for yourself. |
 | `!festival <id1> <id2> <id3> <id4>` | Sets the festival in the current zone. Multiple festivals can be set together to create interesting effects. |
