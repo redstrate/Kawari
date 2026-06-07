@@ -1108,6 +1108,10 @@ ClientZoneIpcType:
   comment: The client moves or rotates a piece of furniture.
   opcode: 956
   size: 32
+- name: UpdatePositionHandlerInstance
+  comment: Used for client updating their position in instances. Unsure why it's separate.
+  opcode: 793
+  size: 40
 ServerLobbyIpcType:
 - name: NackReply
   comment: Sent by the server to indicate an lobby error occured.

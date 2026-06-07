@@ -242,6 +242,12 @@ impl ZoneConnection {
         self.actor_control_self(ActorControlCategory::SetItemLevel { level })
             .await;
 
+        // Duties use this packet!
+        self.actor_control_self(ActorControlCategory::EnableInstancePositionHandler {
+            enabled: bound_by_duty,
+        })
+        .await;
+
         // send some weird thing to make the zone load correctly
         if !bound_by_duty {
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::DailyQuests {

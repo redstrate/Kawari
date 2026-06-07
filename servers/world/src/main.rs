@@ -3559,6 +3559,39 @@ async fn process_packet(
                                 })
                                 .await;
                         }
+                        ClientZoneIpcData::UpdatePositionHandlerInstance {
+                            rotation,
+                            anim_type,
+                            anim_state,
+                            jump_state,
+                            position,
+                            ..
+                        } => {
+                            // NOTE: Keep in sync with the UpdatePositionHandler.
+                            if connection.spawned_in {
+                                connection.player_data.volatile.rotation = *rotation as f64;
+                                connection.player_data.volatile.position = *position;
+
+                                let party_id = if connection.party_id != 0 {
+                                    Some(connection.party_id)
+                                } else {
+                                    None
+                                };
+
+                                connection
+                                    .handle
+                                    .send(ToServer::ActorMoved(
+                                        connection.player_data.character.actor_id,
+                                        *position,
+                                        *rotation,
+                                        *anim_type,
+                                        *anim_state,
+                                        *jump_state,
+                                        party_id,
+                                    ))
+                                    .await;
+                            }
+                        }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
                                 "Unknown Zone packet {:?} recieved ({} bytes), this should be handled!",

@@ -88,6 +88,9 @@ pub struct GameData {
     pub battalion_sheet: BattalionSheet,
     pub enpc_base_sheet: ENpcBaseSheet,
     pub equip_slot_category_sheet: EquipSlotCategorySheet,
+    pub content_finder_condition_sheet: ContentFinderConditionSheet,
+    pub instance_content_sheet: InstanceContentSheet,
+    pub ikd_route_sheet: IKDRouteSheet,
 }
 
 impl Default for GameData {
@@ -316,6 +319,16 @@ impl GameData {
         let equip_slot_category_sheet =
             EquipSlotCategorySheet::read_from(&mut resource_resolver, Language::None).unwrap();
 
+        let content_finder_condition_sheet =
+            ContentFinderConditionSheet::read_from(&mut resource_resolver, config.world.language())
+                .unwrap();
+
+        let instance_content_sheet =
+            InstanceContentSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
+        let ikd_route_sheet =
+            IKDRouteSheet::read_from(&mut resource_resolver, config.world.language()).unwrap();
+
         Self {
             resource: resource_resolver,
             item_sheet,
@@ -340,6 +353,9 @@ impl GameData {
             battalion_sheet,
             enpc_base_sheet,
             equip_slot_category_sheet,
+            content_finder_condition_sheet,
+            instance_content_sheet,
+            ikd_route_sheet,
         }
     }
 
@@ -701,11 +717,7 @@ impl GameData {
 
     /// Gets the zone id for the given ContentFinderCondition ID.
     pub fn find_zone_for_content(&mut self, content_id: u16) -> Option<u16> {
-        let config = get_config();
-        let content_finder_sheet =
-            ContentFinderConditionSheet::read_from(&mut self.resource, config.world.language())
-                .unwrap();
-        let content_finder_row = content_finder_sheet.row(content_id as u32)?;
+        let content_finder_row = self.content_finder_condition_sheet.row(content_id as u32)?;
 
         Some(content_finder_row.TerritoryType)
     }
@@ -794,9 +806,7 @@ impl GameData {
 
     /// Gets the content type for the given InstanceContent.
     pub fn find_type_for_content(&mut self, content_id: u16) -> Option<InstanceContentType> {
-        let instance_content_sheet =
-            InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let instance_content_row = instance_content_sheet.row(content_id as u32)?;
+        let instance_content_row = self.instance_content_sheet.row(content_id as u32)?;
 
         InstanceContentType::from_repr(instance_content_row.InstanceContentType)
     }
@@ -970,11 +980,9 @@ impl GameData {
 
     /// Gets the short name for a given content finder condition.
     pub fn get_content_short_name(&mut self, content_finder_row_id: u16) -> Option<String> {
-        let config = get_config();
-        let content_finder_sheet =
-            ContentFinderConditionSheet::read_from(&mut self.resource, config.world.language())
-                .unwrap();
-        let content_finder_row = content_finder_sheet.row(content_finder_row_id as u32)?;
+        let content_finder_row = self
+            .content_finder_condition_sheet
+            .row(content_finder_row_id as u32)?;
 
         Some(content_finder_row.ShortCode)
     }
@@ -999,19 +1007,18 @@ impl GameData {
         &mut self,
         content_finder_row_id: u16,
     ) -> Option<u16> {
-        let config = get_config();
-        let content_finder_sheet =
-            ContentFinderConditionSheet::read_from(&mut self.resource, config.world.language())
-                .unwrap();
-        let content_finder_row = content_finder_sheet.row(content_finder_row_id as u32)?;
+        let content_finder_row = self
+            .content_finder_condition_sheet
+            .row(content_finder_row_id as u32)?;
 
         Some(content_finder_row.Content)
     }
 
     /// Returns the time limit in minutes for a given InstanceContent id.
     pub fn find_content_time_limit(&mut self, instance_content_id: u16) -> Option<u16> {
-        let sheet = InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let row = sheet.row(instance_content_id as u32)?;
+        let row = self
+            .instance_content_sheet
+            .row(instance_content_id as u32)?;
 
         Some(row.TimeLimitmin)
     }
@@ -1050,15 +1057,12 @@ impl GameData {
 
     /// Returns the entrance ID for this content finder condition.
     pub fn get_content_entrance_id(&mut self, content_finder_id: u16) -> Option<u32> {
-        let config = get_config();
-        let content_finder_sheet =
-            ContentFinderConditionSheet::read_from(&mut self.resource, config.world.language())
-                .unwrap();
-        let content_finder_row = content_finder_sheet.row(content_finder_id as u32)?;
-
-        let instance_content_sheet =
-            InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let instance_content_row = instance_content_sheet.row(content_finder_row.Content as u32)?;
+        let content_finder_row = self
+            .content_finder_condition_sheet
+            .row(content_finder_id as u32)?;
+        let instance_content_row = self
+            .instance_content_sheet
+            .row(content_finder_row.Content as u32)?;
 
         Some(instance_content_row.LGBEventRange)
     }
@@ -1146,9 +1150,7 @@ impl GameData {
 
     /// Returns the layout IDs for the map effects of this InstanceContent.
     pub fn get_map_effects(&mut self, content_id: u32) -> Option<Vec<i32>> {
-        let instance_content_sheet =
-            InstanceContentSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let instance_content_row = instance_content_sheet.row(content_id)?;
+        let instance_content_row = self.instance_content_sheet.row(content_id)?;
         let content_id = instance_content_row.ContentDirectorManagedSG;
 
         let sheet =
@@ -1350,11 +1352,9 @@ impl GameData {
 
     /// Returns the synced level for this content.
     pub fn find_content_synced_level(&mut self, content_finder_row_id: u16) -> Option<u8> {
-        let config = get_config();
-        let content_finder_sheet =
-            ContentFinderConditionSheet::read_from(&mut self.resource, config.world.language())
-                .unwrap();
-        let content_finder_row = content_finder_sheet.row(content_finder_row_id as u32)?;
+        let content_finder_row = self
+            .content_finder_condition_sheet
+            .row(content_finder_row_id as u32)?;
 
         Some(content_finder_row.ClassJobLevelSync).filter(|x| *x != 0)
     }
@@ -1446,12 +1446,8 @@ impl GameData {
 
     /// Returns a ContentFinderCondition for a given roulette.
     pub fn pick_roulette_duty(&mut self, roulette: Roulette) -> u32 {
-        let config = get_config();
-        let content_finder_sheet =
-            ContentFinderConditionSheet::read_from(&mut self.resource, config.world.language())
-                .unwrap();
-
-        let rows: Vec<u32> = content_finder_sheet
+        let rows: Vec<u32> = self
+            .content_finder_condition_sheet
             .into_iter()
             .flatten_subrows()
             .filter(|(_, row)| match roulette {
@@ -1565,19 +1561,14 @@ impl GameData {
 
     /// Returns the ContentFinderCondition for a given IKDRoute.
     pub fn lookup_ikd_route_content(&mut self, id: u32) -> u32 {
-        let config = get_config();
-        let sheet = IKDRouteSheet::read_from(&mut self.resource, config.world.language()).unwrap();
-        let row = sheet.row(id).unwrap();
+        let row = self.ikd_route_sheet.row(id).unwrap();
 
         row.Instance
     }
 
     /// Returns the IKDRoute's spots for a given ContentFinderCondition id.
     pub fn lookup_ikd_route_spots_via_content(&mut self, id: u32) -> Option<[u32; 3]> {
-        let config = get_config();
-        let sheet = IKDRouteSheet::read_from(&mut self.resource, config.world.language()).unwrap();
-
-        sheet
+        self.ikd_route_sheet
             .into_iter()
             .flatten_subrows()
             .find(|x| x.1.Instance == id)

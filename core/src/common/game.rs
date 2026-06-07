@@ -219,6 +219,8 @@ pub enum MoveAnimationState {
     EnteringCollision = 2,
     /// The player reached the apex of their jump, and began to fall.
     StartFalling = 4,
+    /// Seen while falling off arena edges in UpdatePositionHandlerInstance.
+    Unk1 = 64,
 }
 
 /// The client sends this to inform the server about its player's current state when jumping.
@@ -235,6 +237,8 @@ pub enum JumpState {
     GimmickPathMoveFinish = 2,
     /// The player is ascending to the apex of the jump.
     Ascending = 16,
+    /// Seen while falling off arena edges in UpdatePositionHandlerInstance.
+    Unk1 = 64,
 }
 
 /// This allows us (and probably the client as well) to determine which event belongs to each sheet, or type of NPC.

@@ -289,8 +289,13 @@ pub enum ActorControlCategory {
     #[brw(magic = 138u32)]
     DisableEventPosRollback { handler_id: HandlerId },
 
+    /// If enabled, the client sends UpdatePositionHandlerInstance. When disabled (the default) then regular UpdatePositionHandler packets instead.
     #[brw(magic = 142u32)]
-    SetPvpMoveMode { unk1: u32 },
+    EnableInstancePositionHandler {
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        enabled: bool,
+    },
 
     #[brw(magic = 142u32)]
     SetImmediateAction { unk1: u32 },

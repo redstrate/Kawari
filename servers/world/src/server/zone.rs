@@ -338,8 +338,9 @@ impl Zone {
                                     });
                                 }
                                 _ => tracing::warn!(
-                                    "Unknown GimmickRect type: {}",
-                                    gimmick_rect_info.TriggerIn
+                                    "Unknown GimmickRect type: {} for event range instance {}",
+                                    gimmick_rect_info.TriggerIn,
+                                    object.instance_id
                                 ),
                             }
 

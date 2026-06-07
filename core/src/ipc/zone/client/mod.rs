@@ -638,6 +638,17 @@ pub enum ClientZoneIpcData {
         /// Unknown.
         unk3: u32,
     },
+    UpdatePositionHandlerInstance {
+        rotation: f32,
+        interpolate_rotation: f32,
+        anim_type: MoveAnimationType,
+        anim_state: MoveAnimationState,
+        #[brw(pad_after = 1)] // empty
+        jump_state: JumpState,
+        position: Position,
+        interpolate_position: Position,
+        unk1: u32, // Seems to be zeroed?
+    },
 }
 
 #[cfg(test)]
