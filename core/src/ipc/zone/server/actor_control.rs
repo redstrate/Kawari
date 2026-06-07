@@ -220,6 +220,13 @@ pub enum ActorControlCategory {
     #[brw(magic = 58u32)]
     SetSoftTarget {},
 
+    // Sets the player's HP and seems to deal unique damage(?) Seen while falling off an Eden arena.
+    #[brw(magic = 80u32)]
+    DamageEffect {
+        /// How much damage you take.
+        amount: u32,
+    },
+
     // Calls into many inventory-related functions, haven't looked too far yet.
     #[brw(magic = 84u32)]
     UnkInventoryRelated {
