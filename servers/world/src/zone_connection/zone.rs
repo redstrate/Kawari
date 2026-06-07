@@ -256,11 +256,11 @@ impl ZoneConnection {
         self.actor_control_self(ActorControlCategory::SetItemLevel { level })
             .await;
 
-        // Duties use this packet!
-        self.actor_control_self(ActorControlCategory::EnableInstancePositionHandler {
-            enabled: bound_by_duty,
-        })
-        .await;
+        // NOTE: This is currently disabled because - at least in my testing - we quickly desync and I'm unsure if this is actually important right now.
+        // Let's re-enable this once we're not trash
+        // builder.actor_control_self(ActorControlCategory::EnableInstancePositionHandler {
+        //     enabled: bound_by_duty,
+        // });
 
         // send some weird thing to make the zone load correctly
         if !bound_by_duty {
