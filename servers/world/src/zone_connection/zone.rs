@@ -123,7 +123,21 @@ impl ZoneConnection {
                 seed3: !self.obsfucation_data.seed3,
             });
             self.send_ipc_self(ipc).await;
+        } else {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitializeObfuscation {
+                unk_before: [0; 6],
+                obsfucation_mode: 0,
+                seed1: 0,
+                seed2: 0,
+                seed3: 0,
+            });
+            self.send_ipc_self(ipc).await;
         }
+
+        self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::InitResponse {
+            actor_id: self.player_data.character.actor_id,
+        }))
+        .await;
 
         // Send owned housing list (unsure where this fits in before ZoneInit?!)
         {
