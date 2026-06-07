@@ -524,8 +524,6 @@ async fn process_packet(
     n: usize,
     buf: &[u8],
 ) -> bool {
-    let config = get_config();
-
     // if the last response was over >5 seconds, the client is probably gone
     if n == 0 {
         let now = Instant::now();
@@ -568,6 +566,7 @@ async fn process_packet(
                                 );
                             }
 
+                            let config = get_config();
                             let Ok(mut login_reply) = ureq::get(format!(
                                 "{}/_private/max_ex?service={}",
                                 config.login.server_name, service_account_id,
@@ -651,6 +650,7 @@ async fn process_packet(
                                     player_state_flags3.set(PlayerStateFlags3::TRADE_MENTOR, true);
                                 }
 
+                                let config = get_config();
                                 let ipc = ServerZoneIpcSegment::new(
                                     ServerZoneIpcData::PlayerSetup(PlayerSetup {
                                         content_id: connection.player_data.character.content_id
@@ -890,6 +890,7 @@ async fn process_packet(
                             connection.send_grand_company_info().await;
 
                             // Send login message
+                            let config = get_config();
                             connection.send_notice(&config.world.login_message).await;
 
                             let online_player_count;
@@ -1922,6 +1923,7 @@ async fn process_packet(
                             }
 
                             // Send the message to the global server to be processed further
+                            let config = get_config();
                             let info = MessageInfo {
                                 sender_actor_id: connection.player_data.character.actor_id,
                                 sender_account_id: connection
