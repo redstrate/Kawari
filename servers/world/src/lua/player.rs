@@ -264,7 +264,7 @@ impl LuaPlayer {
                 unk5,
             }),
             ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::WalkInTriggerRelatedUnk3 {
+                category: ActorControlCategory::MovementRelatedUnk {
                     unk1: 1, // Sometimes the server sends 2 for this, but it's still completely unknown what it means.
                 },
             })),

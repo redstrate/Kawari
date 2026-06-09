@@ -33,6 +33,9 @@ pub enum DirectorEvent {
     /// `arg` is unknown.
     #[brw(magic = 0x40000006u32)]
     DutyRecommence,
+    /// Shows "one or more party members have yet to complete this duty" message along with the rewards.
+    #[brw(magic = 0x4000000Cu32)]
+    DutyFirstTimeCompletionNotice,
     /// Seems to be in response to the Sync trigger. Arg seems to always be 1.
     #[brw(magic = 0x80000000u32)]
     SyncResponse,

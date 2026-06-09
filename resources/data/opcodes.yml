@@ -735,6 +735,26 @@ ServerZoneIpcType:
   comment: Unknown purpose.
   opcode: 159
   size: 16
+- name: UnkDirector2
+  comment: Unknown purpose.
+  opcode: 387
+  size: 24
+- name: StatusEffectListDouble
+  comment: Unknown purpose, seen in instanced content.
+  opcode: 838
+  size: 720
+- name: StatusEffectListPlayerDouble
+  comment: Unknown purpose, seen in instanced content.
+  opcode: 477
+  size: 720
+- name: UnkJobGauge
+  comment: Seen while dying in instanced content.
+  opcode: 892
+  size: 8
+- name: UpdateRecastTimes
+  comment: Supposedly, from FFXIVOpcodes.
+  opcode: 320
+  size: 640
 ClientZoneIpcType:
 - name: InitRequest
   comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)

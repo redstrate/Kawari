@@ -1424,6 +1424,21 @@ pub enum ServerZoneIpcData {
         /// Unsure what this means yet.
         unk1: [u8; 15],
     },
+    UnkDirector2 {
+        unk: [u8; 24],
+    },
+    StatusEffectListDouble {
+        unk: [u8; 720],
+    },
+    StatusEffectListPlayerDouble {
+        unk: [u8; 720],
+    },
+    UnkJobGauge {
+        unk: [u8; 8],
+    },
+    UpdateRecastTimes {
+        unk: [u8; 640],
+    },
 }
 
 #[cfg(test)]

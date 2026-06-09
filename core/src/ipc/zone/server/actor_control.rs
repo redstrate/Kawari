@@ -220,6 +220,10 @@ pub enum ActorControlCategory {
     #[brw(magic = 58u32)]
     SetSoftTarget {},
 
+    /// Plays this character's idle animation, I guess?
+    #[brw(magic = 60u32)]
+    PlayIdleAnimation {},
+
     // Sets the player's HP and seems to deal unique damage(?) Seen while falling off an Eden arena.
     #[brw(magic = 80u32)]
     DamageEffect {
@@ -399,8 +403,9 @@ pub enum ActorControlCategory {
         unk1: u32,
     },
 
+    /// Changes something in UpdatePositionHandler?
     #[brw(magic = 236u32)]
-    WalkInTriggerRelatedUnk3 { unk1: u32 },
+    MovementRelatedUnk { unk1: u32 },
 
     #[brw(magic = 253u32)]
     CompanionUnlock {
@@ -534,6 +539,10 @@ pub enum ActorControlCategory {
     #[brw(magic = 410u32)]
     PlaySharedGroupTimeline { timeline_id: u32 },
 
+    /// Sets the `companion_owner_id` for a this object.
+    #[brw(magic = 417u32)]
+    SetCompanionOwnerId { new_id: ObjectId },
+
     #[brw(magic = 500u32)]
     SetTitle { title_id: u32 },
 
@@ -608,7 +617,7 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 519u32)]
-    SetPartyMemberCutsceneFlags { unk1: u32, unk2: u32 },
+    SetPartyMemberCutsceneFlags { actor_id: ObjectId, unk2: u32 },
 
     #[brw(magic = 521u32)]
     SetItemLevel { level: u32 },
@@ -630,6 +639,15 @@ pub enum ActorControlCategory {
     /// Calls into some MobHunt method, not sure what it does yet.
     #[brw(magic = 583u32)]
     UnkMobHuntRelated {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    #[brw(magic = 600u32)]
+    AchievementProgress {
+        id: u32,
         unk1: u32,
         unk2: u32,
         unk3: u32,
@@ -813,9 +831,30 @@ pub enum ActorControlCategory {
     #[brw(magic = 1506u32)]
     StartDuelCountdown { opponent_id: ObjectId },
 
+    /// Calls into animation-related functions I think?
+    #[brw(magic = 1529u32)]
+    UnkAnimationRelated {},
+
+    #[brw(magic = 1545u32)]
+    UnkCooldownsRelated {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
     /// Calls some method in PvPProfile, unsure what it does yet.
     #[brw(magic = 1610u32)]
     UnkPvPProfileRelated {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
+    /// Collection UI stuff.
+    #[brw(magic = 2251u32)]
+    McGuffinUnk {
         unk1: u32,
         unk2: u32,
         unk3: u32,
@@ -936,6 +975,14 @@ pub enum ActorControlCategory {
     UnkFate12 {
         /// Index into the FATE Excel sheet.
         fate_id: u32,
+    },
+
+    #[brw(magic = 2500u32)]
+    FauxHollowsData {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
     },
 
     #[doc(hidden)]
