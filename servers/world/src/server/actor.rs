@@ -77,6 +77,8 @@ pub enum NetworkedActor {
     },
     Object {
         object: SpawnObject,
+        /// Name of the layer that the object originates from. Can be empty.
+        layer_name: String,
     },
     Treasure {
         treasure: SpawnTreasure,
@@ -118,7 +120,7 @@ impl NetworkedActor {
         match &self {
             NetworkedActor::Player { spawn, .. } => spawn.common.position,
             NetworkedActor::Npc { spawn, .. } => spawn.common.position,
-            NetworkedActor::Object { object } => object.position,
+            NetworkedActor::Object { object, .. } => object.position,
             NetworkedActor::Treasure { treasure } => treasure.position,
         }
     }
@@ -127,7 +129,7 @@ impl NetworkedActor {
         match &self {
             NetworkedActor::Player { spawn, .. } => spawn.common.rotation,
             NetworkedActor::Npc { spawn, .. } => spawn.common.rotation,
-            NetworkedActor::Object { object } => object.rotation,
+            NetworkedActor::Object { object, .. } => object.rotation,
             NetworkedActor::Treasure { treasure } => treasure.rotation,
         }
     }

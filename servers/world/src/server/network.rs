@@ -55,7 +55,7 @@ impl NetworkState {
                 spawn.common.spawn_index = spawn_index;
                 FromServer::ActorSpawn(object_id, SpawnKind::Npc(spawn))
             }
-            NetworkedActor::Object { object } => {
+            NetworkedActor::Object { object, .. } => {
                 let mut object = *object;
                 object.spawn_index = spawn_index;
                 FromServer::SpawnObject(object)

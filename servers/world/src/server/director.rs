@@ -495,7 +495,9 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 );
 
                 // Update invisibility flags for next spawn
-                if let Some(NetworkedActor::Object { object }) = instance.find_actor_mut(actor_id) {
+                if let Some(NetworkedActor::Object { object, .. }) =
+                    instance.find_actor_mut(actor_id)
+                {
                     object.event_state = state;
                 }
             }
@@ -515,7 +517,9 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 );
 
                 // Update invisibility flags for next spawn
-                if let Some(NetworkedActor::Object { object }) = instance.find_actor_mut(actor_id) {
+                if let Some(NetworkedActor::Object { object, .. }) =
+                    instance.find_actor_mut(actor_id)
+                {
                     object.event_state = state;
                 }
             }
@@ -535,7 +539,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     if let Some(position) = position {
                         object.position = *position;
                     }
-                    instance.insert_object(object.entity_id, object);
+                    instance.insert_object(object.entity_id, object, String::default()); // TODO: insert layer name
                 } else {
                     tracing::warn!("Failed to find eobj {base_id} for SpawnEObj, it won't spawn!");
                 }

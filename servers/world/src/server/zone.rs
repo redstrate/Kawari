@@ -516,7 +516,7 @@ impl Zone {
         &mut self,
         game_data: &mut GameData,
         explorer_mode: bool,
-    ) -> Vec<SpawnObject> {
+    ) -> Vec<(SpawnObject, String)> {
         let mut object_spawns = Vec::new();
 
         for layer_group in &self.layer_groups {
@@ -575,7 +575,7 @@ impl Zone {
                             .insert(spawn.entity_id, spawn.base_id);
 
                         if game_data.get_eobj_pop_type(eobj.parent_data.base_id) == 1 {
-                            object_spawns.push(spawn);
+                            object_spawns.push((spawn, layer.header.name.value.clone()));
                         }
                     }
 
@@ -611,7 +611,7 @@ impl Zone {
                         ..Default::default()
                     };
                     self.cached_objects.insert(base_id, spawn);
-                    object_spawns.push(spawn);
+                    object_spawns.push((spawn, String::default()));
                 }
             }
         }
@@ -627,7 +627,7 @@ impl Zone {
                 args2: u32::from_le_bytes([0, i as u8, 0, 0]),
                 ..Default::default()
             };
-            object_spawns.push(spawn);
+            object_spawns.push((spawn, String::default()));
         }
 
         object_spawns

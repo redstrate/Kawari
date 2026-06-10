@@ -18,9 +18,8 @@ use kawari::ipc::chat::ClientChatIpcData;
 use kawari::ipc::zone::{
     ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
     CrossRealmListings, EventType, FurnitureTranslatedForObserver, ItemInfo,
-    LinkshellInviteResponse, MarketBoardItem, OnlineStatus, OnlineStatusMask,
-    PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType, TrustContent, TrustInformation,
-    WarpType,
+    LinkshellInviteResponse, MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup,
+    SceneFlags, SearchInfo, SocialListRequestType, TrustContent, TrustInformation, WarpType,
 };
 
 use kawari::ipc::zone::{

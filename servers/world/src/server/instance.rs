@@ -153,8 +153,8 @@ impl Instance {
         }
 
         // Load initial event objects into instance
-        for object in instance.zone.get_event_objects(game_data, false) {
-            instance.insert_object(object.entity_id, object);
+        for (object, layer_name) in instance.zone.get_event_objects(game_data, false) {
+            instance.insert_object(object.entity_id, object, layer_name);
         }
 
         // Load initial NPCs into instance
@@ -280,9 +280,9 @@ impl Instance {
         );
     }
 
-    pub fn insert_object(&mut self, actor_id: ObjectId, object: SpawnObject) {
+    pub fn insert_object(&mut self, actor_id: ObjectId, object: SpawnObject, layer_name: String) {
         self.actors
-            .insert(actor_id, NetworkedActor::Object { object });
+            .insert(actor_id, NetworkedActor::Object { object, layer_name });
     }
 
     pub fn insert_treasure(&mut self, actor_id: ObjectId, treasure: SpawnTreasure) {
@@ -340,7 +340,7 @@ impl Instance {
     /// Returns the actor ID (if any) of the spawned EObj by it's instance ID in the layout.
     pub fn find_object(&self, layout_id: u32) -> Option<ObjectId> {
         for (id, actor) in &self.actors {
-            if let NetworkedActor::Object { object } = actor
+            if let NetworkedActor::Object { object, .. } = actor
                 && object.layout_id == layout_id
             {
                 return Some(*id);
@@ -353,8 +353,26 @@ impl Instance {
     /// Returns the actor ID (if any) of the spawned EObj by it's EObj ID.
     pub fn find_object_by_eobj_id(&self, eobj_id: u32) -> Option<ObjectId> {
         for (id, actor) in &self.actors {
-            if let NetworkedActor::Object { object } = actor
+            if let NetworkedActor::Object { object, .. } = actor
                 && object.base_id == eobj_id
+            {
+                return Some(*id);
+            }
+        }
+
+        None
+    }
+
+    /// Returns the actor ID (if any) of the spawned EObj by it's EObj ID and layer name.
+    pub fn find_object_by_eobj_id_and_layer_name(
+        &self,
+        eobj_id: u32,
+        eq_layer_name: &str,
+    ) -> Option<ObjectId> {
+        for (id, actor) in &self.actors {
+            if let NetworkedActor::Object { object, layer_name } = actor
+                && object.base_id == eobj_id
+                && layer_name == eq_layer_name
             {
                 return Some(*id);
             }
@@ -365,6 +383,14 @@ impl Instance {
 
     /// Returns the entrance circle event object (if found).
     pub fn find_entrance_circle(&self) -> Option<ObjectId> {
+        // Prefer EObjs in LVD_zone_01 as that's where the circle is usually placed, otherwise other EObjs conflict such as in E8N.
+        for base_id in ENTRANCE_CIRCLE_IDS {
+            if let Some(id) = self.find_object_by_eobj_id_and_layer_name(base_id, "LVD_zone_01") {
+                return Some(id);
+            }
+        }
+
+        // Fallback to not matching by layer name...
         for base_id in ENTRANCE_CIRCLE_IDS {
             if let Some(id) = self.find_object_by_eobj_id(base_id) {
                 return Some(id);
@@ -378,7 +404,7 @@ impl Instance {
     pub fn find_base_id_by_actor_id(&self, actor_id: ObjectId) -> Option<u32> {
         for (id, actor) in &self.actors {
             if *id == actor_id
-                && let NetworkedActor::Object { object } = actor
+                && let NetworkedActor::Object { object, .. } = actor
             {
                 return Some(object.base_id);
             }
@@ -390,7 +416,7 @@ impl Instance {
     /// Returns the actor ID (if any) of the spawned EObj by it's Bind Layout ID.
     pub fn find_object_by_bind_layout_id(&self, bind_layout_id: u32) -> Option<ObjectId> {
         for (id, actor) in &self.actors {
-            if let NetworkedActor::Object { object } = actor
+            if let NetworkedActor::Object { object, .. } = actor
                 && object.bind_layout_id == bind_layout_id
             {
                 return Some(*id);

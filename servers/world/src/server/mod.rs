@@ -332,7 +332,7 @@ fn set_shared_group_timeline_state(
             return;
         };
 
-        let NetworkedActor::Object { object } = actor else {
+        let NetworkedActor::Object { object, .. } = actor else {
             return;
         };
 
@@ -2190,7 +2190,7 @@ pub async fn server_main_loop(
                         entrance_actor_id = actor_id;
 
                         // Update invisibility flags for next spawn
-                        if let Some(NetworkedActor::Object { object }) =
+                        if let Some(NetworkedActor::Object { object, .. }) =
                             instance.find_actor_mut(entrance_actor_id)
                         {
                             object.event_state = state;
