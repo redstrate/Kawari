@@ -4,7 +4,7 @@ use bstr::BString;
 use kawari::{
     common::{DEBUG_COMMAND_TRIGGER, ObjectId},
     ipc::zone::{
-        ActionKind, ActionRequest, BattleNpcSubKind, CharacterDataFlag, CommonSpawn, ObjectKind,
+        ActionRequest, ActionType, BattleNpcSubKind, CharacterDataFlag, CommonSpawn, ObjectKind,
         ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, WarpType,
     },
 };
@@ -255,9 +255,8 @@ fn process_debug_commands(
                     from_id,
                     from_actor_id,
                     ActionRequest {
-                        action_key: mount_id as u32,
-                        exec_proc: 0,
-                        action_kind: ActionKind::Mount,
+                        action_id: mount_id as u32,
+                        action_type: ActionType::Mount,
                         ..Default::default()
                     },
                 );

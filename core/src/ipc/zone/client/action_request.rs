@@ -2,31 +2,51 @@ use binrw::binrw;
 
 use crate::common::{ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
 
+/// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/ActionManager.cs#L395>
 #[binrw]
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
 #[brw(repr = u8)]
-pub enum ActionKind {
+pub enum ActionType {
     #[default]
-    Nothing = 0x0,
-    Normal = 0x1,
-    Item = 0x2,
-    Mount = 0xD,
+    None,
+    Action,
+    Item,
+    EventItem,
+    EventAction,
+    GeneralAction,
+    BuddyAction,
+    MainCommand,
+    Companion,
+    CraftAction,
+    Unk10, // Fishing per Sapphire? Something to do with items.
+    PetAction,
+    Unk12, // Not in UseAction. Sapphire says CompanyAction, but not actually triggered.
+    Mount,
+    PvPAction,
+    FieldMarker,
+    ChocoboRaceAbility,
+    ChocoboRaceItem,
+    Unk18, // Not in UseAction (?)
+    BgcArmyAction,
+    Ornament,
 }
 
 #[binrw]
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct ActionRequest {
     /// Index into the Action Excel sheet.
-    pub action_key: u32,
-    pub exec_proc: u8, // what?
-    pub action_kind: ActionKind,
-    #[brw(pad_before = 2)] // padding, i think it's filled with GARBAGE
-    pub request_id: u16,
+    pub action_id: u32,
+    pub unk1: u8, // what?
+    pub action_type: ActionType,
+    pub unk2: u16,
     #[br(map = read_quantized_rotation)]
     #[bw(map = write_quantized_rotation)]
-    pub rotation: f32,
-    pub dir: u16,
-    pub dir_target: u16,
+    pub rotation1: f32,
+    #[br(map = read_quantized_rotation)]
+    #[bw(map = write_quantized_rotation)]
+    pub rotation2: f32,
+    pub unk3: u16,
+    pub unk4: u16,
     pub target: ObjectTypeId,
     pub arg: u32,
     pub padding_prob: u32,
@@ -53,10 +73,10 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let action_request = ActionRequest::read_le(&mut buffer).unwrap();
-        assert_eq!(action_request.action_kind, ActionKind::Normal);
+        assert_eq!(action_request.action_type, ActionType::Action);
         assert_eq!(action_request.target.object_id, ObjectId(0x400097d0));
-        assert_eq!(action_request.request_id, 0x2);
-        assert_eq!(action_request.rotation, 1.9694216);
+        assert_eq!(action_request.rotation1, -3.141401);
+        assert_eq!(action_request.rotation2, 1.9694216);
     }
 
     #[test]
@@ -68,10 +88,10 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let action_request = ActionRequest::read_le(&mut buffer).unwrap();
-        assert_eq!(action_request.action_kind, ActionKind::Mount);
-        assert_eq!(action_request.action_key, 55);
+        assert_eq!(action_request.action_type, ActionType::Mount);
+        assert_eq!(action_request.action_id, 55);
         assert_eq!(action_request.target.object_id, ObjectId(277114100));
-        assert_eq!(action_request.request_id, 4);
-        assert_eq!(action_request.rotation, -0.8154669);
+        assert_eq!(action_request.rotation1, -3.1412091);
+        assert_eq!(action_request.rotation2, -0.8154669);
     }
 }

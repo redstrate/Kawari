@@ -204,6 +204,7 @@ impl BaseParameters {
         self.tenacity = param_grow.BaseSpeed as u32;
         self.attack_power = *self.get_mut(4); // TODO: don't hardcode PrimaryStat
         self.skill_speed = self.tenacity;
+        self.haste = 100; // Controls cast times
 
         // This is fixed and isn't modified by any items in retail, so it's safe to be set here.
         self.mp = param_grow.MpModifier as u32;

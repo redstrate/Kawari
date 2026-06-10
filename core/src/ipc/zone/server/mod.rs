@@ -93,7 +93,7 @@ pub use free_company::FcHierarchy;
 mod actor_move;
 use crate::common::{
     CustomizeData, DeepDungeonRoomFlag, HandlerId, LandData, ObjectTypeId, Position,
-    read_packed_position, write_packed_position,
+    read_packed_position, read_quantized_rotation, write_packed_position, write_quantized_rotation,
 };
 use crate::constants::{
     AVAILABLE_CLASSJOBS, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
@@ -188,7 +188,7 @@ use crate::ipc::{
 };
 
 use crate::ipc::zone::social_list::{FriendGroupIconInfo, GrandCompany};
-use crate::ipc::zone::{ActionKind, InviteReply, InviteType, InviteUpdateType, SearchInfo};
+use crate::ipc::zone::{ActionType, InviteReply, InviteType, InviteUpdateType, SearchInfo};
 
 pub type ServerZoneIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ServerZoneIpcType>, ServerZoneIpcType, ServerZoneIpcData>;
@@ -988,15 +988,29 @@ pub enum ServerZoneIpcData {
         position: Position,
     },
     ActorCast {
-        action: u16,
+        /// Index into the Action Excel sheet.
+        action_id: u16,
         /// What kind of action is being cast.
-        #[brw(pad_after = 1)] // empty
-        action_kind: ActionKind,
-        action_key: u32,
+        action_type: ActionType,
+        /// Omen Delay is for the extra effects that appear when casting, usually telegraphs, like Titan's Landslide line. If you increase that value, the line that usually immediately shows in front of him is delayed.
+        omen_delay: u8,
+        /// Seems to always be the same as `action_id`.
+        action_id2: u32,
+        /// Cast time in seconds.
         cast_time: f32,
-        dir: f32,
-        unk1: u32,
+        /// The target of this cast.
         target: ObjectId,
+        /// The cast's rotation.
+        #[br(map = read_quantized_rotation)]
+        #[bw(map = write_quantized_rotation)]
+        rotation: f32,
+        /// ???
+        #[br(map = read_bool_from::<u16>)]
+        #[bw(map = write_bool_as::<u16>)]
+        interruptible: bool,
+        /// Only used when ActionCategory is 11.
+        ballista_entity_id: ObjectId,
+        /// Position of the caster.
         #[brw(pad_after = 2)] // empty
         #[br(map = read_packed_position)]
         #[bw(map = write_packed_position)]

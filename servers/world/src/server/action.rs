@@ -25,7 +25,7 @@ use kawari::{
     },
     config::FilesystemConfig,
     ipc::zone::{
-        ActionEffect, ActionKind, ActionRequest, ActionResult, ActorControlCategory,
+        ActionEffect, ActionRequest, ActionResult, ActionType, ActorControlCategory,
         BattleNpcSubKind, CommonSpawn, EffectEntry, EffectKind, EffectResult, ObjectKind,
         ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc,
     },
@@ -35,13 +35,14 @@ use kawari::{
 pub fn handle_action_messages(
     data: Arc<Mutex<WorldServer>>,
     game_data: Arc<Mutex<GameData>>,
+    network: Arc<Mutex<NetworkState>>,
     msg: &ToServer,
 ) -> bool {
     if let ToServer::ActionRequest(from_id, from_actor_id, request) = msg {
         let cast_time;
         {
             let mut game_data = game_data.lock();
-            cast_time = game_data.get_casttime(request.action_key).unwrap();
+            cast_time = game_data.get_casttime(request.action_id).unwrap(); // TODO: take into account the haste stat like the client does
         }
 
         let delay_milliseconds = cast_time as u64 * 100;
@@ -50,6 +51,32 @@ pub fn handle_action_messages(
         let Some(instance) = data.find_actor_instance_mut(*from_actor_id) else {
             return true;
         };
+
+        if cast_time > 0 {
+            let Some(actor) = instance.find_actor(*from_actor_id) else {
+                return true;
+            };
+
+            let actor_cast = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorCast {
+                action_id: request.action_id as u16,
+                action_type: request.action_type,
+                omen_delay: 0,
+                action_id2: request.action_id,
+                cast_time: delay_milliseconds as f32 / 1000.0,
+                target: request.target.object_id,
+                rotation: request.rotation1,
+                interruptible: false,
+                ballista_entity_id: ObjectId::default(),
+                position: actor.position(),
+            });
+            let mut network = network.lock();
+            network.send_in_range_inclusive_instance(
+                *from_actor_id,
+                instance,
+                FromServer::PacketSegment(actor_cast, *from_actor_id),
+                DestinationNetwork::ZoneClients,
+            );
+        }
 
         instance.insert_task(
             *from_id,
@@ -87,7 +114,7 @@ pub fn execute_action(
     };
     // TODO: Isn't there a better way to do this without a bunch of borrow checking issues involving data, actor, and instance below?
     // Regardless, we need to set the player's mount id in their common spawn so both pillion works and also letting players see this existing actor's mount when they spawn.
-    if request.action_kind == ActionKind::Mount {
+    if request.action_type == ActionType::Mount {
         let mut data = data.lock();
         let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
             return;
@@ -99,7 +126,7 @@ pub fn execute_action(
 
         let common = actor.get_common_spawn_mut();
 
-        common.current_mount = request.action_key as u16;
+        common.current_mount = request.action_id as u16;
         common.mode = CharacterMode::Mounted;
 
         {
@@ -113,7 +140,7 @@ pub fn execute_action(
     let combo_action_id;
     {
         let mut game_data = game_data.lock();
-        combo_action_id = game_data.get_combo_action(request.action_key);
+        combo_action_id = game_data.get_combo_action(request.action_id);
 
         let data = data.lock();
         let Some(instance) = data.find_actor_instance(from_actor_id) else {
@@ -158,17 +185,18 @@ pub fn execute_action(
 
         common_spawn = actor.get_common_spawn().clone();
 
-        effects_builder = match &request.action_kind {
-            ActionKind::Nothing => None,
-            ActionKind::Normal => {
+        effects_builder = match &request.action_type {
+            ActionType::None => None,
+            ActionType::Action => {
                 execute_normal_action(lua.clone(), &request, &mut lua_player, in_combo)
             }
-            ActionKind::Item => {
+            ActionType::Item => {
                 execute_item_action(game_data.clone(), lua.clone(), &request, &mut lua_player)
             }
-            ActionKind::Mount => {
+            ActionType::Mount => {
                 execute_mount_action(network.clone(), from_actor_id, &request, actor, instance)
             }
+            _ => unimplemented!(),
         };
     }
 
@@ -236,7 +264,7 @@ pub fn execute_action(
                     ..
                 } = actor
                 {
-                    *last_combo_action = request.action_key as u16;
+                    *last_combo_action = request.action_id as u16;
                     sequence = *combo_sequence;
 
                     if combo_action_id == *last_combo_action {
@@ -268,7 +296,7 @@ pub fn execute_action(
                         unk3: 0,
                         unk4: 0,
                         unk5: 128,
-                        action_id: request.action_key as u16,
+                        action_id: request.action_id as u16,
                     },
                 });
             }
@@ -291,7 +319,7 @@ pub fn execute_action(
 
                         // Update from game data
                         let mut game_data = game_data.lock();
-                        *damage_element = game_data.get_action_damage_element(request.action_key);
+                        *damage_element = game_data.get_action_damage_element(request.action_id);
                     }
                     EffectKind::InterruptAction {} => {
                         // TODO: this could cancel more than just casting, so we need to be more specific eventually
@@ -375,14 +403,14 @@ pub fn execute_action(
 
                     // TODO: Not sure if this is correct in every item situation
                     // If the action is an item being used, the animation id doesn't necessarily match the action id.
-                    action_animation_id = if request.action_kind == ActionKind::Item
+                    action_animation_id = if request.action_type == ActionType::Item
                         && let Some((action_type, _, _)) =
-                            game_data.lookup_item_action_data(request.action_key)
+                            game_data.lookup_item_action_data(request.action_id)
                     {
                         action_type
                     } else {
                         // Otherwise, just assume the animation id is the action key for now.
-                        request.action_key as u16
+                        request.action_id as u16
                     };
                 }
 
@@ -390,7 +418,7 @@ pub fn execute_action(
                     ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
                         main_target: request.target,
                         target_id_again: request.target,
-                        action_id: request.action_key,
+                        action_id: request.action_id,
                         animation_lock_time: 0.6,
                         rotation: common_spawn.rotation,
                         action_animation_id,
@@ -588,7 +616,7 @@ pub fn execute_action(
 
         if *remove_cooldowns {
             let mut game_data = game_data.lock();
-            let cooldown_group = game_data.get_action_cooldown_group(request.action_key) as u32 - 1;
+            let cooldown_group = game_data.get_action_cooldown_group(request.action_id) as u32 - 1;
             network.send_to_by_actor_id(
                 from_actor_id,
                 FromServer::ActorControlSelf(ActorControlCategory::SetCooldownTimer {
@@ -630,8 +658,8 @@ pub fn execute_enemy_action(
 
         common_spawn = actor.get_common_spawn().clone();
 
-        effects_builder = match &request.action_kind {
-            ActionKind::Normal => {
+        effects_builder = match &request.action_type {
+            ActionType::Action => {
                 execute_normal_action(lua.clone(), &request, &mut lua_player, false)
             }
             _ => unreachable!(),
@@ -672,10 +700,10 @@ pub fn execute_enemy_action(
                     ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
                         main_target: request.target,
                         target_id_again: request.target,
-                        action_id: request.action_key,
+                        action_id: request.action_id,
                         animation_lock_time: 0.6,
                         rotation: common_spawn.rotation,
-                        action_animation_id: request.action_key as u16, // assuming action id == animation id
+                        action_animation_id: request.action_id as u16, // assuming action id == animation id
                         flag: 1,
                         effect_count: effects_builder.effects.len() as u8,
                         effects,
@@ -785,7 +813,7 @@ pub fn execute_normal_action(
     let lua = lua.lock();
     let state = lua.0.app_data_ref::<KawariLuaState>().unwrap();
 
-    let key = request.action_key;
+    let key = request.action_id;
     if let Some(action_script) = state.action_scripts.get(&key) {
         lua.0
             .scope(|scope| {
@@ -825,7 +853,7 @@ pub fn execute_item_action(
 ) -> Option<EffectsBuilder> {
     let lua = lua.lock();
 
-    let key = request.action_key;
+    let key = request.action_id;
     let (action_type, action_data, additional_data);
     let is_misc;
     {
@@ -896,14 +924,14 @@ pub fn execute_mount_action(
         kind: EffectKind::Mount {
             unk1: 1,
             unk2: 0,
-            id: request.action_key as u16,
+            id: request.action_id as u16,
         },
     };
 
     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
         main_target: request.target,
         target_id_again: request.target,
-        action_id: request.action_key,
+        action_id: request.action_id,
         animation_lock_time: 0.1,
         rotation: common_spawn.rotation,
         action_animation_id: 4,
@@ -923,7 +951,7 @@ pub fn execute_mount_action(
     );
 
     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Mount {
-        id: request.action_key as u16,
+        id: request.action_id as u16,
         unk1: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     });
     network.send_in_range_inclusive_instance(

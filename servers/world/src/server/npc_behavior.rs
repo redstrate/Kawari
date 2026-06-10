@@ -12,7 +12,7 @@ use kawari::{
         MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position, TimepointData,
     },
     ipc::zone::{
-        ActionKind, ActionRequest, ActorControlCategory, CharacterDataFlag, ServerZoneIpcData,
+        ActionRequest, ActionType, ActorControlCategory, CharacterDataFlag, ServerZoneIpcData,
         ServerZoneIpcSegment,
     },
 };
@@ -249,20 +249,20 @@ pub fn npc_behavior(
                         match &timepoint.data {
                             TimepointData::Action { action_id, .. } => {
                                 if spawn.common.target_id.object_id.is_valid() && can_take_action {
-                                    let cast_time = 2.7; // TODO: grab from excel data
+                                    let cast_time;
+                                    {
+                                        let mut game_data = gamedata.lock();
+                                        cast_time = game_data.get_casttime(*action_id).unwrap(); // TODO: take into account the haste stat like the client does
+                                    }
+                                    let cast_time_seconds = (cast_time as f32 * 100.0) / 1000.0; // TODO: just change how the Duration is interpreted instead of this nonsense
                                     let request = ActionRequest {
-                                        action_key: *action_id,
-                                        exec_proc: 0,
-                                        action_kind: ActionKind::Normal,
-                                        request_id: 0,
-                                        rotation: spawn.common.rotation,
-                                        dir: 0,
-                                        dir_target: 0,
+                                        action_id: *action_id,
+                                        action_type: ActionType::Action,
+                                        rotation1: spawn.common.rotation,
                                         target: spawn.common.target_id,
-                                        arg: 0,
-                                        padding_prob: 0,
+                                        ..Default::default()
                                     };
-                                    new_action_requests.push((*id, request, cast_time));
+                                    new_action_requests.push((*id, request, cast_time_seconds));
                                 }
                             }
                             TimepointData::TimelineState { states } => {
@@ -286,16 +286,11 @@ pub fn npc_behavior(
                             == ENEMY_AUTO_ATTACK_RATE;
                         if should_auto_attack {
                             let request = ActionRequest {
-                                action_key: timeline.autoattack_action_id,
-                                exec_proc: 0,
-                                action_kind: ActionKind::Normal,
-                                request_id: 0,
-                                rotation: spawn.common.rotation,
-                                dir: 0,
-                                dir_target: 0,
+                                action_id: timeline.autoattack_action_id,
+                                action_type: ActionType::Action,
+                                rotation1: spawn.common.rotation,
                                 target: spawn.common.target_id,
-                                arg: 0,
-                                padding_prob: 0,
+                                ..Default::default()
                             };
                             new_action_requests.push((*id, request, 0.0));
                         }
@@ -342,13 +337,15 @@ pub fn npc_behavior(
 
                 // inform players that this enemy is casting
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorCast {
-                    action: request.action_key as u16,
-                    action_kind: request.action_kind,
-                    action_key: request.action_key,
+                    action_id: request.action_id as u16,
+                    action_type: request.action_type,
+                    omen_delay: 0,
+                    action_id2: request.action_id,
                     cast_time,
-                    dir: request.rotation,
-                    unk1: 1436,
-                    target: ObjectId::default(),
+                    target: request.target.object_id,
+                    rotation: request.rotation1,
+                    interruptible: false,
+                    ballista_entity_id: ObjectId::default(),
                     position,
                 });
 

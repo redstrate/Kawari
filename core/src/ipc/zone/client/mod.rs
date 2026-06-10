@@ -3,7 +3,7 @@ use bstr::BString;
 use kawari_core_macro::opcode_data;
 
 mod action_request;
-pub use crate::ipc::zone::client::action_request::{ActionKind, ActionRequest};
+pub use crate::ipc::zone::client::action_request::{ActionRequest, ActionType};
 
 mod send_chat_message;
 pub use send_chat_message::SendChatMessage;
