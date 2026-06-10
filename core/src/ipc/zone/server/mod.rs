@@ -988,14 +988,14 @@ pub enum ServerZoneIpcData {
         position: Position,
     },
     ActorCast {
-        /// Index into the Action Excel sheet.
-        action_id: u16,
+        /// Usually the same as `action_id`.
+        spell_id: u16,
         /// What kind of action is being cast.
         action_type: ActionType,
         /// Omen Delay is for the extra effects that appear when casting, usually telegraphs, like Titan's Landslide line. If you increase that value, the line that usually immediately shows in front of him is delayed.
         omen_delay: u8,
-        /// Seems to always be the same as `action_id`.
-        action_id2: u32,
+        /// Index into the Action Excel sheet.
+        action_id: u32,
         /// Cast time in seconds.
         cast_time: f32,
         /// The target of this cast.

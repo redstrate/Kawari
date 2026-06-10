@@ -58,10 +58,10 @@ pub fn handle_action_messages(
             };
 
             let actor_cast = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorCast {
-                action_id: request.action_id as u16,
+                spell_id: request.action_id as u16,
+                action_id: request.action_id,
                 action_type: request.action_type,
                 omen_delay: 0,
-                action_id2: 41698, // request.action_id,
                 cast_time: delay_milliseconds as f32 / 1000.0,
                 target: request.target.object_id,
                 rotation: request.rotation1,

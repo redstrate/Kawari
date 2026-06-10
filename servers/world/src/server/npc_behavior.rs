@@ -337,10 +337,10 @@ pub fn npc_behavior(
 
                 // inform players that this enemy is casting
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorCast {
-                    action_id: request.action_id as u16,
+                    spell_id: request.action_id as u16,
                     action_type: request.action_type,
                     omen_delay: 0,
-                    action_id2: request.action_id,
+                    action_id: request.action_id,
                     cast_time,
                     target: request.target.object_id,
                     rotation: request.rotation1,
