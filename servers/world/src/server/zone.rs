@@ -25,9 +25,8 @@ use crate::{
 use kawari::{
     common::{
         DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_EXIT,
-        EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, HandlerType,
-        InvisibilityFlags, ObjectId, Position, WARP_DELAY, euler_to_direction,
-        internal_housing_row,
+        EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, EventState, HandlerType,
+        ObjectId, Position, WARP_DELAY, euler_to_direction, internal_housing_row,
     },
     config::get_config,
     ipc::zone::{
@@ -531,12 +530,15 @@ impl Zone {
                         Affine3A::from(object.transform).to_scale_rotation_translation();
 
                     if let LayerEntryData::EventObject(eobj) = &object.data {
-                        let unselectable = if let Some(event_type) = HandlerType::from_repr(
+                        let targetable_status = if let Some(event_type) = HandlerType::from_repr(
                             game_data.get_eobj_data(eobj.parent_data.base_id) >> 16,
+                        ) && matches!(
+                            event_type,
+                            HandlerType::Invalid | HandlerType::GimmickRect
                         ) {
-                            matches!(event_type, HandlerType::Invalid | HandlerType::GimmickRect)
+                            1
                         } else {
-                            true // make it unselectable to be on the safe side.
+                            0 // make it unselectable to be on the safe side.
                         };
 
                         let base_id = if eobj.parent_data.base_id == EOBJ_SHORTCUT && explorer_mode
@@ -547,22 +549,19 @@ impl Zone {
                         };
 
                         // Hide shortcuts and exits, these will be spawned by the director.
-                        let visibility = if eobj.parent_data.base_id == EOBJ_SHORTCUT
+                        let event_state = if eobj.parent_data.base_id == EOBJ_SHORTCUT
                             || eobj.parent_data.base_id == EOBJ_EXIT
                         {
-                            InvisibilityFlags::UNK1
-                                | InvisibilityFlags::UNK2
-                                | InvisibilityFlags::UNK3
+                            EventState::UNK1 | EventState::UNK2 | EventState::UNK3
                         } else {
-                            InvisibilityFlags::VISIBLE
+                            EventState::VISIBLE
                         };
 
                         let spawn = SpawnObject {
                             kind: ObjectKind::EventObj,
                             base_id,
-                            unselectable,
-                            visibility,
-                            entity_id: ObjectId(object.instance_id),
+                            targetable_status,
+                            event_state,
                             entity_id: ObjectId(fastrand::u32(..)),
                             layout_id: object.instance_id,
                             bind_layout_id: eobj.bound_instance_id,

@@ -2,8 +2,8 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use kawari::{
     common::{
-        DirectorEvent, EOBJ_EXIT, EOBJ_SHORTCUT, HandlerId, InvisibilityFlags, ObjectId,
-        ObjectTypeId, ObjectTypeKind, Position,
+        DirectorEvent, EOBJ_EXIT, EOBJ_SHORTCUT, EventState, HandlerId, ObjectId, ObjectTypeId,
+        ObjectTypeKind, Position,
     },
     ipc::zone::{ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment},
 };
@@ -485,19 +485,18 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     continue;
                 };
 
-                let flags =
-                    InvisibilityFlags::UNK1 | InvisibilityFlags::UNK2 | InvisibilityFlags::UNK3;
+                let state = EventState::UNK1 | EventState::UNK2 | EventState::UNK3;
 
                 let mut network = network.lock();
                 network.send_ac_in_range_instance(
                     instance,
                     actor_id,
-                    ActorControlCategory::SetInvisibilityFlags { flags },
+                    ActorControlCategory::SetEventState { state },
                 );
 
                 // Update invisibility flags for next spawn
                 if let Some(NetworkedActor::Object { object }) = instance.find_actor_mut(actor_id) {
-                    object.visibility = flags;
+                    object.event_state = state;
                 }
             }
             LuaDirectorTask::ShowEObj { base_id } => {
@@ -506,18 +505,18 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     continue;
                 };
 
-                let flags = InvisibilityFlags::VISIBLE;
+                let state = EventState::VISIBLE;
 
                 let mut network = network.lock();
                 network.send_ac_in_range_instance(
                     instance,
                     actor_id,
-                    ActorControlCategory::SetInvisibilityFlags { flags },
+                    ActorControlCategory::SetEventState { state },
                 );
 
                 // Update invisibility flags for next spawn
                 if let Some(NetworkedActor::Object { object }) = instance.find_actor_mut(actor_id) {
-                    object.visibility = flags;
+                    object.event_state = state;
                 }
             }
             LuaDirectorTask::DeleteEObj { base_id } => {

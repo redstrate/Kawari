@@ -3,9 +3,9 @@ use strum_macros::IntoStaticStr;
 
 use crate::{
     common::{
-        CharacterMode, DirectorEvent, EquipDisplayFlag, FateState, HandlerId, InvisibilityFlags,
-        ObjectId, ObjectTypeId, SharedGroupTimelineState, read_bool_from, read_packed_float,
-        write_bool_as, write_packed_float,
+        CharacterMode, DirectorEvent, EquipDisplayFlag, EventState, FateState, HandlerId, ObjectId,
+        ObjectTypeId, SharedGroupTimelineState, read_bool_from, read_packed_float, write_bool_as,
+        write_packed_float,
     },
     ipc::zone::{online_status::OnlineStatus, server::ContainerType},
 };
@@ -266,9 +266,9 @@ pub enum ActorControlCategory {
         handler_id: HandlerId,
     },
 
-    /// Updates the invisibility flags for an actor.
+    /// Updates the state for an event object.
     #[brw(magic = 106u32)]
-    SetInvisibilityFlags { flags: InvisibilityFlags },
+    SetEventState { state: EventState },
 
     #[brw(magic = 109u32)]
     DirectorEvent {

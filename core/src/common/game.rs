@@ -777,10 +777,10 @@ pub fn get_aether_current_comp_flg_set_to_screenimage() -> HashMap<u32, u32> {
 
 #[binrw]
 #[derive(Clone, Copy, Eq, PartialEq)]
-pub struct InvisibilityFlags(u8);
+pub struct EventState(u8);
 
 bitflags! {
-    impl InvisibilityFlags: u8 {
+    impl EventState: u8 {
         const VISIBLE = 0;
         const UNK1 = 1;
         const UNK2 = 2;
@@ -788,13 +788,13 @@ bitflags! {
     }
 }
 
-impl Default for InvisibilityFlags {
+impl Default for EventState {
     fn default() -> Self {
-        InvisibilityFlags::VISIBLE
+        EventState::VISIBLE
     }
 }
 
-impl std::fmt::Debug for InvisibilityFlags {
+impl std::fmt::Debug for EventState {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         bitflags::parser::to_writer(self, f)
     }

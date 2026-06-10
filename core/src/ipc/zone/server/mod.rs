@@ -838,7 +838,9 @@ pub enum ServerZoneIpcData {
         unk: [u8; 528],
     },
     UnkContentFinder2 {
-        unk: [u8; 16],
+        /// Index into the ContentFinderCondition Excel sheet.
+        content_finder_condition_id: u32,
+        unk: [u8; 12],
     },
     Playtime {
         #[brw(pad_after = 4)] // Empty/zeroes

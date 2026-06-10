@@ -2,8 +2,8 @@ use binrw::binrw;
 
 use crate::{
     common::{
-        HandlerId, InvisibilityFlags, ObjectId, Position, read_bool_from, read_quantized_rotation,
-        write_bool_as, write_quantized_rotation,
+        EventState, HandlerId, ObjectId, Position, read_quantized_rotation,
+        write_quantized_rotation,
     },
     ipc::zone::ObjectKind,
 };
@@ -16,11 +16,10 @@ pub struct SpawnObject {
     pub spawn_index: u8,
     /// What kind of object this is.
     pub kind: ObjectKind,
-    /// Seems to control whether or not its targetable?
-    #[br(map = read_bool_from::<u8>)]
-    #[bw(map = write_bool_as::<u8>)]
-    pub unselectable: bool,
-    pub event_state: u8,
+    /// Seems to control whether or not its targetable? TODO: This is a flag I'm pretty sure!
+    pub targetable_status: u8,
+    /// Unsure of the purpose of this field.
+    pub visibility: u8,
     /// If this is an ENPC, represents an index into the EObj Excel sheet.
     /// If this is an AreaObject, represents an index into the VFX Excel sheet.
     pub base_id: u32,
@@ -42,9 +41,9 @@ pub struct SpawnObject {
     pub rotation: f32,
     /// The FATE to associate with.
     pub fate_id: u16,
-    /// Controls the visibility of the object.
+    /// Controls the visibility of the event object.
     #[brw(pad_after = 5)] // padding for alignment, and then an unused u32
-    pub visibility: InvisibilityFlags,
+    pub event_state: EventState,
     /// For EventObjs, this is the default SharedGroupTimelineState.
     pub args1: u32,
     /// Part of this is used for housing entrances.

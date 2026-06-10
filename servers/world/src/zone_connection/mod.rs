@@ -194,6 +194,8 @@ pub struct ZoneConnection {
     pub offered_teleport: Option<TeleportQuery>,
     /// Whether the player is trading with another player or not.
     pub is_trading: bool,
+    /// For the crappy setup_director() function right now.
+    pub director_vars: Option<ServerZoneIpcSegment>,
 }
 
 impl ZoneConnection {

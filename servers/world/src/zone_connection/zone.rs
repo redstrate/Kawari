@@ -15,8 +15,8 @@ use kawari::{
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
         ActorControlCategory, Condition, ContentRegistrationFlags, FurnitureList, House,
-        HouseExterior, HouseList, HouseStatus, HousingInteriorDetails, PlotSize, ServerZoneIpcData,
-        ServerZoneIpcSegment, WarpType, WeatherChange, ZoneInit, ZoneInitFlags,
+        HouseExterior, HouseList, HouseStatus, HousingInteriorDetails, MapEffects, PlotSize,
+        ServerZoneIpcData, ServerZoneIpcSegment, WarpType, WeatherChange, ZoneInit, ZoneInitFlags,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
 };
@@ -494,22 +494,10 @@ impl ZoneConnection {
                 .await;
 
                 if director_type.requires_content_id() {
-                    if let Some(director_vars) = director_vars {
-                        self.send_ipc_self(director_vars).await;
-                    }
-
-                    self.send_ipc_self(ServerZoneIpcSegment::new(
-                        ServerZoneIpcData::UnkDirector1 {
-                            unk: [
-                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255,
-                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                            ],
-                        },
-                    ))
-                    .await;
-
                     self.content_handler_id = director_id;
                 }
+
+                self.director_vars = director_vars;
             } else {
                 tracing::warn!("{intended_use} does not have a known director type yet?");
             }
@@ -645,5 +633,73 @@ impl ZoneConnection {
             intended_use,
             TerritoryIntendedUse::HousingIndoor | TerritoryIntendedUse::HousingOutdoor
         )
+    }
+
+    // TODO: probably shove this director setup into server state? we actually do very, very little here.
+    pub async fn setup_director(&mut self) {
+        // Initialize map effects to their default state.
+        // TODO: find a better place to do this?
+        let Some(instance_id) = self.current_instance_id else {
+            return;
+        };
+
+        let map_effects;
+        {
+            let mut game_data = self.gamedata.lock();
+            map_effects = game_data.get_map_effects(instance_id as u32)
+        }
+
+        if let Some(director_vars) = self.director_vars.take() {
+            self.send_ipc_self(director_vars).await;
+        } else {
+            // Send sensible default until this specific content is scripted...
+            self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorVars {
+                handler_id: self.content_handler_id,
+                flag: 1,
+                branch: 0,
+                data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                unk1: 0,
+                unk2: 0,
+                unk3: 0,
+                unk4: 0,
+            }))
+            .await;
+        }
+
+        self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkDirector1 {
+            unk: [
+                0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 38, 0, 0, 0,
+            ],
+        }))
+        .await;
+
+        if let Some(map_effects) = map_effects {
+            let mut states = Vec::new();
+            for (i, layout_id) in map_effects.iter().enumerate() {
+                // A layout ID of zero means the effect should be skipped.
+                if *layout_id != 0 {
+                    states.resize(i + 1, 0);
+                    states[i] = 4; // 4 means to play it, I guess?
+                }
+            }
+
+            let ipc = MapEffects {
+                handler_id: self.content_handler_id,
+                unk_flag: 5,
+                states,
+                ..Default::default()
+            }
+            .package()
+            .unwrap();
+            self.send_ipc_self(ipc).await;
+        }
+
+        self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkDirector2 {
+            unk: [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            ],
+        }))
+        .await;
     }
 }

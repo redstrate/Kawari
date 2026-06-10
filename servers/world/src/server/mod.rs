@@ -39,8 +39,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        CharacterMode, DEAD_DESPAWN_TIME, HandlerId, HandlerType, InvisibilityFlags,
-        MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        CharacterMode, DEAD_DESPAWN_TIME, EventState, HandlerId, HandlerType, MAX_SPAWNED_ACTORS,
+        MAX_SPAWNED_OBJECTS, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
         SharedGroupTimelineState, determine_initial_pop_range, euler_to_direction, is_private_area,
     },
     config::{FilesystemConfig, get_config},
@@ -2175,8 +2175,7 @@ pub async fn server_main_loop(
                 ToServer::CommenceDuty(from_actor_id) => {
                     let mut data = data.lock();
                     let entrance_actor_id;
-                    let flags =
-                        InvisibilityFlags::UNK1 | InvisibilityFlags::UNK2 | InvisibilityFlags::UNK3;
+                    let state = EventState::UNK1 | EventState::UNK2 | EventState::UNK3;
 
                     {
                         let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
@@ -2194,15 +2193,15 @@ pub async fn server_main_loop(
                         if let Some(NetworkedActor::Object { object }) =
                             instance.find_actor_mut(entrance_actor_id)
                         {
-                            object.visibility = flags;
-                            object.unselectable = true;
+                            object.event_state = state;
+                            object.targetable_status = 1;
                         }
                     }
 
                     // Make the entrance circle invisible.
                     let msg = FromServer::ActorControl(
                         entrance_actor_id,
-                        ActorControlCategory::SetInvisibilityFlags { flags },
+                        ActorControlCategory::SetEventState { state },
                     );
 
                     let mut network = network.lock();
