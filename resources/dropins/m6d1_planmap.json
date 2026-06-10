@@ -18,7 +18,7 @@
                         "nonpop": true,
                         "type": "battle_npc"
                     },
-                    "instance_id": 12109841,
+                    "layout_id": 12109841,
                     "position": {
                         "x": -651.1129150390625,
                         "y": 1.0330779552459717,

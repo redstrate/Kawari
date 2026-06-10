@@ -22,7 +22,9 @@ pub struct DropInLayer {
 /// Drop-in object that can add new objects to a zone.
 #[derive(Deserialize, Serialize, PartialEq, Debug, Clone)]
 pub struct DropInObject {
-    pub instance_id: u32,
+    /// The layout ID associated with this object. This really is for preservation purposes, as use of the drop-in implies this game object doesn't exist in the client LGB.
+    /// Note that this is *not* guaranteed unique across objects. Multiple enemies in instanced content can share the same layout ID.
+    pub layout_id: u32,
     pub position: Position,
     pub rotation: f32,
     pub data: DropInObjectData,
@@ -87,7 +89,7 @@ mod tests {
                 layers: vec![DropInLayer {
                     name: "CRF_MINING_LV20".to_string(),
                     objects: vec![DropInObject {
-                        instance_id: 4001271,
+                        layout_id: 4001271,
                         position: Position(Vec3 {
                             x: -266.0561,
                             y: 29.50931,

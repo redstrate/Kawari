@@ -563,6 +563,7 @@ impl Zone {
                             unselectable,
                             visibility,
                             entity_id: ObjectId(object.instance_id),
+                            entity_id: ObjectId(fastrand::u32(..)),
                             layout_id: object.instance_id,
                             bind_layout_id: eobj.bound_instance_id,
                             radius: 1.0,
@@ -604,7 +605,7 @@ impl Zone {
                         kind: ObjectKind::GatheringPoint,
                         base_id,
                         entity_id: ObjectId(fastrand::u32(..)),
-                        layout_id: object.instance_id,
+                        layout_id: object.layout_id,
                         radius: 1.0,
                         args1: 50334724, // TODO: what is this value? it varies between nodes, and I *believe* it has to be about grouping.
                         position: object.position,
@@ -722,13 +723,13 @@ impl Zone {
                             position: object.position,
                             rotation: object.rotation,
                             look: customize,
-                            layout_id: object.instance_id,
+                            layout_id: object.layout_id,
                             ..game_data.get_npc_equip(equip as u32).unwrap_or_default()
                         },
                         ..Default::default()
                     };
 
-                    self.cached_npcs.insert(object.instance_id, spawn.clone());
+                    self.cached_npcs.insert(object.layout_id, spawn.clone());
                     if !nonpop {
                         npc_spawns.push(spawn);
                     }
@@ -745,13 +746,13 @@ impl Zone {
                             position: object.position,
                             rotation: object.rotation,
                             look: customize,
-                            layout_id: object.instance_id,
+                            layout_id: object.layout_id,
                             ..game_data.get_npc_equip(equip as u32).unwrap_or_default()
                         },
                         ..Default::default()
                     };
 
-                    self.cached_npcs.insert(object.instance_id, spawn.clone());
+                    self.cached_npcs.insert(object.layout_id, spawn.clone());
                     npc_spawns.push(spawn);
                 }
             }

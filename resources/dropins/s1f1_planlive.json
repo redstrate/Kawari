@@ -5,7 +5,7 @@
             "name": "CRF_MINING_LV20",
             "objects": [
                 {
-                    "instance_id": 4102496,
+                    "layout_id": 4102496,
                     "position": {
                         "x": -325.8382,
                         "y": 36.6149,
@@ -18,7 +18,7 @@
                     }
                 },
                 {
-                    "instance_id": 4102495,
+                    "layout_id": 4102495,
                     "position": {
                         "x": -328.5706,
                         "y": 40.75901,
@@ -31,7 +31,7 @@
                     }
                 },
                 {
-                    "instance_id": 4001269,
+                    "layout_id": 4001269,
                     "position": {
                         "x": -335.0318,
                         "y": 38.9954,
