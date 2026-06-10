@@ -81,6 +81,9 @@ pub const WARP_DELAY: Duration = Duration::from_secs(2);
 /// Since this is reflected in the client alone, I measured it from there.
 pub const COMBO_TIMEOUT: Duration = Duration::from_secs(30);
 
+/// In seconds. This controls the animation lock time for *all actions* for now.
+pub const ANIMATION_LOCK_TIME: f32 = 0.6;
+
 #[binrw]
 #[brw(repr(u32))]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

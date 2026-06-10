@@ -250,7 +250,7 @@ pub struct ActionResult {
     /// Index into the Action Excel sheet.
     pub action_id: u32,
     pub global_sequence: u32,
-    /// In seconds.
+    /// Controls how long the next action should be delayed, in seconds.
     pub animation_lock: f32,
     /// Only used when ActionCategory is 11.
     pub ballista_entity_id: ObjectId,

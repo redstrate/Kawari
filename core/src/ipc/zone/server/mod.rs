@@ -58,7 +58,7 @@ pub use event_start::{EventStart, EventType};
 
 mod action_result;
 pub use action_result::{
-    ActionEffect, ActionResult, DamageElement, DamageKind, DamageType, EffectKind,
+    ActionEffect, ActionResult, ActionResultFlag, DamageElement, DamageKind, DamageType, EffectKind,
 };
 
 mod actor_set_pos;

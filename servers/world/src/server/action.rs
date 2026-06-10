@@ -20,8 +20,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        COMBO_TIMEOUT, CharacterMode, DEAD_FADE_OUT_TIME, ObjectId, STRIKING_DUMMY_NAME_ID,
-        TimepointData,
+        ANIMATION_LOCK_TIME, COMBO_TIMEOUT, CharacterMode, DEAD_FADE_OUT_TIME, ObjectId,
+        STRIKING_DUMMY_NAME_ID, TimepointData,
     },
     config::FilesystemConfig,
     ipc::zone::{
@@ -61,7 +61,7 @@ pub fn handle_action_messages(
                 action_id: request.action_id as u16,
                 action_type: request.action_type,
                 omen_delay: 0,
-                action_id2: request.action_id,
+                action_id2: 41698, // request.action_id,
                 cast_time: delay_milliseconds as f32 / 1000.0,
                 target: request.target.object_id,
                 rotation: request.rotation1,
@@ -419,7 +419,7 @@ pub fn execute_action(
                         animation_target_id: request.target,
                         target_id_again: request.target,
                         action_id: request.action_id,
-                        animation_lock: 0.6,
+                        animation_lock: ANIMATION_LOCK_TIME,
                         rotation: common_spawn.rotation,
                         spell_id: action_animation_id,
                         source_sequence: request.sequence,
@@ -429,7 +429,6 @@ pub fn execute_action(
                         global_sequence: network.global_action_sequence,
                         ..Default::default()
                     }));
-                dbg!(&ipc);
                 network.global_action_sequence += 1;
 
                 let mut data = data.lock();
@@ -702,7 +701,7 @@ pub fn execute_enemy_action(
                         animation_target_id: request.target,
                         target_id_again: request.target,
                         action_id: request.action_id,
-                        animation_lock: 0.6,
+                        animation_lock: ANIMATION_LOCK_TIME,
                         rotation: common_spawn.rotation,
                         spell_id: request.action_id as u16, // assuming action id == animation id
                         source_sequence: request.sequence,
@@ -933,7 +932,7 @@ pub fn execute_mount_action(
         animation_target_id: request.target,
         target_id_again: request.target,
         action_id: request.action_id,
-        animation_lock: 0.1,
+        animation_lock: ANIMATION_LOCK_TIME,
         rotation: common_spawn.rotation,
         spell_id: 4,
         source_sequence: request.sequence,
