@@ -27,24 +27,13 @@ pub type ServerChatIpcSegment =
 #[br(import(magic: &ServerChatIpcType, size: &u32))]
 #[derive(Debug, Clone)]
 pub enum ServerChatIpcData {
-    LoginReply {
-        timestamp: u32,
-        sid: u32,
-    },
+    LoginReply { timestamp: u32, sid: u32 },
     TellMessage(TellMessage),
     PartyMessage(PartyMessage),
     TellNotFoundError(TellNotFoundError),
-    FreeCompanyEvent {
-        // TODO: fill this in
-        unk: [u8; 104],
-    },
-    JoinChannelResult {
-        // TODO: fill this in
-        unk: [u8; 32],
-    },
-    GetChannelListResponse {
-        unk: [u8; 768],
-    },
+    FreeCompanyEvent { unk: [u8; 104] },
+    JoinChannelResult { unk: [u8; 32] },
+    GetChannelListResponse { unk: [u8; 768] },
     CWLinkshellMessageEcho(SendCWLinkshellMessage),
     CWLinkshellMessage(CWLinkshellMessage),
     AllianceMessage(AllianceMessage),

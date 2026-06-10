@@ -428,14 +428,7 @@ impl WorldConfig {
     }
 
     pub fn language(&self) -> Language {
-        // TODO: possibly de-duplicate this in Physis?
-        match self.language.as_str() {
-            "ja" => Language::Japanese,
-            "en" => Language::English,
-            "de" => Language::German,
-            "fr" => Language::French,
-            _ => panic!("Unsupported language code!"),
-        }
+        Language::from_shortname(self.language.as_str())
     }
 }
 

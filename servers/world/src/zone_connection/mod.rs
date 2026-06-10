@@ -20,7 +20,7 @@ use kawari::{
     config::WorldConfig,
     ipc::zone::{
         ApartmentList, ApartmentListEntry, CWLSMemberListEntry, ClientTriggerCommand,
-        ClientZoneIpcSegment, Condition, Conditions, ContentRegistrationFlags,
+        ClientZoneIpcSegment, Condition, Conditions, DutyFinderSetting,
         GrandCompany as IpcGrandCompany, LetterPreview, PlayerEntry, ServerZoneIpcData,
         ServerZoneIpcSegment,
     },
@@ -154,7 +154,7 @@ pub struct ZoneConnection {
 
     // TODO: support more than one content in the queue
     pub queued_content: Option<u16>,
-    pub content_settings: Option<ContentRegistrationFlags>,
+    pub content_settings: Option<DutyFinderSetting>,
     pub current_instance_id: Option<u16>,
 
     pub conditions: Conditions,

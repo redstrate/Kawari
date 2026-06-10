@@ -24,7 +24,7 @@ mod mail;
 pub use mail::{MailItemInfo, TakeAttachmentsInfo};
 
 mod queue_duties;
-pub use queue_duties::{ContentRegistrationFlags, QueueDuties};
+pub use queue_duties::{DutyFinderSetting, QueueDuties};
 
 use crate::ipc::zone::{
     CWLSPermissionRank, InviteReply, InviteType, LETTER_MSG_MAX_LENGTH, LinkshellInviteResponse,
@@ -86,12 +86,10 @@ pub enum ClientZoneIpcData {
         unk2: String,
     },
     FinishLoading {
-        // TODO: full of possibly interesting information
         unk: [u8; 72],
     },
     ClientTrigger(ClientTrigger),
     UnkSocialEvent {
-        // TODO: full of possibly interesting information
         unk: [u8; 8],
     },
     SocialListRequest(SocialListRequest),
@@ -106,11 +104,9 @@ pub enum ClientZoneIpcData {
         position: Position,
     },
     LogOut {
-        // TODO: full of possibly interesting information
         unk: [u8; 8],
     },
     Disconnected {
-        // TODO: full of possibly interesting information
         unk: [u8; 8],
     },
     SendChatMessage(SendChatMessage),
@@ -310,7 +306,6 @@ pub enum ClientZoneIpcData {
         content_id: u64,
         world_id: u16,
         invite_type: InviteType,
-        // TODO: The client leaves garbage (probably due to a bug) in the character_name field, so reading it can be a little tricky. Our string parsing had to be updated a little bit to retry when Rusts's String::from_utf8 function fails. Parsing it as a C string (CStr in rust) can work around this issue.
         #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]

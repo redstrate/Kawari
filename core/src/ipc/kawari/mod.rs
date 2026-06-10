@@ -61,7 +61,7 @@ pub enum CustomIpcData {
         num_characters: u8,
         #[br(count = num_characters)]
         #[brw(pad_size_to = CharacterDetails::SIZE * 8)]
-        characters: Vec<CharacterDetails>, // TODO: maybe chunk this into 4 parts ala the lobby server?
+        characters: Vec<CharacterDetails>,
     },
     DeleteCharacter {
         content_id: u64,

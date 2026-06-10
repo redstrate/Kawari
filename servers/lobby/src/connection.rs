@@ -302,6 +302,29 @@ impl LobbyConnection {
         )
         .await;
 
+        let config = get_config();
+        let Ok(mut login_reply) = ureq::get(format!(
+            "{}/_private/max_ex?service={}",
+            config.login.server_name,
+            self.selected_service_account.unwrap(),
+        ))
+        .call() else {
+            tracing::warn!(
+                "Failed to find service account {}?!",
+                self.selected_service_account.unwrap()
+            );
+            return;
+        };
+
+        let entitled_expansion = login_reply
+            .body_mut()
+            .read_to_string()
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        // Send inventory
+
         // now send them the character list
         {
             let charlist_request = CustomIpcSegment::new(CustomIpcData::RequestCharacterList {
@@ -348,7 +371,7 @@ impl LobbyConnection {
                         days_to_next_rank: 0,
                         unk8: if can_create_character { 1 } else { 0 },
                         max_characters_on_world: max_characters_per_world as u16,
-                        entitled_expansion: 5, // TODO: use service account max expansion
+                        entitled_expansion,
                         characters: characters_in_packet,
                         ..Default::default()
                     }

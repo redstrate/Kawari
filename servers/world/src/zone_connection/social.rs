@@ -194,7 +194,7 @@ impl ZoneConnection {
     ) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InviteCharacterResult {
             content_id,
-            message_id,
+            message_id: message_id as u16,
             world_id: self.config.world_id,
             invite_type,
             unk1: 1,

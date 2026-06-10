@@ -80,7 +80,10 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 202u32)]
     TeleportQuery {
         aetheryte_id: u32,
-        // TODO: fill out the rest
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
     },
 
     /// The player answers a teleport offer sent by someone in their party.

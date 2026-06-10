@@ -1226,7 +1226,7 @@ pub async fn server_main_loop(
                 }
                 ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
                     match &trigger.trigger {
-                        ClientTriggerCommand::TeleportQuery { aetheryte_id } => {
+                        ClientTriggerCommand::TeleportQuery { aetheryte_id, .. } => {
                             let msg =
                                 FromServer::ActorControlSelf(ActorControlCategory::TeleportStart {
                                     insufficient_gil: 0,

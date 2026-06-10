@@ -25,14 +25,13 @@ pub enum ClientLobbyIpcData {
         account_index: u8,
         unk1: u8,
         unk2: u16,
-        unk3: u32, // TODO: probably multiple params
+        unk3: u32,
         account_id: u64,
         unk4: [u8; 64],
     },
     GameLogin {
         sequence: u64,
         content_id: u64,
-        // TODO: what else is in here?
         unk1: u32,
         unk2: u32,
         unk3: u32,

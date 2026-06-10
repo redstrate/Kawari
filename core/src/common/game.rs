@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::{
-    constants::BASE_INVENTORY_ACTION, festivals::festival_name, ipc::zone::ContentRegistrationFlags,
+    constants::BASE_INVENTORY_ACTION, festivals::festival_name, ipc::zone::DutyFinderSetting,
 };
 
 /// Maxmimum length of a character's name.
@@ -162,7 +162,6 @@ bitflags! {
 
 /// The client sends this to inform the server (and other clients) about the animation its player is performing while moving.
 /// Multiple can be set at once, e.g. Strafing and walking at the same time.
-// TODO: Why does RUNNING display as a comma in PacketAnalyzer?
 #[binrw]
 #[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct MoveAnimationType(u8);
@@ -663,12 +662,8 @@ pub enum ItemOperationKind {
     EquipMannequin = BASE_INVENTORY_ACTION + 18,
 }
 
-// TODO: Where should this be moved to...?
-// TODO: Is this actually only a u16 in all the places it would be used?
-#[binrw]
-#[derive(Clone, Copy, Debug, Default, FromRepr, PartialEq)]
-#[brw(repr = u16)]
-#[repr(u16)]
+/// Useful pre-defined log messages. Feel free to add any ones we need. Index into the LogMessage Excel sheet.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum LogMessageType {
     #[default]
     Default = 0,
@@ -926,18 +921,18 @@ bitflags! {
 }
 
 impl DutyOption {
-    pub fn from_content_flags(flags: ContentRegistrationFlags) -> Self {
+    pub fn from_content_flags(flags: DutyFinderSetting) -> Self {
         let mut options = DutyOption::default();
 
-        if flags.contains(ContentRegistrationFlags::UNRESTRICTED_PARTY) {
+        if flags.contains(DutyFinderSetting::UNRESTRICTED_PARTY) {
             options.insert(DutyOption::UNRESTRICTED_PARTY);
         }
 
-        if flags.contains(ContentRegistrationFlags::MINIMUM_ITEM_LEVEL) {
+        if flags.contains(DutyFinderSetting::MINIMUM_ITEM_LEVEL) {
             options.insert(DutyOption::MINIMUM_ITEM_LEVEL);
         }
 
-        if flags.contains(ContentRegistrationFlags::SILENCE_ECHO) {
+        if flags.contains(DutyFinderSetting::SILENCE_ECHO) {
             options.insert(DutyOption::SILENCE_ECHO);
         }
 

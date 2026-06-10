@@ -150,7 +150,6 @@ pub fn calculate_max_level(expansion: u8) -> u8 {
 /// The maximum size of our packet buffers, anything bigger than this from the client is truncated.
 pub const RECEIVE_BUFFER_SIZE: usize = 0xFFFF;
 
-/// Error messages: TODO: this should probably be moved into its own universal mod/crate?
 pub const ERR_INVENTORY_ADD_FAILED: &str =
     "Unable to add item to inventory! Your inventory is full, or this is a bug in Kawari!";
 

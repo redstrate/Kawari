@@ -92,8 +92,8 @@ pub use free_company::FcHierarchy;
 
 mod actor_move;
 use crate::common::{
-    CustomizeData, DeepDungeonRoomFlag, HandlerId, LandData, LogMessageType, ObjectTypeId,
-    Position, read_packed_position, write_packed_position,
+    CustomizeData, DeepDungeonRoomFlag, HandlerId, LandData, ObjectTypeId, Position,
+    read_packed_position, write_packed_position,
 };
 use crate::constants::{
     AVAILABLE_CLASSJOBS, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
@@ -210,7 +210,6 @@ pub enum ServerZoneIpcData {
     UpdateClassInfo(UpdateClassInfo),
     SpawnPlayer(SpawnPlayer),
     LogOutComplete {
-        // TODO: guessed
         unk: [u8; 8],
     },
     ActorSetPos(ActorSetPos),
@@ -342,7 +341,6 @@ pub enum ServerZoneIpcData {
         #[br(count = COMPLETED_QUEST_BITMASK_SIZE)]
         #[bw(pad_size_to = COMPLETED_QUEST_BITMASK_SIZE)]
         completed_quests: Vec<u8>,
-        // TODO: what is in here?
         #[br(count = 65)]
         #[bw(pad_size_to = 65)]
         unk2: Vec<u8>,
@@ -431,7 +429,6 @@ pub enum ServerZoneIpcData {
         #[br(count = COMPLETED_LEVEQUEST_BITMASK_SIZE)]
         #[bw(pad_size_to = COMPLETED_LEVEQUEST_BITMASK_SIZE)]
         completed_levequests: Vec<u8>,
-        // TODO: what is in ehre?
         #[br(count = 6)]
         #[bw(pad_size_to = 6)]
         unk2: Vec<u8>,
@@ -556,7 +553,7 @@ pub enum ServerZoneIpcData {
         /// The invited character's content id.
         content_id: u64,
         /// The pre-defined LogMessage to display. 0 seems to indicate no errors, and the client will display a default message such as "You invite <name> to a party."
-        message_id: LogMessageType,
+        message_id: u16,
         #[brw(pad_before = 2)]
         /// The invited character's home world id.
         world_id: u16,
@@ -921,7 +918,6 @@ pub enum ServerZoneIpcData {
         display_ids: [u8; 8],
     },
     UnkSocialResponse {
-        // TODO: full of possibly interesting information
         #[br(count = 80)]
         #[bw(pad_size_to = 80)]
         unk: Vec<u8>,

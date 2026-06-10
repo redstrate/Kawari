@@ -2267,9 +2267,9 @@ async fn process_packet(
                             connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::QueueDuties(queue_duties) => {
-                            connection.content_settings = Some(queue_duties.flags);
+                            connection.content_settings = Some(queue_duties.settings);
                             lua_player.content_data.settings =
-                                DutyOption::from_content_flags(queue_duties.flags).bits(); // TODO: is this the best place to update this?
+                                DutyOption::from_content_flags(queue_duties.settings).bits(); // TODO: is this the best place to update this?
                             connection
                                 .register_for_content(queue_duties.content_ids)
                                 .await;

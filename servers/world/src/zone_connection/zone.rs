@@ -14,9 +14,9 @@ use kawari::{
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
-        ActorControlCategory, Condition, ContentRegistrationFlags, FurnitureList, House,
-        HouseExterior, HouseList, HouseStatus, HousingInteriorDetails, MapEffects, PlotSize,
-        ServerZoneIpcData, ServerZoneIpcSegment, WarpType, WeatherChange, ZoneInit, ZoneInitFlags,
+        ActorControlCategory, Condition, DutyFinderSetting, FurnitureList, House, HouseExterior,
+        HouseList, HouseStatus, HousingInteriorDetails, MapEffects, PlotSize, ServerZoneIpcData,
+        ServerZoneIpcSegment, WarpType, WeatherChange, ZoneInit, ZoneInitFlags,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
 };
@@ -430,16 +430,16 @@ impl ZoneConnection {
                     if self
                         .content_settings
                         .unwrap_or_default()
-                        .contains(ContentRegistrationFlags::UNRESTRICTED_PARTY)
+                        .contains(DutyFinderSetting::UNRESTRICTED_PARTY)
                     {
                         self.content_settings
                             .unwrap_or_default()
-                            .contains(ContentRegistrationFlags::LEVEL_SYNC)
+                            .contains(DutyFinderSetting::LEVEL_SYNC)
                     } else {
                         !self
                             .content_settings
                             .unwrap_or_default()
-                            .contains(ContentRegistrationFlags::EXPLORER_MODE)
+                            .contains(DutyFinderSetting::EXPLORER_MODE)
                     }
                 };
 
@@ -477,7 +477,7 @@ impl ZoneConnection {
                 let flags = if self
                     .content_settings
                     .unwrap_or_default()
-                    .contains(ContentRegistrationFlags::EXPLORER_MODE)
+                    .contains(DutyFinderSetting::EXPLORER_MODE)
                     && director_type.requires_content_id()
                 {
                     1
