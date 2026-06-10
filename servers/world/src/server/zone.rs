@@ -554,7 +554,7 @@ impl Zone {
                         {
                             EventState::UNK1 | EventState::UNK2 | EventState::UNK3
                         } else {
-                            EventState::VISIBLE
+                            EventState::empty()
                         };
 
                         let spawn = SpawnObject {
@@ -704,7 +704,7 @@ impl Zone {
                         character_data_flags: if hostile {
                             CharacterDataFlag::HOSTILE
                         } else {
-                            CharacterDataFlag::NONE
+                            CharacterDataFlag::empty()
                         },
                         character_data_icon: rank,
                         max_links,

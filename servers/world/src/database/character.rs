@@ -322,7 +322,7 @@ impl WorldDatabase {
                 player_id: character.actor_id.0 as u64, // TODO: not correct
                 content_id: character.content_id as u64,
                 index: index as u8,
-                flags: CharacterFlag::NONE,
+                flags: CharacterFlag::empty(),
                 unk1: [255; 6],
                 origin_server_id: world_id,
                 current_server_id: world_id,

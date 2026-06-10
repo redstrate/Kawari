@@ -52,12 +52,11 @@ impl Default for Mogpendium {
 /// Represents the completion state for a complete set of Mogpendium challenges.
 /// If a bitfield is `0`, it is either expired (past week) or incomplete (current week).
 #[binrw]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct MogpendiumCompletionFlags(u32);
 
 bitflags! {
     impl MogpendiumCompletionFlags: u32 {
-        const NONE = 0;
         const W1_COMPLETE = 1 << 0;
         const W1_CLAIMED  = 1 << 1;
         const W2_COMPLETE = 1 << 2;
@@ -72,11 +71,5 @@ bitflags! {
 impl std::fmt::Debug for MogpendiumCompletionFlags {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         bitflags::parser::to_writer(self, f)
-    }
-}
-
-impl Default for MogpendiumCompletionFlags {
-    fn default() -> Self {
-        MogpendiumCompletionFlags::NONE
     }
 }

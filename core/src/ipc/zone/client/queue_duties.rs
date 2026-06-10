@@ -5,13 +5,11 @@ use crate::ipc::zone::SocialListUILanguages;
 
 // TODO: Rename to DutyFinderSetting
 #[binrw]
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct ContentRegistrationFlags(u64);
 
 bitflags! {
     impl ContentRegistrationFlags: u64 {
-        /// No special settings were enabled.
-        const NONE = 0x0;
         /// Enables join party in progress mode.
         const JOIN_PARTY_IN_PROGRESS = 0x2;
         /// Enables unrestricted party mode.
@@ -24,12 +22,6 @@ bitflags! {
         const SILENCE_ECHO = 0x10000000;
         /// Enables explorer mode. If the client enables this, no other flags are sent.
         const EXPLORER_MODE = 0x100000000;
-    }
-}
-
-impl Default for ContentRegistrationFlags {
-    fn default() -> Self {
-        ContentRegistrationFlags::NONE
     }
 }
 

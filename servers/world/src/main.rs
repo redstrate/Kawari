@@ -632,7 +632,7 @@ async fn process_packet(
 
                             // Player Setup
                             {
-                                let mut player_state_flags1 = PlayerStateFlags1::NONE;
+                                let mut player_state_flags1 = PlayerStateFlags1::empty();
                                 if connection.player_data.mentor.is_novice == 0 {
                                     player_state_flags1.set(PlayerStateFlags1::NOT_NOVICE, true);
                                 }
@@ -640,12 +640,12 @@ async fn process_packet(
                                     player_state_flags1.set(PlayerStateFlags1::BATTLE_MENTOR, true);
                                 }
 
-                                let mut player_state_flags2 = PlayerStateFlags2::NONE;
+                                let mut player_state_flags2 = PlayerStateFlags2::empty();
                                 if connection.player_data.mentor.is_returner == 1 {
                                     player_state_flags2.set(PlayerStateFlags2::RETURNER, true);
                                 }
 
-                                let mut player_state_flags3 = PlayerStateFlags3::NONE;
+                                let mut player_state_flags3 = PlayerStateFlags3::empty();
                                 if connection.player_data.mentor.is_trade == 1 {
                                     player_state_flags3.set(PlayerStateFlags3::TRADE_MENTOR, true);
                                 }

@@ -215,7 +215,6 @@ mod tests {
 
     bitflags! {
         struct DisplayFlag : u32 {
-            const NONE = 0x000;
             const ACTIVE_STANCE = 0x001;
             const OTHER_STANCE = 0x002;
         }
@@ -226,12 +225,6 @@ mod tests {
         let mut lua = Lua::new();
         KawariLua::register_flags::<DisplayFlag>(&mut lua, "DISPLAY_FLAG");
 
-        assert_eq!(
-            lua.load("return DISPLAY_FLAG_NONE")
-                .call::<u32>(())
-                .unwrap(),
-            0
-        );
         assert_eq!(
             lua.load("return DISPLAY_FLAG_ACTIVE_STANCE")
                 .call::<u32>(())
@@ -251,7 +244,6 @@ mod tests {
         let mut lua = Lua::new();
         KawariLua::register_flags::<DisplayFlag>(&mut lua, "");
 
-        assert_eq!(lua.load("return NONE").call::<u32>(()).unwrap(), 0);
         assert_eq!(lua.load("return ACTIVE_STANCE").call::<u32>(()).unwrap(), 1);
         assert_eq!(
             lua.load("return ACTIVE_STANCE + OTHER_STANCE")

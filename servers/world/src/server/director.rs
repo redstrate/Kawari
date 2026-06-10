@@ -507,7 +507,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     continue;
                 };
 
-                let state = EventState::VISIBLE;
+                let state = EventState::empty();
 
                 let mut network = network.lock();
                 network.send_ac_in_range_instance(

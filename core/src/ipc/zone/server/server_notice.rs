@@ -4,7 +4,7 @@ use bitflags::bitflags;
 use crate::common::{read_string, write_string};
 
 #[binrw]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct ServerNoticeFlags(pub u8);
 
 impl std::fmt::Debug for ServerNoticeFlags {
@@ -17,17 +17,9 @@ impl std::fmt::Debug for ServerNoticeFlags {
 bitflags! {
     impl ServerNoticeFlags : u8 {
         /// Shows in the chat log.
-        const NONE = 0x000;
-        /// Shows in the chat log.
         const CHAT_LOG = 0x001;
         /// Shows as an on-screen message.
         const ON_SCREEN = 0x004;
-    }
-}
-
-impl Default for ServerNoticeFlags {
-    fn default() -> Self {
-        Self::NONE
     }
 }
 

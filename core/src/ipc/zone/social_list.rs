@@ -142,7 +142,6 @@ pub struct SocialListUIFlags(u16);
 
 bitflags! {
     impl SocialListUIFlags: u16 {
-        const NONE = 0;
         /// The player data was unable to be retrieved (deleted, on another datacenter (?), some other issue).
         const UNABLE_TO_RETRIEVE = 1;
         const UNKNOWN_2 = 2;

@@ -6,20 +6,13 @@ use crate::common::{read_bool_from, write_bool_as};
 use super::CommonSpawn;
 
 #[binrw]
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct CharacterDataFlag(u8);
 
 bitflags! {
     impl CharacterDataFlag: u8 {
-        const NONE = 0x0;
         /// If set, this marks the enemy as "hostile" including changing the nameplate icon.
         const HOSTILE = 0x2;
-    }
-}
-
-impl Default for CharacterDataFlag {
-    fn default() -> Self {
-        Self::NONE
     }
 }
 
@@ -113,7 +106,10 @@ mod tests {
         assert_eq!(npc_spawn.common.health_points, 973);
         assert_eq!(npc_spawn.common.resource_points, 10000);
         assert_eq!(npc_spawn.common.max_resource_points, 10000);
-        //assert_eq!(npc_spawn.common.display_flags, DisplayFlag::NONE);
+        assert_eq!(
+            npc_spawn.common.display_flags,
+            DisplayFlag::UNK2 | DisplayFlag::INVISIBLE | DisplayFlag::UNK1
+        );
         assert_eq!(npc_spawn.common.position.0.x, 4.883462);
         assert_eq!(npc_spawn.common.position.0.y, 40.04264);
         assert_eq!(npc_spawn.common.position.0.z, 11.821917);
@@ -152,7 +148,7 @@ mod tests {
         assert_eq!(npc_spawn.common.health_points, 91);
         assert_eq!(npc_spawn.common.resource_points, 0);
         assert_eq!(npc_spawn.common.max_resource_points, 0);
-        assert_eq!(npc_spawn.common.display_flags, DisplayFlag::NONE);
+        assert_eq!(npc_spawn.common.display_flags, DisplayFlag::empty());
         assert_eq!(npc_spawn.common.position.0.x, 61.169727);
         assert_eq!(npc_spawn.common.position.0.y, 64.56608);
         assert_eq!(npc_spawn.common.position.0.z, -168.08115);

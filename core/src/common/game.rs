@@ -108,7 +108,7 @@ impl DistanceRange {
 }
 
 #[binrw]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 #[cfg_attr(
     feature = "server",
     derive(diesel::expression::AsExpression, diesel::deserialize::FromSqlRow)
@@ -148,7 +148,6 @@ impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sq
 
 bitflags! {
     impl EquipDisplayFlag : u16 {
-        const NONE = 0x00;
         const HIDE_LEGACY_MARK = 0x04;
         const HIDE_HEAD = 0x01;
         const HIDE_WEAPON = 0x02;
@@ -161,23 +160,15 @@ bitflags! {
     }
 }
 
-impl Default for EquipDisplayFlag {
-    fn default() -> Self {
-        Self::NONE
-    }
-}
-
 /// The client sends this to inform the server (and other clients) about the animation its player is performing while moving.
 /// Multiple can be set at once, e.g. Strafing and walking at the same time.
 // TODO: Why does RUNNING display as a comma in PacketAnalyzer?
 #[binrw]
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct MoveAnimationType(u8);
 
 bitflags! {
     impl MoveAnimationType : u8 {
-        /// The player is running.
-        const RUNNING = 0x00;
         /// Unknown: seems to be the start of the regular run animation and loops the first few frames endlessly.
         const UNKNOWN = 0x01;
         /// The player is walking or landing from a jump/fall (MoveAnimationState::ENTER_COLLISION is set).
@@ -190,12 +181,6 @@ bitflags! {
         const JUMPING = 0x10;
         /// The player has begun falling after jumping.
         const FALLING = 0x20;
-    }
-}
-
-impl Default for MoveAnimationType {
-    fn default() -> Self {
-        Self::RUNNING
     }
 }
 
@@ -776,21 +761,14 @@ pub fn get_aether_current_comp_flg_set_to_screenimage() -> HashMap<u32, u32> {
 }
 
 #[binrw]
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct EventState(u8);
 
 bitflags! {
     impl EventState: u8 {
-        const VISIBLE = 0;
         const UNK1 = 1;
         const UNK2 = 2;
         const UNK3 = 4;
-    }
-}
-
-impl Default for EventState {
-    fn default() -> Self {
-        EventState::VISIBLE
     }
 }
 
@@ -844,14 +822,12 @@ pub enum CharacterMode {
 }
 
 #[binrw]
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct PlayerStateFlags1(u8);
 
 // TODO: upstream the flags that FFXIVClientStructs doesn't have
 bitflags! {
     impl PlayerStateFlags1: u8 {
-        /// No flags set.
-        const NONE = 0;
         /// If this player isn't a novice. If not set, considered a New Adventurer.
         const NOT_NOVICE = 1;
         /// If the player has a security token registered.
@@ -863,12 +839,6 @@ bitflags! {
     }
 }
 
-impl Default for PlayerStateFlags1 {
-    fn default() -> Self {
-        PlayerStateFlags1::NONE
-    }
-}
-
 impl std::fmt::Debug for PlayerStateFlags1 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         bitflags::parser::to_writer(self, f)
@@ -876,21 +846,13 @@ impl std::fmt::Debug for PlayerStateFlags1 {
 }
 
 #[binrw]
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct PlayerStateFlags2(u8);
 
 bitflags! {
     impl PlayerStateFlags2: u8 {
-        /// No flags set.
-        const NONE = 0;
         /// Returning players.
         const RETURNER = 32;
-    }
-}
-
-impl Default for PlayerStateFlags2 {
-    fn default() -> Self {
-        PlayerStateFlags2::NONE
     }
 }
 
@@ -901,21 +863,13 @@ impl std::fmt::Debug for PlayerStateFlags2 {
 }
 
 #[binrw]
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct PlayerStateFlags3(u8);
 
 bitflags! {
     impl PlayerStateFlags3: u8 {
-        /// No flags set.
-        const NONE = 0;
         /// If the player is a trade mentor.
         const TRADE_MENTOR = 1;
-    }
-}
-
-impl Default for PlayerStateFlags3 {
-    fn default() -> Self {
-        PlayerStateFlags3::NONE
     }
 }
 
@@ -927,13 +881,11 @@ impl std::fmt::Debug for PlayerStateFlags3 {
 
 /// Duty options, these don't only include the selectables ones in the Duty Finder.
 #[binrw]
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct DutyOption(u32);
 
 bitflags! {
     impl DutyOption: u32 {
-        /// No options set.
-        const NONE = 0x0;
         /// Unknown effect.
         const SOLO = 0x1;
         /// Unknown effect.
@@ -975,7 +927,7 @@ bitflags! {
 
 impl DutyOption {
     pub fn from_content_flags(flags: ContentRegistrationFlags) -> Self {
-        let mut options = DutyOption::NONE;
+        let mut options = DutyOption::default();
 
         if flags.contains(ContentRegistrationFlags::UNRESTRICTED_PARTY) {
             options.insert(DutyOption::UNRESTRICTED_PARTY);
@@ -990,12 +942,6 @@ impl DutyOption {
         }
 
         options
-    }
-}
-
-impl Default for DutyOption {
-    fn default() -> Self {
-        DutyOption::NONE
     }
 }
 
@@ -1077,12 +1023,11 @@ pub struct LandData {
 
 /// For deep dungeon map layouts.
 #[binrw]
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct DeepDungeonRoomFlag(u16);
 
 bitflags! {
     impl DeepDungeonRoomFlag: u16 {
-        const NONE = 0x0;
         const CONNECTION_NORTH = 0x1;
         const CONNECTION_SOUTH = 0x2;
         const CONNECTION_WEST = 0x4;
@@ -1091,12 +1036,6 @@ bitflags! {
         const PASSAGE = 0x20;
         const HOME = 0x40;
         const REVEALED = 0x80;
-    }
-}
-
-impl Default for DeepDungeonRoomFlag {
-    fn default() -> Self {
-        Self::NONE
     }
 }
 
@@ -1120,12 +1059,11 @@ pub enum FateState {
 
 // TODO: not 100% certain this correponds to specific timelines indices...
 #[binrw]
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct SharedGroupTimelineState(u32);
 
 bitflags! {
     impl SharedGroupTimelineState: u32 {
-        const NONE = 0x0;
         /// Plays the first timeline.
         const TIMELINE_1 = 0x1;
         /// Plays the second timeline.
@@ -1138,12 +1076,6 @@ bitflags! {
         const TIMELINE_5 = 0x10;
         /// Plays the sixth timeline.
         const TIMELINE_6 = 0x20;
-    }
-}
-
-impl Default for SharedGroupTimelineState {
-    fn default() -> Self {
-        Self::NONE
     }
 }
 
@@ -1188,9 +1120,9 @@ pub struct HousingFlag(u8);
 
 bitflags! {
     impl HousingFlag: u8 {
-        /// Only players with the requisite permissions can enter. This changes the house to a orange icon on the map.
         const LOCKED = 0x0;
         /// This housing is open to any individual to enter. This changes the house to a blue icon on the map.
+        /// When not set, only players with the requisite permissions can enter. This changes the house to a orange icon on the map.
         const OPEN = 0x1;
         /// This house is owned by a Free Company.
         const OWNED_BY_FC = 0x2;

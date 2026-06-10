@@ -135,7 +135,7 @@ impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sq
 }
 
 #[binrw]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct DisplayFlag(pub u32);
 
 impl std::fmt::Debug for DisplayFlag {
@@ -146,7 +146,7 @@ impl std::fmt::Debug for DisplayFlag {
 
 impl From<EquipDisplayFlag> for DisplayFlag {
     fn from(value: EquipDisplayFlag) -> Self {
-        let mut new_flag = Self::NONE;
+        let mut new_flag = Self::empty();
         if value.intersects(EquipDisplayFlag::HIDE_HEAD) {
             new_flag.insert(DisplayFlag::HIDE_HEAD);
         }
@@ -166,7 +166,6 @@ impl From<EquipDisplayFlag> for DisplayFlag {
 
 bitflags! {
     impl DisplayFlag : u32 {
-        const NONE = 0x000;
         const ACTIVE_STANCE = 0x001;
         const UNK2 = 0x008;
         const INVISIBLE = 0x020;
@@ -176,12 +175,6 @@ bitflags! {
         const CLOSE_VISOR = 0x800;
         const UNK1 = 0x40000;
         const HIDE_EARS = 0x100000;
-    }
-}
-
-impl Default for DisplayFlag {
-    fn default() -> Self {
-        Self::NONE
     }
 }
 

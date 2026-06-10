@@ -4,7 +4,7 @@ use bitflags::bitflags;
 use crate::common::{FestivalId, Position, read_bool_from, write_bool_as};
 
 #[binrw]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct ZoneInitFlags(pub u16);
 
 impl std::fmt::Debug for ZoneInitFlags {
@@ -15,9 +15,6 @@ impl std::fmt::Debug for ZoneInitFlags {
 
 bitflags! {
     impl ZoneInitFlags : u16 {
-        /// No flags.
-        const NONE = 0x000;
-
         /// Enables the Playguide window, and also the Duty Recorder. Only sent for the first zone logged into.
         const INITIAL_LOGIN = 0x001;
 
@@ -42,12 +39,6 @@ bitflags! {
         // TODO: 256 seems to be something else UI related
 
         // TODO: 512 seems to be something weather-related?
-    }
-}
-
-impl Default for ZoneInitFlags {
-    fn default() -> Self {
-        Self::NONE
     }
 }
 

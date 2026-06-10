@@ -313,7 +313,7 @@ fn set_shared_group_timeline_state(
     from_actor_id: ObjectId,
     timelines: &[u32],
 ) {
-    let mut state = SharedGroupTimelineState::NONE;
+    let mut state = SharedGroupTimelineState::empty();
     for timeline in timelines {
         state.toggle(match timeline {
             1 => SharedGroupTimelineState::TIMELINE_1,

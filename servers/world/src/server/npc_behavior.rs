@@ -113,7 +113,7 @@ pub fn npc_behavior(
                         *id,
                         position,
                         rotation,
-                        MoveAnimationType::RUNNING,
+                        MoveAnimationType::empty(),
                         MoveAnimationState::None,
                         JumpState::NoneOrFalling,
                     ));
@@ -310,14 +310,7 @@ pub fn npc_behavior(
 
                 // update common spawn
                 for msg in &actor_moves {
-                    if let FromServer::ActorMove(
-                        msg_id,
-                        pos,
-                        rotation,
-                        MoveAnimationType::RUNNING,
-                        MoveAnimationState::None,
-                        JumpState::NoneOrFalling,
-                    ) = msg
+                    if let FromServer::ActorMove(msg_id, pos, rotation, ..) = msg
                         && *id == *msg_id
                     {
                         spawn.common.position = *pos;

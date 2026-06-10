@@ -115,18 +115,11 @@ pub enum AvailabilityType {
 }
 
 #[binrw]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct HousingFlags(u8);
-
-impl Default for HousingFlags {
-    fn default() -> Self {
-        HousingFlags::NONE
-    }
-}
 
 bitflags! {
     impl HousingFlags: u8 {
-        const NONE = 0;
         const PLOT_OWNED = 1 << 0;
         const VISITORS_ALLOWED = 1 << 1;
         const HAS_SEARCH_COMMENT = 1 << 2;
