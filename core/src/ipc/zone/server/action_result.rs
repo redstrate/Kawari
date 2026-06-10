@@ -1,8 +1,12 @@
 use binrw::binrw;
+use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumIter, FromRepr};
 
-use crate::common::{ObjectTypeId, read_quantized_rotation, write_quantized_rotation};
+use crate::{
+    common::{ObjectId, ObjectTypeId, read_quantized_rotation, write_quantized_rotation},
+    ipc::zone::ActionType,
+};
 
 // TODO: this might be a flag?
 #[binrw]
@@ -223,25 +227,47 @@ pub struct ActionEffect {
 }
 
 #[binrw]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
+pub struct ActionResultFlag(u8);
+
+bitflags! {
+    impl ActionResultFlag : u8 {
+        const FORCE_ANIMATION_LOCK = 0x1;
+    }
+}
+
+impl std::fmt::Debug for ActionResultFlag {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
+#[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct ActionResult {
-    pub main_target: ObjectTypeId,
+    pub animation_target_id: ObjectTypeId,
+    /// Index into the Action Excel sheet.
     pub action_id: u32,
-    pub unk1: u32,
-    pub animation_lock_time: f32,
-    pub unk2: u32,
-    pub hidden_animation: u16,
+    pub global_sequence: u32,
+    /// In seconds.
+    pub animation_lock: f32,
+    /// Only used when ActionCategory is 11.
+    pub ballista_entity_id: ObjectId,
+    /// The same as `sequence` from this action's `ActionRequest`.
+    pub source_sequence: u16,
     #[br(map = read_quantized_rotation)]
     #[bw(map = write_quantized_rotation)]
     pub rotation: f32,
-    pub action_animation_id: u16,
-    pub variation: u8,
-    pub flag: u8,
-    pub unk3: u8,
+    /// Usually the same as `action_id`.
+    pub spell_id: u16,
+    pub animation_variation: u8,
+    /// The kind of action.
+    pub action_type: ActionType,
+    pub flags: ActionResultFlag,
     pub effect_count: u8,
     pub unk4: u16,
-    pub unk5: [u8; 6],
+    pub unk5: [u8; 6], // might be not read by the client?
     pub effects: [ActionEffect; 8],
     #[brw(pad_before = 6, pad_after = 4)]
     pub target_id_again: ObjectTypeId,
@@ -268,17 +294,20 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let action_result = ActionResult::read_le(&mut buffer).unwrap();
-        assert_eq!(action_result.main_target.object_id, ObjectId(0x40070E42));
+        assert_eq!(
+            action_result.animation_target_id.object_id,
+            ObjectId(0x40070E42)
+        );
         assert_eq!(action_result.action_id, 31);
-        assert_eq!(action_result.unk1, 2662353); // TODO: probably means this field is wrong
-        assert_eq!(action_result.animation_lock_time, 0.6);
-        assert_eq!(action_result.unk2, 3758096384); // TODO: ditto
-        assert_eq!(action_result.hidden_animation, 1);
+        assert_eq!(action_result.global_sequence, 2662353);
+        assert_eq!(action_result.animation_lock, 0.6);
+        assert_eq!(action_result.ballista_entity_id, ObjectId::default());
+        assert_eq!(action_result.source_sequence, 1);
         assert_eq!(action_result.rotation, 1.207309);
-        assert_eq!(action_result.action_animation_id, 31);
-        assert_eq!(action_result.variation, 0);
-        assert_eq!(action_result.flag, 1);
-        assert_eq!(action_result.unk3, 0);
+        assert_eq!(action_result.spell_id, 31);
+        assert_eq!(action_result.animation_variation, 0);
+        assert_eq!(action_result.flags, ActionResultFlag::empty());
+        assert_eq!(action_result.action_type, ActionType::Action);
         assert_eq!(action_result.effect_count, 1);
         assert_eq!(action_result.unk4, 0);
         assert_eq!(action_result.unk5, [0; 6]);
@@ -325,17 +354,20 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let action_result = ActionResult::read_le(&mut buffer).unwrap();
-        assert_eq!(action_result.main_target.object_id, ObjectId(277554542));
+        assert_eq!(
+            action_result.animation_target_id.object_id,
+            ObjectId(277554542)
+        );
         assert_eq!(action_result.action_id, 3);
-        assert_eq!(action_result.unk1, 776386); // TODO: probably means this field is wrong
-        assert_eq!(action_result.animation_lock_time, 0.6);
-        assert_eq!(action_result.unk2, 3758096384); // TODO: ditto
-        assert_eq!(action_result.hidden_animation, 1);
+        assert_eq!(action_result.global_sequence, 776386);
+        assert_eq!(action_result.animation_lock, 0.6);
+        assert_eq!(action_result.ballista_entity_id, ObjectId::default());
+        assert_eq!(action_result.source_sequence, 1);
         assert_eq!(action_result.rotation, 2.6254003);
-        assert_eq!(action_result.action_animation_id, 3);
-        assert_eq!(action_result.variation, 0);
-        assert_eq!(action_result.flag, 1);
-        assert_eq!(action_result.unk3, 0);
+        assert_eq!(action_result.spell_id, 3);
+        assert_eq!(action_result.animation_variation, 0);
+        assert_eq!(action_result.flags, ActionResultFlag::empty());
+        assert_eq!(action_result.action_type, ActionType::Action);
         assert_eq!(action_result.effect_count, 1);
         assert_eq!(action_result.unk4, 0);
         assert_eq!(action_result.unk5, [0; 6]);
@@ -364,17 +396,20 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let action_result = ActionResult::read_le(&mut buffer).unwrap();
-        assert_eq!(action_result.main_target.object_id, ObjectId(277114100));
+        assert_eq!(
+            action_result.animation_target_id.object_id,
+            ObjectId(277114100)
+        );
         assert_eq!(action_result.action_id, 55);
-        assert_eq!(action_result.unk1, 4232092); // TODO: probably means this field is wrong
-        assert_eq!(action_result.animation_lock_time, 0.1);
-        assert_eq!(action_result.unk2, 3758096384); // TODO: ditto
-        assert_eq!(action_result.hidden_animation, 4);
+        assert_eq!(action_result.global_sequence, 4232092);
+        assert_eq!(action_result.animation_lock, 0.1);
+        assert_eq!(action_result.ballista_entity_id, ObjectId::default());
+        assert_eq!(action_result.source_sequence, 4);
         assert_eq!(action_result.rotation, -0.8154669);
-        assert_eq!(action_result.action_animation_id, 4);
-        assert_eq!(action_result.variation, 0);
-        assert_eq!(action_result.flag, 13);
-        assert_eq!(action_result.unk3, 0);
+        assert_eq!(action_result.spell_id, 4);
+        assert_eq!(action_result.animation_variation, 0);
+        assert_eq!(action_result.flags, ActionResultFlag::empty());
+        assert_eq!(action_result.action_type, ActionType::Mount);
         assert_eq!(action_result.effect_count, 1);
         assert_eq!(action_result.unk4, 0);
         assert_eq!(action_result.unk5, [0; 6]);
@@ -400,17 +435,20 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let action_result = ActionResult::read_le(&mut buffer).unwrap();
-        assert_eq!(action_result.main_target.object_id, ObjectId(277114100));
+        assert_eq!(
+            action_result.animation_target_id.object_id,
+            ObjectId(277114100)
+        );
         assert_eq!(action_result.action_id, 13266);
-        assert_eq!(action_result.unk1, 749); // TODO: probably means this field is wrong
-        assert_eq!(action_result.animation_lock_time, 0.6);
-        assert_eq!(action_result.unk2, 3758096384); // TODO: ditto
-        assert_eq!(action_result.hidden_animation, 18);
+        assert_eq!(action_result.global_sequence, 749); // TODO: probably means this field is wrong
+        assert_eq!(action_result.animation_lock, 0.6);
+        assert_eq!(action_result.ballista_entity_id, ObjectId::default());
+        assert_eq!(action_result.source_sequence, 18);
         assert_eq!(action_result.rotation, -2.0225368);
-        assert_eq!(action_result.action_animation_id, 13266);
-        assert_eq!(action_result.variation, 0);
-        assert_eq!(action_result.flag, 1);
-        assert_eq!(action_result.unk3, 0);
+        assert_eq!(action_result.spell_id, 13266);
+        assert_eq!(action_result.animation_variation, 0);
+        assert_eq!(action_result.flags, ActionResultFlag::empty());
+        assert_eq!(action_result.action_type, ActionType::Action);
         assert_eq!(action_result.effect_count, 1);
         assert_eq!(action_result.unk4, 0);
         assert_eq!(action_result.unk5, [0; 6]);

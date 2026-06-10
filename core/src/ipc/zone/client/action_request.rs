@@ -37,8 +37,10 @@ pub struct ActionRequest {
     /// Index into the Action Excel sheet.
     pub action_id: u32,
     pub unk1: u8, // what?
+    /// What kind of action is requested.
     pub action_type: ActionType,
-    pub unk2: u16,
+    /// Will show up again in the resulting `ActionResult`.
+    pub sequence: u16,
     #[br(map = read_quantized_rotation)]
     #[bw(map = write_quantized_rotation)]
     pub rotation1: f32,

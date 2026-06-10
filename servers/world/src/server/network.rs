@@ -12,7 +12,7 @@ use crate::{
 };
 use kawari::{common::ObjectId, ipc::zone::ActorControlCategory};
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct NetworkState {
     pub to_remove: Vec<ClientId>,
     pub to_remove_chat: Vec<ClientId>,
@@ -21,6 +21,22 @@ pub struct NetworkState {
     pub parties: HashMap<u64, Party>,
     pub linkshells: HashMap<u64, Vec<ObjectId>>,
     pub commit_parties: bool,
+    pub global_action_sequence: u32,
+}
+
+impl Default for NetworkState {
+    fn default() -> Self {
+        Self {
+            to_remove: Default::default(),
+            to_remove_chat: Default::default(),
+            clients: Default::default(),
+            chat_clients: Default::default(),
+            parties: Default::default(),
+            linkshells: Default::default(),
+            commit_parties: Default::default(),
+            global_action_sequence: 2, // Not sure why we have to begin at 2, but we do otherwise the client rejects them.
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]

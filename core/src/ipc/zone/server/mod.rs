@@ -1004,7 +1004,7 @@ pub enum ServerZoneIpcData {
         #[br(map = read_quantized_rotation)]
         #[bw(map = write_quantized_rotation)]
         rotation: f32,
-        /// ???
+        /// If true, shows special VFX around the cast bar to show that's interruptible (it currently pulsates.) This is only applicable for other targets.
         #[br(map = read_bool_from::<u16>)]
         #[bw(map = write_bool_as::<u16>)]
         interruptible: bool,

@@ -416,20 +416,21 @@ pub fn execute_action(
 
                 let ipc =
                     ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
-                        main_target: request.target,
+                        animation_target_id: request.target,
                         target_id_again: request.target,
                         action_id: request.action_id,
-                        animation_lock_time: 0.6,
+                        animation_lock: 0.6,
                         rotation: common_spawn.rotation,
-                        action_animation_id,
-                        flag: 1,
+                        spell_id: action_animation_id,
+                        source_sequence: request.sequence,
                         effect_count: effects_builder.effects.len() as u8,
                         effects,
-                        unk1: 2662353,
-                        unk2: 3758096384,
-                        hidden_animation: 1,
+                        action_type: request.action_type,
+                        global_sequence: network.global_action_sequence,
                         ..Default::default()
                     }));
+                dbg!(&ipc);
+                network.global_action_sequence += 1;
 
                 let mut data = data.lock();
 
@@ -698,20 +699,20 @@ pub fn execute_enemy_action(
 
                 let ipc =
                     ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
-                        main_target: request.target,
+                        animation_target_id: request.target,
                         target_id_again: request.target,
                         action_id: request.action_id,
-                        animation_lock_time: 0.6,
+                        animation_lock: 0.6,
                         rotation: common_spawn.rotation,
-                        action_animation_id: request.action_id as u16, // assuming action id == animation id
-                        flag: 1,
+                        spell_id: request.action_id as u16, // assuming action id == animation id
+                        source_sequence: request.sequence,
                         effect_count: effects_builder.effects.len() as u8,
                         effects,
-                        unk1: 2662353,
-                        unk2: 3758096384,
-                        hidden_animation: 1,
+                        action_type: request.action_type,
+                        global_sequence: network.global_action_sequence,
                         ..Default::default()
                     }));
+                network.global_action_sequence += 1;
 
                 network.send_in_range_inclusive_instance(
                     from_actor_id,
@@ -929,20 +930,21 @@ pub fn execute_mount_action(
     };
 
     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
-        main_target: request.target,
+        animation_target_id: request.target,
         target_id_again: request.target,
         action_id: request.action_id,
-        animation_lock_time: 0.1,
+        animation_lock: 0.1,
         rotation: common_spawn.rotation,
-        action_animation_id: 4,
-        flag: 13,
+        spell_id: 4,
+        source_sequence: request.sequence,
         effect_count: 1,
         effects,
-        unk1: 4232092,
-        unk2: 3758096384,
-        hidden_animation: 4,
+        action_type: request.action_type,
+        global_sequence: network.global_action_sequence,
         ..Default::default()
     }));
+    network.global_action_sequence += 1;
+
     network.send_in_range_inclusive_instance(
         from_actor_id,
         instance,
