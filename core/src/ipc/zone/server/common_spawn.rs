@@ -168,6 +168,7 @@ bitflags! {
     impl DisplayFlag : u32 {
         const NONE = 0x000;
         const ACTIVE_STANCE = 0x001;
+        const UNK2 = 0x008;
         const INVISIBLE = 0x020;
         const HIDE_HEAD = 0x040;
         const HIDE_WEAPON = 0x80;
