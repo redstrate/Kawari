@@ -649,6 +649,9 @@ pub enum ClientZoneIpcData {
         interpolate_position: Position,
         unk1: u32, // Seems to be zeroed?
     },
+    FallFromArena {
+        unk1: [u8; 24],
+    },
 }
 
 #[cfg(test)]

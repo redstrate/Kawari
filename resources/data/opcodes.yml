@@ -1132,6 +1132,10 @@ ClientZoneIpcType:
   comment: Used for client updating their position in instances. Unsure why it's separate.
   opcode: 793
   size: 40
+- name: FallFromArena
+  comment: Happens when you fall off the edge of an arena.
+  opcode: 598
+  size: 24
 ServerLobbyIpcType:
 - name: NackReply
   comment: Sent by the server to indicate an lobby error occured.

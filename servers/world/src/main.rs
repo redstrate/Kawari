@@ -3564,6 +3564,17 @@ async fn process_packet(
                                     .await;
                             }
                         }
+                        ClientZoneIpcData::FallFromArena { .. } => {
+                            tracing::info!("Player fell from arena!");
+                            // Signal to the global server to kill us.
+                            connection
+                                .handle
+                                .send(ToServer::Kill(
+                                    connection.id,
+                                    connection.player_data.character.actor_id,
+                                ))
+                                .await;
+                        }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
                                 "Unknown Zone packet {:?} recieved ({} bytes), this should be handled!",
