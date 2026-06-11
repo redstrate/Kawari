@@ -353,6 +353,8 @@ impl ZoneConnection {
                     event: DirectorEvent::Unknown(11),
                     arg1: 3,
                     arg2: 0,
+                    arg3: 0,
+                    arg4: 0,
                 })
                 .await;
 
@@ -386,6 +388,8 @@ impl ZoneConnection {
                         .unwrap_or_default()
                         .parse()
                         .unwrap_or_default(),
+                    arg3: 0,
+                    arg4: 0,
                 })
                 .await;
                 true
@@ -407,6 +411,19 @@ impl ZoneConnection {
                     vec![0; parts.get(2).unwrap().parse().unwrap()],
                 )
                 .await;
+
+                true
+            }
+            "!mapeffect" => {
+                let parts: Vec<&str> = chat_message.split(' ').collect();
+
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorMapEffect {
+                    handler_id: self.content_handler_id,
+                    state: parts.get(1).cloned().unwrap_or_default().parse().unwrap(),
+                    timeline_id: parts.get(2).cloned().unwrap_or_default().parse().unwrap(),
+                    index: parts.get(3).cloned().unwrap_or_default().parse().unwrap(),
+                });
+                self.send_ipc_self(ipc).await;
 
                 true
             }

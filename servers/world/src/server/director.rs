@@ -93,6 +93,10 @@ pub enum LuaDirectorTask {
         actor_id: ObjectId,
     },
     CompleteDuty {},
+    MapEffect {
+        index: u32,
+        timeline_id: u32,
+    },
 }
 
 // TODO: Maybe collapse into DirectorData?
@@ -224,6 +228,11 @@ impl UserData for LuaDirector {
             this.tasks
                 .push(LuaDirectorTask::ShowEObj { base_id: EOBJ_EXIT });
             this.tasks.push(LuaDirectorTask::CompleteDuty {});
+            Ok(())
+        });
+        methods.add_method_mut("map_effect", |_, this, (index, timeline_id): (u32, u32)| {
+            this.tasks
+                .push(LuaDirectorTask::MapEffect { index, timeline_id });
             Ok(())
         });
     }
@@ -459,6 +468,26 @@ impl DirectorData {
             }
         }
     }
+
+    pub fn variant_vote(&mut self, vote: u32) {
+        let mut run_script = || {
+            let mut lua_director = self.create_lua_director();
+            let err = self.lua.0.scope(|scope| {
+                let data = scope.create_userdata_ref_mut(&mut lua_director)?;
+
+                let func: Function = self.lua.0.globals().get("onVariantVote")?;
+
+                func.call::<()>((data, vote))?;
+
+                Ok(())
+            });
+            self.apply_lua_director(lua_director);
+            err
+        };
+        if let Err(err) = run_script() {
+            tracing::warn!("Syntax error during onVariantVote: {err:?}");
+        }
+    }
 }
 
 /// Perform any queued director tasks
@@ -662,6 +691,8 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                             event: DirectorEvent::SetBGM,
                             arg1: *id,
                             arg2: 0,
+                            arg3: 0,
+                            arg4: 0,
                         },
                     },
                 ));
@@ -735,6 +766,8 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                             event: DirectorEvent::VariantVoteRoute,
                             arg1: 1, // TODO: set to the number of players in the instance
                             arg2: *npc_route,
+                            arg3: 0,
+                            arg4: 0,
                         },
                     },
                 ));
@@ -782,6 +815,8 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                             event: DirectorEvent::DutyCompleted,
                             arg1: 0,
                             arg2: 0,
+                            arg3: 0,
+                            arg4: 0,
                         },
                     },
                 ));
@@ -795,6 +830,22 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 );
 
                 // TODO: mark duty as completed for each player
+            }
+            LuaDirectorTask::MapEffect { index, timeline_id } => {
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorMapEffect {
+                    handler_id: director_id,
+                    state: 1,
+                    timeline_id: *timeline_id as u16,
+                    index: *index as u8,
+                });
+
+                let mut network = network.lock();
+                network.send_to_instance(
+                    ObjectId::default(),
+                    instance,
+                    FromServer::PacketSegment(ipc, ObjectId::default()), // TODO: how do we just send it from the player?
+                    DestinationNetwork::ZoneClients,
+                );
             }
         }
     }
@@ -824,6 +875,21 @@ pub fn handle_director_messages(data: Arc<Mutex<WorldServer>>, msg: &ToServer) -
                 director.gimmick_accessor(*from_actor_id, id, params);
             } else {
                 tracing::warn!("Expected a director when recieving a GimmickAccessor?");
+            }
+
+            true
+        }
+        ToServer::VariantVote(from_actor_id, vote) => {
+            let mut data = data.lock();
+            let Some(instance) = data.find_actor_instance_mut(*from_actor_id) else {
+                tracing::warn!("Somehow failed to find an instance for actor?");
+                return true;
+            };
+
+            if let Some(director) = &mut instance.director {
+                director.variant_vote(*vote);
+            } else {
+                tracing::warn!("Expected a director when recieving a VariantVote?");
             }
 
             true

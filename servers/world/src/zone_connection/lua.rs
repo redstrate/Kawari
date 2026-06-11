@@ -621,6 +621,8 @@ impl ZoneConnection {
                                 event: DirectorEvent::DutyCommence,
                                 arg1: player.content_data.duration as u32,
                                 arg2: 0,
+                                arg3: 0,
+                                arg4: 0,
                             },
                         },
                     ));
@@ -639,6 +641,8 @@ impl ZoneConnection {
                                 event: DirectorEvent::SetDutyTimeRemaining,
                                 arg1: (player.content_data.duration - 1) as u32, // TODO: lol
                                 arg2: 0,
+                                arg3: 0,
+                                arg4: 0,
                             },
                         },
                     ));

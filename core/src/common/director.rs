@@ -18,6 +18,9 @@ pub enum DirectorEvent {
     /// For Variant Dungeons, the first `arg` is how many votes are needed and the second `arg` is what the NPC chose. Has no effect if there is no route associated with the duty (Another Merchant's Tale.)
     #[brw(magic = 0x10000002u32)]
     VariantVoteRoute,
+    /// Hides the vote window, but probably used for other things.
+    #[brw(magic = 0x10000004u32)]
+    HideVariantVoteRoute,
     /// Shows "Duty Commenced", and starts the clock ticking down. `arg` is the number of seconds the duty should last.
     #[brw(magic = 0x40000001u32)]
     DutyCommence,
@@ -45,6 +48,9 @@ pub enum DirectorEvent {
     /// Sets the remaining time in the duty. `arg` is the number of seconds.
     #[brw(magic = 0x80000004u32)]
     SetDutyTimeRemaining,
+    /// At least used in The Merchant's Tale. First `arg` is the index into InstanceContextTextData.
+    #[brw(magic = 0x80000027u32)]
+    NpcYell,
     Unknown(u32),
 }
 

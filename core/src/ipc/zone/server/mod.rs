@@ -892,10 +892,12 @@ pub enum ServerZoneIpcData {
         handler_id: HandlerId,
         /// The new state of this map effect.
         state: u16,
-        unk1: u16,
+        /// Seems to control the animation of the mape effect.
+        // TODO: unsure if this is correct, but its what makes the most sense right now!
+        timeline_id: u16,
         /// The index of the map effect to change.
+        #[brw(pad_after = 7)] // padding, not read by the client
         index: u8,
-        unk2: [u8; 7], // all padding
     },
     FurnitureList(FurnitureList),
     OwnedHousing {

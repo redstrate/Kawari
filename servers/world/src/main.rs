@@ -1082,6 +1082,8 @@ async fn process_packet(
                                     trigger,
                                     arg,
                                 } => {
+                                    // TODO: move to server state? why is this here?
+
                                     match trigger {
                                         DirectorTrigger::Sync => {
                                             // Always send a sync response for now
@@ -1092,6 +1094,8 @@ async fn process_packet(
                                                         event: DirectorEvent::SyncResponse,
                                                         arg1: 1,
                                                         arg2: 0,
+                                                        arg3: 0,
+                                                        arg4: 0,
                                                     },
                                                 )
                                                 .await;
@@ -1114,6 +1118,8 @@ async fn process_packet(
                                                         event: DirectorEvent::Unknown(9),
                                                         arg1: 74,
                                                         arg2: 1,
+                                                        arg3: 0,
+                                                        arg4: 0,
                                                     },
                                                 )
                                                 .await;
@@ -1125,6 +1131,8 @@ async fn process_packet(
                                                         event: DirectorEvent::Unknown(6),
                                                         arg1: 7773571, // TODO: hardcoded to the air force one attendant for now
                                                         arg2: 1775917801,
+                                                        arg3: 0,
+                                                        arg4: 0,
                                                     },
                                                 )
                                                 .await;
@@ -1136,6 +1144,8 @@ async fn process_packet(
                                                         event: DirectorEvent::Unknown(11),
                                                         arg1: 3,
                                                         arg2: 0,
+                                                        arg3: 0,
+                                                        arg4: 0,
                                                     },
                                                 )
                                                 .await;
@@ -1146,6 +1156,28 @@ async fn process_packet(
                                                     connection.player_data.character.actor_id,
                                                     7773571, // TODO: hardcoded to airforce one NPC for now
                                                 ))
+                                                .await;
+                                        }
+                                        DirectorTrigger::VariantVote => {
+                                            connection
+                                                .handle
+                                                .send(ToServer::VariantVote(
+                                                    connection.player_data.character.actor_id,
+                                                    arg,
+                                                ))
+                                                .await;
+
+                                            connection
+                                                .actor_control_self(
+                                                    ActorControlCategory::DirectorEvent {
+                                                        handler_id,
+                                                        event: DirectorEvent::HideVariantVoteRoute,
+                                                        arg1: 0,
+                                                        arg2: 0,
+                                                        arg3: 0,
+                                                        arg4: 0,
+                                                    },
+                                                )
                                                 .await;
                                         }
                                         _ => tracing::info!(

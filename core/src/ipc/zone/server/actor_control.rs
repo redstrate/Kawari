@@ -276,6 +276,8 @@ pub enum ActorControlCategory {
         event: DirectorEvent,
         arg1: u32,
         arg2: u32,
+        arg3: u32,
+        arg4: u32,
     },
 
     #[brw(magic = 131u32)]
@@ -1019,8 +1021,7 @@ pub struct ActorControl {
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct ActorControlSelf {
-    #[brw(pad_after = 8)]
-    #[brw(pad_size_to = 24)] // take into account categories without params
+    #[brw(pad_size_to = 40)] // take into account categories without params
     pub category: ActorControlCategory,
 }
 

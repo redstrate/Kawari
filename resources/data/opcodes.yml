@@ -6,7 +6,7 @@ ServerZoneIpcType:
 - name: ActorControlSelf
   comment: Control player actor state, from playing emotes to making them invisible.
   opcode: 457
-  size: 32
+  size: 40
 - name: PlayerStats
   comment: Contains various character statistics like Strength and HP.
   opcode: 731

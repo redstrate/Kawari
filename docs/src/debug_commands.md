@@ -19,6 +19,7 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!item <name>` | Gives you an item matching by name. |
 | `!inspect` | Prints info about the player. |
 | `!itemlevel <level>` | Temporarily set your own item level. |
+| `!mapeffect <state> <timeline_id> <index>` | Sets the map effect at index to a new state. |
 | `!mount <id/name>` | Allows you to mount in any zone, on the specified mount ID/name. |
 | `!monies` | Give a unreasonable amount of some currencies. |
 | `!nudge <distance> <up/down (optional)>` | Teleport forward, back, up or down `distance` yalms. Specifying up or down will move the player up or down instead of forward or back. |
