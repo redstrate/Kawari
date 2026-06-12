@@ -918,7 +918,7 @@ ClientZoneIpcType:
   size: 8
 - name: RequestCharaInfoFromContentIds
   comment: Happens when the client requests more information about other characters, and only has their content id.
-  opcode: 1101
+  opcode: 465
   size: 80
 - name: PartyLeave
   comment: Happens when the client leaves their party.
