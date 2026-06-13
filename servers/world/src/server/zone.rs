@@ -1058,6 +1058,18 @@ fn do_change_zone(
 ) {
     let actor_id = network.clients.get(&from_id).unwrap().0.actor_id;
     let state = network.get_state_mut(from_id).unwrap();
+    let (exit_position, exit_rotation) = if exit_position.is_some() {
+        (exit_position, exit_rotation)
+    } else if let Some(destination_object) = target_instance.zone.find_entrance() {
+        let (_, rotation, translation) =
+            Affine3A::from(destination_object.transform).to_scale_rotation_translation();
+        (
+            Some(Position(translation)),
+            Some(euler_to_direction(rotation.to_euler(EulerRot::XYZ))),
+        )
+    } else {
+        (exit_position, exit_rotation)
+    };
 
     if needs_init_zone {
         // Clear spawn pools

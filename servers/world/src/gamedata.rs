@@ -216,6 +216,23 @@ pub enum Roulette {
 }
 
 impl GameData {
+    fn fallback_quest_variables(script_name: &str) -> Vec<(String, u32)> {
+        // Some client variants omit TERRITORYTYPE0 on ARR "Close to Home" quests.
+        // These scripts expect the "real" city territory after the instanced opening area.
+        let territory_type = match script_name {
+            "ManSea002_00108" | "ManSea003_00109" => Some(129), // Limsa Lominsa Lower Decks
+            "ManFst002_00085" | "ManFst003_00123" | "ManFst004_00124" => Some(132), // New Gridania
+            "ManWil002_00568" | "ManWil003_00569" | "ManWil004_00570" => {
+                Some(130)
+            } // Ul'dah - Steps of Nald
+            _ => None,
+        };
+
+        territory_type
+            .map(|zone_id| vec![("TERRITORYTYPE0".to_string(), zone_id)])
+            .unwrap_or_default()
+    }
+
     pub fn new() -> Self {
         let config = get_config();
 
@@ -1194,6 +1211,21 @@ impl GameData {
             }
         }
 
+        let has_territorytype0 = translated_variables
+            .iter()
+            .any(|(name, _)| name == "TERRITORYTYPE0");
+        if !has_territorytype0 {
+            let fallback_variables = Self::fallback_quest_variables(&row.Id);
+            if !fallback_variables.is_empty() {
+                tracing::warn!(
+                    "Quest {} ({}) is missing TERRITORYTYPE0 in QuestParams, applying compatibility fallback.",
+                    quest_id,
+                    row.Id
+                );
+                translated_variables.extend(fallback_variables);
+            }
+        }
+
         translated_variables
     }
 
@@ -1332,7 +1364,9 @@ impl GameData {
 
     /// Returns a CraftAction's animation start/end.
     pub fn get_craft_action_animations(&mut self, id: u32) -> (u16, u16) {
-        let sheet = CraftActionSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let config = get_config();
+        let sheet =
+            CraftActionSheet::read_from(&mut self.resource, config.world.language()).unwrap();
         let row = sheet.row(id).unwrap();
 
         (row.AnimationStart, row.AnimationEnd)
@@ -1342,7 +1376,9 @@ impl GameData {
     pub fn online_status_priorities(&mut self) -> Vec<u8> {
         let mut priorities = Vec::new();
 
-        let sheet = OnlineStatusSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let config = get_config();
+        let sheet =
+            OnlineStatusSheet::read_from(&mut self.resource, config.world.language()).unwrap();
         for (_, row) in sheet.into_iter().flatten_subrows() {
             priorities.push(row.Priority);
         }

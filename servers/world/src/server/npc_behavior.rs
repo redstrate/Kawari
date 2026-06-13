@@ -392,7 +392,9 @@ pub fn npc_behavior(
                     continue;
                 }
 
-                if let Some(current_target) = current_target {
+                if *state == NpcState::Hate
+                    && let Some(current_target) = current_target
+                {
                     if newly_acquired_targets.contains(id) {
                         // Send an ACT for a visual indicator, and stuff.
                         let mut network = network.lock();
