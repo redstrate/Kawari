@@ -252,10 +252,12 @@ impl Zone {
                                 scale,
                                 sanctuary: false,
                                 // This is guesswork since there's only one dueling location in-game
-                                duel: event_range.unk_flags[0] == 1
-                                    && event_range.unk_flags[3] == 1
-                                    && event_range.unk_flags[4] == 1
-                                    && event_range.unk_flags[5] == 1,
+                                // TODO: restore duel support by hardcoding its ID
+                                // duel: event_range.unk_flags[0] == 1
+                                //     && event_range.unk_flags[3] == 1
+                                //     && event_range.unk_flags[4] == 1
+                                //     && event_range.unk_flags[5] == 1,
+                                duel: false,
                                 gimmick: None,
                                 instance_id: object.instance_id,
                                 discovery_id: None,

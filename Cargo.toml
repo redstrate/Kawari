@@ -61,7 +61,7 @@ tokio = { version = "1.52", features = ["macros", "rt", "rt-multi-thread", "io-u
 fastrand = { version = "2.4", features = ["std"], default-features = false }
 
 # HTML templates used in the web servers
-minijinja = { version = "2.20", features = ["serde", "loader", "multi_template"], default-features = false }
+minijinja = { version = "2.21", features = ["serde", "loader", "multi_template"], default-features = false }
 
 # For server-side scripting
 mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false }
@@ -73,7 +73,7 @@ zip = { version = "8.6", features = ["deflate", "lzma", "bzip2"], default-featur
 ureq = { version = "3.3", default-features = false }
 
 # For serving static files on our websites
-tower-http = { version = "0.6", features = ["fs", "cors"], default-features = false }
+tower-http = { version = "0.7", features = ["fs", "cors"], default-features = false }
 
 # For obtaining SHA1 hashes of game components
 sha1_smol = { version = "1.0", default-features = false }
