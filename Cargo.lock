@@ -747,7 +747,7 @@ dependencies = [
 
 [[package]]
 name = "kawari"
-version = "7.51.1"
+version = "7.51.2"
 dependencies = [
  "binrw",
  "bitflags",
@@ -769,7 +769,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-admin"
-version = "7.51.1"
+version = "7.51.2"
 dependencies = [
  "axum",
  "kawari",
@@ -786,7 +786,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-core-macro"
-version = "7.51.1"
+version = "7.51.2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -795,7 +795,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-frontier"
-version = "7.51.1"
+version = "7.51.2"
 dependencies = [
  "axum",
  "kawari",
@@ -809,7 +809,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-launcher"
-version = "7.51.1"
+version = "7.51.2"
 dependencies = [
  "axum",
  "kawari",
@@ -823,7 +823,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-lobby"
-version = "7.51.1"
+version = "7.51.2"
 dependencies = [
  "axum",
  "kawari",
@@ -838,7 +838,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-login"
-version = "7.51.1"
+version = "7.51.2"
 dependencies = [
  "axum",
  "axum-extra",
@@ -861,7 +861,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-navimesh"
-version = "7.51.1"
+version = "7.51.2"
 dependencies = [
  "icarus",
  "kawari",
@@ -874,7 +874,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-patch"
-version = "7.51.1"
+version = "7.51.2"
 dependencies = [
  "axum",
  "kawari",
@@ -887,7 +887,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-run"
-version = "7.51.1"
+version = "7.51.2"
 dependencies = [
  "nu-ansi-term",
  "tokio",
@@ -895,7 +895,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-web"
-version = "7.51.1"
+version = "7.51.2"
 dependencies = [
  "axum",
  "kawari",
@@ -908,7 +908,7 @@ dependencies = [
 
 [[package]]
 name = "kawari-world"
-version = "7.51.1"
+version = "7.51.2"
 dependencies = [
  "async-trait",
  "axum",
