@@ -110,6 +110,7 @@ impl DistanceRange {
     }
 }
 
+/// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Application/Network/WorkDefinitions/ClientSelectData.cs>.
 #[binrw]
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 #[cfg_attr(
@@ -155,8 +156,8 @@ bitflags! {
         const HIDE_WEAPON = 0x02;
         const HIDE_LEGACY_MARK = 0x04;
         const UNK2 = 0x08;
-        const UNK3 = 0x10;
-        const UNK4 = 0x20;
+        const STORE_NEW_ITEMS_IN_ARMOURY_CHEST = 0x10;
+        const STORE_CRAFTED_ITEMS_IN_INVENTORY = 0x20;
         const CLOSE_VISOR = 0x40;
         const HIDE_VIERA_EARS = 0x80;
     }

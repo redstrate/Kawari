@@ -208,7 +208,9 @@ mod tests {
         assert_eq!(chara_make.remake_minutes_remaining, 0);
         assert_eq!(
             chara_make.display_flags,
-            EquipDisplayFlag::HIDE_LEGACY_MARK | EquipDisplayFlag::UNK3 | EquipDisplayFlag::UNK4
+            EquipDisplayFlag::HIDE_LEGACY_MARK
+                | EquipDisplayFlag::STORE_NEW_ITEMS_IN_ARMOURY_CHEST
+                | EquipDisplayFlag::STORE_CRAFTED_ITEMS_IN_INVENTORY
         );
         assert_eq!(chara_make.voice_id, 93);
         assert_eq!(chara_make.unk21, 0);
