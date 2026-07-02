@@ -1442,8 +1442,6 @@ impl GameData {
 
     /// Returns the list of battalions that should be considered an enemy to this battalion.
     pub fn get_battalion_enemies(&mut self, battalion_id: u32) -> Vec<bool> {
-        // TODO: will change to IsEnemyTo in the future
-
         let row = self.battalion_sheet.row(battalion_id).unwrap();
         row.IsEnemyTo.to_vec()
     }
@@ -1664,7 +1662,9 @@ impl Resource for SqPackResourceSpy {
             return Ok(buffer);
         }
 
-        Ok(Vec::new()) // TODO: probably wrong
+        Err(physis::Error::FileNotFound {
+            path: path.to_string(),
+        })
     }
 
     fn exists(&mut self, path: &str) -> bool {

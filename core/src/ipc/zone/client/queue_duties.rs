@@ -3,7 +3,6 @@ use bitflags::bitflags;
 
 use crate::ipc::zone::SocialListUILanguages;
 
-// TODO: Rename to DutyFinderSetting
 #[binrw]
 #[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct DutyFinderSetting(u64);

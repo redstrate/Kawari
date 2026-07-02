@@ -16,7 +16,6 @@ impl<'a> IntoIterator for &'a Inventory {
     }
 }
 
-// TODO: why is this public API? :D
 pub fn get_container_type(container_index: u32) -> Option<ContainerType> {
     match container_index {
         // inventory

@@ -440,7 +440,7 @@ mod tests {
             ObjectId(277114100)
         );
         assert_eq!(action_result.action_id, 13266);
-        assert_eq!(action_result.global_sequence, 749); // TODO: probably means this field is wrong
+        assert_eq!(action_result.global_sequence, 749);
         assert_eq!(action_result.animation_lock, 0.6);
         assert_eq!(action_result.ballista_entity_id, ObjectId::default());
         assert_eq!(action_result.source_sequence, 18);

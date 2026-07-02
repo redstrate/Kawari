@@ -363,6 +363,7 @@ impl ZoneConnection {
         }
     }
 
+    /// Scaled parameters based on level and item level sync.
     pub fn base_parameters(&self) -> BaseParameters {
         let mut game_data = self.gamedata.lock();
 
@@ -419,8 +420,40 @@ impl ZoneConnection {
         base_parameters
     }
 
+    /// Same as `base_parameters` but doesn't take into account level or item level sync.
+    pub fn unscaled_base_parameters(&mut self) -> BaseParameters {
+        let mut game_data = self.gamedata.lock();
+
+        let modifiers = game_data
+            .get_class_job_modifiers(self.player_data.classjob.current_class as u32)
+            .expect("Failed to read param grow");
+
+        let attributes = game_data
+            .get_racial_base_attributes(self.player_data.subrace)
+            .expect("Failed to read racial attributes");
+
+        let level = self.current_level(&game_data);
+
+        let param_grow = game_data
+            .get_param_grow(level as u32)
+            .expect("Failed to read param grow");
+
+        let mut base_parameters = BaseParameters::default();
+        base_parameters.calculate_based_on_level(
+            &attributes,
+            level as u32,
+            &param_grow,
+            &modifiers,
+        );
+        base_parameters.calculate_stat_across_all_items(&self.player_data.inventory.equipped, None);
+        base_parameters.calculate_potencies(level as u32, &param_grow, Some(&modifiers));
+
+        base_parameters
+    }
+
     pub async fn send_stats(&mut self) {
         let base_parameters = self.base_parameters();
+        let unscaled_base_parameters = self.unscaled_base_parameters();
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PlayerStats(PlayerStats {
             strength: base_parameters.strength,
@@ -453,13 +486,12 @@ impl ZoneConnection {
             control: base_parameters.control,
             gathering: base_parameters.gathering,
             perception: base_parameters.perception,
-            ..Default::default() // TODO: restore these
-                                 // base_strength: attributes.strength,
-                                 // base_dexterity: attributes.dexterity,
-                                 // base_vitality: attributes.vitality,
-                                 // base_intelligence: attributes.intelligence,
-                                 // base_mind: attributes.mind,
-                                 // base_piety: attributes.piety,
+            base_strength: unscaled_base_parameters.strength,
+            base_dexterity: unscaled_base_parameters.dexterity,
+            base_vitality: unscaled_base_parameters.vitality,
+            base_intelligence: unscaled_base_parameters.intelligence,
+            base_mind: unscaled_base_parameters.mind,
+            base_piety: unscaled_base_parameters.piety,
         }));
         self.send_ipc_self(ipc).await;
 

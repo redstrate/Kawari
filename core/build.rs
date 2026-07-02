@@ -4,8 +4,6 @@ use serde_yaml_ng::Value;
 
 fn format_value(value: &Value) -> String {
     match value {
-        Value::Null => unreachable!(),
-        Value::Bool(_) => todo!(),
         Value::Number(number) => number.as_u64().unwrap_or_default().to_string(),
         Value::String(string) => format!("\"{string}\""),
         Value::Sequence(values) => {
@@ -16,8 +14,7 @@ fn format_value(value: &Value) -> String {
 
             format!("[{}]", values_str.join(", "))
         }
-        Value::Mapping(_) => todo!(),
-        Value::Tagged(_) => todo!(),
+        _ => todo!(),
     }
 }
 

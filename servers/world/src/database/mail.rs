@@ -2,9 +2,12 @@ use super::{WorldDatabase, models, schema::mail::dsl::*, unixepoch};
 use crate::inventory::GenericStorage;
 use bstr::BString;
 use diesel::prelude::*;
-use kawari::ipc::zone::{
-    AttachedItemInfo, LETTER_MSG_MAX_LENGTH, Letter, LetterPreview, LetterType,
-    MAX_MAIL_ATTACHMENTS_STORAGE, PREVIEW_MSG_MAX_LENGTH,
+use kawari::{
+    common::WORLD_NAME,
+    ipc::zone::{
+        AttachedItemInfo, LETTER_MSG_MAX_LENGTH, Letter, LetterPreview, LetterType,
+        MAX_MAIL_ATTACHMENTS_STORAGE, PREVIEW_MSG_MAX_LENGTH,
+    },
 };
 
 impl WorldDatabase {
@@ -78,9 +81,9 @@ impl WorldDatabase {
                 sender_info.name.clone()
             } else if letter.sender_content_id as u64 == u64::MAX {
                 // Cash shop/gift mails seem to use a content id of u64::MAX. GM mails possibly, too?
-                "Kawari World Server".to_string()
+                WORLD_NAME.to_string()
             } else {
-                "(Unable to retrieve)".to_string() // TODO: Can we localise this somehow?
+                "(Unable to retrieve)".to_string() // TODO: Can we localise this somehow? (See Addon sheet)
             };
 
             // Adjust the preview message to be no longer than PREVIEW_MSG_MAX_LENGTH bytes.

@@ -2167,7 +2167,6 @@ async fn process_packet(
                             }
                         }
                         ClientZoneIpcData::EventReturnHandler2(handler) => {
-                            // TODO: merge all implementations
                             tracing::info!(message = "Event returned", handler_id = %handler.handler_id, error_code = handler.error_code, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                             if let Some(event) = events.last() {
