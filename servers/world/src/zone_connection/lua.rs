@@ -833,6 +833,29 @@ impl ZoneConnection {
                         ))
                         .await;
                 }
+                LuaTask::FinishDyeing {} => {
+                    if let Some(dye_information) = &self.dyeing_information {
+                        // TODO: consume the dye
+
+                        let Some(dst_slot) = self.player_data.inventory.get_item_mut(
+                            dye_information.target_container,
+                            dye_information.target_slot as u16,
+                        ) else {
+                            return true;
+                        };
+
+                        dst_slot.stains = [dye_information.dye1, dye_information.dye2];
+
+                        // The client needs to be informed about the newly dyed item, but this is extreme...
+                        self.send_inventory().await;
+                        self.inform_equip().await;
+
+                        self.send_conditions().await; // So the client gets unstuck.
+                        self.dyeing_information = None;
+                    } else {
+                        tracing::warn!("finish_dyeing called without dye information prepared?!");
+                    }
+                }
             }
         }
 

@@ -1136,6 +1136,10 @@ ClientZoneIpcType:
   comment: Happens when you fall off the edge of an arena.
   opcode: 230
   size: 24
+- name: DyeInformation
+  comment: Information about the dye about to be applied.
+  opcode: 380
+  size: 24
 ServerLobbyIpcType:
 - name: NackReply
   comment: Sent by the server to indicate an lobby error occured.

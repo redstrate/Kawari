@@ -182,6 +182,7 @@ async fn initial_setup(
                     offered_teleport: None,
                     is_trading: false,
                     director_vars: None,
+                    dyeing_information: None,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -3608,6 +3609,9 @@ async fn process_packet(
                                     connection.player_data.character.actor_id,
                                 ))
                                 .await;
+                        }
+                        ClientZoneIpcData::DyeInformation(dye_information) => {
+                            connection.dyeing_information = Some(dye_information.clone());
                         }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
