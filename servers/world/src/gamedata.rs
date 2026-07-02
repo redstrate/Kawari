@@ -1332,7 +1332,9 @@ impl GameData {
 
     /// Returns a CraftAction's animation start/end.
     pub fn get_craft_action_animations(&mut self, id: u32) -> (u16, u16) {
-        let sheet = CraftActionSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let config = get_config();
+        let sheet =
+            CraftActionSheet::read_from(&mut self.resource, config.world.language()).unwrap();
         let row = sheet.row(id).unwrap();
 
         (row.AnimationStart, row.AnimationEnd)
@@ -1341,8 +1343,10 @@ impl GameData {
     /// Returns a list of priorities for each online status.
     pub fn online_status_priorities(&mut self) -> Vec<u8> {
         let mut priorities = Vec::new();
+        let config = get_config();
 
-        let sheet = OnlineStatusSheet::read_from(&mut self.resource, Language::English).unwrap();
+        let sheet =
+            OnlineStatusSheet::read_from(&mut self.resource, config.world.language()).unwrap();
         for (_, row) in sheet.into_iter().flatten_subrows() {
             priorities.push(row.Priority);
         }
