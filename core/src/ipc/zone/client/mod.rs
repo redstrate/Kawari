@@ -341,7 +341,8 @@ pub enum ClientZoneIpcData {
         unk: [u8; 16], // unsure if this is always empty
     },
     RequestAdventurerPlate {
-        unk: [u8; 16],
+        actor_id: ObjectId,
+        unk: [u8; 12],
     },
     SearchPlayers {
         /// The classjobs to filter by.

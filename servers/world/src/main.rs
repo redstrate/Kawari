@@ -2736,8 +2736,13 @@ async fn process_packet(
                             let ipc = ServerZoneIpcSegment::new(search_info);
                             connection.send_ipc_self(ipc).await;
                         }
-                        ClientZoneIpcData::RequestAdventurerPlate { .. } => {
-                            tracing::info!("Requesting adventurer plates is unimplemented");
+                        ClientZoneIpcData::RequestAdventurerPlate { actor_id, .. } => {
+                            let ipc;
+                            {
+                                let mut database = connection.database.lock();
+                                ipc = database.lookup_adventurer_plate(*actor_id);
+                            }
+                            connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::SearchPlayers {
                             classjobs,

@@ -8,11 +8,14 @@ use crate::{
 use kawari::{
     common::{
         BasicCharacterData, ObjectId, WORLD_NAME, WeaponModelId, determine_initial_homepoint,
+        timestamp_secs,
     },
+    config::get_config,
     ipc::{
         lobby::{CharacterDetails, CharacterFlag},
         zone::{
-            GameMasterRank, GrandCompany as IpcGrandCompany, OnlineStatus, SocialListUILanguages,
+            GameMasterRank, GrandCompany as IpcGrandCompany, OnlineStatus, ServerZoneIpcData,
+            ServerZoneIpcSegment, SocialListUILanguages,
         },
     },
 };
@@ -740,5 +743,158 @@ impl WorldDatabase {
             .select(time_played_minutes)
             .first::<i64>(&mut self.connection)
             .unwrap_or_default()
+    }
+
+    pub fn lookup_adventurer_plate(&mut self, for_actor_id: ObjectId) -> ServerZoneIpcSegment {
+        use models::*;
+
+        let for_character;
+        {
+            use schema::character::dsl::*;
+
+            for_character = character
+                .filter(actor_id.eq(for_actor_id))
+                .select(Character::as_select())
+                .first(&mut self.connection)
+                .unwrap();
+        }
+
+        let volatile = Volatile::belonging_to(&for_character)
+            .select(Volatile::as_select())
+            .first(&mut self.connection)
+            .unwrap();
+        let inventory = Inventory::belonging_to(&for_character)
+            .select(Inventory::as_select())
+            .first(&mut self.connection)
+            .unwrap();
+        let classjob = ClassJob::belonging_to(&for_character)
+            .select(ClassJob::as_select())
+            .first(&mut self.connection)
+            .unwrap();
+        let customize = Customize::belonging_to(&for_character)
+            .select(Customize::as_select())
+            .first(&mut self.connection)
+            .unwrap();
+        let grand_company = GrandCompany::belonging_to(&for_character)
+            .select(GrandCompany::as_select())
+            .first(&mut self.connection)
+            .unwrap();
+        let search_info = SearchInfo::belonging_to(&for_character)
+            .select(SearchInfo::as_select())
+            .first(&mut self.connection)
+            .unwrap();
+        let inventory: crate::inventory::Inventory =
+            serde_json::from_str(&inventory.contents).unwrap();
+
+        // NOTE: sending dummy data for now so at least the menu works
+        let config = get_config();
+        ServerZoneIpcSegment::new(ServerZoneIpcData::AdventurerPlate {
+            unk1: 0,
+            unk2: 0,
+            unk3: 0,
+            unk4: 0,
+            content_id: for_character.content_id as u64,
+            actor_id: for_actor_id,
+            unk5: 2,
+            world_id: config.world.world_id,
+            favored_class_level: 100,
+            favored_class: classjob.current_class as u8,
+            unk7: 1,
+            grand_company: grand_company.active_company,
+            grand_company_rank: grand_company.company_ranks.0
+                [grand_company.active_company as usize - 1],
+            version: 4,
+            expression: 22,
+            camera_zoom: 94,
+            directional_lighting_color_red: 118,
+            directional_lighting_color_green: 54,
+            directional_lighting_color_blue: 0,
+            directional_lighting_color_brightness: 199,
+            ambient_lighting_color_red: 126,
+            ambient_lighting_color_green: 103,
+            ambient_lighting_color_blue: 255,
+            ambient_lighting_color_brightness: 42,
+            class_job_id: classjob.current_class as u8,
+            customize: customize.chara_make.customize,
+            stain_ids1: [
+                inventory.equipped.main_hand.stains[0],
+                inventory.equipped.off_hand.stains[0],
+                inventory.equipped.head.stains[0],
+                inventory.equipped.body.stains[0],
+                inventory.equipped.hands.stains[0],
+                inventory.equipped.legs.stains[0],
+                inventory.equipped.feet.stains[0],
+                inventory.equipped.ears.stains[0],
+                inventory.equipped.neck.stains[0],
+                inventory.equipped.wrists.stains[0],
+                inventory.equipped.left_ring.stains[0],
+                inventory.equipped.right_ring.stains[0],
+            ],
+            gear_visibility_flag: 5,
+            top_border: 30,
+            bottom_border: 0,
+            preferred_class_job_id: 38,
+            active_hours_weekdays: [15, 0, 240],
+            active_hours_weekends: [15, 240, 255],
+            play_styles: [14, 1, 20, 25, 31, 0],
+            flags: 0,
+            unk13: 0,
+            privacy_flags: 0,
+            stain_ids2: [
+                inventory.equipped.main_hand.stains[1],
+                inventory.equipped.off_hand.stains[1],
+                inventory.equipped.head.stains[1],
+                inventory.equipped.body.stains[1],
+                inventory.equipped.hands.stains[1],
+                inventory.equipped.legs.stains[1],
+                inventory.equipped.feet.stains[1],
+                inventory.equipped.ears.stains[1],
+                inventory.equipped.neck.stains[1],
+                inventory.equipped.wrists.stains[1],
+                inventory.equipped.left_ring.stains[1],
+                inventory.equipped.right_ring.stains[1],
+            ],
+            unk14: 0,
+            banner_timeline: 5,
+            animation_progress: 340,
+            head_direction_y: 44994,
+            head_direction_x: 45771,
+            eye_direction_y: 45293,
+            eye_direction_x: 46485,
+            camera_position_x: 13398,
+            camera_position_y: 44758,
+            camera_position_z: 14135,
+            camera_target_x: 11330,
+            camera_target_y: 44393,
+            camera_target_z: 42093,
+            image_rotation: 4,
+            directional_lighting_vertical: 17,
+            directional_lighting_horizontal: 65442,
+            banner_decoration: 1,
+            banner_bg: 5,
+            banner_frame: 2,
+            title: volatile.title as u16,
+            decorations: [78, 18, 8, 28, 339],
+            glasses_ids: [0, 0],
+            unk16: 0,
+            unk18: 0,
+            item_ids: [
+                inventory.equipped.main_hand.item_id,
+                inventory.equipped.off_hand.item_id,
+                inventory.equipped.head.item_id,
+                inventory.equipped.body.item_id,
+                inventory.equipped.hands.item_id,
+                inventory.equipped.legs.item_id,
+                inventory.equipped.feet.item_id,
+                inventory.equipped.ears.item_id,
+                inventory.equipped.neck.item_id,
+                inventory.equipped.wrists.item_id,
+                inventory.equipped.right_ring.item_id,
+                inventory.equipped.left_ring.item_id,
+            ],
+            timestamp: timestamp_secs(),
+            comment: search_info.comment.clone(),
+            name: for_character.name.clone(),
+        })
     }
 }
