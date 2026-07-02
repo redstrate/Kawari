@@ -156,8 +156,8 @@ impl From<EquipDisplayFlag> for DisplayFlag {
         if value.intersects(EquipDisplayFlag::CLOSE_VISOR) {
             new_flag.insert(DisplayFlag::CLOSE_VISOR);
         }
-        if value.intersects(EquipDisplayFlag::HIDE_EARS) {
-            new_flag.insert(DisplayFlag::HIDE_EARS);
+        if value.intersects(EquipDisplayFlag::HIDE_VIERA_EARS) {
+            new_flag.insert(DisplayFlag::HIDE_VIERA_EARS);
         }
 
         new_flag
@@ -174,7 +174,7 @@ bitflags! {
         const FADED = 0x100;
         const CLOSE_VISOR = 0x800;
         const UNK1 = 0x40000;
-        const HIDE_EARS = 0x100000;
+        const HIDE_VIERA_EARS = 0x100000;
     }
 }
 

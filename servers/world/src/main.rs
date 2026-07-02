@@ -3309,7 +3309,7 @@ async fn process_packet(
                                             connection.id,
                                             connection.player_data.character.actor_id,
                                             *param1,
-                                            Some((WarpType::InstanceContent, 15, 2, 4)),
+                                            Some((WarpType::Event, 15, 2, 4)),
                                         ))
                                         .await;
                                 }
