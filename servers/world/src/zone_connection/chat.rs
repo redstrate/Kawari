@@ -350,11 +350,13 @@ impl ZoneConnection {
 
                 self.actor_control_self(ActorControlCategory::DirectorEvent {
                     handler_id: HandlerId::new(HandlerType::GoldSaucer, 1319),
-                    event: DirectorEvent::Unknown(11),
-                    arg1: 3,
-                    arg2: 0,
-                    arg3: 0,
-                    arg4: 0,
+                    event: DirectorEvent::Unknown {
+                        id: 11,
+                        arg1: 3,
+                        arg2: 0,
+                        arg3: 0,
+                        arg4: 0,
+                    },
                 })
                 .await;
 
@@ -375,21 +377,23 @@ impl ZoneConnection {
                 // The director sends this with a background arg and a "phase" arg when the scenery needs to change. See the IKDSpot sheet for arg1 values (the row number should be increased by 1, so Kugane Coast would be 10, not 9).
                 self.actor_control_self(ActorControlCategory::DirectorEvent {
                     handler_id: self.content_handler_id,
-                    event: DirectorEvent::Unknown(2),
-                    arg1: parts
-                        .get(1)
-                        .cloned()
-                        .unwrap_or_default()
-                        .parse()
-                        .unwrap_or_default(),
-                    arg2: parts
-                        .get(2)
-                        .cloned()
-                        .unwrap_or_default()
-                        .parse()
-                        .unwrap_or_default(),
-                    arg3: 0,
-                    arg4: 0,
+                    event: DirectorEvent::Unknown {
+                        id: 2,
+                        arg1: parts
+                            .get(1)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
+                        arg2: parts
+                            .get(2)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
+                        arg3: 0,
+                        arg4: 0,
+                    },
                 })
                 .await;
                 true

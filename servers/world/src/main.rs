@@ -1080,46 +1080,48 @@ async fn process_packet(
                                 ClientTriggerCommand::DirectorTrigger {
                                     handler_id,
                                     trigger,
-                                    arg,
                                 } => {
                                     // TODO: move to server state? why is this here?
 
                                     match trigger {
-                                        DirectorTrigger::Sync => {
+                                        DirectorTrigger::Sync { .. } => {
                                             // Always send a sync response for now
                                             connection
                                                 .actor_control_self(
                                                     ActorControlCategory::DirectorEvent {
                                                         handler_id,
-                                                        event: DirectorEvent::SyncResponse,
-                                                        arg1: 1,
-                                                        arg2: 0,
-                                                        arg3: 0,
-                                                        arg4: 0,
+                                                        event: DirectorEvent::SyncResponse {
+                                                            arg1: 1,
+                                                            arg2: 0,
+                                                            arg3: 0,
+                                                            arg4: 0,
+                                                        },
                                                     },
                                                 )
                                                 .await;
                                         }
-                                        DirectorTrigger::SummonStrikingDummy => {
+                                        DirectorTrigger::SummonStrikingDummy { .. } => {
                                             tracing::info!(
                                                 "Spawning a striking dummy is unsupported!"
                                             );
                                         }
-                                        DirectorTrigger::GoldSaucerUnk1 => {
+                                        DirectorTrigger::GoldSaucerUnk1 { .. } => {
                                             // dummied out
                                         }
-                                        DirectorTrigger::GoldSaucerUnk2 => {
+                                        DirectorTrigger::GoldSaucerUnk2 { .. } => {
                                             // hardcoded for now
 
                                             connection
                                                 .actor_control_self(
                                                     ActorControlCategory::DirectorEvent {
                                                         handler_id,
-                                                        event: DirectorEvent::Unknown(9),
-                                                        arg1: 74,
-                                                        arg2: 1,
-                                                        arg3: 0,
-                                                        arg4: 0,
+                                                        event: DirectorEvent::Unknown {
+                                                            id: 9,
+                                                            arg1: 74,
+                                                            arg2: 1,
+                                                            arg3: 0,
+                                                            arg4: 0,
+                                                        },
                                                     },
                                                 )
                                                 .await;
@@ -1128,11 +1130,13 @@ async fn process_packet(
                                                 .actor_control_self(
                                                     ActorControlCategory::DirectorEvent {
                                                         handler_id,
-                                                        event: DirectorEvent::Unknown(6),
-                                                        arg1: 7773571, // TODO: hardcoded to the air force one attendant for now
-                                                        arg2: 1775917801,
-                                                        arg3: 0,
-                                                        arg4: 0,
+                                                        event: DirectorEvent::Unknown {
+                                                            id: 6,
+                                                            arg1: 7773571, // TODO: hardcoded to the air force one attendant for now
+                                                            arg2: 1775917801,
+                                                            arg3: 0,
+                                                            arg4: 0,
+                                                        },
                                                     },
                                                 )
                                                 .await;
@@ -1141,11 +1145,13 @@ async fn process_packet(
                                                 .actor_control_self(
                                                     ActorControlCategory::DirectorEvent {
                                                         handler_id,
-                                                        event: DirectorEvent::Unknown(11),
-                                                        arg1: 3,
-                                                        arg2: 0,
-                                                        arg3: 0,
-                                                        arg4: 0,
+                                                        event: DirectorEvent::Unknown {
+                                                            id: 11,
+                                                            arg1: 3,
+                                                            arg2: 0,
+                                                            arg3: 0,
+                                                            arg4: 0,
+                                                        },
                                                     },
                                                 )
                                                 .await;
@@ -1158,12 +1164,12 @@ async fn process_packet(
                                                 ))
                                                 .await;
                                         }
-                                        DirectorTrigger::VariantVote => {
+                                        DirectorTrigger::VariantVote { route } => {
                                             connection
                                                 .handle
                                                 .send(ToServer::VariantVote(
                                                     connection.player_data.character.actor_id,
-                                                    arg,
+                                                    route,
                                                 ))
                                                 .await;
 
@@ -1172,16 +1178,12 @@ async fn process_packet(
                                                     ActorControlCategory::DirectorEvent {
                                                         handler_id,
                                                         event: DirectorEvent::HideVariantVoteRoute,
-                                                        arg1: 0,
-                                                        arg2: 0,
-                                                        arg3: 0,
-                                                        arg4: 0,
                                                     },
                                                 )
                                                 .await;
                                         }
                                         _ => tracing::info!(
-                                            "DirectorTrigger: {handler_id} {trigger:?} {arg}"
+                                            "DirectorTrigger: {handler_id} {trigger:?}"
                                         ),
                                     }
                                 }

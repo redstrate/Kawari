@@ -287,7 +287,6 @@ pub enum ClientTriggerCommand {
     DirectorTrigger {
         handler_id: HandlerId,
         trigger: DirectorTrigger,
-        arg: u32,
     },
 
     /// When a player requests an NPC (or player?) to a Triple Triad match.
