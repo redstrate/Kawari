@@ -168,7 +168,7 @@ pub struct Volatile {
 #[diesel(primary_key(content_id))]
 pub struct Inventory {
     pub content_id: i64,
-    pub contents: String,
+    pub contents: crate::inventory::Inventory,
 }
 
 #[derive(

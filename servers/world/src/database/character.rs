@@ -145,7 +145,7 @@ impl WorldDatabase {
                 classjob,
                 subrace: customize.chara_make.customize.tribe as u8,
                 volatile,
-                inventory: serde_json::from_str(&inventory.contents).unwrap(),
+                inventory: inventory.contents,
                 unlock,
                 content,
                 companion,
@@ -176,7 +176,7 @@ impl WorldDatabase {
 
         let inventory = Inventory {
             content_id: data.character.content_id,
-            contents: serde_json::to_string(&data.inventory).unwrap(),
+            contents: data.inventory.clone(),
         };
         inventory
             .save_changes::<Inventory>(&mut self.connection)
@@ -283,9 +283,6 @@ impl WorldDatabase {
                 .first(&mut self.connection)
                 .unwrap();
 
-            let inventory: crate::inventory::Inventory =
-                serde_json::from_str(&inventory.contents).unwrap();
-
             let select_data = ClientSelectData {
                 character_name: character.name.clone(),
                 current_class: classjob.current_class,
@@ -301,11 +298,12 @@ impl WorldDatabase {
                 zone_id: volatile.zone_id,
                 content_finder_condition: 0,
                 customize: customize.chara_make.customize,
-                model_main_weapon: inventory.get_main_weapon_id(game_data).into(),
+                model_main_weapon: inventory.contents.get_main_weapon_id(game_data).into(),
                 model_sub_weapon: <WeaponModelId as Into<u64>>::into(
-                    inventory.get_sub_weapon_id(game_data),
+                    inventory.contents.get_sub_weapon_id(game_data),
                 ) as i32,
                 model_ids: inventory
+                    .contents
                     .legacy_model_ids(game_data)
                     .map(|x| x.into())
                     .to_vec(),
@@ -436,7 +434,7 @@ impl WorldDatabase {
 
         let inventory = Inventory {
             content_id: content_id as i64,
-            contents: serde_json::to_string(&inventory).unwrap(),
+            contents: inventory,
         };
         diesel::insert_into(schema::inventory::table)
             .values(inventory)
@@ -783,8 +781,6 @@ impl WorldDatabase {
             .select(SearchInfo::as_select())
             .first(&mut self.connection)
             .unwrap();
-        let inventory: crate::inventory::Inventory =
-            serde_json::from_str(&inventory.contents).unwrap();
 
         // NOTE: sending dummy data for now so at least the menu works
         let config = get_config();
@@ -817,18 +813,18 @@ impl WorldDatabase {
             class_job_id: classjob.current_class as u8,
             customize: customize.chara_make.customize,
             stain_ids1: [
-                inventory.equipped.main_hand.stains[0],
-                inventory.equipped.off_hand.stains[0],
-                inventory.equipped.head.stains[0],
-                inventory.equipped.body.stains[0],
-                inventory.equipped.hands.stains[0],
-                inventory.equipped.legs.stains[0],
-                inventory.equipped.feet.stains[0],
-                inventory.equipped.ears.stains[0],
-                inventory.equipped.neck.stains[0],
-                inventory.equipped.wrists.stains[0],
-                inventory.equipped.left_ring.stains[0],
-                inventory.equipped.right_ring.stains[0],
+                inventory.contents.equipped.main_hand.stains[0],
+                inventory.contents.equipped.off_hand.stains[0],
+                inventory.contents.equipped.head.stains[0],
+                inventory.contents.equipped.body.stains[0],
+                inventory.contents.equipped.hands.stains[0],
+                inventory.contents.equipped.legs.stains[0],
+                inventory.contents.equipped.feet.stains[0],
+                inventory.contents.equipped.ears.stains[0],
+                inventory.contents.equipped.neck.stains[0],
+                inventory.contents.equipped.wrists.stains[0],
+                inventory.contents.equipped.left_ring.stains[0],
+                inventory.contents.equipped.right_ring.stains[0],
             ],
             gear_visibility_flag: 5,
             top_border: 30,
@@ -841,18 +837,18 @@ impl WorldDatabase {
             unk13: 0,
             privacy_flags: 0,
             stain_ids2: [
-                inventory.equipped.main_hand.stains[1],
-                inventory.equipped.off_hand.stains[1],
-                inventory.equipped.head.stains[1],
-                inventory.equipped.body.stains[1],
-                inventory.equipped.hands.stains[1],
-                inventory.equipped.legs.stains[1],
-                inventory.equipped.feet.stains[1],
-                inventory.equipped.ears.stains[1],
-                inventory.equipped.neck.stains[1],
-                inventory.equipped.wrists.stains[1],
-                inventory.equipped.left_ring.stains[1],
-                inventory.equipped.right_ring.stains[1],
+                inventory.contents.equipped.main_hand.stains[1],
+                inventory.contents.equipped.off_hand.stains[1],
+                inventory.contents.equipped.head.stains[1],
+                inventory.contents.equipped.body.stains[1],
+                inventory.contents.equipped.hands.stains[1],
+                inventory.contents.equipped.legs.stains[1],
+                inventory.contents.equipped.feet.stains[1],
+                inventory.contents.equipped.ears.stains[1],
+                inventory.contents.equipped.neck.stains[1],
+                inventory.contents.equipped.wrists.stains[1],
+                inventory.contents.equipped.left_ring.stains[1],
+                inventory.contents.equipped.right_ring.stains[1],
             ],
             unk14: 0,
             banner_timeline: 5,
@@ -879,18 +875,18 @@ impl WorldDatabase {
             unk16: 0,
             unk18: 0,
             item_ids: [
-                inventory.equipped.main_hand.item_id,
-                inventory.equipped.off_hand.item_id,
-                inventory.equipped.head.item_id,
-                inventory.equipped.body.item_id,
-                inventory.equipped.hands.item_id,
-                inventory.equipped.legs.item_id,
-                inventory.equipped.feet.item_id,
-                inventory.equipped.ears.item_id,
-                inventory.equipped.neck.item_id,
-                inventory.equipped.wrists.item_id,
-                inventory.equipped.right_ring.item_id,
-                inventory.equipped.left_ring.item_id,
+                inventory.contents.equipped.main_hand.item_id,
+                inventory.contents.equipped.off_hand.item_id,
+                inventory.contents.equipped.head.item_id,
+                inventory.contents.equipped.body.item_id,
+                inventory.contents.equipped.hands.item_id,
+                inventory.contents.equipped.legs.item_id,
+                inventory.contents.equipped.feet.item_id,
+                inventory.contents.equipped.ears.item_id,
+                inventory.contents.equipped.neck.item_id,
+                inventory.contents.equipped.wrists.item_id,
+                inventory.contents.equipped.right_ring.item_id,
+                inventory.contents.equipped.left_ring.item_id,
             ],
             timestamp: timestamp_secs(),
             comment: search_info.comment.clone(),
