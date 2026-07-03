@@ -42,6 +42,7 @@ mod tests {
     use std::{fs::read, io::Cursor, path::PathBuf};
 
     use binrw::BinRead;
+    use physis::race::{Race, Tribe};
 
     use crate::common::CharacterMode;
     use crate::ipc::zone::{DisplayFlag, ObjectKind, PlayerSubKind};
@@ -74,8 +75,8 @@ mod tests {
         assert_eq!(player_spawn.common.position.0.y, 4.0);
         assert_eq!(player_spawn.common.position.0.z, -152.85175);
         assert_eq!(player_spawn.common.name, "Lavenaa Warren");
-        assert_eq!(player_spawn.common.look.race, 1);
-        assert_eq!(player_spawn.common.look.gender, 1);
+        assert_eq!(player_spawn.common.look.race, Race::Hyur);
+        assert_eq!(player_spawn.common.look.tribe, Tribe::Highlander);
         assert_eq!(player_spawn.common.look.bust, 100);
         assert_eq!(player_spawn.common.fc_tag, "");
         assert_eq!(player_spawn.common.model_chara, 0);

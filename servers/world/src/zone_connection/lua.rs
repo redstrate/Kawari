@@ -23,6 +23,7 @@ use kawari::{
         ServerZoneIpcSegment,
     },
 };
+use physis::race::{Gender, Race, Tribe};
 
 impl ZoneConnection {
     pub async fn process_lua_player(
@@ -534,7 +535,7 @@ impl ZoneConnection {
                         let mut database = self.database.lock();
                         let mut chara_make =
                             database.get_chara_make(self.player_data.character.content_id as u64);
-                        chara_make.customize.race = *race;
+                        chara_make.customize.race = Race::from_repr(*race).unwrap();
 
                         database.set_chara_make(
                             self.player_data.character.content_id as u64,
@@ -548,7 +549,7 @@ impl ZoneConnection {
                         let mut database = self.database.lock();
                         let mut chara_make =
                             database.get_chara_make(self.player_data.character.content_id as u64);
-                        chara_make.customize.subrace = *tribe;
+                        chara_make.customize.tribe = Tribe::from_repr(*tribe).unwrap();
 
                         database.set_chara_make(
                             self.player_data.character.content_id as u64,
@@ -562,7 +563,7 @@ impl ZoneConnection {
                         let mut database = self.database.lock();
                         let mut chara_make =
                             database.get_chara_make(self.player_data.character.content_id as u64);
-                        chara_make.customize.gender = *sex;
+                        chara_make.customize.gender = Gender::from_repr(*sex).unwrap();
 
                         database.set_chara_make(
                             self.player_data.character.content_id as u64,

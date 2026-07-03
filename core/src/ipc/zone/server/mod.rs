@@ -1,5 +1,6 @@
 use binrw::binrw;
 use kawari_core_macro::opcode_data;
+use physis::savedata::chardat::CustomizeData;
 
 use super::OnlineStatusMask;
 pub use super::social_list::{SocialList, SocialListUIFlags, SocialListUILanguages};
@@ -92,8 +93,8 @@ pub use free_company::FcHierarchy;
 
 mod actor_move;
 use crate::common::{
-    CustomizeData, DeepDungeonRoomFlag, HandlerId, LandData, ObjectTypeId, Position,
-    read_packed_position, read_quantized_rotation, write_packed_position, write_quantized_rotation,
+    DeepDungeonRoomFlag, HandlerId, LandData, ObjectTypeId, Position, read_packed_position,
+    read_quantized_rotation, write_packed_position, write_quantized_rotation,
 };
 use crate::constants::{
     AVAILABLE_CLASSJOBS, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,

@@ -143,7 +143,7 @@ impl WorldDatabase {
             player_data = PlayerData {
                 character: found_character,
                 classjob,
-                subrace: customize.chara_make.customize.subrace,
+                subrace: customize.chara_make.customize.tribe as u8,
                 volatile,
                 inventory: serde_json::from_str(&inventory.contents).unwrap(),
                 unlock,
@@ -291,7 +291,7 @@ impl WorldDatabase {
                 current_class: classjob.current_class,
                 class_levels: classjob.levels.0.iter().map(|x| *x as i32).collect(),
                 race: customize.chara_make.customize.race as i32,
-                subrace: customize.chara_make.customize.subrace as i32,
+                subrace: customize.chara_make.customize.tribe as i32,
                 gender: customize.chara_make.customize.gender as i32,
                 birth_month: customize.chara_make.birth_month,
                 birth_day: customize.chara_make.birth_day,

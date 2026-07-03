@@ -52,11 +52,13 @@ use icarus::WeatherRate::WeatherRateSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
 use kawari::ipc::zone::{CommonSpawn, DamageElement, PlotSize};
 use physis::equipment::EquipSlotCategory;
+use physis::race::{Gender, Race, Tribe};
 use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResource};
+use physis::savedata::chardat::CustomizeData;
 use physis::{Language, TerritoryIntendedUse};
 
-use kawari::common::{CustomizeData, LegacyEquipmentModelId, WeaponModelId, timestamp_secs};
 use kawari::common::{InstanceContentType, get_aether_current_comp_flg_set_to_screenimage};
+use kawari::common::{LegacyEquipmentModelId, WeaponModelId, timestamp_secs};
 use kawari::config::get_config;
 use strum::FromRepr;
 
@@ -730,14 +732,14 @@ impl GameData {
         let customize_row = self.bnpc_customize_sheet.row(customize_row_id as u32)?;
 
         let customize = CustomizeData {
-            race: customize_row.Race,
-            gender: customize_row.Gender,
+            race: Race::from_repr(customize_row.Race).unwrap(),
+            gender: Gender::from_repr(customize_row.Gender).unwrap(),
             age: customize_row.BodyType,
             height: customize_row.Height,
-            subrace: customize_row.Tribe,
+            tribe: Tribe::from_repr(customize_row.Tribe).unwrap(),
             face: customize_row.Face,
             hair: customize_row.HairStyle,
-            enable_highlights: customize_row.HairHighlight,
+            enable_highlights: customize_row.HairHighlight == 1,
             skin_tone: customize_row.SkinColor,
             right_eye_color: customize_row.EyeColor,
             hair_tone: customize_row.HairColor,
@@ -773,14 +775,14 @@ impl GameData {
         let model_row_id = row.ModelChara;
 
         let customize = CustomizeData {
-            race: row.Race,
-            gender: row.Gender,
+            race: Race::from_repr(row.Race).unwrap(),
+            gender: Gender::from_repr(row.Gender).unwrap(),
             age: row.BodyType,
             height: row.Height,
-            subrace: row.Tribe,
+            tribe: Tribe::from_repr(row.Tribe).unwrap(),
             face: row.Face,
             hair: row.HairStyle,
-            enable_highlights: row.HairHighlight,
+            enable_highlights: row.HairHighlight == 1,
             skin_tone: row.SkinColor,
             right_eye_color: row.EyeColor,
             hair_tone: row.HairColor,

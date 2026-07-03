@@ -1,8 +1,9 @@
 use binrw::binrw;
+use physis::savedata::chardat::CustomizeData;
 use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, CharacterMode, CrestData, CustomizeData, EquipDisplayFlag, HandlerId,
+    CHAR_NAME_MAX_LENGTH, CharacterMode, CrestData, EquipDisplayFlag, HandlerId,
     LegacyEquipmentModelId, ObjectId, ObjectTypeId, Position, WeaponModelId,
     read_quantized_rotation, read_string, write_quantized_rotation, write_string,
 };
