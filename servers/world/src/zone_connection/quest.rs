@@ -3,7 +3,7 @@
 use crate::{ZoneConnection, inventory::Storage, zone_connection::PersistentQuest};
 use kawari::{
     common::adjust_quest_id,
-    constants::{COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE},
+    constants::COMPLETED_QUEST_BITMASK_SIZE,
     ipc::zone::{
         ActiveQuest, QuestActiveList, QuestTracker, ServerZoneIpcData, ServerZoneIpcSegment,
         TrackedQuest,
@@ -45,7 +45,7 @@ impl ZoneConnection {
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::QuestCompleteList {
                 completed_quests: self.player_data.quest.completed.data.clone(),
-                unk2: vec![0xFF; 65],
+                unlocked_map_markers: self.player_data.quest.unlocked_map_markers.data.clone(),
             });
             self.send_ipc_self(ipc).await;
         }
@@ -53,16 +53,15 @@ impl ZoneConnection {
         // legacy quest complete list
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LegacyQuestList {
-                bitmask: [0xFF; 40],
+                bitmask: self.player_data.quest.completed_legacy.data.clone(),
             });
             self.send_ipc_self(ipc).await;
         }
 
         // levequest complete list
-        // NOTE: all levequests are unlocked by default
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LevequestCompleteList {
-                completed_levequests: vec![0xFF; COMPLETED_LEVEQUEST_BITMASK_SIZE],
+                completed_levequests: self.player_data.quest.completed_levequests.data.clone(),
                 unk2: Vec::default(),
             });
             self.send_ipc_self(ipc).await;

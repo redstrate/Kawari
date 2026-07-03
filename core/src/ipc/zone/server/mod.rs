@@ -97,8 +97,8 @@ use crate::common::{
     read_quantized_rotation, write_packed_position, write_quantized_rotation,
 };
 use crate::constants::{
-    AVAILABLE_CLASSJOBS, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
-    TITLE_UNLOCK_BITMASK_SIZE,
+    AVAILABLE_CLASSJOBS, COMPLETED_LEGACY_QUEST_BITMASK_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE,
+    COMPLETED_QUEST_BITMASK_SIZE, TITLE_UNLOCK_BITMASK_SIZE, UNLOCKED_MAP_MARKERS_BITMASK_SIZE,
 };
 pub use crate::ipc::zone::server::actor_move::ActorMove;
 
@@ -342,9 +342,10 @@ pub enum ServerZoneIpcData {
         #[br(count = COMPLETED_QUEST_BITMASK_SIZE)]
         #[bw(pad_size_to = COMPLETED_QUEST_BITMASK_SIZE)]
         completed_quests: Vec<u8>,
-        #[br(count = 65)]
-        #[bw(pad_size_to = 65)]
-        unk2: Vec<u8>,
+        #[brw(pad_after = 1)] // unused I guess
+        #[br(count = UNLOCKED_MAP_MARKERS_BITMASK_SIZE)]
+        #[bw(pad_size_to = UNLOCKED_MAP_MARKERS_BITMASK_SIZE)]
+        unlocked_map_markers: Vec<u8>,
     },
     UnkResponse2 {
         #[brw(pad_after = 7)]
@@ -682,7 +683,9 @@ pub enum ServerZoneIpcData {
         layout_id: u32,
     },
     LegacyQuestList {
-        bitmask: [u8; 40],
+        #[br(count = COMPLETED_LEGACY_QUEST_BITMASK_SIZE)]
+        #[bw(pad_size_to = COMPLETED_LEGACY_QUEST_BITMASK_SIZE)]
+        bitmask: Vec<u8>,
     },
     DirectorVars {
         /// ID of this director.
