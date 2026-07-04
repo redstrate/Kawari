@@ -42,6 +42,11 @@ pub enum LuaTask {
     SetLevel {
         level: u16,
     },
+    /// Set the level of a *specific* classjob (by ClassJob id), not just the currently-active one.
+    SetClassJobLevel {
+        classjob_id: u8,
+        level: u16,
+    },
     ChangeWeather {
         id: u8,
     },

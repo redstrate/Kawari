@@ -28,49 +28,60 @@ pub struct EquippedStorage {
 pub const EQUIP_RESTRICTED: i8 = -1;
 
 impl EquippedStorage {
-    /// Calculates the player's item level.
+    /// Calculates the player's average item level.
+    ///
+    /// Retail averages over 12 gear slots: MainHand, OffHand, Head, Body, Hands, Legs, Feet, Ears,
+    /// Neck, Wrists, and both Rings. The Waist slot is a legacy slot that no longer exists, and the
+    /// Soul Crystal is never counted. For a two-handed weapon the (empty) off-hand slot inherits the
+    /// main hand's item level, so a full set of N-ilvl gear reports N.
+    ///
+    /// The item level is resolved live from the Item sheet via `item_id` rather than trusting the
+    /// cached `item_level` field. That field is `#[serde(skip)]` and only populated by
+    /// `prepare_player_inventory` at load time, so items moved around mid-session (e.g. via a
+    /// gearset swap) can carry a stale `0`. Resolving from `item_id` keeps the result correct
+    /// regardless of how the item got into the slot.
     pub fn calculate_item_level(&self, game_data: &mut GameData) -> u16 {
         const DIVISOR: u16 = 12;
 
-        let mut level = 0;
+        // Resolve an equipped item's true item level from its catalog id (0 for empty slots).
+        let resolve_ilvl = |game_data: &mut GameData, item: &Item| -> u32 {
+            if item.quantity == 0 || item.item_id == 0 {
+                return 0;
+            }
+            game_data
+                .get_item_info(ItemInfoQuery::ById(item.item_id))
+                .map(|info| info.item_level as u32)
+                .unwrap_or(item.item_level as u32)
+        };
 
-        // First, sum up the item levels of all item slots regardless of restrictions.
+        let main_hand_ilvl = resolve_ilvl(game_data, &self.main_hand);
+
+        // Is the main hand two-handed? If so, the off-hand slot counts as the main hand.
+        let main_hand_is_two_handed = game_data
+            .get_item_info(ItemInfoQuery::ById(self.main_hand.item_id))
+            .map(|info| info.equip_restrictions.off_hand == EQUIP_RESTRICTED)
+            .unwrap_or(false);
+
+        let mut level: u32 = 0;
+
         for index in EquipSlot::iter() {
+            // The waist slot is legacy/removed and the soul crystal is never counted.
             if index == EquipSlot::Waist || index == EquipSlot::SoulCrystal {
                 continue;
             }
 
-            let item = self.get_slot(index as u16);
-            level += item.item_level;
-        }
-
-        // Next, calculate additional item levels based off main hand and body equipment restrictions.
-        if let Some(main_hand_info) =
-            game_data.get_item_info(ItemInfoQuery::ById(self.main_hand.item_id))
-        {
-            // If our main hand weapon is two-handed (i.e. restricts off-hands from being equipped), it counts one additional time.
-            if main_hand_info.equip_restrictions.off_hand == EQUIP_RESTRICTED {
-                level += self.get_slot(EquipSlot::MainHand as u16).item_level;
+            // For a two-handed weapon the empty off-hand slot inherits the main hand's item level.
+            if index == EquipSlot::OffHand && main_hand_is_two_handed && self.off_hand.quantity == 0
+            {
+                level += main_hand_ilvl;
+                continue;
             }
+
+            let item = *self.get_slot(index as u16);
+            level += resolve_ilvl(game_data, &item);
         }
 
-        if let Some(body_info) = game_data.get_item_info(ItemInfoQuery::ById(self.body.item_id)) {
-            let body_restrictions = [
-                body_info.equip_restrictions.head,
-                body_info.equip_restrictions.hands,
-                body_info.equip_restrictions.legs,
-                body_info.equip_restrictions.feet,
-            ];
-
-            // If our body equipment blocks head, hands, legs, or feet, it counts one addtional time per restricted slot.
-            for slot in body_restrictions {
-                if slot == EQUIP_RESTRICTED {
-                    level += self.get_slot(EquipSlot::Body as u16).item_level;
-                }
-            }
-        }
-
-        std::cmp::min(level / DIVISOR, 9999)
+        std::cmp::min((level / DIVISOR as u32) as u16, 9999)
     }
 }
 

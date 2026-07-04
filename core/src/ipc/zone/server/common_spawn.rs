@@ -167,15 +167,17 @@ impl From<EquipDisplayFlag> for DisplayFlag {
 
 bitflags! {
     impl DisplayFlag : u32 {
-        const ACTIVE_STANCE = 0x001;
-        const UNK2 = 0x008;
-        const INVISIBLE = 0x020;
-        const HIDE_HEAD = 0x040;
-        const HIDE_WEAPON = 0x80;
-        const FADED = 0x100;
-        const CLOSE_VISOR = 0x800;
-        const UNK1 = 0x40000;
-        const HIDE_VIERA_EARS = 0x100000;
+        const ACTIVE_STANCE         = 1 << 0;
+        const UNK2                  = 1 << 3;
+        const INVISIBLE             = 1 << 5;
+        const HIDE_HEAD             = 1 << 6;
+        const HIDE_WEAPON           = 1 << 7;
+        const FADED                 = 1 << 8;
+        const CLOSE_VISOR           = 1 << 11;
+        const FORCE_REFRESH         = 1 << 13;
+        const INACTIVE              = 1 << 16;
+        const UNK1                  = 1 << 18;
+        const HIDE_VIERA_EARS       = 1 << 20;
     }
 }
 

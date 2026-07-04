@@ -14,6 +14,8 @@ use crate::{
     lua::{KawariLua, LuaPlayer},
 };
 
+const MAX_SCRIPT_REDIRECTS: usize = 8;
+
 /// For events implemented in Lua scripts.
 #[derive(Debug)]
 pub struct LuaEventHandler {
@@ -36,14 +38,9 @@ impl LuaEventHandler {
             Self::inject_lua_parameters(id, &mut lua.0, &mut game_data);
         }
 
-        let file_name = FilesystemConfig::locate_script_file(path);
-
-        let result = std::fs::read(&file_name);
-        if let Err(err) = result {
-            tracing::warn!("Failed to load {}: {:?}", file_name, err);
+        let Some((file_name, file)) = Self::load_script(path) else {
             return None;
-        }
-        let file = result.unwrap();
+        };
 
         if let Err(err) = lua
             .0
@@ -62,6 +59,56 @@ impl LuaEventHandler {
         lua.0.globals().set("GAME_DATA", game_data).unwrap();
 
         Some(Self { file_name, lua })
+    }
+
+    fn load_script(path: &str) -> Option<(String, Vec<u8>)> {
+        let mut path = path.to_string();
+
+        for _ in 0..MAX_SCRIPT_REDIRECTS {
+            let file_name = FilesystemConfig::locate_script_file(&path);
+            let result = std::fs::read(&file_name);
+            if let Err(err) = result {
+                tracing::warn!("Failed to load {}: {:?}", file_name, err);
+                return None;
+            }
+            let file = result.unwrap();
+
+            let Some(redirect_path) = Self::script_redirect_target(&path, &file) else {
+                return Some((file_name, file));
+            };
+
+            tracing::debug!("Lua event script {path} redirects to {redirect_path}");
+            path = redirect_path;
+        }
+
+        tracing::warn!("Lua event script {path} exceeded the redirect limit");
+        None
+    }
+
+    fn script_redirect_target(path: &str, file: &[u8]) -> Option<String> {
+        let source = std::str::from_utf8(file).ok()?;
+        let redirect = source.trim().trim_start_matches('\u{feff}').trim();
+        if !redirect.ends_with(".lua")
+            || redirect.is_empty()
+            || redirect.chars().any(char::is_whitespace)
+        {
+            return None;
+        }
+
+        let redirect = redirect.replace('\\', "/");
+        if redirect.starts_with('/') || redirect.split('/').any(|part| part == "..") {
+            return None;
+        }
+
+        if redirect.contains('/') {
+            return Some(redirect);
+        }
+
+        let Some((parent, _)) = path.rsplit_once('/') else {
+            return Some(redirect);
+        };
+
+        Some(format!("{parent}/{redirect}"))
     }
 
     /// Injects any applicable Lua parameters from Excel, such as from `Opening`.
@@ -89,6 +136,39 @@ impl LuaEventHandler {
             lua.globals().set(&**name, *value).unwrap();
             tracing::info!("- {name}: {value}");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn resolves_single_line_lua_redirect_relative_to_current_script() {
+        let redirect = LuaEventHandler::script_redirect_target(
+            "events/warp/WarpInnGridania.lua",
+            b"WarpInnGeneric.lua\r\n",
+        );
+
+        assert_eq!(redirect, Some("events/warp/WarpInnGeneric.lua".to_string()));
+    }
+
+    #[test]
+    fn ignores_normal_lua_scripts() {
+        let redirect = LuaEventHandler::script_redirect_target(
+            "events/warp/WarpInnGeneric.lua",
+            b"function onTalk(target, player)\nend\n",
+        );
+
+        assert_eq!(redirect, None);
+    }
+
+    #[test]
+    fn rejects_redirects_outside_scripts() {
+        let redirect =
+            LuaEventHandler::script_redirect_target("events/warp/Foo.lua", b"../Bar.lua\n");
+
+        assert_eq!(redirect, None);
     }
 }
 

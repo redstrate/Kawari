@@ -233,13 +233,21 @@ impl Inventory {
         None
     }
 
-    pub fn process_action(&mut self, action: &ItemOperation) {
+    /// Applies an item operation to the inventory.
+    ///
+    /// Returns `true` if the operation was applied successfully, `false` if it was rejected
+    /// (e.g. an invalid container/slot). On failure the inventory is left unchanged, so the
+    /// caller must NOT acknowledge the operation to the client (otherwise client/server desync).
+    pub fn process_action(&mut self, action: &ItemOperation) -> bool {
         match action.operation_type {
             ItemOperationKind::Discard => {
                 if let Some(src_item) =
                     self.get_item_mut(action.src_storage_id, action.src_container_index)
                 {
                     *src_item = Item::default();
+                    true
+                } else {
+                    false
                 }
             }
             ItemOperationKind::CombineStack => {
@@ -249,79 +257,111 @@ impl Inventory {
                         self.get_item_mut(action.src_storage_id, action.src_container_index)
                     {
                         src_item = *original_item;
-                        *original_item = Item::default();
                     } else {
-                        return;
+                        return false;
                     }
                 }
 
+                // Validate the destination before mutating anything.
                 if let Some(dst_item) =
                     self.get_item_mut(action.dst_storage_id, action.dst_container_index)
                 {
                     // TODO: We ought to check the max stack size for a given item id and disallow overflow
                     dst_item.quantity += src_item.quantity;
+                } else {
+                    return false;
                 }
+
+                // Only clear the source after the destination was successfully updated.
+                if let Some(original_item) =
+                    self.get_item_mut(action.src_storage_id, action.src_container_index)
+                {
+                    *original_item = Item::default();
+                }
+                true
             }
             ItemOperationKind::SplitStack => {
-                let mut src_item;
+                // Peek at the source first without mutating, so a bad destination doesn't eat quantity.
+                let split_item;
                 {
                     let Some(original_item) =
-                        self.get_item_mut(action.src_storage_id, action.src_container_index)
+                        self.get_item(action.src_storage_id, action.src_container_index)
                     else {
                         tracing::warn!(
                             "Client sent a bogus storage id: {}! Rejecting item operation!",
                             action.src_storage_id
                         );
-                        return;
+                        return false;
                     };
-                    if original_item.quantity >= action.dst_stack {
-                        original_item.quantity -= action.dst_stack;
-                        src_item = *original_item;
-                        src_item.quantity = action.dst_stack
+                    if original_item.quantity >= action.dst_stack && action.dst_stack > 0 {
+                        let mut s = original_item;
+                        s.quantity = action.dst_stack;
+                        split_item = s;
                     } else {
                         tracing::warn!(
                             "Client sent a bogus split amount: {}! Rejecting item operation!",
                             action.dst_stack
                         );
-                        return;
+                        return false;
                     }
                 }
 
+                // Validate destination is empty/valid before committing.
                 if let Some(dst_item) =
                     self.get_item_mut(action.dst_storage_id, action.dst_container_index)
                 {
-                    dst_item.clone_from(&src_item);
+                    dst_item.clone_from(&split_item);
+                } else {
+                    return false;
                 }
+
+                // Commit: deduct from the source now that the destination accepted it.
+                if let Some(original_item) =
+                    self.get_item_mut(action.src_storage_id, action.src_container_index)
+                {
+                    original_item.quantity -= action.dst_stack;
+                }
+                true
             }
             ItemOperationKind::Exchange | ItemOperationKind::Move => {
-                let src_item;
-
-                // Clear existing item so add in next free slot checks work.
+                // Validate BOTH containers exist before touching anything, otherwise a clear-then-bail
+                // path would delete the source item permanently (desync / item loss).
+                if self
+                    .get_item(action.src_storage_id, action.src_container_index)
+                    .is_none()
+                    || self
+                        .get_item(action.dst_storage_id, action.dst_container_index)
+                        .is_none()
                 {
-                    if let Some(src_slot) =
-                        self.get_item_mut(action.src_storage_id, action.src_container_index)
-                    {
-                        src_item = *src_slot;
-                        src_slot.quantity = 0;
-                    } else {
-                        return;
-                    }
+                    tracing::warn!(
+                        "Rejecting {:?}: invalid container (src {} / dst {})",
+                        action.operation_type,
+                        action.src_storage_id,
+                        action.dst_storage_id
+                    );
+                    return false;
                 }
+
+                let src_item = self
+                    .get_item(action.src_storage_id, action.src_container_index)
+                    .unwrap();
+                let dst_item = self
+                    .get_item(action.dst_storage_id, action.dst_container_index)
+                    .unwrap();
 
                 // move src item into dst slot
                 if let Some(dst_slot) =
                     self.get_item_mut(action.dst_storage_id, action.dst_container_index)
                 {
-                    let dst_item = *dst_slot;
                     dst_slot.clone_from(&src_item);
-
-                    // move dst item into src slot
-                    if let Some(src_slot) =
-                        self.get_item_mut(action.src_storage_id, action.src_container_index)
-                    {
-                        src_slot.clone_from(&dst_item);
-                    }
                 }
+                // move dst item into src slot
+                if let Some(src_slot) =
+                    self.get_item_mut(action.src_storage_id, action.src_container_index)
+                {
+                    src_slot.clone_from(&dst_item);
+                }
+                true
             }
             _ => todo!(),
         }
@@ -544,8 +584,15 @@ impl Inventory {
         }
     }
 
+    /// Re-populates the runtime-only (`#[serde(skip)]`) derived fields (item_level, defense,
+    /// base params, etc.) on the equipped container from game data. Call this after items are
+    /// moved into equipped slots (e.g. a gearset swap) so item level and stats stay correct —
+    /// otherwise an item moved mid-session can carry stale zeroed derived fields.
+    pub fn prepare_equipped(&mut self, data: &mut GameData) {
+        Self::prepare_items_in_container(&mut self.equipped, data);
+    }
+
     pub fn prepare_player_inventory(inventory: &mut Inventory, data: &mut GameData) {
-        // TODO: implement iter_mut for Inventory so all of this can be reduced down
         for index in 0..inventory.pages.len() {
             Self::prepare_items_in_container(&mut inventory.pages[index], data);
         }
@@ -561,17 +608,18 @@ impl Inventory {
         Self::prepare_items_in_container(&mut inventory.armoury_necklace, data);
         Self::prepare_items_in_container(&mut inventory.armoury_bracelet, data);
         Self::prepare_items_in_container(&mut inventory.armoury_rings, data);
+        Self::prepare_items_in_container(&mut inventory.armoury_soul_crystal, data);
         Self::prepare_items_in_container(&mut inventory.key_items, data);
-        // Skip soul crystals
     }
 
     /// Equips the given soul crystal and places the old one (if any) back into the Armoury Chest.
-    pub fn equip_soul_crystal(&mut self, id: u32) {
+    /// Returns `true` if the soul crystal was equipped.
+    pub fn equip_soul_crystal(&mut self, id: u32) -> bool {
         // NOTE: This has to match client behavior exactly! See ItemOperation code for more details.
 
         // If we already have it equipped, do nothing.
         if self.equipped.soul_crystal.item_id == id && self.equipped.soul_crystal.quantity > 0 {
-            return;
+            return true;
         }
 
         for i in 0..self.armoury_soul_crystal.max_slots() as u16 {
@@ -587,16 +635,25 @@ impl Inventory {
                     dst_container_index: 13,
                     ..Default::default()
                 };
-                self.process_action(&operation);
-
-                return;
+                return self.process_action(&operation);
             }
         }
+
+        false
     }
 
     /// Checks if the soul crystal exists in your inventory.
     pub fn has_soul_crystal(&mut self, id: u32) -> bool {
         // TODO: can you move the soul crystal somewhere else?
+
+        // The crystal counts as "owned" if it's already equipped. Without this, swapping to a
+        // weapon of the SAME job (class unchanged) would look up the job's crystal, fail to find it
+        // in the armoury chest (because it's currently equipped, not stored), and fall through to
+        // the "unequip the crystal" branch — stripping the soul crystal even though the job didn't
+        // change.
+        if self.equipped.soul_crystal.item_id == id && self.equipped.soul_crystal.quantity > 0 {
+            return true;
+        }
 
         for i in 0..self.armoury_soul_crystal.max_slots() as u16 {
             // Find the soul crystal in the Armoury Chest.
@@ -610,15 +667,23 @@ impl Inventory {
     }
 
     /// Puts the equipment in `slot` back into the Armoury Chest.
-    pub fn unequip_equipment(&mut self, slot: u16) {
+    /// Returns `true` if the item was unequipped, `false` if there was nothing to do or the
+    /// armoury chest was full (in which case the slot is left untouched, matching retail which
+    /// blocks the operation rather than destroying the item).
+    pub fn unequip_equipment(&mut self, slot: u16) -> bool {
         // NOTE: This has to match client behavior exactly! See ItemOperation code for more details.
 
         // If we already have nothing, do nothing.
         if self.equipped.get_slot(slot).quantity == 0 {
-            return;
+            return false;
         }
 
-        let destination_info = self.add_in_next_free_armory_slot(slot).unwrap();
+        let Some(destination_info) = self.add_in_next_free_armory_slot(slot) else {
+            tracing::warn!(
+                "Cannot unequip slot {slot}: the corresponding armoury chest is full! Leaving it equipped."
+            );
+            return false;
+        };
         self.add_in_slot(
             *self.equipped.get_slot(slot),
             &destination_info.container,
@@ -626,6 +691,7 @@ impl Inventory {
         );
 
         *self.equipped.get_slot_mut(slot) = Item::default();
+        true
     }
 }
 

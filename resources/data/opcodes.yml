@@ -383,10 +383,6 @@ ServerZoneIpcType:
   comment: Sent by the server in response to the client requesting housing ward info on the residential aetheryte menu.
   opcode: 905
   size: 2416
-- name: SupportDeskNotification
-  comment: Sent by the server to indicate you have a support desk notification(?) !! Out of date as of 7.40.
-  opcode: 3260
-  size: 16
 - name: ScenarioGuide
   comment: Sent by the server to update the scenario guide UI.
   opcode: 762
@@ -505,7 +501,7 @@ ServerZoneIpcType:
   size: 16
 - name: UnkSocialResponse
   comment: Unknown purpose, but allows you to load in while sending the search info packet.
-  opcode: 255
+  opcode: 802
   size: 80
 - name: UnkClassRelated
   comment: Seems to control the client's hotbars.
@@ -535,6 +531,18 @@ ServerZoneIpcType:
   comment: Unknown purpose.
   opcode: 848
   size: 636
+- name: AoeEffect16
+  comment: Multi-target action effect (up to 16 targets).
+  opcode: 638
+  size: 1212
+- name: AoeEffect24
+  comment: Multi-target action effect (up to 24 targets).
+  opcode: 420
+  size: 1788
+- name: AoeEffect32
+  comment: Multi-target action effect (up to 32 targets).
+  opcode: 674
+  size: 2364
 - name: ActorCast
   comment: Unknown purpose.
   opcode: 457
@@ -808,46 +816,86 @@ ClientZoneIpcType:
   comment: Occasionally sent by the client, purpose is unknown.
   opcode: 899
   size: 32
-- name: UnkSocialEvent
-  comment: Unknown purpose.
-  opcode: 1706
-  size: 8
 - name: ItemOperation
   comment: Unknown purpose.
   opcode: 109
   size: 48
+- name: DyeInformation
+  comment: Information about the dye about to be applied.
+  opcode: 380
+  size: 24
 - name: StartTalkEvent
   comment: Unknown purpose.
   opcode: 601
   size: 16
-- name: EventReturnHandler2
-  comment: Unknown purpose.
+- name: EventAction1
+  comment: Sent by the client when an event scene yields with up to 2 results.
+  opcode: 638
+  size: 16
+- name: EventAction4
+  comment: Sent by the client when an event scene yields with up to 4 results.
+  opcode: 420
+  size: 24
+- name: EventAction8
+  comment: Sent by the client when an event scene yields with up to 8 results.
+  opcode: 674
+  size: 40
+- name: EventAction16
+  comment: Sent by the client when an event scene yields with up to 16 results.
+  opcode: 324
+  size: 72
+- name: EventAction32
+  comment: Sent by the client when an event scene yields with up to 32 results.
+  opcode: 838
+  size: 136
+- name: EventAction64
+  comment: Sent by the client when an event scene yields with up to 64 results.
+  opcode: 651
+  size: 264
+- name: EventAction128
+  comment: Sent by the client when an event scene yields with up to 128 results.
+  opcode: 569
+  size: 520
+- name: EventAction255
+  comment: Sent by the client when an event scene yields with up to 255 results.
+  opcode: 608
+  size: 1032
+- name: EventFinish1
+  comment: Sent by the client when an event scene finishes with up to 2 results.
   opcode: 969
   size: 16
-- name: EventReturnHandler8
-  comment: Unknown purpose.
+- name: EventFinish4
+  comment: Sent by the client when an event scene finishes with up to 4 results.
+  opcode: 415
+  size: 24
+- name: EventFinish8
+  comment: Sent by the client when an event scene finishes with up to 8 results.
   opcode: 356
   size: 40
+- name: EventFinish16
+  comment: Sent by the client when an event scene finishes with up to 16 results.
+  opcode: 721
+  size: 72
+- name: EventFinish32
+  comment: Sent by the client when an event scene finishes with up to 32 results.
+  opcode: 342
+  size: 136
+- name: EventFinish64
+  comment: Sent by the client when an event scene finishes with up to 64 results.
+  opcode: 893
+  size: 264
+- name: EventFinish128
+  comment: Sent by the client when an event scene finishes with up to 128 results.
+  opcode: 474
+  size: 520
+- name: EventFinish255
+  comment: Sent by the client when an event scene finishes with up to 255 results.
+  opcode: 696
+  size: 1032
 - name: Config
   comment: Unknown purpose.
   opcode: 239
   size: 8
-- name: EventYieldHandler2
-  comment: Unknown purpose, but seen when trying to play a Gold Saucer arcade machine.
-  opcode: 638
-  size: 16
-- name: EventYieldHandler4
-  comment: Unknown purpose.
-  opcode: 415
-  size: 24
-- name: EventYieldHandler16
-  comment: Unknown purpose.
-  opcode: 1222
-  size: 72
-- name: EventYieldHandler128
-  comment: Unknown purpose.
-  opcode: 1239
-  size: 520
 - name: UnkCall2
   comment: Unsure the true purpose of this, but it's needed for the Unending Journey to function.
   opcode: 281
@@ -870,7 +918,7 @@ ClientZoneIpcType:
   size: 72
 - name: EquipGearset2
   comment: Unknown purpose, and also unsure why it's different from EquipGearset.
-  opcode: 1487
+  opcode: 334
   size: 128
 - name: StartWalkInEvent
   comment: Unknown purpose.
@@ -914,7 +962,7 @@ ClientZoneIpcType:
   size: 8
 - name: SetFreeCompanyGreeting
   comment: Happens when the client sets their free company's message of the day. May have additional uses?
-  opcode: 1182
+  opcode: 805
   size: 200
 - name: SetClientLanguage
   comment: Happens during initialization, informs the server what the client's language is set to.
@@ -1006,7 +1054,7 @@ ClientZoneIpcType:
   size: 104
 - name: RequestFreeCompanyShortMessage
   comment: The client requests a character's short message in their free company.
-  opcode: 1665
+  opcode: 901
   size: 16
 - name: QueueRoulette
   comment: The client queues into a roulette.
@@ -1043,11 +1091,11 @@ ClientZoneIpcType:
 - name: CrossRealmListingsRequest1
   comment: Seen while opening the Party Finder.
   opcode: 631
-  size: 56
+  size: 80
 - name: CrossRealmListingsRequest2
   comment: Seen while opening the Party Finder.
   opcode: 828
-  size: 40
+  size: 64
 - name: ViewCrossRealmListing
   comment: Seen while viewing information for a specific Party Finder listing.
   opcode: 752
@@ -1070,7 +1118,7 @@ ClientZoneIpcType:
   size: 8
 - name: RenameCrossworldLinkshell
   comment: The client requests to rename a cross-world linkshell. Only Masters can do this.
-  opcode: 827
+  opcode: 295
   size: 40
 - name: SetCWLSMemberRank
   comment: The client promotes a member in their linkshell to a higher rank. Only Masters can do this if the target is another player, and only Leaders can target themselves to resign. Masters resign when they leave the linkshell.
@@ -1139,10 +1187,6 @@ ClientZoneIpcType:
 - name: FallFromArena
   comment: Happens when you fall off the edge of an arena.
   opcode: 230
-  size: 24
-- name: DyeInformation
-  comment: Information about the dye about to be applied.
-  opcode: 380
   size: 24
 ServerLobbyIpcType:
 - name: NackReply

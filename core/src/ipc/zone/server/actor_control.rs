@@ -60,8 +60,10 @@ pub enum ActorControlCategory {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         shown: bool,
-        /// This seems to always be set to 1. If set to another value, the animation glitches for other clients.
-        unk_flag: u32,
+        /// This seems to always be set to true. If set to another value, the animation glitches for other clients.
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        immediately: bool,
     },
 
     /// Sets auto-attack mode of this entity.
@@ -146,15 +148,23 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 15u32)]
-    CancelCast {},
+    CancelCast {
+        /// This corresponds to row id from the LogMessage sheet.
+        log_message_id: u32,
+        action_type: u32,
+        action_id: u32,
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        interrupted: bool,
+    },
 
     /// Sets the current value of the cooldown timer.
     #[brw(magic = 16u32)]
     SetCooldownTimer {
         /// This corresponds to (CooldownGroup - 1) from the Action sheet.
         cooldown_group: u32,
-        unk1: u32,
-        unk2: u32,
+        elapsed_centisec: u32,
+        total_centisec: u32,
     },
 
     /// Sets the upper bound of the cooldown timer. *Only* has an effect if the cooldown timer is actually running.
@@ -164,8 +174,9 @@ pub enum ActorControlCategory {
         cooldown_group: u32,
         /// Index in the Action Excel sheet.
         action_id: u32,
-        /// 10 * milliseconds value.
-        milliseconds: u32,
+        /// Cooldown duration in centiseconds (10ms units). This is derived from Action.Recast100ms
+        /// after speed scaling and per-group adjustments, not sent in the sheet's raw 100ms unit.
+        duration_centisec: u32,
     },
 
     #[brw(magic = 20u32)]
@@ -188,6 +199,16 @@ pub enum ActorControlCategory {
 
     #[brw(magic = 27u32)]
     Flee { speed: u16 },
+
+    #[brw(magic = 35u32)]
+    Tether {
+        /// This corresponds to row id from the Channeling sheet.
+        tether_id: u32,
+        from_actor_id: u32,
+        to_actor_id: u32,
+        /// Tether progress (in pct), not sure what does it controls
+        progress: u32,
+    },
 
     #[brw(magic = 38u32)]
     ToggleInvisibility {
@@ -214,6 +235,13 @@ pub enum ActorControlCategory {
     #[brw(magic = 43u32)]
     SetEXP { classjob_id: u32, amount: u32 },
 
+    #[brw(magic = 47u32)]
+    TetherCancel {
+        /// This corresponds to row id from the Channeling sheet.
+        tether_id: u32,
+        target_actor_id: u32,
+    },
+
     #[brw(magic = 50u32)]
     SetTarget {},
 
@@ -224,11 +252,41 @@ pub enum ActorControlCategory {
     #[brw(magic = 60u32)]
     PlayIdleAnimation {},
 
+    /// Toggles whether this actor can be targeted. Retail uses this to make a boss untargetable
+    /// while it's off doing a mechanic (e.g. Ifrit jumping away for Crimson Cyclone).
+    #[brw(magic = 54u32)]
+    Targetable {
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        targetable: bool,
+    },
+
+    /// Shows or hides the actor (controls its visibility). `visible` = 1 to show, 0 to hide. The
+    /// optional `duration` is a raw float controlling the fade animation length — the client divides
+    /// `1.0` by it; pass `0.0` for the default/instant.
+    #[brw(magic = 414u32)]
+    ToggleVisibility {
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        visible: bool,
+        duration: f32,
+    },
+
+    /// Immediately force-refresh the actor's state (pos, rotation etc.).
+    #[brw(magic = 415u32)]
+    ForceStateRefresh {},
+
     // Sets the player's HP and seems to deal unique damage(?) Seen while falling off an Eden arena.
     #[brw(magic = 80u32)]
     DamageEffect {
         /// How much damage you take.
         amount: u32,
+    },
+
+    #[brw(magic = 98u32)]
+    SetName {
+        /// This corresponds to row id from the BNpcName sheet.
+        name_row_id: u32,
     },
 
     // Calls into many inventory-related functions, haven't looked too far yet.
@@ -401,14 +459,47 @@ pub enum ActorControlCategory {
         unk1: u32,
     },
 
+    /// Apply knockback to player
+    #[brw(magic = 225u32)]
+    Knockback {
+        // Knockback direction, likely `radians * 10000 with PI offset`.
+        direction: u32,
+        // Knockback distance, likely `distance * 10000`.
+        distance: u32,
+        // lerp speed?, likely scaled by 100.
+        speed: u32,
+    },
+
+    // TODO: This may need special handling since they are u32 bruh
+    // Coords need to do a `var * (2000d / 65535) - 1000` on client-side, we need to do it reverse (don't know why it converted to ushort in Bossmod)
+    // Rotations need to do a `var * (1d / 65535 * 2 * PI) - PI` and convert it to radians on client-side, we need to do it reverse
+    /// Overriding player's movement (ActorControlSelf)
+    #[brw(magic = 226u32)]
+    ForcedMovement {
+        coords_x: u32,
+        coords_y: u32,
+        coords_z: u32,
+        rotation: u32,
+        duration: u32,
+        move_type: u32,
+    },
+
     /// Changes something in UpdatePositionHandler?
     #[brw(magic = 236u32)]
     MovementRelatedUnk { unk1: u32 },
 
     #[brw(magic = 253u32)]
     CompanionUnlock {
-        unk1: u32,
-        unk2: u32, // unlocked?
+        /// Is companion summoned or not
+        is_summoned: u32,
+        /// Observed as 1 while syncing a summoned companion.
+        force_sync: u32,
+        /// Remaining spawn time (in sec)
+        remaining_time: u32,
+        /// Current companion EXP.
+        current_exp: u32,
+        /// Companion skill level.
+        skill_level: u32,
     },
 
     #[brw(magic = 254u32)]
@@ -438,6 +529,8 @@ pub enum ActorControlCategory {
         unk3: u32,
         /// Usually 7?
         unk4: u32,
+        /// Retail toggles this to 1 while the pet owner is mounted, then back to 0 after dismount.
+        mount_state: u32,
     },
 
     #[brw(magic = 270u32)]
@@ -530,12 +623,20 @@ pub enum ActorControlCategory {
     #[brw(magic = 409u32)]
     SetSharedGroupTimelineState {
         state: SharedGroupTimelineState,
-        // NOTE: There is another u32 in here, but I don't believe it's read by the client. And it looks like nonsense...
+        /// NOTE: I don't believe it's read by the client. And it looks like nonsense... maybe director id?
+        unk2: u32,
+        /// p3 == 1 means housing (?) item instead of event obj
+        unk3: u32,
+        /// housing item id
+        unk4: u32,
     },
 
     /// Plays an animation for a SharedGroup object.
     #[brw(magic = 410u32)]
     PlaySharedGroupTimeline { timeline_id: u32 },
+
+    #[brw(magic = 413u32)]
+    EObjAnimation { param1: u32, param2: u32 },
 
     /// Sets the `companion_owner_id` for a this object.
     #[brw(magic = 417u32)]
@@ -559,20 +660,22 @@ pub enum ActorControlCategory {
     #[brw(magic = 504u32)]
     SetStatusIcon { icon: OnlineStatus },
 
-    #[brw(magic = 504u32)]
-    SetLimitBreak {
-        level: u32,
-        amount: u32,
-        limit_type: u32,
-    },
-
-    /// Controls *something* about limit breaks.
+    // adds 75 per 3 seconds (100 per 3 seconds in pvp mode) when in combat
+    /// LimitBreakGauge (ActorControlSelf)
     #[brw(magic = 505u32)]
-    UnkLimitBreakController {
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
+    LimitBreakGauge {
+        /// Controlling how many bars for the LB gauge, set to 0 hides it (happened when exiting duty)
+        bars: u32,
+        /// Current value of the gauge, should be `bars * max_value_per_bar`
+        current_value: u32,
+        /// Usually 10000 in duty, 3000 in pvp from retail
+        max_value_per_bar: u32,
+        /// Seems ununsed, always 0 so far
         unk4: u32,
+        /// 0 - Normal LB
+        /// 1 - PvP LB
+        /// 3 - Normal LB but NPC can consume it? (if is the client doing NPC classjob rotation)
+        lb_type: u32,
     },
 
     #[brw(magic = 507u32)]
@@ -658,6 +761,18 @@ pub enum ActorControlCategory {
     #[brw(magic = 609u32)]
     ToggleWireframeRendering(),
 
+    /// ActionRejected (ActorControlSelf)
+    #[brw(magic = 700u32)]
+    ActionRejected {
+        /// This corresponds to row id from the LogMessage sheet.
+        log_message_id: u32,
+        action_type: u32,
+        action_id: u32,
+        recast_elapsed_centisec: u32,
+        recast_total_centisec: u32,
+        source_seq: u32,
+    },
+
     #[brw(magic = 801u32)]
     GearSetEquipped { gearset_index: u32 },
 
@@ -722,6 +837,17 @@ pub enum ActorControlCategory {
         unk2: u32,
         unk3: u32,
         unk4: u32,
+    },
+
+    /// ServerRequestCallbackResponse (ActorControlSelf)
+    #[brw(magic = 925u32)]
+    ServerRequestCallbackResponse {
+        listener_index: u32,
+        listener_req_type: u32,
+        data1: u32,
+        data2: u32,
+        data3: u32,
+        data4: u32,
     },
 
     /// Unsure what this is for, but it's sent when riding as a passenger.
@@ -829,9 +955,81 @@ pub enum ActorControlCategory {
     #[brw(magic = 1506u32)]
     StartDuelCountdown { opponent_id: ObjectId },
 
+    #[brw(magic = 1512u32)]
+    SetDutyActionSet {
+        /// Should be correspond to row id of the ContentExAction sheet?
+        row_id: u32,
+    },
+
+    /// SetDutyActionDetails (ActorControlSelf)
+    /// cur_charges seems like usually sets to 0, then follow by a SetDutyActionCharges
+    #[brw(magic = 1513u32)]
+    SetDutyActionDetails {
+        slot0_action_id: u32,
+        slot0_max_charges: u32,
+        slot1_action_id: u32,
+        slot1_max_charges: u32,
+        slot0_cur_charges: u32,
+        slot1_cur_charges: u32,
+    },
+
+    #[brw(magic = 1514u32)]
+    SetDutyActionPresent { do_present: u32 },
+
+    #[brw(magic = 1515u32)]
+    SetDutyActionActive {
+        slot0_active: u32,
+        slot1_active: u32,
+    },
+
+    #[brw(magic = 1516u32)]
+    SetDutyActionCharges {
+        slot0_cur_charges: u32,
+        slot1_cur_charges: u32,
+    },
+
     /// Calls into animation-related functions I think?
     #[brw(magic = 1529u32)]
     UnkAnimationRelated {},
+
+    #[brw(magic = 1536u32)]
+    IncrementRecast {
+        cooldown_group: u32,
+        delta_time_centisec: u32,
+    },
+
+    /// Floating heal number shown on screen for a heal-over-time tick. Retail sends this every
+    /// 3 seconds for each active HoT (captured category 1540 — one less than the DoT's 1541).
+    #[brw(magic = 1540u32)]
+    TickHeal {
+        /// The Status EXD row id that owns this tick.
+        status_id: u32,
+        /// The heal amount displayed.
+        amount: u32,
+        /// The actor that applied the HoT (the caster).
+        source_actor_id: ObjectId,
+        /// Unknown. Client static analysis shows multiple branches depending on this field; keep
+        /// observed values until its meaning is better understood.
+        unk2: u32,
+        unk3: u32,
+    },
+
+    /// Floating damage number shown above an actor for a damage-over-time tick. Retail sends this
+    /// every 3 seconds for each active DoT (captured category 1541), which is why DoT ticks render
+    /// in the distinct "tick" number style rather than the regular action-hit style.
+    #[brw(magic = 1541u32)]
+    TickDamage {
+        /// The Status EXD row id that owns this tick.
+        status_id: u32,
+        /// The damage amount displayed.
+        amount: u32,
+        /// The actor that applied the DoT (the caster).
+        source_actor_id: ObjectId,
+        /// Unknown. Client static analysis shows multiple branches depending on this field; keep
+        /// observed values until its meaning is better understood.
+        unk2: u32,
+        unk3: u32,
+    },
 
     #[brw(magic = 1545u32)]
     UnkCooldownsRelated {

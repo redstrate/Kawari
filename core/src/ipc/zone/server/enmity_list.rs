@@ -7,8 +7,9 @@ use crate::common::ObjectId;
 pub struct PlayerEnmity {
     /// The player's object ID.
     pub actor_id: ObjectId,
-    /// Value out of a 100, I think.
-    pub enmity: u32,
+    /// Enmity percentage, capped to 0..100.
+    #[brw(pad_after = 3)]
+    pub enmity: u8,
 }
 
 impl PlayerEnmity {
@@ -18,10 +19,11 @@ impl PlayerEnmity {
 #[binrw]
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct EnmityList {
-    pub count: u32,
-    #[brw(pad_after = 4)] // empty
+    #[brw(pad_after = 3)]
+    pub count: u8,
     #[br(count = count)]
     #[brw(pad_size_to = PlayerEnmity::SIZE * 8)]
+    #[brw(pad_after = 4)] // empty tail padding
     pub list: Vec<PlayerEnmity>,
 }
 

@@ -7,8 +7,9 @@ use crate::common::ObjectId;
 pub struct Hater {
     /// ID of the hater.
     pub actor_id: ObjectId,
-    /// Value out of a 100, I think.
-    pub enmity: u32,
+    /// Enmity percentage, capped to 0..100.
+    #[brw(pad_after = 3)]
+    pub enmity: u8,
 }
 
 impl Hater {
@@ -18,10 +19,11 @@ impl Hater {
 #[binrw]
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct HaterList {
-    pub count: u32,
-    #[brw(pad_after = 4)] // empty
+    #[brw(pad_after = 3)]
+    pub count: u8,
     #[br(count = count)]
     #[brw(pad_size_to = Hater::SIZE * 32)]
+    #[brw(pad_after = 4)] // empty tail padding
     pub list: Vec<Hater>,
 }
 

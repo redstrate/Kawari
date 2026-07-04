@@ -19,8 +19,7 @@ use kawari::{
     opcodes::ServerChatIpcType,
     packet::{
         CompressionType, ConnectionState, ConnectionType, IpcSegmentHeader, PacketSegment,
-        SegmentData, SegmentType, ServerIpcSegmentHeader, parse_packet, send_keep_alive,
-        send_packet,
+        SegmentData, SegmentType, ServerIpcSegmentHeader, parse_packet, send_packet,
     },
 };
 
@@ -344,13 +343,11 @@ impl ChatConnection {
     }
 
     pub async fn send_keep_alive(&mut self, id: u32, timestamp: u32) {
-        send_keep_alive::<ServerChatIpcSegment>(
-            &mut self.socket,
-            &mut self.state,
-            ConnectionType::Chat,
-            id,
-            timestamp,
-        )
+        self.send_segment(PacketSegment {
+            segment_type: SegmentType::KeepAliveResponse,
+            data: SegmentData::KeepAliveResponse { id, timestamp },
+            ..Default::default()
+        })
         .await;
     }
 

@@ -43,6 +43,10 @@ pub struct Item {
     pub defense: u16,
     #[serde(skip)]
     pub magic_defense: u16,
+    #[serde(skip)]
+    pub weapon_damage_phys: u16,
+    #[serde(skip)]
+    pub weapon_damage_mag: u16,
 }
 
 impl Item {
@@ -58,6 +62,8 @@ impl Item {
             base_param_values: item_info.base_param_values,
             defense: item_info.defense,
             magic_defense: item_info.magic_defense,
+            weapon_damage_phys: item_info.weapon_damage_phys,
+            weapon_damage_mag: item_info.weapon_damage_mag,
             ..Default::default()
         }
     }

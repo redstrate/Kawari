@@ -96,4 +96,25 @@ mod tests {
         assert_eq!(action_request.rotation1, -3.1412091);
         assert_eq!(action_request.rotation2, -0.8154669);
     }
+
+    #[test]
+    fn read_actionrequest_cast_dye() {
+        let buffer = [
+            0xa8, 0x09, 0x00, 0x00, // action id 2472, Cast Dye
+            0x00, 0x01, 0x01, 0x00, // action type Action, sequence 1
+            0x82, 0xc4, 0x82, 0xc4, // rotations
+            0x00, 0x00, 0x00, 0x00, // unknowns
+            0xe7, 0x92, 0xc8, 0xdb, 0x00, 0x00, 0x00, 0x00, // target
+            0x00, 0x00, 0x00, 0x00, // arg
+            0x00, 0x00, 0x00, 0x00, // padding
+        ];
+        let mut buffer = Cursor::new(buffer);
+
+        let action_request = ActionRequest::read_le(&mut buffer).unwrap();
+        assert_eq!(action_request.action_type, ActionType::Action);
+        assert_eq!(action_request.action_id, 2472);
+        assert_eq!(action_request.sequence, 1);
+        assert_eq!(action_request.target.object_id, ObjectId(0xdbc892e7));
+        assert_eq!(buffer.position(), 32);
+    }
 }

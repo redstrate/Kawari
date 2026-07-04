@@ -14,7 +14,7 @@ default = ["server"]
 oodle = []
 
 # Used while compiling with the server binaries.
-server = ["dep:tokio", "dep:mlua", "dep:diesel"]
+server = ["dep:tokio", "dep:mlua", "dep:diesel", "dep:libsqlite3-sys"]
 
 [build-dependencies]
 serde = { workspace = true }
@@ -34,6 +34,9 @@ strum_macros = { workspace = true }
 tokio = { workspace = true, optional = true }
 mlua = { workspace = true, optional = true }
 diesel = { workspace = true, optional = true }
+# Pulled in transitively by diesel's sqlite backend; declaring it activates the `bundled` SQLite so
+# tests (and any binary that enables the `server` feature) don't try to link system sqlite3.lib.
+libsqlite3-sys = { workspace = true, optional = true }
 bstr = { workspace = true }
 glam = { workspace = true }
 

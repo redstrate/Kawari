@@ -26,11 +26,11 @@ pub fn handle_social_messages(
             invite_type,
         ) => {
             let mut log_message = LogMessageType::Default;
+            let data = data.lock();
             let mut network = network.lock();
 
             let is_online;
             {
-                let data = data.lock();
                 is_online = data.find_actor_instance(*recipient_actor_id).is_some();
             }
 

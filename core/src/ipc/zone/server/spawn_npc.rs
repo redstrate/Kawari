@@ -12,7 +12,9 @@ pub struct CharacterDataFlag(u8);
 bitflags! {
     impl CharacterDataFlag: u8 {
         /// If set, this marks the enemy as "hostile" including changing the nameplate icon.
-        const HOSTILE = 0x2;
+        const HOSTILE = 0x1;
+        /// If set, the NPC initially appears to be in combat.
+        const IN_COMBAT = 0x2;
     }
 }
 

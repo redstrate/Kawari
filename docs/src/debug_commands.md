@@ -17,8 +17,10 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!finishevent` | Forcefully finishes the current event, useful if the script has an error and you're stuck talking to something. |
 | `!gate` | Spawns a non-functional debug GATE. |
 | `!item <name>` | Gives you an item matching by name. |
+| `!item <id>[*qty][,<id>[*qty]...]` | Gives you one or more items by id, comma-separated. Optional `*qty` per id (1-999), e.g. `!item 4551,5447*3,20*99`. |
 | `!inspect` | Prints info about the player. |
 | `!itemlevel <level>` | Temporarily set your own item level. |
+| `!joblevel <classjob_id> <level>` | Set the level of a specific class/job by its ClassJob id (1-100), regardless of which job is active. |
 | `!mapeffect <state> <timeline_id> <index>` | Sets the map effect at index to a new state. |
 | `!mount <id/name>` | Allows you to mount in any zone, on the specified mount ID/name. |
 | `!monies` | Give a unreasonable amount of some currencies. |

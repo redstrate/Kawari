@@ -1,6 +1,9 @@
 -- This file should only be used for globally useful constants and functions.
 -- Please put new events, actions, items, etc. in their respective 'main' Lua files.
 
+-- Job-gauge resource indices for EffectsBuilder:modify_gauge(index, amount).
+GAUGE_AETHERFLOW = 0 -- Summoner Aetherflow stacks (0-2)
+
 function split(input, separator)
     if separator == nil then
         separator = '%s'

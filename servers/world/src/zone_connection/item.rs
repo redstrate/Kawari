@@ -15,6 +15,8 @@ use kawari::{
 use physis::equipment::EquipSlot;
 use strum::IntoEnumIterator;
 
+const DYE_RESULT_LOG_MESSAGE: u32 = 0xBC77;
+
 impl ZoneConnection {
     /// Inform other clients (including yourself) that you changed your equipped model ids.
     pub async fn inform_equip(&mut self) {
@@ -236,24 +238,45 @@ impl ZoneConnection {
         self.player_data.item_sequence += 1;
     }
 
-    pub async fn send_inventory_transaction_finish(&mut self, unk1: u32, unk2: u32) {
+    /// Sends the InventoryTransactionFinish that closes a transaction batch. `transaction_id` MUST
+    /// be the same id used for the InventoryTransaction packets in this batch (see `swap_items`),
+    /// otherwise the client can't correlate the finish and stays stuck "syncing with the server".
+    pub async fn send_inventory_transaction_finish(
+        &mut self,
+        transaction_id: u32,
+        unk1: u32,
+        unk2: u32,
+    ) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransactionFinish {
-            sequence: self.player_data.item_sequence,
-            sequence_repeat: self.player_data.item_sequence,
+            sequence: transaction_id,
+            sequence_repeat: transaction_id,
             unk1,
             unk2,
         });
         self.send_ipc_self(ipc).await;
-        self.player_data.item_sequence += 1;
+    }
+
+    /// Allocates a fresh InventoryTransaction batch id.
+    pub fn next_transaction_id(&mut self) -> u32 {
+        let id = self.player_data.transaction_sequence;
+        self.player_data.transaction_sequence += 1;
+        id
     }
 
     /// Swaps two items from two (possibly different) containers and informs the client of this change.
+    ///
+    /// `transaction_id` is the InventoryTransaction batch id. All swaps that belong to the same
+    /// logical operation (e.g. a single gearset equip) must pass the SAME id, and the trailing
+    /// `send_inventory_transaction_finish` must be given that same id — that's how the client
+    /// correlates the finish with its transactions. (Retail confirms: every InventoryTransaction in
+    /// a gearset batch shares one id, repeated in the finish.)
     pub async fn swap_items(
         &mut self,
         src_container: ContainerType,
         src_index: u16,
         dst_container: ContainerType,
         dst_index: u16,
+        transaction_id: u32,
     ) {
         let Some(src_item) = self
             .player_data
@@ -313,9 +336,11 @@ impl ZoneConnection {
             self.player_data.item_sequence += 1;
         }
 
-        // And also update the current transaction
+        // And also update the current transaction. This uses the shared transaction batch id, NOT
+        // item_sequence, so the trailing InventoryTransactionFinish (which repeats this id) can be
+        // correlated by the client.
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
-            sequence: self.player_data.item_sequence,
+            sequence: transaction_id,
             operation_type: if was_empty {
                 ItemOperationKind::Move
             } else {
@@ -347,13 +372,40 @@ impl ZoneConnection {
             let mut game_data = self.gamedata.lock();
 
             let weapon = self.player_data.inventory.equipped.main_hand.item_id;
-            let item_info = game_data
-                .get_item_info(ItemInfoQuery::ById(weapon))
-                .unwrap();
+
+            // If there's no weapon equipped (e.g. the player is mid-swap and the main hand slot is
+            // momentarily empty), there's nothing to derive a class from. Keep the current class
+            // rather than panicking on an empty classjob list.
+            if weapon == 0 {
+                return;
+            }
+
+            let Some(item_info) = game_data.get_item_info(ItemInfoQuery::ById(weapon)) else {
+                tracing::warn!(
+                    "No item info for equipped weapon {weapon}; keeping the current class."
+                );
+                return;
+            };
             classjobs = game_data.get_applicable_classjobs(item_info.classjob_category as u16);
         }
 
-        self.player_data.classjob.current_class = classjobs.first().copied().unwrap() as i32;
+        let Some(new_class) = classjobs.first().copied() else {
+            // The weapon isn't tied to any class (e.g. a non-combat/glamour item). Keep the
+            // current class instead of crashing.
+            tracing::warn!(
+                "Equipped weapon has no applicable class jobs; keeping the current class."
+            );
+            return;
+        };
+
+        // If the class didn't actually change, don't replay the change VFX/message/update. This
+        // avoids the duplicate "job changed" message when a weapon swap is followed by the
+        // automatic soul-crystal re-check that lands on the same job.
+        if self.player_data.classjob.current_class == new_class as i32 {
+            return;
+        }
+
+        self.player_data.classjob.current_class = new_class as i32;
         assert!(self.player_data.classjob.current_class != 0); // If this is 0, then something went seriously wrong.
 
         self.update_class_info().await;
@@ -372,6 +424,11 @@ impl ZoneConnection {
             }
 
             if let Some(classjob_id) = classjob_id {
+                // Skip if the class is already correct, to avoid a redundant change VFX/message.
+                if self.player_data.classjob.current_class == classjob_id as i32 {
+                    return;
+                }
+
                 self.player_data.classjob.current_class = classjob_id as i32;
                 assert!(self.player_data.classjob.current_class != 0); // If this is 0, then something went seriously wrong.
 
@@ -382,65 +439,110 @@ impl ZoneConnection {
     }
 
     /// Removes armor that's incompatible with your current class.
-    pub async fn remove_incompatible_armor(&mut self, action: &ItemOperation) {
+    ///
+    /// Returns `true` if anything was unequipped (in which case the caller should re-sync the
+    /// affected containers to the client, since this happens server-side).
+    pub async fn remove_incompatible_armor(&mut self, action: &ItemOperation) -> bool {
         // NOTE: This has to match client behavior exactly! As this happens client-side.
 
-        let mut game_data = self.gamedata.lock();
-
-        // First remove incompatible classjob gear.
-        for slot in EquipSlot::iter() {
-            let item = self.player_data.inventory.equipped.get_slot(slot as u16);
-            if item.quantity > 0 {
-                let classjob_category = game_data.get_item_classjobcategory(item.item_id);
-                let classjobs = game_data.get_applicable_classjobs(classjob_category as u16);
-                if !classjobs.contains(&(self.player_data.classjob.current_class as u8)) {
-                    tracing::info!(
-                        "Unequipping item in slot {slot:#?} because it's incompatible with the current class."
-                    );
-                    self.player_data.inventory.unequip_equipment(slot as u16);
-                }
-            }
-        }
-
-        // Then unequip slots that are restricted by any body armor.
-        let body_item = self
-            .player_data
-            .inventory
-            .equipped
-            .get_slot(EquipSlot::Body as u16);
-        if body_item.quantity > 0
-            && let Some(body_item_info) =
-                game_data.get_item_info(ItemInfoQuery::ById(body_item.item_id))
+        // First, decide which slots to unequip. We hold the game data lock only for the lookups,
+        // then drop it before mutating the inventory and sending packets.
+        let mut slots_to_unequip: Vec<u16> = Vec::new();
         {
-            let body_restrictions = [
-                (EquipSlot::Head, body_item_info.equip_restrictions.head),
-                (EquipSlot::Hands, body_item_info.equip_restrictions.hands),
-                (EquipSlot::Legs, body_item_info.equip_restrictions.legs),
-                (EquipSlot::Feet, body_item_info.equip_restrictions.feet),
-            ];
-            for (slot, restriction) in body_restrictions {
-                if action.dst_storage_id == ContainerType::Equipped
-                    && restriction == EQUIP_RESTRICTED
+            let mut game_data = self.gamedata.lock();
+
+            // First remove incompatible classjob gear.
+            for slot in EquipSlot::iter() {
+                // Skip slots that must never be auto-unequipped here:
+                // - MainHand: the weapon *defines* the current class, so it's never "incompatible".
+                //   Stripping it would desync (and can make the weapon vanish during a swap).
+                // - SoulCrystal: the crystal IS what defines the job; reverting to a base class
+                //   (e.g. SMN -> ACN) must not also strip the crystal.
+                // - Waist: legacy slot with no model.
+                if slot == EquipSlot::MainHand
+                    || slot == EquipSlot::SoulCrystal
+                    || slot == EquipSlot::Waist
                 {
-                    // If body was equipped, remove this restricted gear.
-                    if action.dst_container_index == EquipSlot::Body as u16 {
+                    continue;
+                }
+
+                let item = self.player_data.inventory.equipped.get_slot(slot as u16);
+                if item.quantity > 0 {
+                    let classjob_category = game_data.get_item_classjobcategory(item.item_id);
+                    let classjobs = game_data.get_applicable_classjobs(classjob_category as u16);
+                    if !classjobs.contains(&(self.player_data.classjob.current_class as u8)) {
                         tracing::info!(
-                            "Unequipping item in slot {slot:#?} because it's incompatible with the current body armor."
+                            "Unequipping item in slot {slot:#?} because it's incompatible with the current class."
                         );
-                        self.player_data.inventory.unequip_equipment(slot as u16);
+                        slots_to_unequip.push(slot as u16);
                     }
-                    // Otherwise, we're equipping into a restricted slot, so remove the body instead and exit the loop.
-                    else if action.dst_container_index == slot as u16 {
-                        tracing::info!(
-                            "Unequipping item in slot Body because it's incompatible with the current {slot:#?} armor."
-                        );
-                        self.player_data
-                            .inventory
-                            .unequip_equipment(EquipSlot::Body as u16);
-                        break;
+                }
+            }
+
+            // Then unequip slots that are restricted by any body armor.
+            let body_item = self
+                .player_data
+                .inventory
+                .equipped
+                .get_slot(EquipSlot::Body as u16);
+            if body_item.quantity > 0
+                && let Some(body_item_info) =
+                    game_data.get_item_info(ItemInfoQuery::ById(body_item.item_id))
+            {
+                let body_restrictions = [
+                    (EquipSlot::Head, body_item_info.equip_restrictions.head),
+                    (EquipSlot::Hands, body_item_info.equip_restrictions.hands),
+                    (EquipSlot::Legs, body_item_info.equip_restrictions.legs),
+                    (EquipSlot::Feet, body_item_info.equip_restrictions.feet),
+                ];
+                for (slot, restriction) in body_restrictions {
+                    if action.dst_storage_id == ContainerType::Equipped
+                        && restriction == EQUIP_RESTRICTED
+                    {
+                        // If body was equipped, remove this restricted gear.
+                        if action.dst_container_index == EquipSlot::Body as u16 {
+                            tracing::info!(
+                                "Unequipping item in slot {slot:#?} because it's incompatible with the current body armor."
+                            );
+                            slots_to_unequip.push(slot as u16);
+                        }
+                        // Otherwise, we're equipping into a restricted slot, so remove the body instead and exit the loop.
+                        else if action.dst_container_index == slot as u16 {
+                            tracing::info!(
+                                "Unequipping item in slot Body because it's incompatible with the current {slot:#?} armor."
+                            );
+                            slots_to_unequip.push(EquipSlot::Body as u16);
+                            break;
+                        }
                     }
                 }
             }
         }
+
+        if slots_to_unequip.is_empty() {
+            return false;
+        }
+
+        // Perform the unequips and collect the armoury containers that received items, so we can
+        // re-sync them (plus the Equipped container) to the client. Without this the character
+        // window keeps showing the old gear even though it was moved server-side.
+        let mut affected_containers: Vec<ContainerType> = vec![ContainerType::Equipped];
+        for slot in slots_to_unequip {
+            if self.player_data.inventory.unequip_equipment(slot) {
+                let armoury = ContainerType::from_equip_slot(slot as u8);
+                if !affected_containers.contains(&armoury) {
+                    affected_containers.push(armoury);
+                }
+            }
+        }
+
+        for container_type in affected_containers {
+            let container = self.player_data.inventory.clone();
+            if let Some(storage) = container.get_container(container_type) {
+                self.send_container(storage, container_type).await;
+            }
+        }
+
+        true
     }
 }

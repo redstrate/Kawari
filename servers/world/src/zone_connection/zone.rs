@@ -58,6 +58,7 @@ impl ZoneConnection {
         lua_content: &mut LuaContent,
     ) {
         self.spawned_in = false;
+        self.zone_in_confirmed = false;
 
         let bound_by_duty = content_finder_condition_id != 0;
 
@@ -404,12 +405,24 @@ impl ZoneConnection {
             self.content_handler_id = HandlerId::default();
             self.current_instance_id = None;
         }
+        if self.zone_director_handler_id.0 != 0 {
+            self.actor_control_self(ActorControlCategory::TerminateDirector {
+                handler_id: self.zone_director_handler_id,
+            })
+            .await;
+
+            self.zone_director_handler_id = HandlerId::default();
+            self.current_instance_id = None;
+        }
 
         self.synced_level = None;
 
         // Initialize director as needed
         if let Some(intended_use) = TerritoryIntendedUse::from_repr(lua_zone.intended_use) {
             if let Some(director_type) = HandlerType::from_intended_use(intended_use) {
+                let requires_director_state = director_type.requires_content_id()
+                    || director_type.requires_zone_director_state();
+
                 let content_id = if bound_by_duty {
                     let mut game_data = self.gamedata.lock();
                     game_data
@@ -495,6 +508,8 @@ impl ZoneConnection {
 
                 if director_type.requires_content_id() {
                     self.content_handler_id = director_id;
+                } else if requires_director_state {
+                    self.zone_director_handler_id = director_id;
                 }
 
                 self.director_vars = director_vars;
@@ -643,6 +658,16 @@ impl ZoneConnection {
             return;
         };
 
+        let handler_id = if self.content_handler_id.0 != 0 {
+            self.content_handler_id
+        } else {
+            self.zone_director_handler_id
+        };
+
+        if handler_id.0 == 0 {
+            return;
+        }
+
         let map_effects;
         {
             let mut game_data = self.gamedata.lock();
@@ -654,7 +679,7 @@ impl ZoneConnection {
         } else {
             // Send sensible default until this specific content is scripted...
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorVars {
-                handler_id: self.content_handler_id,
+                handler_id,
                 flag: 1,
                 branch: 0,
                 data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -685,7 +710,7 @@ impl ZoneConnection {
             }
 
             let ipc = MapEffects {
-                handler_id: self.content_handler_id,
+                handler_id,
                 unk_flag: 5,
                 states,
                 ..Default::default()

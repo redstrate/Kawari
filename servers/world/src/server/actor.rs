@@ -1,12 +1,13 @@
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 
 use crate::{
     StatusEffects,
+    server::combat_state::PlayerCombatState,
     zone_connection::{BaseParameters, TeleportQuery},
 };
 use glam::Vec3;
 use kawari::{
-    common::{DistanceRange, ObjectId, Position, Timeline},
+    common::{DistanceRange, ObjectId, Position, STRIKING_DUMMY_NAME_ID, Timeline},
     ipc::zone::{CommonSpawn, Conditions, SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure},
 };
 
@@ -16,6 +17,8 @@ pub enum NpcState {
     Wander,
     /// Follows its owner NPC.
     Follow,
+    /// Stays at its current position until explicitly told otherwise.
+    Stay,
     /// Actively targetting another actor.
     Hate,
     /// DEAD!
@@ -53,10 +56,16 @@ pub enum NetworkedActor {
         dueling_opponent_id: ObjectId,
         /// Whether or not cooldowns should be cheatily removed.
         remove_cooldowns: bool,
+        combat_state: PlayerCombatState,
         /// Whether the player can execute a combo action. If so, contains a Some of the last action used.
         last_combo_action: u16,
         /// Sequence into the current combo.
         combo_sequence: u8,
+        /// BNpcs currently tracking this player, mapped to the hate slot shown by the client.
+        hated_by: HashMap<ObjectId, u8>,
+        /// Last enmity snapshot sent to this player as a sorted `(npc_id, rate%)` list. Used to
+        /// suppress redundant HaterList/EnmityList packets when nothing changed since last tick.
+        last_enmity_sent: Vec<(ObjectId, u8)>,
     },
     Npc {
         state: NpcState,
@@ -64,14 +73,34 @@ pub enum NetworkedActor {
         navmesh_path_lerp: f32,
         navmesh_target: Option<ObjectId>,
         last_position: Option<Vec3>,
+        /// The position this NPC spawned at, used as the leash anchor for deaggro.
+        spawn_position: Vec3,
         spawn: SpawnNpc,
         timeline: Timeline,
         /// In half-seconds (the current server logic tick.)
         timeline_position: i64,
-        /// Used for aggros outside of the server logic loop (such as regular attacks.)
-        newly_hated_actor: Option<ObjectId>,
+        /// Persistent hate values keyed by actor id.
+        hate_list: HashMap<ObjectId, u32>,
         /// Whether this NPC is currently invulnerable to all attacks.
         currently_invulnerable: bool,
+        /// When true, the NPC's behavior (chase + auto-attack/abilities) is paused — used while a
+        /// boss is "off the field" doing a mechanic (e.g. Ifrit's Crimson Cyclone jump-away) so it
+        /// doesn't keep hitting players while hidden. It stays alive and keeps its hate list.
+        ai_paused: bool,
+        /// Whether this NPC can be targeted by players. Defaults to true. Visual-only actors (e.g.
+        /// Crimson Cyclone clones) set this false; it's re-applied via an ActorControl on every
+        /// walked-in spawn, since the spawn packet itself has no targetable field and the client
+        /// defaults a fresh spawn to targetable.
+        targetable: bool,
+        /// Whether this NPC is rendered. Defaults to true. Clones idle hidden on the arena edge and
+        /// are only shown during their mechanic; like `targetable`, re-applied via an ActorControl
+        /// (ToggleVisibility) on every walked-in spawn so a fresh spawn doesn't pop into view.
+        visible: bool,
+        /// True while the NPC is locked in a cast bar (set when a `CastBar` is sent, cleared when the
+        /// cast's effect resolves). Like `ai_paused` it suppresses chase + auto-attack, so a boss
+        /// freezes while casting instead of walking up and meleeing — but it's separate so it never
+        /// disturbs the persistent `ai_paused` of visual-only actors (clones).
+        cast_locked: bool,
         /// This actor's status effects.
         status_effects: StatusEffects,
     },
@@ -86,20 +115,30 @@ pub enum NetworkedActor {
 }
 
 impl NetworkedActor {
-    pub fn get_common_spawn(&self) -> &CommonSpawn {
+    pub fn common_spawn(&self) -> Option<&CommonSpawn> {
         match &self {
-            NetworkedActor::Player { spawn, .. } => &spawn.common,
-            NetworkedActor::Npc { spawn, .. } => &spawn.common,
-            _ => unreachable!(),
+            NetworkedActor::Player { spawn, .. } => Some(&spawn.common),
+            NetworkedActor::Npc { spawn, .. } => Some(&spawn.common),
+            _ => None,
         }
     }
 
-    pub fn get_common_spawn_mut(&mut self) -> &mut CommonSpawn {
+    pub fn common_spawn_mut(&mut self) -> Option<&mut CommonSpawn> {
         match self {
-            NetworkedActor::Player { spawn, .. } => &mut spawn.common,
-            NetworkedActor::Npc { spawn, .. } => &mut spawn.common,
-            _ => unreachable!(),
+            NetworkedActor::Player { spawn, .. } => Some(&mut spawn.common),
+            NetworkedActor::Npc { spawn, .. } => Some(&mut spawn.common),
+            _ => None,
         }
+    }
+
+    pub fn get_common_spawn(&self) -> &CommonSpawn {
+        self.common_spawn()
+            .expect("networked actor does not have a common spawn")
+    }
+
+    pub fn get_common_spawn_mut(&mut self) -> &mut CommonSpawn {
+        self.common_spawn_mut()
+            .expect("networked actor does not have a common spawn")
     }
 
     pub fn get_player_spawn(&self) -> Option<&SpawnPlayer> {
@@ -174,6 +213,61 @@ impl NetworkedActor {
         match self {
             NetworkedActor::Player { status_effects, .. } => Some(status_effects),
             NetworkedActor::Npc { status_effects, .. } => Some(status_effects),
+            _ => None,
+        }
+    }
+
+    pub fn shield_percent(&self) -> u8 {
+        let Some(common) = self.common_spawn() else {
+            return 0;
+        };
+        self.status_effects()
+            .map(|status_effects| status_effects.shield_percent(common.max_health_points))
+            .unwrap_or(0)
+    }
+
+    /// Applies incoming damage after consuming any active barrier effects. The returned amount is
+    /// the damage that reached HP; callers can still display the original hit amount if desired.
+    pub fn apply_damage(&mut self, damage: u32) -> u32 {
+        let hp_damage = self
+            .status_effects_mut()
+            .map(|status_effects| status_effects.absorb_damage(damage))
+            .unwrap_or(damage);
+
+        let Some(common) = self.common_spawn_mut() else {
+            return hp_damage;
+        };
+
+        if common.name_id == STRIKING_DUMMY_NAME_ID {
+            if hp_damage >= common.health_points {
+                common.health_points = common.max_health_points;
+            } else {
+                common.health_points -= hp_damage;
+            }
+        } else {
+            common.health_points = common.health_points.saturating_sub(hp_damage);
+        }
+
+        hp_damage
+    }
+
+    pub fn npc_hate_list(&self) -> Option<&HashMap<ObjectId, u32>> {
+        match self {
+            NetworkedActor::Npc { hate_list, .. } => Some(hate_list),
+            _ => None,
+        }
+    }
+
+    pub fn npc_hate_list_mut(&mut self) -> Option<&mut HashMap<ObjectId, u32>> {
+        match self {
+            NetworkedActor::Npc { hate_list, .. } => Some(hate_list),
+            _ => None,
+        }
+    }
+
+    pub fn player_hated_by_mut(&mut self) -> Option<&mut HashMap<ObjectId, u8>> {
+        match self {
+            NetworkedActor::Player { hated_by, .. } => Some(hated_by),
             _ => None,
         }
     }

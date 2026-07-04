@@ -64,6 +64,8 @@ async fn main() {
         start_server("kawari-login"),
         start_server("kawari-patch"),
         start_server("kawari-web"),
-        start_server("kawari-world"),
+        // kawari-world is intentionally NOT started here. The world server is run separately
+        // (e.g. `cargo run -p kawari-world`) so it can be restarted on its own during development
+        // without bouncing the other services.
     );
 }

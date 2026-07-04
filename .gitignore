@@ -19,3 +19,5 @@ docs/book
 *.db-journal
 **/.diesel_lock
 perf.data*
+*.dll
+*.pdb

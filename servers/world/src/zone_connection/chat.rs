@@ -67,11 +67,14 @@ impl ZoneConnection {
                 lua.0.scope(|scope| {
                     let connection_data = scope
                     .create_userdata_ref_mut(lua_player)?;
-                    /* TODO: Instead of panicking we ought to send a message to the player
-                     * and the console log, and abandon execution. */
-                    lua.0.load(
-                        std::fs::read(&file_name).unwrap_or_else(|_| panic!("Failed to load script file {}!", &file_name)),
-                    )
+                    let script_bytes = match std::fs::read(&file_name) {
+                        Ok(bytes) => bytes,
+                        Err(err) => {
+                            tracing::warn!("Failed to load GM command script {}: {:?}", &file_name, err);
+                            return Ok(());
+                        }
+                    };
+                    lua.0.load(script_bytes)
                     .set_name("@".to_string() + &file_name)
                     .exec()?;
 
@@ -175,27 +178,104 @@ impl ZoneConnection {
                 true
             }
             "!item" => {
-                if let Some((_, name)) = chat_message.split_once(' ') {
-                    let mut result = None;
-                    {
-                        let mut gamedata = self.gamedata.lock();
+                if let Some((_, args)) = chat_message.split_once(' ') {
+                    let args = args.trim();
 
-                        if let Some(item_info) =
-                            gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
+                    // Comma-separated list of item ids (optionally `id*quantity`), e.g.
+                    // `!item 4551,5447*3, 20*99`. If the whole argument has no comma and isn't a
+                    // bare number, fall back to the original single item-by-name lookup so existing
+                    // usage (`!item Iron Sword`) keeps working.
+                    let looks_like_id_list = args.contains(',')
+                        || args
+                            .split_once('*')
+                            .map(|(id, _)| id.trim())
+                            .unwrap_or(args)
+                            .parse::<u32>()
+                            .is_ok();
+
+                    if looks_like_id_list {
+                        let mut added = 0u32;
+                        let mut failures: Vec<String> = Vec::new();
+
+                        for entry in args.split(',') {
+                            let entry = entry.trim();
+                            if entry.is_empty() {
+                                continue;
+                            }
+
+                            // Each entry is `id` or `id*quantity`.
+                            let (id_str, quantity) = match entry.split_once('*') {
+                                Some((id, qty)) => {
+                                    let qty = qty.trim().parse::<u32>().unwrap_or(0).clamp(1, 999);
+                                    (id.trim(), qty)
+                                }
+                                None => (entry, 1),
+                            };
+
+                            let Ok(id) = id_str.parse::<u32>() else {
+                                failures.push(format!("{id_str:?} (not a number)"));
+                                continue;
+                            };
+
+                            let new_item;
+                            {
+                                let mut gamedata = self.gamedata.lock();
+                                new_item = gamedata
+                                    .get_item_info(ItemInfoQuery::ById(id))
+                                    .map(|info| Item::new(&info, quantity));
+                            }
+
+                            match new_item {
+                                Some(item)
+                                    if self
+                                        .player_data
+                                        .inventory
+                                        .add_in_next_free_slot(item)
+                                        .is_some() =>
+                                {
+                                    added += 1;
+                                }
+                                Some(_) => failures.push(format!("{id} (inventory full)")),
+                                None => failures.push(format!("{id} (unknown item)")),
+                            }
+                        }
+
+                        if added > 0 {
+                            self.send_inventory().await;
+                        }
+
+                        let mut summary = format!("[item] Added {added} item(s).");
+                        if !failures.is_empty() {
+                            summary.push_str(&format!(" Failed: {}.", failures.join(", ")));
+                        }
+                        self.send_notice(&summary).await;
+                    } else {
+                        let mut result = None;
                         {
-                            result = self
-                                .player_data
-                                .inventory
-                                .add_in_next_free_slot(Item::new(&item_info, 1));
+                            let mut gamedata = self.gamedata.lock();
+
+                            if let Some(item_info) =
+                                gamedata.get_item_info(ItemInfoQuery::ByName(args.to_string()))
+                            {
+                                result = self
+                                    .player_data
+                                    .inventory
+                                    .add_in_next_free_slot(Item::new(&item_info, 1));
+                            }
+                        }
+
+                        if result.is_some() {
+                            self.send_inventory().await;
+                        } else {
+                            tracing::error!(ERR_INVENTORY_ADD_FAILED);
+                            self.send_notice(ERR_INVENTORY_ADD_FAILED).await;
                         }
                     }
-
-                    if result.is_some() {
-                        self.send_inventory().await;
-                    } else {
-                        tracing::error!(ERR_INVENTORY_ADD_FAILED);
-                        self.send_notice(ERR_INVENTORY_ADD_FAILED).await;
-                    }
+                } else {
+                    self.send_notice(
+                        "[item] Usage: !item <item name> | !item <id>[*qty][,<id>[*qty]...]",
+                    )
+                    .await;
                 }
 
                 true

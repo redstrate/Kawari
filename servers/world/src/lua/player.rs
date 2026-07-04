@@ -6,6 +6,7 @@ use parking_lot::Mutex;
 use crate::{
     GameData, PlayerData, RemakeMode, StatusEffects,
     inventory::{CrystalKind, CurrencyKind},
+    server::combat_state::{PlayerCombatState, SummonerAttunement, SummonerDemiPhase},
     zone_connection::BaseParameters,
 };
 use kawari::{
@@ -45,6 +46,10 @@ pub struct LuaPlayer {
     pub content_data: LuaContent,
     // TODO: move this into PlayerData
     pub base_parameters: BaseParameters,
+    pub combat_state: PlayerCombatState,
+    /// The caster's current (class/job) level, populated for action scripts so they can scale
+    /// potency by level (e.g. SCH Biolysis: 70/tick below 94, 85 at 94+). 0 when not set.
+    pub level: u16,
 }
 
 impl QueueSegments for LuaPlayer {
@@ -191,6 +196,11 @@ impl LuaPlayer {
 
     fn set_level(&mut self, level: u16) {
         self.queued_tasks.push(LuaTask::SetLevel { level });
+    }
+
+    fn set_classjob_level(&mut self, classjob_id: u8, level: u16) {
+        self.queued_tasks
+            .push(LuaTask::SetClassJobLevel { classjob_id, level });
     }
 
     fn change_weather(&mut self, id: u8) {
@@ -714,6 +724,17 @@ impl UserData for LuaPlayer {
             this.set_level(level);
             Ok(())
         });
+        // Sets the level of a specific classjob (by ClassJob id), regardless of which job is active.
+        methods.add_method_mut(
+            "set_classjob_level",
+            |_, this, (classjob_id, level): (u8, u16)| {
+                this.set_classjob_level(classjob_id, level);
+                Ok(())
+            },
+        );
+        // Returns the caster's current class/job level. Action scripts use this to scale potency by
+        // level (e.g. SCH Biolysis ticks for 70 below level 94 and 85 at 94+).
+        methods.add_method("get_level", |_, this, _: ()| Ok(this.level));
         methods.add_method_mut("change_weather", |_, this, id: u8| {
             this.change_weather(id);
             Ok(())
@@ -926,6 +947,57 @@ impl UserData for LuaPlayer {
         methods.add_method("get_effect", |_, this, effect_id: u16| {
             Ok(this.status_effects.get(effect_id))
         });
+        methods.add_method("summoner_attunement", |_, this, _: ()| {
+            Ok(match this.combat_state.summoner.attunement {
+                SummonerAttunement::None => "none",
+                SummonerAttunement::Ruby => "ruby",
+                SummonerAttunement::Topaz => "topaz",
+                SummonerAttunement::Emerald => "emerald",
+            })
+        });
+        methods.add_method("summoner_attunement_stacks", |_, this, _: ()| {
+            Ok(this.combat_state.summoner.attunement_stacks)
+        });
+        methods.add_method("summoner_aetherflow_stacks", |_, this, _: ()| {
+            Ok(this.combat_state.summoner.aetherflow_stacks)
+        });
+        methods.add_method("summoner_further_ruin", |_, this, _: ()| {
+            Ok(this.combat_state.summoner.further_ruin)
+        });
+        methods.add_method("summoner_has_carbuncle", |_, this, _: ()| {
+            Ok(this.combat_state.summoner.carbuncle_summoned)
+        });
+        methods.add_method("summoner_mountain_buster_ready", |_, this, _: ()| {
+            Ok(this.combat_state.summoner.mountain_buster_ready)
+        });
+        methods.add_method("summoner_slipstream_ready", |_, this, _: ()| {
+            Ok(this.combat_state.summoner.slipstream_ready)
+        });
+        methods.add_method("summoner_crimson_cyclone_ready", |_, this, _: ()| {
+            Ok(this.combat_state.summoner.crimson_cyclone_ready)
+        });
+        methods.add_method("summoner_crimson_strike_ready", |_, this, _: ()| {
+            Ok(this.combat_state.summoner.crimson_strike_ready)
+        });
+        methods.add_method("summoner_demi_phase", |_, this, _: ()| {
+            Ok(match this.combat_state.summoner.demi_phase {
+                SummonerDemiPhase::None => "none",
+                SummonerDemiPhase::Bahamut => "bahamut",
+                SummonerDemiPhase::SolarBahamut => "solar_bahamut",
+            })
+        });
+        methods.add_method("summoner_demi_enkindle_ready", |_, this, _: ()| {
+            Ok(this.combat_state.summoner.demi_enkindle_ready)
+        });
+        methods.add_method("summoner_demi_finisher_ready", |_, this, _: ()| {
+            Ok(this.combat_state.summoner.demi_finisher_ready)
+        });
+        methods.add_method("summoner_searing_flash_ready", |_, this, _: ()| {
+            Ok(this.combat_state.summoner.searing_flash_ready)
+        });
+        methods.add_method("summoner_lux_solaris_ready", |_, this, _: ()| {
+            Ok(this.combat_state.summoner.lux_solaris_ready)
+        });
         methods.add_method_mut("start_talk_event", |_, this, _: ()| {
             this.start_talk_event();
             Ok(())
@@ -1092,6 +1164,32 @@ impl UserData for LuaPlayer {
         });
         fields.add_field_method_get("content", |_, this| Ok(this.content_data));
         fields.add_field_method_get("parameters", |_, this| Ok(this.base_parameters.clone()));
+        fields.add_field_method_get("combat_state", |lua, this| {
+            lua.to_value(&serde_json::json!({
+                "summoner": {
+                    "carbuncle_summoned": this.combat_state.summoner.carbuncle_summoned,
+                    "attunement_stacks": this.combat_state.summoner.attunement_stacks,
+                    "aetherflow_stacks": this.combat_state.summoner.aetherflow_stacks,
+                    "further_ruin": this.combat_state.summoner.further_ruin,
+                    "ruby_arcanum": this.combat_state.summoner.ruby_arcanum,
+                    "topaz_arcanum": this.combat_state.summoner.topaz_arcanum,
+                    "emerald_arcanum": this.combat_state.summoner.emerald_arcanum,
+                    "mountain_buster_ready": this.combat_state.summoner.mountain_buster_ready,
+                    "slipstream_ready": this.combat_state.summoner.slipstream_ready,
+                    "crimson_cyclone_ready": this.combat_state.summoner.crimson_cyclone_ready,
+                    "crimson_strike_ready": this.combat_state.summoner.crimson_strike_ready,
+                    "demi_phase": match this.combat_state.summoner.demi_phase {
+                        SummonerDemiPhase::None => "none",
+                        SummonerDemiPhase::Bahamut => "bahamut",
+                        SummonerDemiPhase::SolarBahamut => "solar_bahamut",
+                    },
+                    "demi_enkindle_ready": this.combat_state.summoner.demi_enkindle_ready,
+                    "demi_finisher_ready": this.combat_state.summoner.demi_finisher_ready,
+                    "searing_flash_ready": this.combat_state.summoner.searing_flash_ready,
+                    "lux_solaris_ready": this.combat_state.summoner.lux_solaris_ready,
+                }
+            }))
+        });
         fields.add_field_method_get("rested_exp", |_, this| {
             Ok(this.player_data.classjob.rested_exp)
         });

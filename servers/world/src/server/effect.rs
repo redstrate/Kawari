@@ -10,6 +10,7 @@ use crate::{
     lua::{KawariLua, KawariLuaState, LuaContent, LuaPlayer, LuaZone},
     server::{
         WorldServer,
+        combat_state::PlayerCombatState,
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
@@ -104,6 +105,7 @@ pub fn send_effects_list(
         max_health_points: common_spawn.max_health_points,
         resource_points: common_spawn.resource_points,
         max_resource_points: common_spawn.max_resource_points,
+        shield: status_effects.shield_percent(common_spawn.max_health_points) as u16,
         ..Default::default()
     }));
 
@@ -197,8 +199,17 @@ pub fn gain_effect_instance(
         return 0;
     };
 
-    let index = status_effects.len() as u8;
-    status_effects.add(effect_id, effect_param, effect_duration);
+    status_effects.add_with_source(
+        effect_id,
+        effect_param,
+        effect_duration,
+        effect_source_actor_id,
+    );
+    // The status's slot index must be its ACTUAL position in the list, not `len()` before adding:
+    // if the status already existed (a refresh, or the DoT/HoT tick registered it first via
+    // add_tick), `add` reuses that slot instead of appending. Reporting the wrong index here makes
+    // the client show the buff twice (one from this packet's index, one from the StatusEffectList).
+    let index = status_effects.position_of(effect_id).unwrap_or(0) as u8;
 
     if inform_players {
         {
@@ -222,6 +233,18 @@ pub fn gain_effect_instance(
     if effect_duration == 0.0 {
         return index;
     }
+
+    // Cancel any existing expiry task for this same status on this actor before scheduling the new
+    // one. Re-applying a status (a refresh) re-adds it with the full duration, but the OLD expiry
+    // task still points at the original end time — if left in place it fires early and removes the
+    // just-refreshed status, so the client shows the refresh but the buff vanishes prematurely.
+    instance.retain_tasks(|task| {
+        !(task.from_actor_id == from_actor_id
+            && matches!(
+                task.data,
+                QueuedTaskData::LoseStatusEffect { effect_id: e, .. } if e == effect_id
+            ))
+    });
 
     instance.insert_task(
         from_id,
@@ -274,8 +297,8 @@ pub fn remove_effect(
 
     // Then send the actor control to lose the effect
     {
-        let mut network = network.lock();
         let data = data.lock();
+        let mut network = network.lock();
 
         let ipc = ActorControlCategory::LoseEffect {
             effect_id: effect_id as u32,
@@ -307,30 +330,36 @@ pub fn remove_effect(
             zone_data: LuaZone::default(),
             content_data: LuaContent::default(),
             base_parameters: BaseParameters::default(),
+            combat_state: PlayerCombatState::default(),
+            level: 0,
         };
 
         let key = effect_id as u32;
         if let Some(effect_script) = state.effect_scripts.get(&key) {
-            lua.0
-                .scope(|scope| {
-                    let connection_data = scope.create_userdata_ref_mut(&mut lua_player).unwrap();
+            match std::fs::read(effect_script) {
+                Ok(script_bytes) => {
+                    let result = lua.0.scope(|scope| {
+                        let connection_data = scope.create_userdata_ref_mut(&mut lua_player)?;
 
-                    lua.0
-                        .load(
-                            std::fs::read(effect_script)
-                                .expect("Failed to locate scripts directory!"),
-                        )
-                        .set_name("@".to_string() + effect_script)
-                        .exec()
-                        .unwrap();
+                        lua.0
+                            .load(script_bytes)
+                            .set_name("@".to_string() + effect_script)
+                            .exec()?;
 
-                    let func: Function = lua.0.globals().get("onLose").unwrap();
+                        let func: Function = lua.0.globals().get("onLose")?;
 
-                    func.call::<()>(connection_data).unwrap();
+                        func.call::<()>(connection_data)?;
 
-                    Ok(())
-                })
-                .unwrap();
+                        Ok(())
+                    });
+                    if let Err(err) = result {
+                        tracing::warn!("Error executing effect script {effect_script}: {err:?}");
+                    }
+                }
+                Err(err) => {
+                    tracing::warn!("Failed to read effect script {effect_script}: {err:?}");
+                }
+            }
         } else {
             tracing::warn!("Effect {effect_id} isn't scripted yet! Ignoring...");
         }

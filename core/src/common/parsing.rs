@@ -58,8 +58,17 @@ pub(crate) fn read_quantized_rotation(quantized: u16) -> f32 {
 pub(crate) fn write_quantized_rotation(quantized: &f32) -> u16 {
     let max = u16::MAX as f32;
     let pi = std::f32::consts::PI;
+    let two_pi = 2.0 * pi;
 
-    (((quantized + pi) / (2.0 * pi)) * max) as u16
+    // Normalize to (-π, π] first. The final `as u16` *saturates* (not wraps) in Rust, so any angle
+    // outside [-π, π] — e.g. a facing of `a + π` that lands at 5π/4 — would otherwise clamp to 65535
+    // and read back as exactly π (every such actor pointing due-180°). Normalizing keeps it exact.
+    let mut r = quantized.rem_euclid(two_pi);
+    if r > pi {
+        r -= two_pi;
+    }
+
+    (((r + pi) / two_pi) * max) as u16
 }
 
 pub(crate) fn read_packed_float(packed: u16) -> f32 {

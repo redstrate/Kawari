@@ -23,7 +23,7 @@ mod event;
 pub use event::{Event, EventHandler};
 
 mod status_effects;
-pub use status_effects::StatusEffects;
+pub use status_effects::{StatusEffects, TickEffect, TickEffectKind};
 
 mod server;
 pub use server::{Party, server_main_loop};
@@ -32,7 +32,9 @@ mod custom_ipc_connection;
 pub use custom_ipc_connection::CustomIpcConnection;
 
 mod common;
-pub use common::{ClientHandle, ClientId, FromServer, MessageInfo, ServerHandle, ToServer};
+pub use common::{
+    ClientHandle, ClientId, FromServer, MessageInfo, PetCommand, ServerHandle, ToServer,
+};
 
 mod navmesh;
 pub use navmesh::{Navmesh, NavmeshParams, NavmeshTile};

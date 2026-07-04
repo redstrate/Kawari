@@ -387,8 +387,8 @@ pub fn handle_party_messages(
 ) -> bool {
     match msg {
         ToServer::AddPartyMember(party_id, leader_actor_id, new_member_content_id) => {
-            let mut network = network.lock();
             let data = data.lock();
+            let mut network = network.lock();
             let mut party_id = *party_id;
 
             // Grab the leader's info before doing anything else.
@@ -588,8 +588,8 @@ pub fn handle_party_messages(
             execute_name,
             zone_id,
         ) => {
-            let mut network = network.lock();
             let data = data.lock();
+            let mut network = network.lock();
             let party = network.parties.get(party_id).unwrap();
 
             let party_list = build_party_list(party, &data);
@@ -622,13 +622,13 @@ pub fn handle_party_messages(
             target_content_id,
             target_name,
         ) => {
+            let data = data.lock();
             let mut network = network.lock();
 
             if !network.parties.contains_key(party_id) {
                 panic!("Why are we trying to do party operations on an invalid party?");
             }
 
-            let data = data.lock();
             let target_account_id;
             {
                 let party = &mut network.parties.get_mut(party_id).unwrap();
@@ -668,8 +668,8 @@ pub fn handle_party_messages(
             execute_actor_id,
             execute_name,
         ) => {
-            let mut network = network.lock();
             let data = data.lock();
+            let mut network = network.lock();
             let party_list;
             let leaving_zone_client_id;
             let leaving_chat_client_id;
@@ -807,8 +807,8 @@ pub fn handle_party_messages(
             target_content_id,
             target_name,
         ) => {
-            let mut network = network.lock();
             let data = data.lock();
+            let mut network = network.lock();
             let party = network.parties.get_mut(party_id).unwrap();
 
             let Some(member) = party.get_member_by_content_id(*target_content_id) else {
@@ -892,8 +892,8 @@ pub fn handle_party_messages(
             from_actor_id,
             execute_name,
         ) => {
-            let mut network = network.lock();
             let data = data.lock();
+            let mut network = network.lock();
 
             if !network.parties.contains_key(party_id) {
                 tracing::error!(
@@ -940,6 +940,7 @@ pub fn handle_party_messages(
             true
         }
         ToServer::PartyMemberReturned(execute_actor_id, zone_id, party_id) => {
+            let data = data.lock();
             let mut network = network.lock();
 
             let Some(party) = network.parties.get_mut(party_id) else {
@@ -966,7 +967,6 @@ pub fn handle_party_messages(
 
             let party_list;
             {
-                let data = data.lock();
                 party_list = build_party_list(party, &data);
             }
 
@@ -1085,12 +1085,12 @@ pub fn handle_party_messages(
             true
         }
         ToServer::ApplyWaymarkPreset(from_id, party_id, waymark_preset, zone_id) => {
+            let data = data.lock();
             let mut network = network.lock();
             let msg = FromServer::WaymarkPreset(*waymark_preset, *zone_id);
 
             if *party_id != 0 {
                 network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);
-                let data = data.lock();
                 update_party_waymarks(&mut network, &data, *from_id, *waymark_preset);
             } else {
                 network.send_to_by_actor_id(*from_id, msg, DestinationNetwork::ZoneClients);
@@ -1130,6 +1130,7 @@ pub fn handle_party_messages(
             target_actor_id,
             target_seat_index,
         ) => {
+            let mut data = data.lock();
             let mut network = network.lock();
 
             let Some(party_id) = party_id else {
@@ -1148,7 +1149,6 @@ pub fn handle_party_messages(
                 }
             }
 
-            let mut data = data.lock();
             let Some(instance) = data.find_actor_instance_mut(*from_actor_id) else {
                 return true;
             };
@@ -1181,7 +1181,7 @@ pub fn handle_party_messages(
                 *from_actor_id,
                 ActorControlCategory::ToggleWeapon {
                     shown: false,
-                    unk_flag: 1,
+                    immediately: true,
                 },
             );
 
@@ -1236,6 +1236,7 @@ pub fn handle_party_messages(
                 return true;
             };
 
+            let data = data.lock();
             let mut network = network.lock();
             let Some(party) = network.parties.get_mut(party_id) else {
                 return true;
@@ -1257,7 +1258,6 @@ pub fn handle_party_messages(
                 }
             }
 
-            let data = data.lock();
             let party_list = build_party_list(party, &data);
 
             let msg = FromServer::PartyUpdate(
@@ -1286,6 +1286,7 @@ pub fn handle_party_messages(
                 return true;
             };
 
+            let data = data.lock();
             let mut network = network.lock();
             let Some(party) = network.parties.get_mut(party_id) else {
                 return true;
@@ -1335,7 +1336,6 @@ pub fn handle_party_messages(
                 party.readycheck_host = None;
             }
 
-            let data = data.lock();
             let party_list = build_party_list(party, &data);
 
             let msg = FromServer::PartyUpdate(
@@ -1358,6 +1358,7 @@ pub fn handle_party_messages(
                 return true;
             };
 
+            let data = data.lock();
             let mut network = network.lock();
 
             // We're going to offer this teleport only to people in the same area.
@@ -1366,7 +1367,6 @@ pub fn handle_party_messages(
             // We're interested in the offeror's index into the party so their name will display correctly for other party members.
             let mut offeror_index = None;
             {
-                let data = data.lock();
                 let the_party = network.parties.entry(*party_id).or_default();
 
                 for (member_index, member) in the_party.members.iter().enumerate() {

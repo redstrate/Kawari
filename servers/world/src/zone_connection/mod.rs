@@ -27,9 +27,11 @@ use kawari::{
     opcodes::ServerZoneIpcType,
     packet::{
         CompressionType, ConnectionState, ConnectionType, IpcSegmentHeader, PacketSegment,
-        SegmentData, SegmentType, ServerIpcSegmentHeader, parse_packet, send_keep_alive,
-        send_packet,
+        SegmentData, SegmentType, ServerIpcSegmentHeader, parse_packet, send_packet,
     },
+};
+use physis::{
+    savedata::chardat::CustomizeData,
 };
 
 use super::{
@@ -95,6 +97,12 @@ pub struct PlayerData {
     pub gm_invisible: bool,
 
     pub item_sequence: u32,
+    /// Transaction-batch id for InventoryTransaction/InventoryTransactionFinish packets. Unlike
+    /// `item_sequence` (which increments per UpdateInventorySlot/ContainerInfo packet), every
+    /// InventoryTransaction within a single logical operation (e.g. one gearset equip) shares ONE
+    /// id, and the trailing InventoryTransactionFinish repeats it. This is how the client correlates
+    /// a finish with its transactions; mismatched ids leave it stuck "syncing with the server".
+    pub transaction_sequence: u32,
     pub shop_sequence: u32,
     /// The server-side copy of NPC shop buyback lists.
     pub buyback_list: BuyBackList,
@@ -143,7 +151,9 @@ pub struct ZoneConnection {
     pub rejoining_party: bool,
     /// The player's currently active quests.
     pub login_time: Option<SystemTime>,
+    pub zone_initialize_sent: bool,
     pub glamour_information: Option<ClientTriggerCommand>,
+    pub pending_aesthetician_customize: Option<CustomizeData>,
 
     pub last_keep_alive: Instant,
 
@@ -169,6 +179,8 @@ pub struct ZoneConnection {
 
     /// Information about the current content.
     pub content_handler_id: HandlerId,
+    /// Non-content zone directors, kept separate so player spawns don't inherit their handler.
+    pub zone_director_handler_id: HandlerId,
     pub event_handler_id: Option<HandlerId>,
     pub recipe: Option<Recipe>,
     pub synced_level: Option<u8>,
@@ -190,6 +202,8 @@ pub struct ZoneConnection {
     pub mail_index: usize,
     /// Whether the player is spawned in or not.
     pub spawned_in: bool,
+    /// Whether the client has acknowledged the initial zone-in fade for the current zone.
+    pub zone_in_confirmed: bool,
     /// The last teleport offered to this player. Only one can be kept at a time.
     pub offered_teleport: Option<TeleportQuery>,
     /// Whether the player is trading with another player or not.
@@ -240,34 +254,48 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn initialize(&mut self, actor_id: ObjectId) {
+    pub fn prepare_zone_session(&mut self, actor_id: ObjectId) {
         self.player_data.item_sequence = 0;
+        self.player_data.transaction_sequence = 0;
         self.player_data.shop_sequence = 0;
+        self.zone_initialize_sent = false;
 
-        tracing::info!("Client {actor_id} is initializing zone session...");
+        tracing::info!("Client {actor_id} zone setup complete");
+    }
 
-        // We have send THEM a keep alive
-        {
-            self.send_segment(PacketSegment {
-                segment_type: SegmentType::KeepAliveRequest,
-                data: SegmentData::KeepAliveRequest {
-                    id: 0xE0037603u32,
-                    timestamp: timestamp_secs(),
-                },
-                ..Default::default()
-            })
-            .await;
-        }
-
-        self.send_segment(PacketSegment {
-            segment_type: SegmentType::Initialize,
-            data: SegmentData::Initialize {
-                actor_id: self.player_data.character.actor_id,
+    pub async fn send_initial_keep_alive(&mut self) {
+        self.send_segment(PacketSegment::<ServerZoneIpcSegment> {
+            segment_type: SegmentType::KeepAliveRequest,
+            data: SegmentData::KeepAliveRequest {
+                id: 0xE0037603u32,
                 timestamp: timestamp_secs(),
             },
             ..Default::default()
         })
         .await;
+    }
+
+    pub async fn send_initialize(&mut self) -> bool {
+        if self.zone_initialize_sent {
+            return false;
+        }
+
+        let actor_id = self.player_data.character.actor_id;
+        tracing::info!("Client {actor_id} is initializing zone session...");
+
+        self.send_segment(PacketSegment::<ServerZoneIpcSegment> {
+            segment_type: SegmentType::Initialize,
+            data: SegmentData::Initialize {
+                actor_id,
+                timestamp: timestamp_secs(),
+            },
+            ..Default::default()
+        })
+        .await;
+
+        self.zone_initialize_sent = true;
+        tracing::info!("Client {actor_id} initialization packet sent");
+        true
     }
 
     pub async fn begin_log_out(&mut self) {
@@ -333,13 +361,11 @@ impl ZoneConnection {
     }
 
     pub async fn send_keep_alive(&mut self, id: u32, timestamp: u32) {
-        send_keep_alive::<ServerZoneIpcSegment>(
-            &mut self.socket,
-            &mut self.state,
-            ConnectionType::Zone,
-            id,
-            timestamp,
-        )
+        self.send_segment(PacketSegment {
+            segment_type: SegmentType::KeepAliveResponse,
+            data: SegmentData::KeepAliveResponse { id, timestamp },
+            ..Default::default()
+        })
         .await;
     }
 

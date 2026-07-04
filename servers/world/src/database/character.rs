@@ -782,6 +782,14 @@ impl WorldDatabase {
             .first(&mut self.connection)
             .unwrap();
 
+        // Ranks are 1-indexed by the active company; a character with no grand company
+        // has `active_company == None` (0), so guard against underflowing the array index.
+        let grand_company_rank = if grand_company.active_company != IpcGrandCompany::None {
+            grand_company.company_ranks.0[grand_company.active_company as usize - 1]
+        } else {
+            0
+        };
+
         // NOTE: sending dummy data for now so at least the menu works
         let config = get_config();
         ServerZoneIpcSegment::new(ServerZoneIpcData::AdventurerPlate {
@@ -797,8 +805,7 @@ impl WorldDatabase {
             favored_class: classjob.current_class as u8,
             unk7: 1,
             grand_company: grand_company.active_company,
-            grand_company_rank: grand_company.company_ranks.0
-                [grand_company.active_company as usize - 1],
+            grand_company_rank,
             version: 4,
             expression: 22,
             camera_zoom: 94,

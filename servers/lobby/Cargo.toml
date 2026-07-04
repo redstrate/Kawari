@@ -16,3 +16,6 @@ sha1_smol = { workspace = true }
 ureq = { workspace = true }
 serde_json = { workspace = true }
 physis = { workspace = true }
+# Pulled in transitively via kawari's `server` feature (diesel). Declaring it here ensures the
+# `bundled` SQLite is used when building lobby on its own, so it doesn't try to link system sqlite3.lib.
+libsqlite3-sys = { workspace = true }

@@ -47,6 +47,7 @@ use icarus::SpecialShop::SpecialShopSheet;
 use icarus::SwitchTalkVariation::{SwitchTalkVariationRow, SwitchTalkVariationSheet};
 use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::TopicSelect::TopicSelectSheet;
+use icarus::Trait::TraitSheet;
 use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
@@ -75,6 +76,7 @@ pub struct GameData {
     pub quest_sheet: QuestSheet,
     pub warp_sheet: WarpSheet,
     pub action_sheet: ActionSheet,
+    pub trait_sheet: TraitSheet,
     pub place_name_sheet: PlaceNameSheet,
     pub custom_talk_sheet: CustomTalkSheet,
     pub tribe_sheet: TribeSheet,
@@ -145,6 +147,10 @@ pub struct ItemRow {
     pub defense: u16,
     /// Magic defense;
     pub magic_defense: u16,
+    /// Weapon physical damage (the weapon's base damage, used by physical jobs).
+    pub weapon_damage_phys: u16,
+    /// Weapon magic damage (the weapon's base damage, used by caster jobs).
+    pub weapon_damage_mag: u16,
 }
 
 #[derive(Debug)]
@@ -224,9 +230,7 @@ impl GameData {
         let territory_type = match script_name {
             "ManSea002_00108" | "ManSea003_00109" => Some(129), // Limsa Lominsa Lower Decks
             "ManFst002_00085" | "ManFst003_00123" | "ManFst004_00124" => Some(132), // New Gridania
-            "ManWil002_00568" | "ManWil003_00569" | "ManWil004_00570" => {
-                Some(130)
-            } // Ul'dah - Steps of Nald
+            "ManWil002_00568" | "ManWil003_00569" | "ManWil004_00570" => Some(130), // Ul'dah - Steps of Nald
             _ => None,
         };
 
@@ -290,6 +294,9 @@ impl GameData {
 
         let action_sheet = ActionSheet::read_from(&mut resource_resolver, config.world.language())
             .expect("Failed to read Action, does the Excel files exist?");
+
+        let trait_sheet = TraitSheet::read_from(&mut resource_resolver, config.world.language())
+            .expect("Failed to read Trait, does the Excel files exist?");
 
         let place_name_sheet =
             PlaceNameSheet::read_from(&mut resource_resolver, config.world.language())
@@ -357,6 +364,7 @@ impl GameData {
             territory_type_sheet,
             warp_sheet,
             action_sheet,
+            trait_sheet,
             place_name_sheet,
             custom_talk_sheet,
             tribe_sheet,
@@ -438,6 +446,8 @@ impl GameData {
                 base_param_values: matched_row.BaseParamValue,
                 defense: matched_row.DefensePhys,
                 magic_defense: matched_row.DefenseMag,
+                weapon_damage_phys: matched_row.DamagePhys,
+                weapon_damage_mag: matched_row.DamageMag,
                 equip_restrictions: self
                     .get_equipslot_restrictions(matched_row.EquipSlotCategory)
                     .unwrap(),
@@ -1379,7 +1389,6 @@ impl GameData {
         let mut priorities = Vec::new();
         let config = get_config();
 
-        let config = get_config();
         let sheet =
             OnlineStatusSheet::read_from(&mut self.resource, config.world.language()).unwrap();
         for (_, row) in sheet.into_iter().flatten_subrows() {
@@ -1416,6 +1425,68 @@ impl GameData {
         let row = self.action_sheet.row(id).unwrap();
 
         row.CooldownGroup
+    }
+
+    pub fn get_action_additional_cooldown_group(&mut self, id: u32) -> u8 {
+        let row = self.action_sheet.row(id).unwrap();
+
+        row.AdditionalCooldownGroup
+    }
+
+    pub fn get_action_recast(&mut self, id: u32) -> u16 {
+        let row = self.action_sheet.row(id).unwrap();
+
+        row.Recast100ms
+    }
+
+    pub fn get_action_mp_cost(&mut self, id: u32) -> u32 {
+        const PRIMARY_COST_TYPE_MP: u8 = 3;
+
+        let row = self.action_sheet.row(id).unwrap();
+        if row.PrimaryCostType == PRIMARY_COST_TYPE_MP {
+            u32::from(row.PrimaryCostValue) * 100
+        } else {
+            0
+        }
+    }
+
+    pub fn get_action_category(&mut self, id: u32) -> u8 {
+        let row = self.action_sheet.row(id).unwrap();
+
+        row.ActionCategory
+    }
+
+    pub fn get_action_max_charges_at_level(&mut self, id: u32, level: u8) -> u8 {
+        let row = self.action_sheet.row(id).unwrap();
+        let base_charges = row.MaxCharges.max(1);
+
+        // Enhanced Radiant Aegis (Trait#480, Lv88) raises Radiant Aegis from 1 to 2 charges.
+        match id {
+            25799 if level >= 88 => 2,
+            _ => base_charges,
+        }
+    }
+
+    /// The action's cast type. 1 = single target; other values are AoE shapes (circle/cone/line).
+    pub fn get_action_cast_type(&mut self, id: u32) -> u8 {
+        self.action_sheet
+            .row(id)
+            .map(|row| row.CastType)
+            .unwrap_or(1)
+    }
+
+    /// The action's effect radius in yalms (only meaningful for AoE cast types).
+    pub fn get_action_effect_range(&mut self, id: u32) -> u8 {
+        self.action_sheet
+            .row(id)
+            .map(|row| row.EffectRange)
+            .unwrap_or(0)
+    }
+
+    /// The character level at which `trait_id` becomes active (from the Trait sheet's `Level`
+    /// column). Returns 0 for an unknown trait so a `level >= get_trait_level(..)` gate fails open.
+    pub fn get_trait_level(&mut self, id: u32) -> u8 {
+        self.trait_sheet.row(id).map(|row| row.Level).unwrap_or(0)
     }
 
     /// Checks if this zone is associated with a ContentFinderCondition.

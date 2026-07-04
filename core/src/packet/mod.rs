@@ -23,6 +23,8 @@ pub mod oodle;
 #[cfg(feature = "server")]
 mod send_helpers;
 #[cfg(feature = "server")]
+pub use send_helpers::{PacketReadBuffer, read_packet};
+#[cfg(feature = "server")]
 pub use send_helpers::{send_custom_world_packet, send_keep_alive, send_packet};
 
 mod scrambler;

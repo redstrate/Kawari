@@ -62,6 +62,9 @@ pub use action_result::{
     ActionEffect, ActionResult, ActionResultFlag, DamageElement, DamageKind, DamageType, EffectKind,
 };
 
+mod aoe_effect;
+pub use aoe_effect::{AoeEffect8, AoeEffect16, AoeEffect24, AoeEffect32, AoeEffectHeader};
+
 mod actor_set_pos;
 pub use actor_set_pos::{ActorSetPos, WarpType};
 
@@ -413,8 +416,12 @@ pub enum ServerZoneIpcData {
     ActorGauge {
         /// The class (ideally the one you actually are) to update the gauge for. Index into the ClassJob Excel sheet.
         classjob_id: u8,
-        /// Arbitrary class-specific data.
-        data: [u8; 15],
+        /// Class-specific gauge data: a little-endian `u64` (the client's `ActorGauge.Payload`). On
+        /// the wire it sits one pad byte after `classjob_id` (so at byte 2), followed by 6 trailing
+        /// pad bytes — a 16-byte payload total. The leading pad and the length both matter: without
+        /// them the gauge is read off-by-one / the packet is dropped, and the gauge stays blank.
+        #[brw(pad_before = 1, pad_after = 6)]
+        data: u64,
     },
     FreeCompanyInfo {
         unk: [u8; 80],
@@ -670,9 +677,6 @@ pub enum ServerZoneIpcData {
     HousingOccupiedLandInfo(HousingOccupiedLandInfo),
     HousingVacantLandInfo(HousingVacantLandInfo),
     HousingEstateGreeting(HousingEstateGreeting),
-    SupportDeskNotification {
-        unk1: [u8; 16],
-    },
     ScenarioGuide {
         /// Not sure what this controls.
         quest_id_1: u32,
@@ -923,11 +927,6 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 8)] // empty
         display_ids: [u8; 8],
     },
-    UnkSocialResponse {
-        #[br(count = 80)]
-        #[bw(pad_size_to = 80)]
-        unk: Vec<u8>,
-    },
     UnkClassRelated {
         #[brw(pad_after = 3)]
         classjob_id: u8,
@@ -970,29 +969,10 @@ pub enum ServerZoneIpcData {
         unk3: u32,
         unk4: u32,
     },
-    AoeEffect8 {
-        source_actor: ObjectId,
-        unk1: u32,
-        action_key: u32,
-        dir: u16,
-        duration: f32,
-        unk3: u32,
-        request_id: u16,
-        action_id: u16,
-        action_variant: u8,
-        action_kind: u8,
-        flag: u8,
-        unk10: [u8; 18],
-        target_count: u8,
-        #[br(count = 512)]
-        #[brw(pad_size_to = 512)]
-        effects: Vec<u8>,
-        target_ids: [ObjectTypeId; 8],
-        #[brw(pad_after = 6)] // empty
-        #[br(map = read_packed_position)]
-        #[bw(map = write_packed_position)]
-        position: Position,
-    },
+    AoeEffect8(Box<AoeEffect8>),
+    AoeEffect16(Box<AoeEffect16>),
+    AoeEffect24(Box<AoeEffect24>),
+    AoeEffect32(Box<AoeEffect32>),
     ActorCast {
         /// Usually the same as `action_id`.
         spell_id: u16,

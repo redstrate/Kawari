@@ -4,6 +4,7 @@ use std::{
         Arc,
         atomic::{AtomicUsize, Ordering},
     },
+    time::{Duration, Instant},
 };
 
 use tokio::sync::mpsc::Sender;
@@ -84,6 +85,14 @@ pub struct MessageInfo {
     pub channel: ChatChannelType,
     /// The chat message itself.
     pub message: BString,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum PetCommand {
+    Recall,
+    Follow,
+    Place(Position),
+    Stay,
 }
 
 #[derive(Clone, Debug)]
@@ -242,6 +251,76 @@ pub enum FromServer {
     TeleportOffered(u32, TeleportQuery),
 }
 
+impl FromServer {
+    pub fn kind(&self) -> &'static str {
+        match self {
+            Self::Message(..) => "Message",
+            Self::ActorSpawn(..) => "ActorSpawn",
+            Self::ActorMove(..) => "ActorMove",
+            Self::DeleteActor(..) => "DeleteActor",
+            Self::DeleteObject(..) => "DeleteObject",
+            Self::ActorControl(..) => "ActorControl",
+            Self::ActorControlTarget(..) => "ActorControlTarget",
+            Self::ActorControlSelf(..) => "ActorControlSelf",
+            Self::UpdateConfig(..) => "UpdateConfig",
+            Self::ActorEquip(..) => "ActorEquip",
+            Self::ActorSummonsMinion(..) => "ActorSummonsMinion",
+            Self::ActorDespawnsMinion() => "ActorDespawnsMinion",
+            Self::LoseEffect(..) => "LoseEffect",
+            Self::Conditions(..) => "Conditions",
+            Self::ChangeZone(..) => "ChangeZone",
+            Self::TellMessageReceived(..) => "TellMessageReceived",
+            Self::ChatDisconnected() => "ChatDisconnected",
+            Self::SetPartyChatChannel(..) => "SetPartyChatChannel",
+            Self::SocialInvite(..) => "SocialInvite",
+            Self::InvitationResult(..) => "InvitationResult",
+            Self::InvitationReplyResult(..) => "InvitationReplyResult",
+            Self::PartyMessageReceived(..) => "PartyMessageReceived",
+            Self::PartyUpdate(..) => "PartyUpdate",
+            Self::InviteCharacterResult(..) => "InviteCharacterResult",
+            Self::RejoinPartyAfterDisconnect(..) => "RejoinPartyAfterDisconnect",
+            Self::PacketSegment(..) => "PacketSegment",
+            Self::NewTasks(..) => "NewTasks",
+            Self::NewStatusEffects(..) => "NewStatusEffects",
+            Self::SpawnObject(..) => "SpawnObject",
+            Self::LocationDiscovered(..) => "LocationDiscovered",
+            Self::StrategyBoardShared(..) => "StrategyBoardShared",
+            Self::StrategyBoardSharedAck(..) => "StrategyBoardSharedAck",
+            Self::StrategyBoardRealtimeUpdate(..) => "StrategyBoardRealtimeUpdate",
+            Self::StrategyBoardRealtimeFinished() => "StrategyBoardRealtimeFinished",
+            Self::WaymarkUpdated(..) => "WaymarkUpdated",
+            Self::WaymarkPreset(..) => "WaymarkPreset",
+            Self::EnteredInstanceEntranceRange(..) => "EnteredInstanceEntranceRange",
+            Self::IncrementRestedExp() => "IncrementRestedExp",
+            Self::Countdown(..) => "Countdown",
+            Self::TargetSignToggled(..) => "TargetSignToggled",
+            Self::LeaveContent() => "LeaveContent",
+            Self::FinishEvent() => "FinishEvent",
+            Self::FishBite() => "FishBite",
+            Self::ActorDismounted(..) => "ActorDismounted",
+            Self::PartyMemberPositionsUpdate(..) => "PartyMemberPositionsUpdate",
+            Self::CommitParties(..) => "CommitParties",
+            Self::TreasureSpawn(..) => "TreasureSpawn",
+            Self::CWLSMessageReceived(..) => "CWLSMessageReceived",
+            Self::SetLinkshellChatChannels(..) => "SetLinkshellChatChannels",
+            Self::LinkshellDisbanded(..) => "LinkshellDisbanded",
+            Self::LinkshellLeft(..) => "LinkshellLeft",
+            Self::LinkshellRenamed(..) => "LinkshellRenamed",
+            Self::LinkshellRankChanged(..) => "LinkshellRankChanged",
+            Self::LinkshellInviteReceived(..) => "LinkshellInviteReceived",
+            Self::LinkshellInviteAccepted(..) => "LinkshellInviteAccepted",
+            Self::SetCurrentMount(..) => "SetCurrentMount",
+            Self::MustRefreshChatChannels() => "MustRefreshChatChannels",
+            Self::FriendRemoved(..) => "FriendRemoved",
+            Self::NewLetterArrived() => "NewLetterArrived",
+            Self::PlayDirectorCutscene(..) => "PlayDirectorCutscene",
+            Self::FurniturePlaced(..) => "FurniturePlaced",
+            Self::FurnitureTranslated(..) => "FurnitureTranslated",
+            Self::TeleportOffered(..) => "TeleportOffered",
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ClientHandle {
     pub id: ClientId,
@@ -342,6 +421,8 @@ pub enum ToServer {
     ActorDespawnsMinion(ObjectId),
     /// Move the player's actor to the specified pop range.
     MoveToPopRange(ClientId, ObjectId, u32, bool),
+    /// Control the player's currently summoned pet.
+    PetCommand(ClientId, ObjectId, PetCommand),
     /// The connection sent a direct message to another client. This needs the sender's actor id too for purposes of `send_ipc_from`.
     TellMessageSent(ObjectId, ObjectId, TellMessage),
     /// The client invited another player to join their party, friend list, or free company.
@@ -487,6 +568,93 @@ pub enum ToServer {
     VariantVote(ObjectId, u32),
 }
 
+impl ToServer {
+    pub fn kind(&self) -> &'static str {
+        match self {
+            Self::NewClient(..) => "NewClient",
+            Self::NewChatClient(..) => "NewChatClient",
+            Self::Message(..) => "Message",
+            Self::ActorMoved(..) => "ActorMoved",
+            Self::ClientTrigger(..) => "ClientTrigger",
+            Self::ZoneLoaded(..) => "ZoneLoaded",
+            Self::ChangeZone(..) => "ChangeZone",
+            Self::EnterZoneJump(..) => "EnterZoneJump",
+            Self::Disconnected(..) => "Disconnected",
+            Self::FatalError(..) => "FatalError",
+            Self::ActionRequest(..) => "ActionRequest",
+            Self::Config(..) => "Config",
+            Self::Equip(..) => "Equip",
+            Self::GainEffect(..) => "GainEffect",
+            Self::LoseEffect(..) => "LoseEffect",
+            Self::Warp(..) => "Warp",
+            Self::WarpAetheryte(..) => "WarpAetheryte",
+            Self::ReadySpawnPlayer(..) => "ReadySpawnPlayer",
+            Self::ZoneIn(..) => "ZoneIn",
+            Self::ActorSummonsMinion(..) => "ActorSummonsMinion",
+            Self::ActorDespawnsMinion(..) => "ActorDespawnsMinion",
+            Self::MoveToPopRange(..) => "MoveToPopRange",
+            Self::PetCommand(..) => "PetCommand",
+            Self::TellMessageSent(..) => "TellMessageSent",
+            Self::InvitePlayerTo(..) => "InvitePlayerTo",
+            Self::InvitationResponse(..) => "InvitationResponse",
+            Self::AddPartyMember(..) => "AddPartyMember",
+            Self::PartyMessageSent(..) => "PartyMessageSent",
+            Self::PartyChangeLeader(..) => "PartyChangeLeader",
+            Self::PartyMemberKick(..) => "PartyMemberKick",
+            Self::PartyMemberChangedAreas(..) => "PartyMemberChangedAreas",
+            Self::PartyMemberLeft(..) => "PartyMemberLeft",
+            Self::PartyDisband(..) => "PartyDisband",
+            Self::ChatDisconnected(..) => "ChatDisconnected",
+            Self::PartyMemberOffline(..) => "PartyMemberOffline",
+            Self::PartyMemberReturned(..) => "PartyMemberReturned",
+            Self::JoinContent(..) => "JoinContent",
+            Self::LeaveContent(..) => "LeaveContent",
+            Self::UpdateConditions(..) => "UpdateConditions",
+            Self::CommenceDuty(..) => "CommenceDuty",
+            Self::Kill(..) => "Kill",
+            Self::SetHP(..) => "SetHP",
+            Self::SetMP(..) => "SetMP",
+            Self::NewLocationDiscovered(..) => "NewLocationDiscovered",
+            Self::ShareStrategyBoard(..) => "ShareStrategyBoard",
+            Self::StrategyBoardReceived(..) => "StrategyBoardReceived",
+            Self::StrategyBoardRealtimeUpdate(..) => "StrategyBoardRealtimeUpdate",
+            Self::StrategyBoardRealtimeFinished(..) => "StrategyBoardRealtimeFinished",
+            Self::ApplyWaymarkPreset(..) => "ApplyWaymarkPreset",
+            Self::SetNewStatValues(..) => "SetNewStatValues",
+            Self::StartCountdown(..) => "StartCountdown",
+            Self::GimmickAccessor(..) => "GimmickAccessor",
+            Self::Fish(..) => "Fish",
+            Self::WarpPopRange(..) => "WarpPopRange",
+            Self::ReloadScripts => "ReloadScripts",
+            Self::Dismounted(..) => "Dismounted",
+            Self::SetOnlineStatus(..) => "SetOnlineStatus",
+            Self::RidePillionRequest(..) => "RidePillionRequest",
+            Self::SetCharacterMode(..) => "SetCharacterMode",
+            Self::BroadcastActorControl(..) => "BroadcastActorControl",
+            Self::ReadyCheckInitiated(..) => "ReadyCheckInitiated",
+            Self::ReadyCheckResponse(..) => "ReadyCheckResponse",
+            Self::RemoveCooldowns(..) => "RemoveCooldowns",
+            Self::SetLinkshells(..) => "SetLinkshells",
+            Self::CWLSMessageSent(..) => "CWLSMessageSent",
+            Self::DisbandLinkshell(..) => "DisbandLinkshell",
+            Self::LeaveLinkshell(..) => "LeaveLinkshell",
+            Self::RenameLinkshell(..) => "RenameLinkshell",
+            Self::SetLinkshellRank(..) => "SetLinkshellRank",
+            Self::SendLinkshellInvite(..) => "SendLinkshellInvite",
+            Self::AcceptedLinkshellInvite(..) => "AcceptedLinkshellInvite",
+            Self::FriendRemoved(..) => "FriendRemoved",
+            Self::SendLetterTo(..) => "SendLetterTo",
+            Self::Jump(..) => "Jump",
+            Self::Call(..) => "Call",
+            Self::SpawnLayoutNpc(..) => "SpawnLayoutNpc",
+            Self::PlaceFurniture(..) => "PlaceFurniture",
+            Self::TranslateFurniture(..) => "TranslateFurniture",
+            Self::OfferTeleportToParty(..) => "OfferTeleportToParty",
+            Self::VariantVote(..) => "VariantVote",
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct ServerHandle {
     pub chan: Sender<ToServer>,
@@ -495,8 +663,31 @@ pub struct ServerHandle {
 
 impl ServerHandle {
     pub async fn send(&mut self, msg: ToServer) {
-        if self.chan.send(msg).await.is_err() {
-            panic!("Main loop has shut down.");
+        let msg_kind = msg.kind();
+        match self.chan.try_send(msg) {
+            Ok(()) => return,
+            Err(tokio::sync::mpsc::error::TrySendError::Closed(_)) => {
+                panic!("Main loop has shut down.");
+            }
+            Err(tokio::sync::mpsc::error::TrySendError::Full(msg)) => {
+                let started = Instant::now();
+                tracing::warn!(
+                    msg = msg_kind,
+                    "world server channel is full; waiting to send"
+                );
+                if self.chan.send(msg).await.is_err() {
+                    panic!("Main loop has shut down.");
+                }
+
+                let waited = started.elapsed();
+                if waited >= Duration::from_millis(250) {
+                    tracing::warn!(
+                        msg = msg_kind,
+                        waited_ms = waited.as_millis(),
+                        "sent to world server after channel backpressure"
+                    );
+                }
+            }
         }
     }
     pub fn next_id(&self) -> ClientId {

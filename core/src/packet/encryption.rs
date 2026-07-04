@@ -4,7 +4,9 @@ use binrw::BinResult;
 
 use crate::constants::LOBBY_GAME_VERSION;
 
-use super::{IPC_HEADER_SIZE, ReadWriteIpcSegment, parsing::ConnectionState};
+use super::{
+    IPC_HEADER_SIZE, PACKET_SEGMENT_HEADER_SIZE, ReadWriteIpcSegment, parsing::ConnectionState,
+};
 
 pub fn generate_encryption_key(key: &[u8], phrase: &str) -> [u8; 16] {
     let mut base_key = vec![0x78, 0x56, 0x34, 0x12]; // 0x12345678
@@ -28,7 +30,13 @@ pub(crate) fn decrypt<T: ReadWriteIpcSegment>(size: u32, state: &ConnectionState
         let mut cursor = Cursor::new(&data);
         T::read_options(&mut cursor, endian, (&size,))
     } else {
-        T::read_options(reader, endian, (&size,))
+        let segment_body_size = size - PACKET_SEGMENT_HEADER_SIZE;
+
+        let mut data = vec![0; segment_body_size as usize];
+        reader.read_exact(&mut data)?;
+
+        let mut cursor = Cursor::new(&data);
+        T::read_options(&mut cursor, endian, (&size,))
     }
 }
 

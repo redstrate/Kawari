@@ -1,30 +1,93 @@
 use std::{
     collections::{HashMap, VecDeque},
     path::PathBuf,
-    sync::Arc,
+    sync::{Arc, OnceLock},
     time::{Duration, Instant},
 };
 
 use crate::{
-    ClientId, GameData, Navmesh, StatusEffects,
+    ClientId, FromServer, GameData, Navmesh, StatusEffects,
     server::{
-        action::cancel_action,
+        action::{cancel_action, clear_action_cooldowns},
         actor::{NetworkedActor, NpcState},
+        combat_state::PlayerCombatState,
         director::DirectorData,
-        network::NetworkState,
+        network::{DestinationNetwork, NetworkState},
         zone::Zone,
     },
     zone_connection::{BaseParameters, TeleportQuery},
 };
 use kawari::{
-    common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, Position},
+    common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, Position, Timeline},
     config::{FilesystemConfig, get_config},
     ipc::zone::{
-        ActionRequest, Conditions, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer,
-        SpawnTreasure,
+        ActionRequest, ActorControlCategory, Conditions, ServerZoneIpcSegment, SpawnNpc,
+        SpawnObject, SpawnPlayer, SpawnTreasure,
     },
 };
 use parking_lot::Mutex;
+
+static DEFAULT_TIMELINE: OnceLock<Timeline> = OnceLock::new();
+static BASE_TIMELINES: OnceLock<HashMap<u32, Timeline>> = OnceLock::new();
+
+fn default_timeline() -> Timeline {
+    DEFAULT_TIMELINE
+        .get_or_init(|| {
+            serde_json::from_str(
+                &std::fs::read_to_string(FilesystemConfig::locate_timeline_file("Default.json"))
+                    .unwrap(),
+            )
+            .unwrap()
+        })
+        .clone()
+}
+
+fn base_timelines() -> &'static HashMap<u32, Timeline> {
+    BASE_TIMELINES.get_or_init(|| {
+        let mut timelines = HashMap::new();
+        let mut search_dirs: Vec<String> = get_config()
+            .filesystem
+            .additional_resource_paths
+            .iter()
+            .cloned()
+            .map(|mut x| {
+                x.push_str("/timelines/");
+                x
+            })
+            .collect();
+        search_dirs.push("resources/timelines/".to_string());
+
+        for search_dir in search_dirs {
+            let Ok(entries) = std::fs::read_dir(search_dir) else {
+                continue;
+            };
+
+            for entry in entries.flatten() {
+                let file_name = entry.file_name();
+                let Some(file_name) = file_name.to_str() else {
+                    continue;
+                };
+                let Some(base_id) = file_name
+                    .strip_suffix(".json")
+                    .and_then(|name| name.rsplit_once('_'))
+                    .and_then(|(_, base_id)| base_id.parse::<u32>().ok())
+                else {
+                    continue;
+                };
+                let Ok(contents) = std::fs::read_to_string(entry.path()) else {
+                    continue;
+                };
+                let Ok(timeline) = serde_json::from_str(&contents) else {
+                    continue;
+                };
+
+                timelines.entry(base_id).or_insert(timeline);
+            }
+        }
+
+        timelines
+    })
+}
 
 #[derive(Default, Debug)]
 pub enum NavmeshGenerationStep {
@@ -78,6 +141,48 @@ pub enum QueuedTaskData {
     /// Used by directors since its tough to fit this into the director logic.
     WarpToPopRange {
         id: u32,
+    },
+    /// Finalize a pet summon after the actor has been visible to the client for a short moment.
+    RevealPet {
+        actor_id: ObjectId,
+    },
+    /// Resolve a short-lived Summoner elemental primal's finisher. If the owner has no attackable
+    /// target yet, this task retries within the 8s summon window, then reverts to carbuncle without
+    /// damage.
+    SummonerPrimalFinisher {
+        owner_id: ObjectId,
+        pet_id: ObjectId,
+        preferred_target_id: ObjectId,
+        action_id: u32,
+        potency: u32,
+        expires_at: Instant,
+    },
+    /// Resolve one 3s tick of a demi-summon's automatic attack.
+    SummonerDemiAutoAttack {
+        owner_id: ObjectId,
+    },
+    /// Revert an elemental primal back to carbuncle after its finisher animation has had time to
+    /// play on the client.
+    SummonerPrimalRevert {
+        owner_id: ObjectId,
+        pet_id: ObjectId,
+    },
+    /// Resolve one tick of Summoner Slipstream's lingering ground AoE.
+    SummonerSlipstreamTick {
+        owner_id: ObjectId,
+        center: Position,
+        radius: f32,
+        potency: u32,
+        ticks_remaining: u8,
+    },
+    /// Spawn Summoner Slipstream's lingering ground VFX.
+    SummonerSlipstreamGroundVfx {
+        owner_id: ObjectId,
+        center: Position,
+    },
+    /// Remove Summoner Slipstream's lingering ground VFX actor.
+    SummonerSlipstreamGroundVfxCleanup {
+        object_id: ObjectId,
     },
     /// Reset a player's action combo status.
     ResetCombo,
@@ -174,46 +279,12 @@ impl Instance {
     }
 
     pub fn insert_npc(&mut self, id: ObjectId, spawn: SpawnNpc) {
-        // Load drop-ins
-        let mut timeline = serde_json::from_str(
-            &std::fs::read_to_string(FilesystemConfig::locate_timeline_file("Default.json"))
-                .unwrap(),
-        )
-        .unwrap();
-
-        let mut search_dirs: Vec<String> = get_config()
-            .filesystem
-            .additional_resource_paths
-            .iter()
+        let timeline = base_timelines()
+            .get(&spawn.common.base_id)
             .cloned()
-            .map(|mut x| {
-                x.push_str("/timelines/");
-                x
-            })
-            .collect();
-        search_dirs.push("resources/timelines/".to_string());
+            .unwrap_or_else(default_timeline);
 
-        'outer: for search_dir in search_dirs {
-            for entry in std::fs::read_dir(search_dir)
-                .expect("Didn't find timelines directory?")
-                .flatten()
-            {
-                if !entry
-                    .file_name()
-                    .to_str()
-                    .unwrap_or_default()
-                    .ends_with(&format!("_{}.json", spawn.common.base_id))
-                {
-                    continue;
-                }
-
-                if let Ok(contents) = std::fs::read_to_string(entry.path()) {
-                    timeline = serde_json::from_str(&contents).unwrap();
-                    break 'outer;
-                }
-            }
-        }
-
+        let spawn_position = spawn.common.position.0;
         self.actors.insert(
             id,
             NetworkedActor::Npc {
@@ -222,11 +293,16 @@ impl Instance {
                 navmesh_path_lerp: 0.0,
                 navmesh_target: None,
                 last_position: None,
+                spawn_position,
                 spawn,
                 timeline,
                 timeline_position: 0,
-                newly_hated_actor: None,
+                hate_list: HashMap::new(),
                 currently_invulnerable: false,
+                ai_paused: false,
+                targetable: true,
+                visible: true,
+                cast_locked: false,
                 status_effects: StatusEffects::default(),
             },
         );
@@ -274,8 +350,11 @@ impl Instance {
                 parameters: BaseParameters::default(),
                 dueling_opponent_id: ObjectId::default(),
                 remove_cooldowns: false,
+                combat_state: PlayerCombatState::default(),
                 last_combo_action: 0,
                 combo_sequence: 0,
+                hated_by: HashMap::new(),
+                last_enmity_sent: Vec::new(),
             },
         );
     }
@@ -315,13 +394,45 @@ impl Instance {
             .collect()
     }
 
-    pub fn cancel_task(&mut self, network: Arc<Mutex<NetworkState>>, task: &QueuedTask) {
+    pub(super) fn cancel_task(
+        &mut self,
+        network: Arc<Mutex<NetworkState>>,
+        game_data: &mut GameData,
+        task: &QueuedTask,
+    ) {
         // Delete the selected task:
         self.queued_task.retain(|x| x != task);
 
         // Then actually do the work:
-        if let QueuedTaskData::CastAction { .. } = task.data {
-            cancel_action(network.clone(), task.from_id)
+        if let QueuedTaskData::CastAction { request, .. } = &task.data {
+            let cleared_cooldown_groups =
+                if let Some(actor) = self.find_actor_mut(task.from_actor_id) {
+                    clear_action_cooldowns(actor, game_data, request.action_id)
+                } else {
+                    Vec::new()
+                };
+            if !cleared_cooldown_groups.is_empty() {
+                let mut network = network.lock();
+                for cooldown_group in cleared_cooldown_groups {
+                    network.send_to(
+                        task.from_id,
+                        FromServer::ActorControlSelf(ActorControlCategory::SetCooldownTimer {
+                            cooldown_group,
+                            elapsed_centisec: 0,
+                            total_centisec: 0,
+                        }),
+                        DestinationNetwork::ZoneClients,
+                    );
+                }
+            }
+            cancel_action(
+                network.clone(),
+                task.from_id,
+                None,
+                Some(request.action_type),
+                Some(request.action_id),
+                None,
+            )
         }
     }
 

@@ -33,26 +33,26 @@ impl ZoneConnection {
         // We're purely walking or strafing while walking. No jumping or falling.
         if anim_type & MoveAnimationType::WALKING_OR_LANDING
             == MoveAnimationType::WALKING_OR_LANDING
-            && anim_state == MoveAnimationState::None
-            && jump_state == JumpState::NoneOrFalling
+            && anim_state.is_empty()
+            && jump_state.is_empty()
         {
             anim_speed = SPEED_WALKING;
         }
 
-        if anim_state == MoveAnimationState::LeavingCollision {
+        if anim_state.contains(MoveAnimationState::LEAVING_COLLISION) {
             anim_type |= MoveAnimationType::FALLING;
         }
 
-        if jump_state == JumpState::Ascending {
+        if jump_state.contains(JumpState::ASCENDING) {
             anim_type |= MoveAnimationType::FALLING;
-            if anim_state == MoveAnimationState::LeavingCollision
-                || anim_state == MoveAnimationState::StartFalling
+            if anim_state.contains(MoveAnimationState::LEAVING_COLLISION)
+                || anim_state.contains(MoveAnimationState::START_FALLING)
             {
                 anim_type |= MoveAnimationType::JUMPING;
             }
         }
 
-        if anim_state == MoveAnimationState::EnteringCollision {
+        if anim_state.contains(MoveAnimationState::ENTERING_COLLISION) {
             anim_type = MoveAnimationType::WALKING_OR_LANDING;
         }
 

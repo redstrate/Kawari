@@ -316,7 +316,7 @@ impl LobbyConnection {
             return;
         };
 
-        let entitled_expansion = login_reply
+        let entitled_expansion: u32 = login_reply
             .body_mut()
             .read_to_string()
             .unwrap()
@@ -360,26 +360,31 @@ impl LobbyConnection {
                 let lobby_character_list = if i == 3 {
                     // On the last packet, add the account-wide information
                     ServiceLoginReply {
-                        sequence,
-                        counter: (i * (ServiceLoginReply::MAX_CHARACTERS as u8 * 2)) + 1,
-                        num_in_packet: characters_in_packet.len() as u8,
-                        unk3: 0,
-                        unk4: 0,
-                        unk6: 64,
-                        days_subscribed: 30,
-                        remaining_days: 30,
-                        days_to_next_rank: 0,
-                        unk8: if can_create_character { 1 } else { 0 },
-                        max_characters_on_world: max_characters_per_world as u16,
-                        entitled_expansion,
+                        request_id: sequence as u32,
+                        timestamp: (sequence >> 32) as u32,
+                        reply_flags: (i * (ServiceLoginReply::MAX_CHARACTERS as u8 * 2)) + 1, // TODO: why the + 1 here?
+                        count: characters_in_packet.len() as u8,
+                        flag: 64,                   // config system online
+                        paid_monthly: 2077 * 86400, // ~2077 days of subscription, just for fun :)
+                        remaining_days: 2077,
+                        sumday: 30,
+                        next_reward_days: 0,
+                        max_create_character: if can_create_character {
+                            max_characters_per_world as u16
+                        } else {
+                            0
+                        },
+                        max_character_list: max_characters_per_world as u16,
+                        exver: entitled_expansion as u16,
                         characters: characters_in_packet,
                         ..Default::default()
                     }
                 } else {
                     ServiceLoginReply {
-                        sequence,
-                        counter: i * (ServiceLoginReply::MAX_CHARACTERS as u8 * 2),
-                        num_in_packet: characters_in_packet.len() as u8,
+                        request_id: sequence as u32,
+                        timestamp: (sequence >> 32) as u32,
+                        reply_flags: i * (ServiceLoginReply::MAX_CHARACTERS as u8 * 2),
+                        count: characters_in_packet.len() as u8,
                         characters: characters_in_packet,
                         ..Default::default()
                     }

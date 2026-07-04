@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, f32::consts::FRAC_PI_2, sync::Arc};
 
 use glam::{Affine3A, EulerRot, Vec3};
 use parking_lot::Mutex;
@@ -13,26 +13,28 @@ use physis::{
 };
 
 use crate::{
-    ClientId, FromServer, GameData, StatusEffects, TerritoryNameKind, ToServer,
+    ClientId, FromServer, GameData, TerritoryNameKind, ToServer,
     lua::LuaZone,
     server::{
         NetworkedActor, WorldServer,
+        combat_state::PlayerCombatState,
         instance::{Instance, QueuedTaskData},
+        jobs::summoner::{apply_summon_pet_effect, build_summoner_gauge_data, is_summoner},
         network::{DestinationNetwork, NetworkState},
     },
-    zone_connection::{BaseParameters, TeleportQuery},
+    zone_connection::BaseParameters,
 };
 use kawari::{
     common::{
-        DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_EXIT,
+        DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_EXIT,
         EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, EventState, HandlerType,
         ObjectId, Position, WARP_DELAY, euler_to_direction, internal_housing_row,
     },
     config::get_config,
     ipc::zone::{
         ActorControlCategory, ActorSetPos, BattleNpcSubKind, CharacterDataFlag, CommonSpawn,
-        Conditions, DisplayFlag, ObjectKind, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc,
-        SpawnObject, SpawnTreasure, WarpType,
+        DisplayFlag, ObjectKind, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, SpawnObject,
+        SpawnTreasure, WarpType,
     },
 };
 
@@ -63,6 +65,9 @@ pub struct MapRange {
     pub trigger_box_shape: TriggerBoxShape,
     /// Position of this range in the world.
     pub position: Vec3,
+    /// Facing (world direction yaw) baked from this range's transform rotation. For the entrance
+    /// EventRange (EntranceRect) this is the direction the player faces on zone-in.
+    pub rotation: f32,
     /// Relative scale of this range.
     pub scale: Vec3,
     /// Whether this map range represents a sanctuary.
@@ -219,8 +224,9 @@ impl Zone {
                     }
 
                     for object in &layer.objects {
-                        let (scale, _, translation) =
+                        let (scale, rotation, translation) =
                             Affine3A::from(object.transform).to_scale_rotation_translation();
+                        let facing = euler_to_direction(rotation.to_euler(EulerRot::XYZ));
 
                         if let LayerEntryData::EventNPC(npc) = &object.data {
                             zone.cached_npc_base_ids.insert(
@@ -232,6 +238,7 @@ impl Zone {
                             zone.map_ranges.push(MapRange {
                                 trigger_box_shape: map_range.parent_data.trigger_box_shape,
                                 position: translation,
+                                rotation: facing,
                                 scale,
                                 sanctuary: map_range.rest_bonus_enabled,
                                 duel: false,
@@ -249,6 +256,7 @@ impl Zone {
                             zone.map_ranges.push(MapRange {
                                 trigger_box_shape: event_range.parent_data.trigger_box_shape,
                                 position: translation,
+                                rotation: facing,
                                 scale,
                                 sanctuary: false,
                                 // This is guesswork since there's only one dueling location in-game
@@ -644,6 +652,20 @@ impl Zone {
         self.cached_npcs.get(&instance_id).cloned()
     }
 
+    /// Returns a cached BNpc template matching the given ids, preferring an exact base/name pair.
+    pub fn find_battle_npc_template(&self, base_id: u32, name_id: u32) -> Option<SpawnNpc> {
+        self.cached_npcs
+            .values()
+            .find(|spawn| spawn.common.base_id == base_id && spawn.common.name_id == name_id)
+            .cloned()
+            .or_else(|| {
+                self.cached_npcs
+                    .values()
+                    .find(|spawn| spawn.common.base_id == base_id)
+                    .cloned()
+            })
+    }
+
     /// Returns an SpawnTreasure for the given base ID.
     pub fn get_treasure(&self, base_id: u8) -> Option<SpawnTreasure> {
         self.cached_treasure.get(&base_id).cloned()
@@ -692,6 +714,7 @@ impl Zone {
                         base_parameters.calculate_based_on_level(
                             &attributes,
                             level,
+                            0,
                             &param_grow,
                             &modifiers,
                         );
@@ -872,10 +895,18 @@ fn begin_change_zone<'a>(
             DestinationNetwork::ZoneClients,
         );
 
+        // Carry the player's combat state (job gauge, cooldowns, summoned-pet flag) across the zone
+        // change. Retail keeps the gauge and pet when you change maps; without this they'd reset,
+        // because the destination instance gets a brand-new actor with default state.
+        let mut carried_combat_state = None;
+
         // inform the players in this zone that this actor left
         if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
             // HACK: This is to prevent actors from disappearing when warping within the same zone.
             if current_instance.zone.id != destination_zone_id {
+                carried_combat_state =
+                    take_combat_state_and_despawn_pets(current_instance, network, actor_id);
+
                 network.remove_actor(current_instance, actor_id);
                 needs_init_zone = true;
             }
@@ -885,6 +916,10 @@ fn begin_change_zone<'a>(
         let instance = data.ensure_exists(destination_zone_id, game_data);
         // Insert an empty actor that will be filled later
         instance.insert_empty_actor(actor_id);
+
+        // Restore the carried combat state onto the freshly-inserted actor. ZoneLoaded later clones
+        // this when it builds the real player spawn, so the gauge/cooldowns survive the move.
+        restore_carried_combat_state(instance, actor_id, carried_combat_state);
 
         (instance, needs_init_zone)
     } else {
@@ -914,6 +949,58 @@ fn begin_change_zone<'a>(
 }
 
 /// Sends the needed information to ZoneConnection for a zone change.
+/// Take the player's combat state (job gauge, cooldowns, summoned-pet flag) out of their current
+/// instance and despawn any pet actors they own there. Returns the cloned combat state so it can be
+/// restored onto the freshly-inserted actor in the destination instance via
+/// [`restore_carried_combat_state`]. Mirrors what [`begin_change_zone`] does inline, but is reusable
+/// by the content (duty) transition paths that build the destination instance themselves.
+pub fn take_combat_state_and_despawn_pets(
+    current_instance: &mut Instance,
+    network: &mut NetworkState,
+    actor_id: ObjectId,
+) -> Option<PlayerCombatState> {
+    let carried_combat_state =
+        if let Some(NetworkedActor::Player { combat_state, .. }) =
+            current_instance.find_actor(actor_id)
+        {
+            Some(combat_state.clone())
+        } else {
+            None
+        };
+
+    // Despawn this player's pet(s) in the old instance so they don't linger orphaned; the pet is
+    // re-summoned in the destination once the player has loaded (see ZoneLoaded).
+    let pet_ids: Vec<ObjectId> = current_instance
+        .actors
+        .iter()
+        .filter_map(|(id, actor)| match actor {
+            NetworkedActor::Npc { spawn, .. } if spawn.common.owner_id == actor_id => Some(*id),
+            _ => None,
+        })
+        .collect();
+    for pet_id in pet_ids {
+        network.remove_actor(current_instance, pet_id);
+    }
+
+    carried_combat_state
+}
+
+/// Restore combat state previously taken by [`take_combat_state_and_despawn_pets`] onto the
+/// (freshly-inserted, default-state) player actor in the destination instance. ZoneLoaded later
+/// clones this when it builds the real player spawn, so the gauge/cooldowns/pet survive the move.
+pub fn restore_carried_combat_state(
+    target_instance: &mut Instance,
+    actor_id: ObjectId,
+    carried_combat_state: Option<PlayerCombatState>,
+) {
+    if let Some(state) = carried_combat_state
+        && let Some(NetworkedActor::Player { combat_state, .. }) =
+            target_instance.find_actor_mut(actor_id)
+    {
+        *combat_state = state;
+    }
+}
+
 pub fn change_zone_warp_to_pop_range(
     data: &mut WorldServer,
     network: &mut NetworkState,
@@ -975,13 +1062,28 @@ pub fn change_zone_warp_to_entrance(
     needs_init_zone: bool,
     from_id: ClientId,
 ) {
+    // The player's facing on zone-in comes from the entrance EventRange (InstanceContent.EntranceRect),
+    // which is flagged `entrance` when the instance is created. The entrance *circle* EObj/SGB carries
+    // no rotation of its own, so we take the yaw from the rect. Mirrors Sapphire's
+    // InstanceContent::movePlayerToEntrance: position from the entrance object, facing from the rect,
+    // falling back to due-east (π/2) when no rect is present.
+    let entrance_rect = target_instance
+        .zone
+        .map_ranges
+        .iter()
+        .find(|r| r.entrance)
+        .map(|r| (Position(r.position), r.rotation));
+
     let exit_position;
     let exit_rotation;
     if let Some(destination_object) = target_instance.zone.find_entrance() {
-        let (_, rotation, translation) =
+        let (_, _, translation) =
             Affine3A::from(destination_object.transform).to_scale_rotation_translation();
         exit_position = Some(Position(translation));
-        exit_rotation = Some(euler_to_direction(rotation.to_euler(EulerRot::XYZ)));
+        exit_rotation = Some(entrance_rect.map_or(FRAC_PI_2, |(_, rot)| rot));
+    } else if let Some((pos, rot)) = entrance_rect {
+        exit_position = Some(pos);
+        exit_rotation = Some(rot);
     } else {
         tracing::warn!(
             "Failed to find instanced content entrance?! This is a bug in Kawari, please report it!"
@@ -989,6 +1091,13 @@ pub fn change_zone_warp_to_entrance(
         exit_position = None;
         exit_rotation = None;
     }
+
+    tracing::info!(
+        "Instance entrance: position={:?} rotation={:?} (rect_found={})",
+        exit_position,
+        exit_rotation,
+        entrance_rect.is_some()
+    );
 
     do_change_zone(
         network,
@@ -1129,20 +1238,108 @@ pub fn handle_zone_messages(
 
             // replace the connection's actor in the table
             let instance = data.find_actor_instance_mut(*from_actor_id).unwrap();
+            let (
+                status_effects,
+                teleport_query,
+                distance_range,
+                conditions,
+                executing_gimmick_jump,
+                inside_instance_exit,
+                parameters,
+                dueling_opponent_id,
+                remove_cooldowns,
+                combat_state,
+                last_combo_action,
+                combo_sequence,
+                hated_by,
+            ) = match instance.find_actor_mut(*from_actor_id).unwrap() {
+                NetworkedActor::Player {
+                    status_effects,
+                    teleport_query,
+                    distance_range,
+                    conditions,
+                    executing_gimmick_jump,
+                    inside_instance_exit,
+                    parameters,
+                    dueling_opponent_id,
+                    remove_cooldowns,
+                    combat_state,
+                    last_combo_action,
+                    combo_sequence,
+                    hated_by,
+                    ..
+                } => (
+                    status_effects.clone(),
+                    teleport_query.clone(),
+                    *distance_range,
+                    *conditions,
+                    *executing_gimmick_jump,
+                    *inside_instance_exit,
+                    parameters.clone(),
+                    *dueling_opponent_id,
+                    *remove_cooldowns,
+                    combat_state.clone(),
+                    *last_combo_action,
+                    *combo_sequence,
+                    hated_by.clone(),
+                ),
+                _ => unreachable!(),
+            };
+
+            // Read what we need from the carried combat_state before it's moved into the actor:
+            // whether a pet was summoned, and (for jobs with one) the job-gauge bytes to re-send so
+            // the gauge shows immediately instead of staying blank until the next action.
+            let had_pet = combat_state.summoner.carbuncle_summoned;
+            let gauge_data = is_summoner(player_spawn.common.class_job)
+                .then(|| build_summoner_gauge_data(&combat_state, player_spawn.common.level));
+
             *instance.find_actor_mut(*from_actor_id).unwrap() = NetworkedActor::Player {
                 spawn: player_spawn.clone(),
-                status_effects: StatusEffects::default(),
-                teleport_query: TeleportQuery::default(),
-                distance_range: DistanceRange::Normal,
-                conditions: Conditions::default(),
-                executing_gimmick_jump: false,
-                inside_instance_exit: false,
-                parameters: BaseParameters::default(),
-                dueling_opponent_id: ObjectId::default(),
-                remove_cooldowns: false,
-                last_combo_action: 0,
-                combo_sequence: 0,
+                status_effects,
+                teleport_query,
+                distance_range,
+                conditions,
+                executing_gimmick_jump,
+                inside_instance_exit,
+                parameters,
+                dueling_opponent_id,
+                remove_cooldowns,
+                combat_state,
+                last_combo_action,
+                combo_sequence,
+                hated_by,
+                // Reset on zone change — no enmity carries into the new instance.
+                last_enmity_sent: Vec::new(),
             };
+
+            // Now that the player actor exists at its new position, re-summon their pet beside them
+            // — unless one is already present (a same-zone reload won't have despawned it).
+            if had_pet
+                && !instance.actors.values().any(|actor| {
+                    matches!(
+                        actor,
+                        NetworkedActor::Npc { spawn, .. }
+                            if spawn.common.owner_id == *from_actor_id
+                    )
+                })
+            {
+                apply_summon_pet_effect(network.clone(), instance, *from_actor_id);
+            }
+
+            // Re-send the job gauge so the carried-over state shows immediately (the zone-in setup
+            // sends a blank gauge, which would otherwise leave it empty until the next action).
+            if let Some(data) = gauge_data {
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorGauge {
+                    classjob_id: player_spawn.common.class_job,
+                    data,
+                });
+                let mut network = network.lock();
+                network.send_to_by_actor_id(
+                    *from_actor_id,
+                    FromServer::PacketSegment(ipc, *from_actor_id),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
 
             true
         }
@@ -1320,6 +1517,7 @@ pub fn handle_zone_messages(
             tracing::info!("Player {from_id:?} has finally zoned in, informing other players...");
 
             // Inform all clients to play the zone in animation
+            let mut data = data.lock();
             let mut network = network.lock();
             let mut to_remove = Vec::new();
             for (id, (handle, _)) in &mut network.clients {
@@ -1348,7 +1546,6 @@ pub fn handle_zone_messages(
             network.to_remove.append(&mut to_remove);
 
             // Then update the PlayerSpawn so respawning this player doesn't appear invisible again
-            let mut data = data.lock();
             if let Some(instance) = data.find_actor_instance_mut(*from_actor_id)
                 && let Some(actor) = instance.find_actor_mut(*from_actor_id)
             {
@@ -1440,8 +1637,8 @@ pub fn handle_zone_messages(
             rotation,
             plot_index,
         ) => {
-            let mut network = network.lock();
             let data = data.lock();
+            let mut network = network.lock();
 
             let Some(instance) = data.find_actor_instance(*from_actor_id) else {
                 return true;
@@ -1476,8 +1673,8 @@ pub fn handle_zone_messages(
             rotation,
             indoors,
         ) => {
-            let mut network = network.lock();
             let data = data.lock();
+            let mut network = network.lock();
 
             let Some(instance) = data.find_actor_instance(*from_actor_id) else {
                 return true;

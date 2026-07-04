@@ -83,7 +83,14 @@ impl ZoneConnection {
                         soul_crystal_id = gamedata.get_soul_crystal_item_id(*classjob_id as u16);
                     }
 
-                    self.set_level_for(*classjob_id, starting_level as u16);
+                    // Some classes/jobs share an EXP array slot (e.g. ACN/SMN/SCH all use index 18).
+                    // Unlocking a job that shares a slot with an already-leveled class must NOT lower
+                    // that shared level back down to the new job's starting level, or it desyncs the
+                    // player's level (and cascades into incompatible-gear removal). Keep the higher level.
+                    let existing_level = self.level_for(*classjob_id);
+                    let new_level = existing_level.max(starting_level as u16);
+
+                    self.set_level_for(*classjob_id, new_level);
 
                     self.actor_control_self(ActorControlCategory::UnlockClass {
                         classjob_id: *classjob_id as u32,
@@ -93,7 +100,7 @@ impl ZoneConnection {
                     // UnlockClass only sets it to level 1, but we want to change the level.
                     self.actor_control_self(ActorControlCategory::SetLevel {
                         classjob_id: *classjob_id as u32,
-                        level: starting_level as u32,
+                        level: new_level as u32,
                     })
                     .await;
 
@@ -104,17 +111,21 @@ impl ZoneConnection {
                             ..Default::default()
                         };
 
-                        let destination = self
-                            .player_data
-                            .inventory
-                            .add_in_next_free_armory_slot(13)
-                            .unwrap();
-                        self.player_data.inventory.add_in_slot(
-                            soul_crystal,
-                            &destination.container,
-                            destination.slot,
-                        );
-                        self.send_inventory().await;
+                        if let Some(destination) =
+                            self.player_data.inventory.add_in_next_free_armory_slot(13)
+                        {
+                            self.player_data.inventory.add_in_slot(
+                                soul_crystal,
+                                &destination.container,
+                                destination.slot,
+                            );
+                            self.send_inventory().await;
+                        } else {
+                            tracing::warn!(
+                                "Soul crystal armoury chest is full; not granting the job crystal for classjob {}.",
+                                classjob_id
+                            );
+                        }
                     }
                 }
                 LuaTask::WarpAetheryte {
@@ -173,6 +184,23 @@ impl ZoneConnection {
                     self.set_current_level(*level);
                     self.update_class_info().await;
                     self.send_stats().await; // Needed because stats change based on level.
+                }
+                LuaTask::SetClassJobLevel { classjob_id, level } => {
+                    self.set_level_for(*classjob_id, *level);
+
+                    // Tell the client the new level for this job.
+                    self.actor_control_self(ActorControlCategory::SetLevel {
+                        classjob_id: *classjob_id as u32,
+                        level: *level as u32,
+                    })
+                    .await;
+
+                    // If we just changed the level of the job we're currently playing, our stats
+                    // depend on it, so refresh the class info and stats too.
+                    if self.player_data.classjob.current_class == *classjob_id as i32 {
+                        self.update_class_info().await;
+                        self.send_stats().await;
+                    }
                 }
                 LuaTask::ChangeWeather { id } => {
                     self.change_weather(*id).await;
@@ -725,6 +753,7 @@ impl ZoneConnection {
                         };
 
                         dst_slot.glamour_id = src_slot.item_id;
+                        dst_slot.stains = src_slot.stains;
 
                         // The client needs to be informed about the new glamoured item, but this is extreme...
                         self.send_inventory().await;

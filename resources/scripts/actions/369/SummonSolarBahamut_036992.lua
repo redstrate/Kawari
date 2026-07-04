@@ -1,0 +1,9 @@
+-- 烈日龙神召唤 / Summon Solar Bahamut (enables the Solar Bahamut burst phase)
+-- Simplified: no demi pet/timer is modelled yet, so this just plays as an instant GCD with no
+-- direct effect. The follow-up burst skills (迸发/核爆/灵极脉冲) are not gated server-side.
+function doAction(player, in_combo)
+    effects = EffectsBuilder()
+    effects:summon_demi()
+
+    return effects
+end

@@ -9,10 +9,623 @@ use icarus::ParamGrow::ParamGrowRow;
 use kawari::{
     common::{MAXIMUM_RESTED_EXP, ObjectId},
     ipc::zone::{
-        ActorControlCategory, PlayerStats, ServerZoneIpcData, ServerZoneIpcSegment, UpdateClassInfo,
+        ActorControlCategory, DamageKind, PlayerStats, ServerZoneIpcData, ServerZoneIpcSegment,
+        UpdateClassInfo,
     },
 };
 use mlua::{UserData, UserDataMethods};
+
+#[derive(Clone, Copy)]
+struct LevelModifier {
+    main: u16,
+    sub: u16,
+    div: u16,
+}
+
+const LEVEL_MODIFIERS: [LevelModifier; 101] = [
+    LevelModifier {
+        main: 20,
+        sub: 56,
+        div: 56,
+    },
+    LevelModifier {
+        main: 20,
+        sub: 56,
+        div: 56,
+    },
+    LevelModifier {
+        main: 21,
+        sub: 57,
+        div: 57,
+    },
+    LevelModifier {
+        main: 22,
+        sub: 60,
+        div: 60,
+    },
+    LevelModifier {
+        main: 24,
+        sub: 62,
+        div: 62,
+    },
+    LevelModifier {
+        main: 26,
+        sub: 65,
+        div: 65,
+    },
+    LevelModifier {
+        main: 27,
+        sub: 68,
+        div: 68,
+    },
+    LevelModifier {
+        main: 29,
+        sub: 70,
+        div: 70,
+    },
+    LevelModifier {
+        main: 31,
+        sub: 73,
+        div: 73,
+    },
+    LevelModifier {
+        main: 33,
+        sub: 76,
+        div: 76,
+    },
+    LevelModifier {
+        main: 35,
+        sub: 78,
+        div: 78,
+    },
+    LevelModifier {
+        main: 36,
+        sub: 82,
+        div: 82,
+    },
+    LevelModifier {
+        main: 38,
+        sub: 85,
+        div: 85,
+    },
+    LevelModifier {
+        main: 41,
+        sub: 89,
+        div: 89,
+    },
+    LevelModifier {
+        main: 44,
+        sub: 93,
+        div: 93,
+    },
+    LevelModifier {
+        main: 46,
+        sub: 96,
+        div: 96,
+    },
+    LevelModifier {
+        main: 49,
+        sub: 100,
+        div: 100,
+    },
+    LevelModifier {
+        main: 52,
+        sub: 104,
+        div: 104,
+    },
+    LevelModifier {
+        main: 54,
+        sub: 109,
+        div: 109,
+    },
+    LevelModifier {
+        main: 57,
+        sub: 113,
+        div: 113,
+    },
+    LevelModifier {
+        main: 60,
+        sub: 116,
+        div: 116,
+    },
+    LevelModifier {
+        main: 63,
+        sub: 122,
+        div: 122,
+    },
+    LevelModifier {
+        main: 67,
+        sub: 127,
+        div: 127,
+    },
+    LevelModifier {
+        main: 71,
+        sub: 133,
+        div: 133,
+    },
+    LevelModifier {
+        main: 74,
+        sub: 138,
+        div: 138,
+    },
+    LevelModifier {
+        main: 78,
+        sub: 144,
+        div: 144,
+    },
+    LevelModifier {
+        main: 81,
+        sub: 150,
+        div: 150,
+    },
+    LevelModifier {
+        main: 85,
+        sub: 155,
+        div: 155,
+    },
+    LevelModifier {
+        main: 89,
+        sub: 162,
+        div: 162,
+    },
+    LevelModifier {
+        main: 92,
+        sub: 168,
+        div: 168,
+    },
+    LevelModifier {
+        main: 97,
+        sub: 173,
+        div: 173,
+    },
+    LevelModifier {
+        main: 101,
+        sub: 181,
+        div: 181,
+    },
+    LevelModifier {
+        main: 106,
+        sub: 188,
+        div: 188,
+    },
+    LevelModifier {
+        main: 110,
+        sub: 194,
+        div: 194,
+    },
+    LevelModifier {
+        main: 115,
+        sub: 202,
+        div: 202,
+    },
+    LevelModifier {
+        main: 119,
+        sub: 209,
+        div: 209,
+    },
+    LevelModifier {
+        main: 124,
+        sub: 215,
+        div: 215,
+    },
+    LevelModifier {
+        main: 128,
+        sub: 223,
+        div: 223,
+    },
+    LevelModifier {
+        main: 134,
+        sub: 229,
+        div: 229,
+    },
+    LevelModifier {
+        main: 139,
+        sub: 236,
+        div: 236,
+    },
+    LevelModifier {
+        main: 144,
+        sub: 244,
+        div: 244,
+    },
+    LevelModifier {
+        main: 150,
+        sub: 253,
+        div: 253,
+    },
+    LevelModifier {
+        main: 155,
+        sub: 263,
+        div: 263,
+    },
+    LevelModifier {
+        main: 161,
+        sub: 272,
+        div: 272,
+    },
+    LevelModifier {
+        main: 166,
+        sub: 283,
+        div: 283,
+    },
+    LevelModifier {
+        main: 171,
+        sub: 292,
+        div: 292,
+    },
+    LevelModifier {
+        main: 177,
+        sub: 302,
+        div: 302,
+    },
+    LevelModifier {
+        main: 183,
+        sub: 311,
+        div: 311,
+    },
+    LevelModifier {
+        main: 189,
+        sub: 322,
+        div: 322,
+    },
+    LevelModifier {
+        main: 196,
+        sub: 331,
+        div: 331,
+    },
+    LevelModifier {
+        main: 202,
+        sub: 341,
+        div: 341,
+    },
+    LevelModifier {
+        main: 204,
+        sub: 342,
+        div: 366,
+    },
+    LevelModifier {
+        main: 205,
+        sub: 344,
+        div: 392,
+    },
+    LevelModifier {
+        main: 207,
+        sub: 345,
+        div: 418,
+    },
+    LevelModifier {
+        main: 209,
+        sub: 346,
+        div: 444,
+    },
+    LevelModifier {
+        main: 210,
+        sub: 347,
+        div: 470,
+    },
+    LevelModifier {
+        main: 212,
+        sub: 349,
+        div: 496,
+    },
+    LevelModifier {
+        main: 214,
+        sub: 350,
+        div: 522,
+    },
+    LevelModifier {
+        main: 215,
+        sub: 351,
+        div: 548,
+    },
+    LevelModifier {
+        main: 217,
+        sub: 352,
+        div: 574,
+    },
+    LevelModifier {
+        main: 218,
+        sub: 354,
+        div: 600,
+    },
+    LevelModifier {
+        main: 224,
+        sub: 355,
+        div: 630,
+    },
+    LevelModifier {
+        main: 228,
+        sub: 356,
+        div: 660,
+    },
+    LevelModifier {
+        main: 236,
+        sub: 357,
+        div: 690,
+    },
+    LevelModifier {
+        main: 244,
+        sub: 358,
+        div: 720,
+    },
+    LevelModifier {
+        main: 252,
+        sub: 359,
+        div: 750,
+    },
+    LevelModifier {
+        main: 260,
+        sub: 360,
+        div: 780,
+    },
+    LevelModifier {
+        main: 268,
+        sub: 361,
+        div: 810,
+    },
+    LevelModifier {
+        main: 276,
+        sub: 362,
+        div: 840,
+    },
+    LevelModifier {
+        main: 284,
+        sub: 363,
+        div: 870,
+    },
+    LevelModifier {
+        main: 292,
+        sub: 364,
+        div: 900,
+    },
+    LevelModifier {
+        main: 296,
+        sub: 365,
+        div: 940,
+    },
+    LevelModifier {
+        main: 300,
+        sub: 366,
+        div: 980,
+    },
+    LevelModifier {
+        main: 305,
+        sub: 367,
+        div: 1020,
+    },
+    LevelModifier {
+        main: 310,
+        sub: 368,
+        div: 1060,
+    },
+    LevelModifier {
+        main: 315,
+        sub: 370,
+        div: 1100,
+    },
+    LevelModifier {
+        main: 320,
+        sub: 372,
+        div: 1140,
+    },
+    LevelModifier {
+        main: 325,
+        sub: 374,
+        div: 1180,
+    },
+    LevelModifier {
+        main: 330,
+        sub: 376,
+        div: 1220,
+    },
+    LevelModifier {
+        main: 335,
+        sub: 378,
+        div: 1260,
+    },
+    LevelModifier {
+        main: 340,
+        sub: 380,
+        div: 1300,
+    },
+    LevelModifier {
+        main: 345,
+        sub: 382,
+        div: 1360,
+    },
+    LevelModifier {
+        main: 350,
+        sub: 384,
+        div: 1420,
+    },
+    LevelModifier {
+        main: 355,
+        sub: 386,
+        div: 1480,
+    },
+    LevelModifier {
+        main: 360,
+        sub: 388,
+        div: 1540,
+    },
+    LevelModifier {
+        main: 365,
+        sub: 390,
+        div: 1600,
+    },
+    LevelModifier {
+        main: 370,
+        sub: 392,
+        div: 1660,
+    },
+    LevelModifier {
+        main: 375,
+        sub: 394,
+        div: 1720,
+    },
+    LevelModifier {
+        main: 380,
+        sub: 396,
+        div: 1780,
+    },
+    LevelModifier {
+        main: 385,
+        sub: 398,
+        div: 1840,
+    },
+    LevelModifier {
+        main: 390,
+        sub: 400,
+        div: 1900,
+    },
+    LevelModifier {
+        main: 395,
+        sub: 402,
+        div: 1988,
+    },
+    LevelModifier {
+        main: 400,
+        sub: 404,
+        div: 2076,
+    },
+    LevelModifier {
+        main: 405,
+        sub: 406,
+        div: 2164,
+    },
+    LevelModifier {
+        main: 410,
+        sub: 408,
+        div: 2252,
+    },
+    LevelModifier {
+        main: 415,
+        sub: 410,
+        div: 2340,
+    },
+    LevelModifier {
+        main: 420,
+        sub: 412,
+        div: 2428,
+    },
+    LevelModifier {
+        main: 425,
+        sub: 414,
+        div: 2516,
+    },
+    LevelModifier {
+        main: 430,
+        sub: 416,
+        div: 2604,
+    },
+    LevelModifier {
+        main: 435,
+        sub: 418,
+        div: 2692,
+    },
+    LevelModifier {
+        main: 440,
+        sub: 420,
+        div: 2780,
+    },
+];
+
+fn level_modifier_for(level: u32) -> LevelModifier {
+    LEVEL_MODIFIERS[level.clamp(1, 100) as usize]
+}
+
+fn attack_modifier_for_level(level: u32) -> f64 {
+    match level {
+        0..=50 => 75.0,
+        51..=70 => ((level - 50) as f64 * 2.5) + 75.0,
+        71..=80 => ((level - 70) as f64 * 4.0) + 125.0,
+        81..=90 => ((level - 80) as f64 * 3.0) + 165.0,
+        _ => ((level - 90) as f64 * 4.2) + 195.0,
+    }
+}
+
+fn heal_modifier_for_level(level: u32) -> f64 {
+    match level {
+        0..=59 => (level as f64 * 1.5) + 10.0,
+        60..=69 => ((level - 60) as f64 * 2.0) + 100.0,
+        70..=79 => 120.0,
+        _ => ((level - 80) as f64 * 2.5) + 120.8,
+    }
+}
+
+fn tank_attack_modifier_for_level(level: u32) -> f64 {
+    match level {
+        0..=80 => level as f64 + 35.0,
+        81..=90 => ((level - 80) as f64 * 4.1) + 115.0,
+        _ => ((level - 90) as f64 * 3.4) + 156.0,
+    }
+}
+
+fn classjob_uses_dexterity(classjob_id: u8) -> bool {
+    matches!(classjob_id, 5 | 23 | 29 | 30 | 31 | 38 | 41)
+}
+
+fn classjob_uses_mind(classjob_id: u8) -> bool {
+    matches!(classjob_id, 6 | 24 | 28 | 33 | 40)
+}
+
+fn classjob_uses_tenacity(classjob_id: u8) -> bool {
+    matches!(classjob_id, 1 | 3 | 19 | 21 | 32 | 37)
+}
+
+fn classjob_is_caster_like(classjob_id: u8) -> bool {
+    matches!(
+        classjob_id,
+        6 | 7 | 24 | 25 | 26 | 27 | 28 | 33 | 35 | 36 | 40 | 42
+    )
+}
+
+fn classjob_primary_stat_id(classjob_id: u8) -> u8 {
+    if classjob_uses_mind(classjob_id) {
+        5
+    } else if classjob_is_caster_like(classjob_id) {
+        4
+    } else if classjob_uses_dexterity(classjob_id) {
+        2
+    } else {
+        1
+    }
+}
+
+fn classjob_damage_trait_modifier(classjob_id: u8, level: u32) -> f64 {
+    if classjob_id == 36 {
+        return match level {
+            50.. => 1.5,
+            40..=49 => 1.4,
+            30..=39 => 1.3,
+            20..=29 => 1.2,
+            10..=19 => 1.1,
+            _ => 1.0,
+        };
+    }
+
+    if classjob_is_caster_like(classjob_id) {
+        return match level {
+            40.. => 1.3,
+            20..=39 => 1.1,
+            _ => 1.0,
+        };
+    }
+
+    match classjob_id {
+        5 | 23 | 31 => match level {
+            40.. => 1.2,
+            20..=39 => 1.1,
+            _ => 1.0,
+        },
+        38 => match level {
+            60.. => 1.2,
+            50..=59 => 1.1,
+            _ => 1.0,
+        },
+        _ => 1.0,
+    }
+}
 
 /// Every BaseParam row, some of them may be useless.
 #[derive(Default, Debug, Clone)]
@@ -90,6 +703,9 @@ pub struct BaseParameters {
     pub control: u32,
     pub gathering: u32,
     pub perception: u32,
+    pub classjob_id: u8,
+    pub level: u8,
+    pub job_attack_modifier: u16,
 }
 
 impl BaseParameters {
@@ -176,10 +792,21 @@ impl BaseParameters {
     pub fn calculate_based_on_level(
         &mut self,
         attributes: &Attributes,
-        _level: u32,
+        level: u32,
+        classjob_id: u8,
         param_grow: &ParamGrowRow,
         modifiers: &Modifiers,
     ) {
+        self.classjob_id = classjob_id;
+        self.level = level.min(u32::from(u8::MAX)) as u8;
+        self.job_attack_modifier = match classjob_primary_stat_id(classjob_id) {
+            1 => modifiers.strength,
+            2 => modifiers.dexterity,
+            4 => modifiers.intelligence,
+            5 => modifiers.mind,
+            _ => 100,
+        };
+
         // Akh Morning data can't be extrapolated from game sheets, and it's missing a significant amount of entries from 50-70, so let's try making a decent approximation with the BaseSpeed, HpModifier and LevelModifier columns.
         self.strength = modifiers
             .apply_to(1, param_grow.BaseSpeed as u32)
@@ -202,7 +829,6 @@ impl BaseParameters {
 
         self.spell_speed = param_grow.BaseSpeed as u32;
         self.tenacity = param_grow.BaseSpeed as u32;
-        self.attack_power = *self.get_mut(4); // TODO: don't hardcode PrimaryStat
         self.skill_speed = self.tenacity;
         self.haste = 100; // Controls cast times
 
@@ -217,9 +843,18 @@ impl BaseParameters {
         param_grow: &ParamGrowRow,
         modifiers: Option<&Modifiers>,
     ) {
-        self.physical_damage = self.strength;
-        self.attack_magic_potency = self.intelligence;
-        self.healing_magic_potency = self.mind;
+        let primary_damage_stat = self.primary_damage_stat_value();
+        self.attack_power = primary_damage_stat;
+        self.attack_magic_potency = if classjob_is_caster_like(self.classjob_id) {
+            primary_damage_stat
+        } else {
+            self.intelligence
+        };
+        self.healing_magic_potency = if classjob_uses_mind(self.classjob_id) {
+            self.mind
+        } else {
+            primary_damage_stat
+        };
 
         // To calculate HP, we use a formula loosely inspired by Akh Morning and take some liberties to keep it fairly simple, at least for now.
         // TODO: This formula isn't the greatest for 1-50, as near the end of that range it's fairly low compared to retail. For level 80+ though it's pretty close.
@@ -245,22 +880,232 @@ impl BaseParameters {
             .round() as u32;
     }
 
+    fn primary_damage_stat_value(&self) -> u32 {
+        match classjob_primary_stat_id(self.classjob_id) {
+            2 => self.dexterity,
+            4 => self.intelligence,
+            5 => self.mind,
+            _ => self.strength,
+        }
+    }
+
+    fn expected_crit_rate(&self, level_modifier: LevelModifier) -> f64 {
+        ((200.0 * (self.critical_hit as f64 - level_modifier.sub as f64)
+            / level_modifier.div as f64)
+            .floor()
+            + 50.0)
+            / 1000.0
+    }
+
+    fn crit_multiplier(&self, level_modifier: LevelModifier) -> f64 {
+        ((200.0 * (self.critical_hit as f64 - level_modifier.sub as f64)
+            / level_modifier.div as f64)
+            .floor()
+            + 1400.0)
+            / 1000.0
+    }
+
+    fn determination_bonus(&self, level_modifier: LevelModifier) -> f64 {
+        ((140.0 * (self.determination as f64 - level_modifier.main as f64)
+            / level_modifier.div as f64)
+            .floor()
+            / 1000.0)
+            .max(0.0)
+    }
+
+    fn direct_hit_rate_bonus(&self, level_modifier: LevelModifier) -> f64 {
+        ((550.0 * (self.direct_hit_rate as f64 - level_modifier.sub as f64)
+            / level_modifier.div as f64)
+            .floor()
+            / 1000.0)
+            .max(0.0)
+    }
+
+    fn tenacity_damage_bonus(&self, level_modifier: LevelModifier) -> f64 {
+        if !classjob_uses_tenacity(self.classjob_id) {
+            return 0.0;
+        }
+
+        ((112.0 * (self.tenacity as f64 - level_modifier.sub as f64) / level_modifier.div as f64)
+            .floor()
+            / 1000.0)
+            .max(0.0)
+    }
+
+    fn offensive_weapon_damage(&self) -> u32 {
+        if classjob_is_caster_like(self.classjob_id) {
+            self.magic_damage
+        } else {
+            self.physical_damage
+        }
+    }
+
+    fn calc_expected_damage(&self, potency: u32) -> u32 {
+        if potency == 0 {
+            return 0;
+        }
+
+        let level_modifier = level_modifier_for(u32::from(self.level));
+        let primary_stat = self.primary_damage_stat_value() as f64;
+        let weapon_base_damage = self.offensive_weapon_damage() as f64;
+
+        if primary_stat <= 0.0 || weapon_base_damage <= 0.0 {
+            return 0;
+        }
+
+        let weapon_damage = (weapon_base_damage
+            + (level_modifier.main as f64 * self.job_attack_modifier as f64 / 1000.0))
+            .floor()
+            / 100.0;
+        let attack_modifier = if classjob_uses_tenacity(self.classjob_id) {
+            tank_attack_modifier_for_level(u32::from(self.level))
+        } else {
+            attack_modifier_for_level(u32::from(self.level))
+        };
+        let attack_power = (100.0
+            + attack_modifier * (primary_stat - level_modifier.main as f64)
+                / level_modifier.main as f64)
+            .floor()
+            / 100.0;
+
+        let base_damage = (potency as f64 * attack_power * weapon_damage).floor();
+        let with_determination =
+            (base_damage * (1.0 + self.determination_bonus(level_modifier))).floor();
+        let with_tenacity =
+            (with_determination * (1.0 + self.tenacity_damage_bonus(level_modifier))).floor();
+        let normal_damage = (with_tenacity
+            * classjob_damage_trait_modifier(self.classjob_id, u32::from(self.level)))
+        .floor();
+
+        // Return the *base* (pre-crit, pre-direct-hit, pre-variance) damage. The crit/direct-hit
+        // roll and ±5% variance are applied later by `roll_damage` at the point of impact, so the
+        // client can be told the actual hit severity (and so each hit varies).
+        normal_damage.clamp(0.0, u32::MAX as f64) as u32
+    }
+
+    /// Rolls a single damage instance from a base amount: independently rolls critical hit and
+    /// direct hit from this character's rates, applies the ±5% damage variance, and reports which
+    /// (if any) occurred so the client can show the right hit severity.
+    pub fn roll_damage(&self, base: u32) -> (u32, DamageKind) {
+        if base == 0 {
+            return (0, DamageKind::Normal);
+        }
+
+        let level_modifier = level_modifier_for(u32::from(self.level));
+        let is_crit = fastrand::f64() < self.expected_crit_rate(level_modifier);
+        let is_direct = fastrand::f64() < self.direct_hit_rate_bonus(level_modifier);
+
+        let mut damage = base as f64;
+        if is_crit {
+            damage *= self.crit_multiplier(level_modifier);
+        }
+        if is_direct {
+            damage *= 1.25;
+        }
+        // ±5% variance, matching retail.
+        damage *= 0.95 + fastrand::f64() * 0.10;
+
+        let kind = match (is_crit, is_direct) {
+            (true, true) => DamageKind::CriticalDirectHit,
+            (true, false) => DamageKind::Critical,
+            (false, true) => DamageKind::DirectHit,
+            (false, false) => DamageKind::Normal,
+        };
+
+        (damage.clamp(0.0, u32::MAX as f64) as u32, kind)
+    }
+
+    /// Fraction of incoming damage (0.0–0.99) mitigated by this character's defense, per the
+    /// retail formula (15% at a defense equal to the level's divisor). `is_magic` selects magic
+    /// defense over physical defense.
+    pub fn mitigation_against(&self, is_magic: bool) -> f64 {
+        let level_modifier = level_modifier_for(u32::from(self.level));
+        let defense = if is_magic {
+            self.magic_defense
+        } else {
+            self.defense
+        };
+        (0.15 * defense as f64 / level_modifier.div as f64).clamp(0.0, 0.99)
+    }
+
+    /// Applies this character's skill/spell speed to a base time, matching the client's exact
+    /// rounding (CharacterPanelRefined's SpeedCalc). Input and output are both in centiseconds
+    /// (10ms units) — the same unit the client's cooldown packets use — so both sides agree to the
+    /// centisecond and the GCD ring doesn't rubber-band. Casters use spell speed, others skill speed.
+    pub fn apply_speed(&self, base_centisec: u32) -> u32 {
+        if base_centisec == 0 {
+            return 0;
+        }
+        let speed = if classjob_is_caster_like(self.classjob_id) {
+            self.spell_speed
+        } else {
+            self.skill_speed
+        };
+        let level_modifier = level_modifier_for(u32::from(self.level));
+        // factor = 1000 + ceil(130*(sub - speed)/div) = 1000 - floor(130*(speed - sub)/div).
+        let factor = 1000.0
+            - (130.0 * (speed as f64 - level_modifier.sub as f64) / level_modifier.div as f64)
+                .floor();
+        // Client formula (haste/type modifier assumed 0): floor(floor(factor * base / 100) / 10).
+        let inner = (factor * base_centisec as f64 / 100.0).floor();
+        ((inner / 10.0).floor() as u32).max(1)
+    }
+
     /// Calculates amount of physical damage to apply based on potency.
-    fn calc_physical_damage(&self, potency: u32) -> u16 {
-        let normalized_potency = potency as f32 / 100.0;
-        (normalized_potency * self.physical_damage as f32).floor() as u16
+    pub fn calc_physical_damage(&self, potency: u32) -> u32 {
+        self.calc_expected_damage(potency)
     }
 
     /// Calculates amount of magic damage to apply based on potency.
-    fn calc_magical_damage(&self, potency: u32) -> u16 {
-        let normalized_potency = potency as f32 / 100.0;
-        (normalized_potency * self.attack_magic_potency as f32).floor() as u16
+    pub fn calc_magical_damage(&self, potency: u32) -> u32 {
+        self.calc_expected_damage(potency)
     }
 
     /// Calculates amount of healing to apply based on potency.
-    fn calc_heal_amount(&self, potency: u32) -> u16 {
-        let normalized_potency = potency as f32 / 100.0;
-        (normalized_potency * self.healing_magic_potency as f32).floor() as u16
+    pub fn calc_heal_amount(&self, potency: u32) -> u32 {
+        if potency == 0 {
+            return 0;
+        }
+
+        let level_modifier = level_modifier_for(u32::from(self.level));
+        let primary_stat = self.primary_damage_stat_value() as f64;
+        let weapon_base_damage = self.offensive_weapon_damage() as f64;
+
+        if primary_stat <= 0.0 || weapon_base_damage <= 0.0 {
+            return 0;
+        }
+
+        let weapon_damage = (weapon_base_damage
+            + (level_modifier.main as f64 * self.job_attack_modifier as f64 / 1000.0))
+            .floor()
+            / 100.0;
+        let heal_power = (100.0
+            + heal_modifier_for_level(u32::from(self.level))
+                * (primary_stat - level_modifier.main as f64)
+                / level_modifier.main as f64)
+            .floor()
+            / 100.0;
+
+        let base_heal = (potency as f64 * heal_power * weapon_damage).floor();
+        let with_determination =
+            (base_heal * (1.0 + self.determination_bonus(level_modifier))).floor();
+        let with_tenacity =
+            (with_determination * (1.0 + self.tenacity_damage_bonus(level_modifier))).floor();
+        let normal_heal = (with_tenacity
+            * if classjob_is_caster_like(self.classjob_id) {
+                classjob_damage_trait_modifier(self.classjob_id, u32::from(self.level))
+            } else {
+                1.0
+            })
+        .floor();
+        // Roll a critical heal (heals can crit but never direct-hit) plus ±5% variance.
+        let mut heal = normal_heal;
+        if fastrand::f64() < self.expected_crit_rate(level_modifier) {
+            heal = (heal * self.crit_multiplier(level_modifier)).floor();
+        }
+        heal *= 0.95 + fastrand::f64() * 0.10;
+
+        heal.clamp(0.0, u32::MAX as f64) as u32
     }
 
     /// Iterates over the given equipped items and calculates defense, along with any stat bonuses.
@@ -274,6 +1119,10 @@ impl BaseParameters {
             if slot.quantity > 0 {
                 self.defense += slot.defense as u32;
                 self.magic_defense += slot.magic_defense as u32;
+                // Weapon base damage drives calc_physical/magical_damage; only the equipped
+                // weapon carries a non-zero value, so summing across slots is fine.
+                self.physical_damage += slot.weapon_damage_phys as u32;
+                self.magic_damage += slot.weapon_damage_mag as u32;
 
                 for (i, param_id) in slot.base_param_ids.iter().enumerate() {
                     if *param_id != 0 {
@@ -303,6 +1152,7 @@ impl UserData for BaseParameters {
         methods.add_method("calc_heal_amount", |_, this, potency: u32| {
             Ok(this.calc_heal_amount(potency))
         });
+        methods.add_method("max_hp", |_, this, _: ()| Ok(this.hp));
     }
 }
 
@@ -332,7 +1182,7 @@ impl ZoneConnection {
         // Send this too, otherwise actions dependent on the gauge won't function
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorGauge {
             classjob_id: self.player_data.classjob.current_class as u8,
-            data: [0; 15],
+            data: 0,
         });
         self.send_ipc_self(ipc).await;
     }
@@ -404,6 +1254,7 @@ impl ZoneConnection {
         base_parameters.calculate_based_on_level(
             &attributes,
             level as u32,
+            self.player_data.classjob.current_class as u8,
             &param_grow,
             &modifiers,
         );
@@ -442,6 +1293,7 @@ impl ZoneConnection {
         base_parameters.calculate_based_on_level(
             &attributes,
             level as u32,
+            self.player_data.classjob.current_class as u8,
             &param_grow,
             &modifiers,
         );
@@ -536,6 +1388,18 @@ impl ZoneConnection {
             .get_exp_array_index(classjob_id as u16)
             .expect("Failed to find EXP array index?!");
         self.player_data.classjob.levels.0[index as usize] = level;
+    }
+
+    /// Returns the current level stored in the EXP array slot for the given classjob.
+    /// Note: some classes/jobs share an EXP array slot (e.g. ACN/SMN/SCH all use index 18),
+    /// so this reflects the shared level for those.
+    pub fn level_for(&self, classjob_id: u8) -> u16 {
+        let game_data = self.gamedata.lock();
+
+        let index = game_data
+            .get_exp_array_index(classjob_id as u16)
+            .expect("Failed to find EXP array index?!");
+        self.player_data.classjob.levels.0[index as usize]
     }
 
     pub fn current_exp(&self, game_data: &GameData) -> i32 {

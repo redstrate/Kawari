@@ -8,6 +8,44 @@ use crate::{
     ipc::zone::ActionType,
 };
 
+const DAMAGE_HEAL_LARGE_VALUE_FLAG: u8 = 0x40;
+const DAMAGE_HEAL_MAX_VALUE: u32 = 0x00FF_FFFF;
+
+fn decode_damage_heal_amount(value: u16, param3: u8, param4: u8) -> u32 {
+    let amount = u32::from(value);
+    if param4 & DAMAGE_HEAL_LARGE_VALUE_FLAG != 0 {
+        amount + (u32::from(param3) << 16)
+    } else {
+        amount
+    }
+}
+
+fn encode_damage_heal_amount_low(amount: u32) -> u16 {
+    (amount.min(DAMAGE_HEAL_MAX_VALUE) & 0xFFFF) as u16
+}
+
+fn encode_damage_heal_amount_high(amount: u32) -> u8 {
+    ((amount.min(DAMAGE_HEAL_MAX_VALUE) >> 16) & 0xFF) as u8
+}
+
+fn encode_damage_heal_param4(amount: u32, param4: u8) -> u8 {
+    let mut param4 = param4 & !DAMAGE_HEAL_LARGE_VALUE_FLAG;
+    if amount.min(DAMAGE_HEAL_MAX_VALUE) > u32::from(u16::MAX) {
+        param4 |= DAMAGE_HEAL_LARGE_VALUE_FLAG;
+    }
+    param4
+}
+
+fn encode_heal_params(amount: u32, params: [u8; 5]) -> [u8; 5] {
+    [
+        params[0],
+        params[1],
+        params[2],
+        encode_damage_heal_amount_high(amount),
+        encode_damage_heal_param4(amount, params[4]),
+    ]
+}
+
 // TODO: this might be a flag?
 #[binrw]
 #[derive(
@@ -22,6 +60,8 @@ pub enum DamageKind {
     Normal = 0x0,
     Critical = 0x1,
     DirectHit = 0x2,
+    /// Both a critical *and* a direct hit (the severity field is a bitfield: 0x1 | 0x2).
+    CriticalDirectHit = 0x3,
 }
 
 #[cfg(feature = "server")]
@@ -68,13 +108,41 @@ pub enum EffectKind {
         #[bw(calc = ((*damage_element as u8) << 4) | *damage_type as u8)]
         actual_param1: u8,
         bonus_percent: u8,
+        #[br(temp)]
+        #[bw(calc = encode_damage_heal_amount_high(*amount))]
+        param3: u8,
+        #[br(temp)]
+        #[bw(calc = encode_damage_heal_param4(*amount, *unk4))]
+        param4: u8,
+        #[br(temp)]
+        #[bw(calc = encode_damage_heal_amount_low(*amount))]
+        value: u16,
+        #[br(calc = param3)]
+        #[bw(ignore)]
         unk3: u8,
+        #[br(calc = param4)]
+        #[bw(ignore)]
         unk4: u8,
-        amount: u16,
+        #[br(calc = decode_damage_heal_amount(value, param3, param4))]
+        #[bw(ignore)]
+        amount: u32,
     },
     /// Heals for a specified amount.
     #[brw(magic = 4u8)]
-    Heal { unk1: [u8; 5], amount: u16 },
+    Heal {
+        #[br(temp)]
+        #[bw(calc = encode_heal_params(*amount, *unk1))]
+        params: [u8; 5],
+        #[br(temp)]
+        #[bw(calc = encode_damage_heal_amount_low(*amount))]
+        value: u16,
+        #[br(calc = params)]
+        #[bw(ignore)]
+        unk1: [u8; 5],
+        #[br(calc = decode_damage_heal_amount(value, params[3], params[4]))]
+        #[bw(ignore)]
+        amount: u32,
+    },
     /// Seen while attacking giant clams.
     #[brw(magic = 7u8)]
     Invincible {},
@@ -109,6 +177,10 @@ pub enum EffectKind {
         #[brw(ignore)]
         duration: f32,
     },
+    /// Seen on Summon Bahamut / Summon Solar Bahamut. The payload is `00 00 00 00 00 01 00` on
+    /// retail and appears to be the demi-summon transition effect distinct from ordinary pet summon.
+    #[brw(magic = 25u8)]
+    SummonDemi { unk: [u8; 7] },
     /// Seen during Cascade (and gaining Silken Symmetry.)
     /// Guessed at it's purpose, not 100% certain it's for applying to yourself.
     #[brw(magic = 15u8)]
@@ -277,13 +349,53 @@ pub struct ActionResult {
 mod tests {
     use std::{fs::read, io::Cursor, path::PathBuf};
 
-    use binrw::BinRead;
+    use binrw::{BinRead, BinWrite};
 
     use crate::common::ObjectId;
 
     use crate::server_zone_tests_dir;
 
     use super::*;
+
+    #[test]
+    fn action_effect_damage_uses_large_value_encoding() {
+        let effect = ActionEffect {
+            kind: EffectKind::Damage {
+                damage_kind: DamageKind::Normal,
+                damage_type: DamageType::Magic,
+                damage_element: DamageElement::Unaspected,
+                bonus_percent: 0,
+                unk3: 0,
+                unk4: 0,
+                amount: 70_000,
+            },
+        };
+
+        let mut writer = Cursor::new(Vec::new());
+        effect.write_le(&mut writer).unwrap();
+        let raw = writer.into_inner();
+
+        assert_eq!(raw.len(), 8);
+        assert_eq!(raw[0], 3);
+        assert_eq!(raw[4], 1);
+        assert_eq!(raw[5] & 0x40, 0x40);
+        assert_eq!(u16::from_le_bytes([raw[6], raw[7]]), 4_464);
+
+        let mut reader = Cursor::new(raw);
+        let parsed = ActionEffect::read_le(&mut reader).unwrap();
+        assert_eq!(
+            parsed.kind,
+            EffectKind::Damage {
+                damage_kind: DamageKind::Normal,
+                damage_type: DamageType::Magic,
+                damage_element: DamageElement::Unaspected,
+                bonus_percent: 0,
+                unk3: 1,
+                unk4: 0x40,
+                amount: 70_000,
+            }
+        );
+    }
 
     #[test]
     fn read_actionresult() {

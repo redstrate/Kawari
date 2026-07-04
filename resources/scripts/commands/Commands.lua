@@ -90,6 +90,7 @@ registerCommand("classjob",                         DBG_DIR.."ClassJob.lua")
 registerCommand("festival",                         DBG_DIR.."Festival.lua")
 registerCommand("inspect",                          GM_DIR.."InspectPlayer.lua") -- TODO: remove this once we figure out the GMInspect IPC opcode
 registerCommand("itemlevel",                        DBG_DIR.."SetItemLevel.lua")
+registerCommand("joblevel",                         DBG_DIR.."JobLevel.lua")
 registerCommand("monies",                           DBG_DIR.."Monies.lua")
 registerCommand("nudge",                            DBG_DIR.."Nudge.lua")
 registerCommand("ost",                              DBG_DIR.."OnScreenTest.lua")

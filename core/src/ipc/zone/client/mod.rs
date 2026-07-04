@@ -11,14 +11,14 @@ pub use send_chat_message::SendChatMessage;
 mod client_trigger;
 pub use crate::ipc::zone::client::client_trigger::{ClientTrigger, ClientTriggerCommand};
 
-mod event_yield_handler;
-pub use crate::ipc::zone::client::event_yield_handler::EventYieldHandler;
+mod event_action;
+pub use crate::ipc::zone::client::event_action::EventAction;
 
 mod item_operation;
 pub use crate::ipc::zone::client::item_operation::ItemOperation;
 
-mod event_return_handler;
-pub use crate::ipc::zone::client::event_return_handler::EventReturnHandler;
+mod event_finish;
+pub use crate::ipc::zone::client::event_finish::EventFinish;
 
 mod mail;
 pub use mail::{MailItemInfo, TakeAttachmentsInfo};
@@ -92,9 +92,6 @@ pub enum ClientZoneIpcData {
         unk: [u8; 72],
     },
     ClientTrigger(ClientTrigger),
-    UnkSocialEvent {
-        unk: [u8; 8],
-    },
     SocialListRequest(SocialListRequest),
     UpdatePositionHandler {
         /// In radians.
@@ -144,18 +141,28 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 4)] // padding
         handler_id: HandlerId,
     },
-    EventYieldHandler2(EventYieldHandler<2>),
-    EventYieldHandler4(EventYieldHandler<4>),
-    EventYieldHandler16(EventYieldHandler<16>),
-    EventYieldHandler128(EventYieldHandler<128>),
+    EventAction1(EventAction<2>),
+    EventAction4(EventAction<4>),
+    EventAction8(EventAction<8>),
+    EventAction16(EventAction<16>),
+    EventAction32(EventAction<32>),
+    EventAction64(EventAction<64>),
+    EventAction128(EventAction<128>),
+    EventAction255(EventAction<256>),
     StandardControlsPivot {
         /// Set to 4 when beginning to pivot.
         /// Set to 0 when pivoting ends.
         #[brw(pad_after = 4)]
         is_pivoting: u32,
     },
-    EventReturnHandler2(EventReturnHandler<2>),
-    EventReturnHandler8(EventReturnHandler<8>),
+    EventFinish1(EventFinish<2>),
+    EventFinish4(EventFinish<4>),
+    EventFinish8(EventFinish<8>),
+    EventFinish16(EventFinish<16>),
+    EventFinish32(EventFinish<32>),
+    EventFinish64(EventFinish<64>),
+    EventFinish128(EventFinish<128>),
+    EventFinish255(EventFinish<256>),
     Config(Config),
     UnkCall2 {
         unk1: [u8; 8],
@@ -215,8 +222,8 @@ pub enum ClientZoneIpcData {
         /// Originating World ID of the caller.
         world_id: u16,
         /// Name passed to the command.
-        #[brw(pad_size_to = 30)]
-        #[br(count = 30)]
+        #[brw(pad_size_to = 34)]
+        #[br(count = 34)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         name: String,
@@ -468,9 +475,11 @@ pub enum ClientZoneIpcData {
         unk2: u32,
         max_results: u32,
         unk3: [u8; 44],
+        unk4: [u8; 24],
     },
     CrossRealmListingsRequest2 {
         unk1: [u8; 40],
+        unk2: [u8; 24],
     },
     ViewCrossRealmListing {
         #[brw(pad_after = 8)] // empty

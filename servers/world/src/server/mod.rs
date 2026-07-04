@@ -20,9 +20,13 @@ use crate::{
         },
         actor::{NetworkedActor, NpcState},
         chat::handle_chat_messages,
-        director::{DirectorData, director_tick, handle_director_messages},
+        director::{
+            DirectorData, PendingAoe, director_tick, encounter_tick, handle_director_messages,
+            resolve_aoe,
+        },
         effect::{handle_effect_messages, remove_effect, send_effects_list},
         instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
+        jobs::summoner,
         linkshell::handle_linkshell_messages,
         network::{DestinationNetwork, NetworkState},
         party::{
@@ -33,14 +37,15 @@ use crate::{
         social::handle_social_messages,
         zone::{
             MapGimmick, change_zone_to_player, change_zone_warp_to_entrance,
-            change_zone_warp_to_pop_range, handle_zone_messages,
+            change_zone_warp_to_pop_range, handle_zone_messages, restore_carried_combat_state,
+            take_combat_state_and_despawn_pets,
         },
     },
 };
 use kawari::{
     common::{
         CharacterMode, DEAD_DESPAWN_TIME, EventState, HandlerId, HandlerType, MAX_SPAWNED_ACTORS,
-        MAX_SPAWNED_OBJECTS, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        MAX_SPAWNED_OBJECTS, ObjectId, ObjectTypeId, ObjectTypeKind, Position, SLIDECAST_WINDOW,
         SharedGroupTimelineState, determine_initial_pop_range, euler_to_direction, is_private_area,
     },
     config::{FilesystemConfig, get_config},
@@ -51,13 +56,16 @@ use kawari::{
 };
 
 use super::{ClientId, FromServer, ToServer};
+use crate::common::PetCommand;
 
 mod action;
 mod actor;
 mod chat;
+pub(crate) mod combat_state;
 mod director;
 mod effect;
 mod instance;
+mod jobs;
 mod linkshell;
 mod network;
 mod party;
@@ -85,6 +93,125 @@ struct WorldServer {
     // TODO: Eventually remove these once we can reliably and ergonomically run misc. tasks on slower intervals!
     rested_exp_counter: i32,
     party_positions_counter: i32,
+    /// Drives the 3-second DoT/HoT + natural HP/MP regen tick (300ms tick * 10 = 3s), matching retail.
+    regen_tick_counter: i32,
+}
+
+fn allocate_hate_slots(current: &HashMap<ObjectId, u8>) -> Vec<u8> {
+    let mut used: Vec<u8> = current.values().copied().collect();
+    used.sort_unstable();
+
+    (0..32)
+        .filter(|slot| !used.contains(slot))
+        .map(|slot| slot as u8)
+        .collect()
+}
+
+fn sync_player_hated_by(
+    player_actor: &mut NetworkedActor,
+    hated_npcs: &[(ObjectId, u32)],
+) -> (Vec<(ObjectId, u8)>, Vec<ObjectId>) {
+    let Some(hated_by) = player_actor.player_hated_by_mut() else {
+        return (Vec::new(), Vec::new());
+    };
+
+    let active_ids: Vec<ObjectId> = hated_npcs.iter().map(|(id, _)| *id).collect();
+    let removed: Vec<ObjectId> = hated_by
+        .keys()
+        .copied()
+        .filter(|id| !active_ids.contains(id))
+        .collect();
+
+    for actor_id in &removed {
+        hated_by.remove(actor_id);
+    }
+
+    let mut free_slots = allocate_hate_slots(hated_by);
+    let mut assigned = Vec::new();
+    for (actor_id, _) in hated_npcs {
+        let slot = if let Some(slot) = hated_by.get(actor_id) {
+            *slot
+        } else if let Some(slot) = free_slots.first().copied() {
+            free_slots.remove(0);
+            hated_by.insert(*actor_id, slot);
+            slot
+        } else {
+            let slot = hated_by.len().min(255) as u8;
+            hated_by.insert(*actor_id, slot);
+            slot
+        };
+
+        assigned.push((*actor_id, slot));
+    }
+
+    (assigned, removed)
+}
+
+fn refresh_runtime_job_state(instance: &mut Instance, network: &mut NetworkState) -> Vec<ObjectId> {
+    let actor_ids: Vec<ObjectId> = instance.actors.keys().copied().collect();
+    let mut refreshed = Vec::new();
+
+    for actor_id in actor_ids {
+        let Some(actor) = instance.find_actor_mut(actor_id) else {
+            continue;
+        };
+
+        let Some(common) = actor.common_spawn() else {
+            continue;
+        };
+
+        let class_job = common.class_job;
+        if !summoner::is_summoner(class_job) {
+            continue;
+        }
+
+        let result = summoner::refresh_summoner_runtime_state_on_actor(actor_id, actor);
+        let status_timer_refreshed = result.status_timer_refreshed;
+        let gauge_data = if result.changed {
+            let level = actor
+                .common_spawn()
+                .expect("summoner runtime actor has common spawn")
+                .level;
+            if let NetworkedActor::Player { combat_state, .. } = actor {
+                Some(summoner::build_summoner_gauge_data(combat_state, level))
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        if let Some(gauge_data) = gauge_data
+            && !result.demi_just_ended
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorGauge {
+                classjob_id: class_job,
+                data: gauge_data,
+            });
+            network.send_to_by_actor_id(
+                actor_id,
+                FromServer::PacketSegment(ipc, actor_id),
+                DestinationNetwork::ZoneClients,
+            );
+        }
+
+        // Demi window just expired this tick — retail kills/despawns the demi actor, clears the
+        // demi hotbar, then re-spawns/re-binds carbuncle instead of only flipping UI state.
+        if result.demi_just_ended {
+            summoner::apply_demi_summon_revert(
+                network,
+                instance,
+                actor_id,
+                gauge_data.map(|data| (class_job, data)),
+            );
+        }
+
+        if status_timer_refreshed {
+            refreshed.push(actor_id);
+        }
+    }
+
+    refreshed
 }
 
 impl WorldServer {
@@ -193,6 +320,19 @@ impl WorldServer {
                     tasks: Vec::new(),
                     bosses: HashMap::new(),
                     shortcut_poprange_id: None,
+                    battle_started_at: None,
+                    elapsed_secs: 0.0,
+                    last_tick_at: None,
+                    scheduler: Vec::new(),
+                    deaggro_since: None,
+                    vars: HashMap::new(),
+                    player_vars: HashMap::new(),
+                    helpers: HashMap::new(),
+                    omen_helpers: Vec::new(),
+                    omen_rr: 0,
+                    clones: Vec::new(),
+                    current_actors: Vec::new(),
+                    pending_battle_start: false,
                 };
 
                 // Call into the onSetup function before returning, as we need the flag to be initialized before any players change zones.
@@ -343,8 +483,269 @@ fn set_shared_group_timeline_state(
     network.send_ac_in_range_inclusive_instance(
         instance,
         from_actor_id,
-        ActorControlCategory::SetSharedGroupTimelineState { state },
+        ActorControlCategory::SetSharedGroupTimelineState {
+            state,
+            unk2: 0,
+            unk3: 0,
+            unk4: 0,
+        },
     );
+}
+
+/// Resolves DoT/HoT ticks and applies natural HP/MP regen for one instance. Called on the ~3s
+/// regen tick. Matches retail, where the 3-second server tick drives both periodic statuses and
+/// passive HP/MP recovery (HP regens even in combat, just more slowly; MP always regens).
+fn process_regen_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance) {
+    /// Fraction of max HP recovered per tick while out of combat.
+    const HP_REGEN_OOC: f32 = 0.06;
+    /// Fraction of max HP recovered per tick while in combat (much smaller than out of combat).
+    const HP_REGEN_COMBAT: f32 = 0.02;
+    /// Fraction of max MP recovered per tick (retail regens MP in and out of combat).
+    const MP_REGEN: f32 = 0.02;
+
+    // Snapshot what each actor needs this tick. We can't mutate while iterating + reading source
+    // parameters, so we gather (id, hp delta, mp delta) first, then apply.
+    struct ActorTickPlan {
+        id: ObjectId,
+        /// Net HP change: negative = DoT damage, positive = HoT + natural regen.
+        hp_delta: i64,
+        /// Net MP change (natural regen only for now).
+        mp_delta: i64,
+    }
+
+    // First, resolve a lookup of source actors' parameters for DoT/HoT potency math.
+    let mut plans: Vec<ActorTickPlan> = Vec::new();
+
+    // Per-tick DoT enmity to apply after the borrow loop: (enemy carrying the DoT, caster, amount).
+    // DoT ticks keep generating enmity for the caster, like retail.
+    let mut dot_enmity: Vec<(ObjectId, ObjectId, u32)> = Vec::new();
+
+    // Per-tick floating damage/heal numbers to broadcast after HP is applied:
+    // (status id, source/caster, target carrying the status, amount, is_heal). Retail shows a
+    // number above the target every tick using the owning Status EXD row id.
+    let mut tick_popups: Vec<(u32, ObjectId, ObjectId, u32, bool)> = Vec::new();
+
+    // Collect the ids up-front so we can borrow the instance immutably per-actor below.
+    let actor_ids: Vec<ObjectId> = instance.actors.keys().copied().collect();
+
+    for id in actor_ids {
+        let Some(actor) = instance.find_actor(id) else {
+            continue;
+        };
+
+        // Only living characters tick.
+        let Some(common) = actor.common_spawn() else {
+            continue;
+        };
+        if common.mode == CharacterMode::Dead || common.health_points == 0 {
+            continue;
+        }
+        let max_hp = common.max_health_points.max(1);
+        let cur_hp = common.health_points;
+        let cur_mp = common.resource_points;
+        let max_mp = common.max_resource_points;
+
+        // Gather this actor's DoT/HoT ticks (cloned so we drop the borrow before looking up sources).
+        let ticks: Vec<crate::TickEffect> = actor
+            .status_effects()
+            .map(|s| s.tick_effects().to_vec())
+            .unwrap_or_default();
+
+        let (in_combat, is_player) = match actor {
+            NetworkedActor::Player { combat_state, .. } => (combat_state.in_combat, true),
+            NetworkedActor::Npc { hate_list, .. } => (!hate_list.is_empty(), false),
+            _ => (false, false),
+        };
+
+        let mut hp_delta: i64 = 0;
+        let mut mp_delta: i64 = 0;
+
+        // Resolve DoT/HoT magnitudes using the *source* actor's parameters (retail computes DoT
+        // damage from the caster's stats). NPC sources have no BaseParameters, so fall back to a
+        // rough flat value derived from potency.
+        for tick in &ticks {
+            let source_params = instance.find_actor(tick.source_actor_id).and_then(|a| {
+                if let NetworkedActor::Player { parameters, .. } = a {
+                    Some(parameters.clone())
+                } else {
+                    None
+                }
+            });
+
+            use crate::TickEffectKind;
+            let magnitude = match tick.kind {
+                TickEffectKind::DamageMagic => source_params
+                    .as_ref()
+                    .map(|p| p.calc_magical_damage(tick.potency as u32) as i64)
+                    .unwrap_or((tick.potency / 2) as i64),
+                TickEffectKind::DamagePhysical => source_params
+                    .as_ref()
+                    .map(|p| p.calc_physical_damage(tick.potency as u32) as i64)
+                    .unwrap_or((tick.potency / 2) as i64),
+                TickEffectKind::Heal => source_params
+                    .as_ref()
+                    .map(|p| p.calc_heal_amount(tick.potency as u32) as i64)
+                    .unwrap_or((tick.potency / 2) as i64),
+                TickEffectKind::RestoreMp => tick.potency as i64,
+            };
+
+            match tick.kind {
+                TickEffectKind::DamageMagic | TickEffectKind::DamagePhysical => {
+                    hp_delta -= magnitude;
+                    // The DoT lives on this actor (`id` = the enemy); credit its enmity to the
+                    // caster so sustained DoTs keep the caster on the hate list.
+                    if magnitude > 0 {
+                        dot_enmity.push((id, tick.source_actor_id, magnitude as u32));
+                        // Floating damage number above the target each tick (caster -> this actor).
+                        tick_popups.push((
+                            tick.effect_id as u32,
+                            tick.source_actor_id,
+                            id,
+                            magnitude.min(u32::MAX as i64) as u32,
+                            false,
+                        ));
+                    }
+                }
+                TickEffectKind::Heal => {
+                    hp_delta += magnitude;
+                    if magnitude > 0 {
+                        // Floating heal number above the target each tick (caster -> this actor).
+                        tick_popups.push((
+                            tick.effect_id as u32,
+                            tick.source_actor_id,
+                            id,
+                            magnitude.min(u32::MAX as i64) as u32,
+                            true,
+                        ));
+                    }
+                }
+                TickEffectKind::RestoreMp => {
+                    mp_delta += magnitude;
+                }
+            }
+        }
+
+        // Natural regen. Only players regen passively (HP in and out of combat, plus MP). NPCs do
+        // NOT naturally regen — out of combat they're snapped back to full by the existing deaggro
+        // path, and in combat they only change HP via damage/heal effects.
+        if is_player && cur_hp < max_hp {
+            let frac = if in_combat {
+                HP_REGEN_COMBAT
+            } else {
+                HP_REGEN_OOC
+            };
+            hp_delta += (max_hp as f32 * frac).ceil() as i64;
+        }
+        if is_player && cur_mp < max_mp {
+            mp_delta += (max_mp as f32 * MP_REGEN).ceil() as i64;
+        }
+
+        if hp_delta != 0 || mp_delta != 0 {
+            plans.push(ActorTickPlan {
+                id,
+                hp_delta,
+                mp_delta,
+            });
+        }
+    }
+
+    // Apply per-tick DoT enmity (collected above) to each affected enemy's hate list.
+    for (enemy_id, caster_id, amount) in dot_enmity {
+        if let Some(actor) = instance.find_actor_mut(enemy_id)
+            && let Some(hate_list) = actor.npc_hate_list_mut()
+        {
+            let entry = hate_list.entry(caster_id).or_insert(0);
+            *entry = entry.saturating_add(amount);
+        }
+    }
+
+    // Apply the plans and notify clients.
+    for plan in plans {
+        let Some(actor) = instance.find_actor_mut(plan.id) else {
+            continue;
+        };
+        let max_hp = actor.get_common_spawn().max_health_points.max(1);
+        let max_mp = actor.get_common_spawn().max_resource_points;
+
+        if plan.hp_delta < 0 {
+            let damage = (-plan.hp_delta) as u32;
+            actor.apply_damage(damage);
+        } else if plan.hp_delta > 0 {
+            let common = actor.get_common_spawn_mut();
+            common.health_points = common
+                .health_points
+                .saturating_add(plan.hp_delta as u32)
+                .min(max_hp);
+        }
+
+        if plan.mp_delta > 0 {
+            let common = actor.get_common_spawn_mut();
+            common.resource_points =
+                ((common.resource_points as i64 + plan.mp_delta).min(max_mp as i64)) as u16;
+        }
+
+        update_actor_hp_mp(network.clone(), instance, plan.id);
+    }
+
+    // Broadcast a floating damage/heal number above each target for every DoT/HoT tick this round.
+    // Retail uses an ActorControl sourced from the *target* actor, carrying the amount and the
+    // caster id — this is what gives ticks their distinct number style (a plain ActionResult would
+    // render them like a normal action hit instead). DoT and HoT use different categories; the
+    // owner status id is carried in param1. `unk2` still has multiple client branches and is
+    // not fully identified.
+    if !tick_popups.is_empty() {
+        let mut net = network.lock();
+        for (status_id, source_id, target_id, amount, is_heal) in tick_popups {
+            let category = if is_heal {
+                ActorControlCategory::TickHeal {
+                    status_id,
+                    amount: amount as u32,
+                    source_actor_id: source_id,
+                    unk2: 0,
+                    unk3: 0,
+                }
+            } else {
+                ActorControlCategory::TickDamage {
+                    status_id,
+                    amount: amount as u32,
+                    source_actor_id: source_id,
+                    unk2: u32::MAX,
+                    unk3: 0,
+                }
+            };
+            net.send_in_range_inclusive_instance(
+                target_id,
+                instance,
+                FromServer::ActorControl(target_id, category),
+                DestinationNetwork::ZoneClients,
+            );
+        }
+    }
+}
+
+/// Schedule each pending AoE on its own precise timer. After `delay` seconds, re-locate the
+/// instance (by the AoE's source actor) and resolve it, snapshotting player positions at exactly
+/// that moment — independent of the coarse director tick. Mirrors the instant-action `spawn + sleep`
+/// pattern so mechanic snapshots land on time.
+fn schedule_pending_aoes(
+    data: Arc<Mutex<WorldServer>>,
+    network: Arc<Mutex<NetworkState>>,
+    pending: Vec<PendingAoe>,
+) {
+    for aoe in pending {
+        let data = data.clone();
+        let network = network.clone();
+        let source_id = aoe.source_id;
+        let delay = Duration::from_secs_f32(aoe.delay.max(0.0));
+        tokio::task::spawn(async move {
+            tokio::time::sleep(delay).await;
+            let mut data = data.lock();
+            let Some(instance) = data.find_actor_instance_mut(source_id) else {
+                return;
+            };
+            resolve_aoe(network, instance, aoe);
+        });
+    }
 }
 
 fn server_logic_tick(
@@ -355,11 +756,14 @@ fn server_logic_tick(
 ) {
     let mut actors_to_update_hp_mp = Vec::new();
     let mut actors_to_fake_zone_jump = Vec::new();
+    let mut actors_to_refresh_effects = Vec::new();
+    let mut pending_aoes: Vec<PendingAoe> = Vec::new();
 
     {
         let mut data = data.lock();
         let rested_exp_counter = data.rested_exp_counter;
         let party_positions_counter = data.party_positions_counter;
+        let regen_tick = data.regen_tick_counter == 0;
 
         data.cleanup_dead_instances();
 
@@ -384,44 +788,161 @@ fn server_logic_tick(
             let mut actors_now_inside_instance_exits = Vec::new();
             let mut actors_now_outside_instance_entrances = Vec::new();
 
+            let player_ids: Vec<ObjectId> = instance
+                .actors
+                .iter()
+                .filter_map(|(id, actor)| match actor {
+                    NetworkedActor::Player { .. } => Some(*id),
+                    _ => None,
+                })
+                .collect();
+
             // Player area stuffs
-            for (id, actor) in &instance.actors {
-                // Only check players
-                let NetworkedActor::Player {
+            for id in &player_ids {
+                let Some(NetworkedActor::Player {
                     conditions,
                     executing_gimmick_jump,
                     inside_instance_exit: inside_instance_entrance,
+                    distance_range,
                     ..
-                } = actor
+                }) = instance.find_actor(*id)
                 else {
                     continue;
                 };
+                let conditions = *conditions;
+                let executing_gimmick_jump = *executing_gimmick_jump;
+                let inside_instance_entrance = *inside_instance_entrance;
+                let player_position = instance.find_actor(*id).unwrap().position();
+                let player_distance_range = *distance_range;
 
                 // Find the ClientState for this player.
                 let mut network = network.lock();
 
-                if let Some(haters) = haters.get(id) {
-                    let mut list: Vec<Hater> = haters
+                let hated_npcs = haters.get(id).cloned().unwrap_or_default();
+
+                let (assigned_slots, removed_haters) =
+                    if let Some(actor) = instance.find_actor_mut(*id) {
+                        sync_player_hated_by(actor, &hated_npcs)
+                    } else {
+                        (Vec::new(), Vec::new())
+                    };
+
+                for actor_id in removed_haters {
+                    let msg = FromServer::ActorControlTarget(
+                        actor_id,
+                        ObjectTypeId::default(),
+                        ActorControlCategory::UpdateHater { unk1: 0 },
+                    );
+                    network.send_to_by_actor_id(*id, msg, DestinationNetwork::ZoneClients);
+                }
+
+                for (actor_id, slot) in assigned_slots {
+                    let msg = FromServer::ActorControlTarget(
+                        actor_id,
+                        ObjectTypeId::default(),
+                        ActorControlCategory::Unknown {
+                            category: 0x1F7,
+                            param1: slot as u32,
+                            param2: actor_id.0,
+                            param3: 0,
+                            param4: 0,
+                            param5: 0,
+                        },
+                    );
+                    network.send_to_by_actor_id(*id, msg, DestinationNetwork::ZoneClients);
+                }
+
+                // The two enmity packets are mirror images (matching Sapphire's sendHateList):
+                //  - HaterList: { actor_id = the NPC, enmity = 0-100 percentage }. The percentage
+                //    drives the aggro-indicator colour — 100% (you're top of its hate list) shows
+                //    the red "you have aggro" state. Sending the raw value (what we did before)
+                //    makes the client read garbage as the percent and mis-colour it (green/orange).
+                //  - EnmityList: { actor_id = the player themselves, enmity = 0-100 percentage }.
+                let player_enmity: Vec<(ObjectId, u32, u32)> = hated_npcs
+                    .iter()
+                    .map(|(npc_id, enmity)| {
+                        let max_enmity = instance
+                            .find_actor(*npc_id)
+                            .and_then(|actor| actor.npc_hate_list())
+                            .and_then(|hate_list| hate_list.values().copied().max())
+                            .unwrap_or(*enmity);
+                        let rate = if max_enmity == 0 {
+                            0
+                        } else {
+                            ((*enmity as f32 / max_enmity as f32) * 100.0).round() as u32
+                        };
+                        (*npc_id, *enmity, rate)
+                    })
+                    .collect();
+
+                // Change detection: only resend the enmity packets when the (npc, rate%) snapshot
+                // differs from what we last sent this player. Without this we'd spam both packets
+                // (including empty ones for players with no haters) every 300ms tick.
+                let mut new_snapshot: Vec<(ObjectId, u8)> = player_enmity
+                    .iter()
+                    .map(|(npc_id, _raw, rate)| (*npc_id, (*rate).min(100) as u8))
+                    .collect();
+                new_snapshot.sort_by_key(|(npc_id, _)| npc_id.0);
+
+                let enmity_changed = match instance.find_actor_mut(*id) {
+                    Some(NetworkedActor::Player {
+                        last_enmity_sent, ..
+                    }) => {
+                        if *last_enmity_sent != new_snapshot {
+                            *last_enmity_sent = new_snapshot;
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    _ => true,
+                };
+
+                if enmity_changed {
+                    if !player_enmity.is_empty() {
+                        let mut list: Vec<Hater> = player_enmity
+                            .iter()
+                            .map(|(npc_id, _raw, rate)| Hater {
+                                actor_id: *npc_id,
+                                enmity: (*rate).min(100) as u8,
+                            })
+                            .collect();
+                        list.truncate(32);
+                        let ipc =
+                            ServerZoneIpcSegment::new(ServerZoneIpcData::HaterList(HaterList {
+                                count: list.len() as u8,
+                                list,
+                            }));
+                        network.send_to_by_actor_id(
+                            *id,
+                            FromServer::PacketSegment(ipc, *id),
+                            DestinationNetwork::ZoneClients,
+                        );
+                    } else {
+                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::HaterList(
+                            HaterList::default(),
+                        ));
+                        network.send_to_by_actor_id(
+                            *id,
+                            FromServer::PacketSegment(ipc, *id),
+                            DestinationNetwork::ZoneClients,
+                        );
+                    }
+
+                    let mut enmity_list: Vec<PlayerEnmity> = player_enmity
                         .iter()
-                        .map(|actor_id| Hater {
-                            actor_id: *actor_id,
-                            enmity: 100,
+                        .map(|(_npc_id, _raw, rate)| PlayerEnmity {
+                            actor_id: *id,
+                            enmity: (*rate).min(100) as u8,
                         })
                         .collect();
-                    list.truncate(32);
-                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::HaterList(HaterList {
-                        count: haters.len() as u32,
-                        list,
-                    }));
-                    network.send_to_by_actor_id(
-                        *id,
-                        FromServer::PacketSegment(ipc, *id),
-                        DestinationNetwork::ZoneClients,
-                    );
-                } else {
-                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::HaterList(
-                        HaterList::default(),
-                    ));
+                    enmity_list.truncate(8);
+
+                    let ipc =
+                        ServerZoneIpcSegment::new(ServerZoneIpcData::EnmityList(EnmityList {
+                            count: enmity_list.len() as u8,
+                            list: enmity_list,
+                        }));
                     network.send_to_by_actor_id(
                         *id,
                         FromServer::PacketSegment(ipc, *id),
@@ -429,27 +950,13 @@ fn server_logic_tick(
                     );
                 }
 
-                // TODO: send info for party
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EnmityList(EnmityList {
-                    count: 1,
-                    list: vec![PlayerEnmity {
-                        actor_id: *id,
-                        enmity: 100,
-                    }],
-                }));
-                network.send_to_by_actor_id(
-                    *id,
-                    FromServer::PacketSegment(ipc, *id),
-                    DestinationNetwork::ZoneClients,
-                );
-
                 let Some((handle, state)) = network.get_by_actor_mut(*id) else {
                     continue;
                 };
 
                 // Check for overlapping map ranges
                 let overlapping_ranges =
-                    instance.zone.get_overlapping_map_ranges(actor.position().0);
+                    instance.zone.get_overlapping_map_ranges(player_position.0);
                 let in_sanctuary = overlapping_ranges.iter().filter(|x| x.sanctuary).count() > 0;
 
                 // We're on the 10 second mark, and you're in a sanctuary...
@@ -540,7 +1047,7 @@ fn server_logic_tick(
                 if is_in_duel_area != has_duel_condition {
                     // Update conditions
                     {
-                        let mut conditions = *conditions;
+                        let mut conditions = conditions;
                         conditions.toggle_condition(Condition::InDuelingArea, is_in_duel_area);
 
                         let msg = FromServer::Conditions(conditions);
@@ -575,8 +1082,8 @@ fn server_logic_tick(
                     let a_position = a.1.position();
                     let b_position = b.1.position();
 
-                    let a_distance = Vec3::distance(actor.position().0, a_position.0);
-                    let b_distance = Vec3::distance(actor.position().0, b_position.0);
+                    let a_distance = Vec3::distance(player_position.0, a_position.0);
+                    let b_distance = Vec3::distance(player_position.0, b_position.0);
 
                     a_distance.total_cmp(&b_distance)
                 });
@@ -592,7 +1099,13 @@ fn server_logic_tick(
                     }
 
                     // If the actor _should_ be in the view of the other.
-                    let in_range = actor.in_range_of(other_actor);
+                    let in_range = {
+                        let mut other_pos = other_actor.position().0;
+                        other_pos.y = 0.0;
+                        let mut self_pos = player_position.0;
+                        self_pos.y = 0.0;
+                        Vec3::distance(self_pos, other_pos) < player_distance_range.distance()
+                    };
                     let has_been_spawned = state.has_spawned(*other_id);
 
                     // There are four states:
@@ -632,6 +1145,68 @@ fn server_logic_tick(
                             if handle.send(msg).is_err() {
                                 // TODO: remove as needed
                                 //self.to_remove.push(id);
+                            }
+
+                            // If this NPC is already in combat, the claim ACTs that turn its
+                            // nameplate red (SetTarget/SetBattle/FirstAttack) were broadcast — with
+                            // `only_spawned` — back when it first acquired its target, before this
+                            // client had spawned it, so they were silently dropped. (Happens when a
+                            // player appears inside aggro range before the spawn lands, e.g. a
+                            // gm-pos teleport onto a mob.) Re-send them to just this client now,
+                            // after the spawn it just received, so the nameplate goes red.
+                            if let NetworkedActor::Npc { spawn, .. } = other_actor
+                                && spawn.common.combat_tag_type != 0
+                                && spawn.common.combat_tagger_id.object_id.is_valid()
+                            {
+                                let target_id = spawn.common.combat_tagger_id.object_id;
+                                let target = ObjectTypeId {
+                                    object_id: target_id,
+                                    object_type: ObjectTypeKind::None,
+                                };
+                                let _ = handle.send(FromServer::ActorControlTarget(
+                                    *other_id,
+                                    target,
+                                    ActorControlCategory::SetTarget {},
+                                ));
+                                let _ = handle.send(FromServer::ActorControl(
+                                    *other_id,
+                                    ActorControlCategory::SetBattle { battle: true },
+                                ));
+                                let ipc = ServerZoneIpcSegment::new(
+                                    ServerZoneIpcData::FirstAttack {
+                                        unk1: 1,
+                                        unk2: 0,
+                                        combat_tagger: target_id,
+                                        unk3: 0,
+                                    },
+                                );
+                                let _ = handle.send(FromServer::PacketSegment(ipc, *other_id));
+                            }
+
+                            // The spawn packet has no targetable field, so a fresh client spawn is
+                            // always targetable. Visual-only NPCs (e.g. Crimson Cyclone clones) carry
+                            // `targetable = false`; re-apply it here so they can't be selected after
+                            // each walk-in (they walk out/in every cycle).
+                            if let NetworkedActor::Npc {
+                                targetable: false, ..
+                            } = other_actor
+                            {
+                                let _ = handle.send(FromServer::ActorControl(
+                                    *other_id,
+                                    ActorControlCategory::Targetable { targetable: false },
+                                ));
+                            }
+                            // Re-apply visibility: it's a runtime ActorControl (414, the client's
+                            // bit16), not part of the spawn packet, so a fresh walked-in spawn would
+                            // show a hidden clone at full opacity without this.
+                            if let NetworkedActor::Npc { visible: false, .. } = other_actor {
+                                let _ = handle.send(FromServer::ActorControl(
+                                    *other_id,
+                                    ActorControlCategory::ToggleVisibility {
+                                        visible: false,
+                                        duration: 0.0,
+                                    },
+                                ));
                             }
                         } else {
                             // Early exit if the client refuses to spawn any more actors
@@ -685,9 +1260,30 @@ fn server_logic_tick(
 
             // NOTE: I know this isn't retail accurate
             for (id, actor) in &mut instance.actors {
-                if let NetworkedActor::Player { spawn, .. } = actor {
-                    let in_combat = haters.contains_key(id);
+                if let NetworkedActor::Player {
+                    spawn,
+                    combat_state,
+                    ..
+                } = actor
+                {
                     let is_dead = spawn.common.health_points == 0;
+                    let in_combat =
+                        haters.get(id).is_some_and(|entries| !entries.is_empty()) && !is_dead;
+
+                    // Toggle the player's battle state when their aggro status changes — this is
+                    // what makes the client draw the weapon and play combat music. Only send on a
+                    // transition so we don't spam the client every tick.
+                    if in_combat != combat_state.in_combat {
+                        combat_state.in_combat = in_combat;
+                        let mut network = network.lock();
+                        network.send_to_by_actor_id(
+                            *id,
+                            FromServer::ActorControlSelf(ActorControlCategory::SetBattle {
+                                battle: in_combat,
+                            }),
+                            DestinationNetwork::ZoneClients,
+                        );
+                    }
 
                     // Don't heal people who are in combat or dead, please.
                     if in_combat || is_dead {
@@ -769,20 +1365,40 @@ fn server_logic_tick(
             }
 
             // Process any director tasks for this instance.
-            director_tick(network.clone(), instance);
+            pending_aoes.extend(director_tick(network.clone(), gamedata.clone(), instance));
+
+            // Every ~3 seconds: resolve DoT/HoT ticks and natural HP/MP regen, matching retail's
+            // 3s server tick (which also drives passive regen).
+            if regen_tick {
+                process_regen_tick(network.clone(), instance);
+            }
+
+            {
+                let mut network = network.lock();
+                actors_to_refresh_effects.extend(refresh_runtime_job_state(instance, &mut network));
+            }
         }
-        // Ensure the rested EXP counter only happens every 10 seconds.
+        // Ensure the rested EXP counter only happens approx. every 10 seconds (300ms tick * 33).
         data.rested_exp_counter += 1;
-        if data.rested_exp_counter == 21 {
+        if data.rested_exp_counter == 33 {
             data.rested_exp_counter = 0;
         }
 
-        // Ensure the party positions counter only happens approx. every 5 seconds.
+        // Ensure the party positions counter only happens approx. every 5 seconds (300ms tick * 17).
         data.party_positions_counter += 1;
-        if data.party_positions_counter == 11 {
+        if data.party_positions_counter == 17 {
             data.party_positions_counter = 0;
         }
+
+        // Drive the 3-second DoT/HoT + natural regen tick (300ms tick * 10 = 3s).
+        data.regen_tick_counter += 1;
+        if data.regen_tick_counter == 10 {
+            data.regen_tick_counter = 0;
+        }
     }
+
+    // Schedule precise timers for any AoEs queued this tick, now that the data lock is released.
+    schedule_pending_aoes(data.clone(), network.clone(), pending_aoes);
 
     for id in actors_to_update_hp_mp {
         let mut data = data.lock();
@@ -790,10 +1406,17 @@ fn server_logic_tick(
         update_actor_hp_mp(network.clone(), instance, id);
     }
 
+    for id in actors_to_refresh_effects {
+        let data = data.lock();
+        if let Some(instance) = data.find_actor_instance(id) {
+            send_effects_list(network.clone(), instance, id);
+        }
+    }
+
     for (id, exit_pop_range_id) in actors_to_fake_zone_jump {
-        let mut game_data = gamedata.lock();
         let mut data = data.lock();
         let mut network = network.lock();
+        let mut game_data = gamedata.lock();
         let from_id = network.find_by_actor(id).unwrap();
         change_zone_warp_to_pop_range(
             &mut data,
@@ -840,7 +1463,7 @@ pub async fn server_main_loop(
         let game_data = game_data.clone();
         let lua = lua.clone();
         tokio::task::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_millis(500)); // Be careful when changing this, as the rested EXP may become whacky.
+            let mut interval = tokio::time::interval(Duration::from_millis(300)); // Be careful when changing this, as the rested EXP may become whacky. Counters in server_logic_tick are sized off this interval.
             interval.tick().await;
             loop {
                 interval.tick().await;
@@ -913,9 +1536,9 @@ pub async fn server_main_loop(
                                 );
                             }
                             QueuedTaskData::DeadFadeOut { actor_id } => {
-                                let mut network = network.lock();
-
                                 let mut data = data.lock();
+
+                                let mut network = network.lock();
                                 if let Some(instance) = data.instances.get_mut(*instance_index) {
                                     network.send_ac_in_range_instance(
                                         instance,
@@ -996,6 +1619,128 @@ pub async fn server_main_loop(
                                     0,
                                 );
                             }
+                            QueuedTaskData::RevealPet { actor_id } => {
+                                let mut data = data.lock();
+                                if let Some(instance) = data.find_actor_instance_mut(*actor_id) {
+                                    let mut network = network.lock();
+                                    summoner::send_retail_pet_reveal_controls(
+                                        &mut network,
+                                        instance,
+                                        *actor_id,
+                                    );
+                                }
+                            }
+                            QueuedTaskData::SummonerPrimalFinisher {
+                                owner_id,
+                                pet_id,
+                                preferred_target_id,
+                                action_id,
+                                potency,
+                                expires_at,
+                            } => {
+                                let mut data = data.lock();
+                                if let Some(instance) = data.instances.get_mut(*instance_index) {
+                                    if let Some(target_id) =
+                                        summoner::process_elemental_primal_finisher(
+                                            network.clone(),
+                                            instance,
+                                            *owner_id,
+                                            *pet_id,
+                                            *preferred_target_id,
+                                            *action_id,
+                                            *potency,
+                                            *expires_at,
+                                        )
+                                    {
+                                        update_actor_hp_mp(network.clone(), instance, target_id);
+                                    }
+                                }
+                            }
+                            QueuedTaskData::SummonerPrimalRevert { owner_id, pet_id } => {
+                                let mut data = data.lock();
+                                if let Some(instance) = data.instances.get_mut(*instance_index) {
+                                    let mut network = network.lock();
+                                    summoner::apply_elemental_primal_revert(
+                                        &mut network,
+                                        instance,
+                                        *owner_id,
+                                        *pet_id,
+                                    );
+                                }
+                            }
+                            QueuedTaskData::SummonerDemiAutoAttack { owner_id } => {
+                                let mut data = data.lock();
+                                if let Some(instance) = data.instances.get_mut(*instance_index)
+                                    && let Some(target_id) = summoner::process_demi_auto_attack(
+                                        network.clone(),
+                                        instance,
+                                        *owner_id,
+                                    )
+                                {
+                                    update_actor_hp_mp(network.clone(), instance, target_id);
+                                }
+                            }
+                            QueuedTaskData::SummonerSlipstreamTick {
+                                owner_id,
+                                center,
+                                radius,
+                                potency,
+                                ticks_remaining,
+                            } => {
+                                let mut data = data.lock();
+                                if let Some(instance) = data.instances.get_mut(*instance_index) {
+                                    let hit_targets = {
+                                        let mut network = network.lock();
+                                        summoner::process_slipstream_lingering_tick(
+                                            &mut network,
+                                            instance,
+                                            *owner_id,
+                                            *center,
+                                            *radius,
+                                            *potency,
+                                            *ticks_remaining,
+                                        )
+                                    };
+                                    for target_id in hit_targets {
+                                        update_actor_hp_mp(network.clone(), instance, target_id);
+                                    }
+                                }
+                            }
+                            QueuedTaskData::SummonerSlipstreamGroundVfx { owner_id, center } => {
+                                let mut data = data.lock();
+                                if let Some(instance) = data.instances.get_mut(*instance_index) {
+                                    let object_id = ObjectId(fastrand::u32(..));
+                                    {
+                                        let mut network = network.lock();
+                                        summoner::spawn_slipstream_ground_vfx(
+                                            &mut network,
+                                            instance,
+                                            *owner_id,
+                                            *center,
+                                            object_id,
+                                        );
+                                    }
+                                    instance.insert_task(
+                                        ClientId::default(),
+                                        *owner_id,
+                                        summoner::slipstream_ground_vfx_duration(),
+                                        QueuedTaskData::SummonerSlipstreamGroundVfxCleanup {
+                                            object_id,
+                                        },
+                                    );
+                                }
+                            }
+                            QueuedTaskData::SummonerSlipstreamGroundVfxCleanup { object_id } => {
+                                let mut data = data.lock();
+                                if let Some(instance) = data.instances.get_mut(*instance_index) {
+                                    let mut network = network.lock();
+                                    summoner::despawn_slipstream_ground_vfx(
+                                        &mut network,
+                                        instance,
+                                        *object_id,
+                                    );
+                                }
+                            }
                             QueuedTaskData::ResetCombo => {
                                 let mut data = data.lock();
                                 if let Some(instance) =
@@ -1017,6 +1762,44 @@ pub async fn server_main_loop(
         });
     }
 
+    // High-frequency (~125ms / 8Hz) encounter loop. Advances only instances that have a director:
+    // their scheduled timeline events and `onTick`, then drains the director tasks those produce.
+    // Kept separate from the 300ms loop so mechanic timing isn't bound to that coarse tick. Locks
+    // data→network, matching the unified lock order across the codebase, so it can't deadlock with
+    // the recv-loop handlers. Player action/position handling is untouched (event-driven).
+    {
+        let data = data.clone();
+        let network = network.clone();
+        let gamedata = game_data.clone();
+        tokio::task::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_millis(125));
+            interval.tick().await;
+            loop {
+                interval.tick().await;
+
+                let now = Instant::now();
+                let mut pending_aoes: Vec<PendingAoe> = Vec::new();
+                {
+                    let mut data = data.lock();
+                    for instance in data.instances.iter_mut() {
+                        if instance.director.is_none() {
+                            continue;
+                        }
+
+                        encounter_tick(instance, now);
+                        pending_aoes.extend(director_tick(
+                            network.clone(),
+                            gamedata.clone(),
+                            instance,
+                        ));
+                    }
+                }
+                // Spawn precise AoE timers after releasing the data lock.
+                schedule_pending_aoes(data.clone(), network.clone(), pending_aoes);
+            }
+        });
+    }
+
     while let Some(msg) = recv.recv().await {
         let mut to_remove = Vec::new();
 
@@ -1029,7 +1812,13 @@ pub async fn server_main_loop(
         );
         handled |= handle_social_messages(data.clone(), network.clone(), &msg);
         handled |= handle_zone_messages(data.clone(), network.clone(), game_data.clone(), &msg);
-        handled |= handle_action_messages(data.clone(), game_data.clone(), network.clone(), &msg);
+        handled |= handle_action_messages(
+            data.clone(),
+            game_data.clone(),
+            network.clone(),
+            lua.clone(),
+            &msg,
+        );
         handled |= handle_effect_messages(data.clone(), network.clone(), lua.clone(), &msg);
         handled |= handle_director_messages(data.clone(), &msg);
         handled |= handle_party_messages(data.clone(), network.clone(), &msg);
@@ -1107,8 +1896,8 @@ pub async fn server_main_loop(
                 ) => {
                     tracing::info!("Player {from_id:?} is now spawning into {zone_id}....");
 
-                    let mut network = network.lock();
                     let mut data = data.lock();
+                    let mut network = network.lock();
 
                     // create a new instance if necessary
                     let instance;
@@ -1202,11 +1991,18 @@ pub async fn server_main_loop(
 
                         if moved {
                             // Check if the actor has any in-progress actions, and cancel them if so.
+                            // Slidecast: once a cast is within its final window (SLIDECAST_WINDOW)
+                            // it's locked in, so movement no longer interrupts it — the task is left
+                            // in the queue and still fires for full effect. Moving any earlier than
+                            // that interrupts as usual.
+                            let now = Instant::now();
                             for task in instance.find_tasks(actor_id) {
                                 if let QueuedTaskData::CastAction { interruptible, .. } = task.data
                                     && interruptible
+                                    && task.point.saturating_duration_since(now) > SLIDECAST_WINDOW
                                 {
-                                    instance.cancel_task(network.clone(), &task);
+                                    let mut game_data = game_data.lock();
+                                    instance.cancel_task(network.clone(), &mut game_data, &task);
                                 }
                             }
 
@@ -1222,6 +2018,22 @@ pub async fn server_main_loop(
                                 );
                             }
                         }
+                    }
+                }
+                ToServer::PetCommand(_from_id, from_actor_id, command) => {
+                    let mut data = data.lock();
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        continue;
+                    };
+
+                    let mut network = network.lock();
+                    if !summoner::apply_pet_command(&mut network, instance, from_actor_id, command)
+                    {
+                        tracing::debug!(
+                            "Pet command {:?} ignored for actor {}",
+                            command,
+                            from_actor_id
+                        );
                     }
                 }
                 ToServer::ClientTrigger(from_id, from_actor_id, trigger) => {
@@ -1269,6 +2081,38 @@ pub async fn server_main_loop(
                             let mut network = network.lock();
                             network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                         }
+                        ClientTriggerCommand::PetAction { action_id } => {
+                            let pet_command = match *action_id {
+                                1 => Some(PetCommand::Recall),
+                                2 => Some(PetCommand::Follow),
+                                4 => Some(PetCommand::Stay),
+                                _ => None,
+                            };
+
+                            if let Some(pet_command) = pet_command {
+                                let mut data = data.lock();
+                                let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                                else {
+                                    continue;
+                                };
+
+                                let mut network = network.lock();
+                                if !summoner::apply_pet_command(
+                                    &mut network,
+                                    instance,
+                                    from_actor_id,
+                                    pet_command,
+                                ) {
+                                    tracing::debug!(
+                                        "Pet action {} ignored for actor {}",
+                                        action_id,
+                                        from_actor_id
+                                    );
+                                }
+                            } else if *action_id != 3 {
+                                tracing::debug!("Client executed unknown pet action {}", action_id);
+                            }
+                        }
                         ClientTriggerCommand::SetTarget {
                             actor_id,
                             actor_type,
@@ -1287,17 +2131,23 @@ pub async fn server_main_loop(
                                 }
                             };
 
+                            let target = ObjectTypeId {
+                                object_id: *actor_id,
+                                object_type: actor_type,
+                            };
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
-                                ObjectTypeId {
-                                    object_id: *actor_id,
-                                    object_type: actor_type,
-                                },
+                                target,
                                 ActorControlCategory::SetTarget {},
                             );
 
+                            let mut data = data.lock();
+                            if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                                && let Some(actor) = instance.find_actor_mut(from_actor_id)
+                            {
+                                actor.get_common_spawn_mut().target_id = target;
+                            }
                             let mut network = network.lock();
-                            let data = data.lock();
                             network.send_in_range(
                                 from_actor_id,
                                 &data,
@@ -1312,8 +2162,8 @@ pub async fn server_main_loop(
                                 ActorControlCategory::SetSoftTarget {},
                             );
 
-                            let mut network = network.lock();
                             let data = data.lock();
+                            let mut network = network.lock();
                             network.send_in_range(
                                 from_actor_id,
                                 &data,
@@ -1330,8 +2180,8 @@ pub async fn server_main_loop(
                                 },
                             );
 
-                            let mut network = network.lock();
                             let mut data = data.lock();
+                            let mut network = network.lock();
                             network.send_in_range(
                                 from_actor_id,
                                 &data,
@@ -1358,8 +2208,8 @@ pub async fn server_main_loop(
                                 },
                             );
 
-                            let mut network = network.lock();
                             let mut data = data.lock();
+                            let mut network = network.lock();
                             network.send_in_range(
                                 from_actor_id,
                                 &data,
@@ -1377,6 +2227,7 @@ pub async fn server_main_loop(
                                 }
                             }
                         }
+                        ClientTriggerCommand::ExitIdlePosture {} => {}
                         ClientTriggerCommand::Emote { emote, hide_text } => {
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
@@ -1387,8 +2238,8 @@ pub async fn server_main_loop(
                                 },
                             );
 
-                            let mut network = network.lock();
                             let mut data = data.lock();
+                            let mut network = network.lock();
                             network.send_in_range(
                                 from_actor_id,
                                 &data,
@@ -1415,17 +2266,17 @@ pub async fn server_main_loop(
                                 );
                             }
                         }
-                        ClientTriggerCommand::ToggleWeapon { shown, unk_flag } => {
+                        ClientTriggerCommand::ToggleWeapon { shown, immediately } => {
                             let msg = FromServer::ActorControl(
                                 from_actor_id,
                                 ActorControlCategory::ToggleWeapon {
                                     shown: *shown,
-                                    unk_flag: *unk_flag,
+                                    immediately: *immediately,
                                 },
                             );
 
-                            let mut network = network.lock();
                             let data = data.lock();
+                            let mut network = network.lock();
                             network.send_in_range(
                                 from_actor_id,
                                 &data,
@@ -1456,7 +2307,7 @@ pub async fn server_main_loop(
                                             && effect_id == target_effect_id
                                             && effect_source_actor_id == target_actor_id
                                         {
-                                            instance.cancel_task(network.clone(), &task);
+                                            instance.retain_tasks(|queued| queued != &task);
                                         }
                                     }
                                 }
@@ -1532,8 +2383,8 @@ pub async fn server_main_loop(
                             );
                         }
                         ClientTriggerCommand::PlaceWaymark { id, pos } => {
-                            let mut network = network.lock();
                             let data = data.lock();
+                            let mut network = network.lock();
 
                             update_party_waymark(
                                 &mut network,
@@ -1544,14 +2395,14 @@ pub async fn server_main_loop(
                             );
                         }
                         ClientTriggerCommand::ClearWaymark { id } => {
-                            let mut network = network.lock();
                             let data = data.lock();
+                            let mut network = network.lock();
 
                             update_party_waymark(&mut network, &data, from_actor_id, *id, None);
                         }
                         ClientTriggerCommand::ClearAllWaymarks {} => {
-                            let mut network = network.lock();
                             let data = data.lock();
+                            let mut network = network.lock();
 
                             // Clearing all waymarks is equivalent to sending a completely blank preset.
                             update_party_waymarks(
@@ -1591,6 +2442,7 @@ pub async fn server_main_loop(
                             }
                         }
                         ClientTriggerCommand::RequestDuel { actor_id } => {
+                            let mut data = data.lock();
                             let mut network = network.lock();
                             network.send_to_by_actor_id(
                                 from_actor_id,
@@ -1619,7 +2471,6 @@ pub async fn server_main_loop(
                                 opponent_content_id = handle.content_id;
                                 opponent_object_id = *actor_id;
 
-                                let data = data.lock();
                                 let Some(instance) = data.find_actor_instance(*actor_id) else {
                                     continue;
                                 };
@@ -1649,7 +2500,6 @@ pub async fn server_main_loop(
                                 DestinationNetwork::ZoneClients,
                             );
 
-                            let mut data = data.lock();
                             let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
                                 continue;
                             };
@@ -1729,9 +2579,9 @@ pub async fn server_main_loop(
                                 }
                             } else {
                                 // If not cancelling, then we need to send a confirmation to the opponent...
-                                let mut network = network.lock();
-
                                 let data = data.lock();
+
+                                let mut network = network.lock();
                                 let Some(instance) = data.find_actor_instance(from_actor_id) else {
                                     continue;
                                 };
@@ -1897,13 +2747,23 @@ pub async fn server_main_loop(
                                 continue;
                             };
 
+                            let hated_players = instance
+                                .find_actor(*id)
+                                .and_then(|actor| actor.npc_hate_list())
+                                .map(|hate_list| hate_list.keys().copied().collect::<Vec<_>>())
+                                .unwrap_or_default();
+
                             let Some(actor) = instance.find_actor_mut(*id) else {
                                 continue;
                             };
 
                             let NetworkedActor::Npc {
                                 state,
+                                navmesh_path,
+                                navmesh_path_lerp,
                                 navmesh_target: current_target,
+                                hate_list,
+                                spawn,
                                 ..
                             } = actor
                             else {
@@ -1911,14 +2771,65 @@ pub async fn server_main_loop(
                             };
 
                             *state = NpcState::Wander;
+                            navmesh_path.clear();
+                            *navmesh_path_lerp = 0.0;
                             *current_target = None;
+                            hate_list.clear();
+                            spawn.common.target_id = ObjectTypeId::default();
+                            spawn.common.health_points = spawn.common.max_health_points;
+                            let reset_hp = spawn.common.health_points;
+                            let reset_mp = spawn.common.resource_points;
+
+                            for player_id in hated_players {
+                                if let Some(NetworkedActor::Player { hated_by, .. }) =
+                                    instance.find_actor_mut(player_id)
+                                {
+                                    hated_by.remove(id);
+                                }
+                            }
 
                             // TODO: throw this into a generic de-aggro thing eventually
                             let mut network = network.lock();
+                            network.send_in_range(
+                                *id,
+                                &data,
+                                FromServer::ActorControlTarget(
+                                    *id,
+                                    ObjectTypeId::default(),
+                                    ActorControlCategory::SetTarget {},
+                                ),
+                                DestinationNetwork::ZoneClients,
+                            );
                             network.send_ac_in_range(
                                 &data,
                                 *id,
                                 ActorControlCategory::SetBattle { battle: false },
+                            );
+                            // Drop the combat tag (claim) so the nameplate returns to neutral.
+                            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::FirstAttack {
+                                unk1: 1,
+                                unk2: 0,
+                                combat_tagger: ObjectId::default(),
+                                unk3: 0,
+                            });
+                            network.send_in_range(
+                                *id,
+                                &data,
+                                FromServer::PacketSegment(ipc, *id),
+                                DestinationNetwork::ZoneClients,
+                            );
+                            // Broadcast the refilled HP. The reset restores HP server-side, but
+                            // without this the client only sees full HP on the *next* attack.
+                            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateHpMpTp {
+                                hp: reset_hp,
+                                mp: reset_mp,
+                                unk: 0,
+                            });
+                            network.send_in_range(
+                                *id,
+                                &data,
+                                FromServer::PacketSegment(ipc, *id),
+                                DestinationNetwork::ZoneClients,
                             );
                         }
                         ClientTriggerCommand::EmoteInterrupted {} => {
@@ -2040,14 +2951,14 @@ pub async fn server_main_loop(
                     network.linkshells.retain(|_, shell| !shell.is_empty());
                 }
                 ToServer::ActorSummonsMinion(from_actor_id, minion_id) => {
-                    let mut network = network.lock();
                     let mut data = data.lock();
+                    let mut network = network.lock();
 
                     set_player_minion(&mut data, &mut network, minion_id, from_actor_id);
                 }
                 ToServer::ActorDespawnsMinion(from_actor_id) => {
-                    let mut network = network.lock();
                     let mut data = data.lock();
+                    let mut network = network.lock();
 
                     set_player_minion(&mut data, &mut network, 0, from_actor_id);
                 }
@@ -2066,6 +2977,7 @@ pub async fn server_main_loop(
                     let mut actor_ids = Vec::new();
 
                     // Send all party members to this instanced content
+                    let mut data = data.lock();
                     let mut network = network.lock();
                     if let Some(party_id) = get_party_id_from_actor_id(&network, from_actor_id) {
                         if let Some(party) = network.parties.get(&party_id) {
@@ -2080,12 +2992,21 @@ pub async fn server_main_loop(
                     }
 
                     if let Some(zone_id) = zone_id {
-                        let mut data = data.lock();
-
+                        // Carry each player's combat state (job gauge, cooldowns, summoned-pet flag)
+                        // into the duty. Without this the destination instance gets a brand-new
+                        // actor with default state, so a summoner's pet would fail to re-spawn while
+                        // the client still shows it — desyncing the pet UI.
+                        let mut carried_states = Vec::new();
                         for (_, actor_id) in &actor_ids {
                             // inform the players in this zone that this actor left
                             if let Some(current_instance) = data.find_actor_instance_mut(*actor_id)
                             {
+                                let state = take_combat_state_and_despawn_pets(
+                                    current_instance,
+                                    &mut network,
+                                    *actor_id,
+                                );
+                                carried_states.push((*actor_id, state));
                                 network.remove_actor(current_instance, *actor_id);
                             }
                         }
@@ -2097,6 +3018,12 @@ pub async fn server_main_loop(
                         {
                             for (client_id, actor_id) in &actor_ids {
                                 target_instance.insert_empty_actor(*actor_id);
+
+                                let carried = carried_states
+                                    .iter()
+                                    .find(|(id, _)| id == actor_id)
+                                    .and_then(|(_, state)| state.clone());
+                                restore_carried_combat_state(target_instance, *actor_id, carried);
 
                                 change_zone_warp_to_entrance(
                                     &mut network,
@@ -2122,8 +3049,18 @@ pub async fn server_main_loop(
                     let mut data = data.lock();
                     let mut network = network.lock();
 
+                    // Carry the player's combat state (job gauge, cooldowns, summoned-pet flag) back
+                    // out of the duty so the summoner's pet re-spawns in the overworld instead of
+                    // leaving the client's pet UI desynced.
+                    let mut carried_combat_state = None;
+
                     // Inform the players in this zone that this actor left
                     if let Some(current_instance) = data.find_actor_instance_mut(from_actor_id) {
+                        carried_combat_state = take_combat_state_and_despawn_pets(
+                            current_instance,
+                            &mut network,
+                            from_actor_id,
+                        );
                         network.remove_actor(current_instance, from_actor_id);
                     }
 
@@ -2135,6 +3072,7 @@ pub async fn server_main_loop(
                     }
 
                     instance.insert_empty_actor(from_actor_id);
+                    restore_carried_combat_state(instance, from_actor_id, carried_combat_state);
 
                     let director_vars = instance
                         .director
@@ -2292,8 +3230,8 @@ pub async fn server_main_loop(
                     }
                 }
                 ToServer::Dismounted(from_actor_id, party_id) => {
+                    let mut data = data.lock();
                     let mut network = network.lock();
-                    let data = data.lock();
 
                     let mut ids_to_dismount = Vec::new();
                     ids_to_dismount.push(from_actor_id);
@@ -2316,9 +3254,16 @@ pub async fn server_main_loop(
                     }
 
                     for id in ids_to_dismount {
-                        let Some(instance) = data.find_actor_instance(id) else {
+                        let Some(instance) = data.find_actor_instance_mut(id) else {
                             continue;
                         };
+
+                        if let Some(actor) = instance.find_actor_mut(id) {
+                            let common = actor.get_common_spawn_mut();
+                            common.current_mount = 0;
+                            common.mode = CharacterMode::Normal;
+                            common.mode_arg = 0;
+                        }
 
                         let msg = FromServer::ActorDismounted(id);
                         network.send_in_range_inclusive_instance(
@@ -2327,11 +3272,12 @@ pub async fn server_main_loop(
                             msg,
                             DestinationNetwork::ZoneClients,
                         );
+                        summoner::sync_pet_after_dismount(&mut network, instance, id);
                     }
                 }
                 ToServer::SetOnlineStatus(from_actor_id, online_status) => {
-                    let mut network = network.lock();
                     let data = data.lock();
+                    let mut network = network.lock();
                     network.send_ac_in_range_inclusive(
                         &data,
                         from_actor_id,
@@ -2352,8 +3298,8 @@ pub async fn server_main_loop(
                     set_character_mode(instance, &mut network, from_actor_id, mode, arg);
                 }
                 ToServer::BroadcastActorControl(from_actor_id, actor_control) => {
-                    let mut network = network.lock();
                     let data = data.lock();
+                    let mut network = network.lock();
                     network.send_ac_in_range(&data, from_actor_id, actor_control);
                 }
                 ToServer::RemoveCooldowns(actor_id) => {
@@ -2432,6 +3378,7 @@ pub async fn server_main_loop(
 
         // Remove any clients that errored out
         {
+            let mut data = data.lock();
             let mut network = network.lock();
 
             network.to_remove.append(&mut to_remove);
@@ -2446,7 +3393,6 @@ pub async fn server_main_loop(
                 }
 
                 if let Some(actor_id) = actor_id {
-                    let mut data = data.lock();
                     // remove them from the instance
                     if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
                         network.remove_actor(current_instance, actor_id);

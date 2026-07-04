@@ -84,6 +84,10 @@ pub const COMBO_TIMEOUT: Duration = Duration::from_secs(30);
 /// In seconds. This controls the animation lock time for *all actions* for now.
 pub const ANIMATION_LOCK_TIME: f32 = 0.6;
 
+/// The "slidecast" window: the final stretch of a cast during which the spell is locked in, so
+/// moving no longer interrupts it (the cast still completes and deals its effect). Measured from
+/// retail at roughly the last half-second of the cast bar.
+pub const SLIDECAST_WINDOW: Duration = Duration::from_millis(500);
 #[binrw]
 #[brw(repr(u32))]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -193,39 +197,57 @@ impl std::fmt::Debug for MoveAnimationType {
 }
 
 /// The client sends this to inform the server about its player's current state when moving around.
+/// Stored as raw bitflags rather than a strict enum because the client does combine flags during
+/// special movement (e.g. dashes/charges like Crimson Cyclone send values that aren't a single
+/// known constant); a strict `repr = u8` enum would fail to parse and drop the whole position
+/// update packet.
 #[binrw]
-#[brw(repr = u8)]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum MoveAnimationState {
-    #[default]
-    /// No special state is in play.
-    None = 0,
-    /// The player fell off something, or they began jumping.
-    LeavingCollision = 1,
-    /// The player landed back on the ground.
-    EnteringCollision = 2,
-    /// The player reached the apex of their jump, and began to fall.
-    StartFalling = 4,
-    /// Seen while falling off arena edges in UpdatePositionHandlerInstance.
-    Unk1 = 64,
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
+pub struct MoveAnimationState(u8);
+
+bitflags! {
+    impl MoveAnimationState : u8 {
+        /// The player fell off something, or they began jumping.
+        const LEAVING_COLLISION = 0x01;
+        /// The player landed back on the ground.
+        const ENTERING_COLLISION = 0x02;
+        /// The player reached the apex of their jump, and began to fall.
+        const START_FALLING = 0x04;
+        /// Seen while falling off arena edges in UpdatePositionHandlerInstance.
+        const UNK1 = 0x40;
+    }
+}
+
+impl std::fmt::Debug for MoveAnimationState {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
 }
 
 /// The client sends this to inform the server about its player's current state when jumping.
+/// Stored as raw bitflags for the same reason as [`MoveAnimationState`] — strict enum dispatch
+/// rejected legitimate dash-style values from the client.
 #[binrw]
-#[brw(repr = u8)]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum JumpState {
-    /// The player is descending back to the ground, or isn't jumping at all.
-    #[default]
-    NoneOrFalling = 0,
-    /// The player begins a gimmick path. Observed during S9 teleportation pads.
-    GimmickPathMoveBegin = 1,
-    /// THe player finishes a gimmick path. Observed during S9 teleportation pads.
-    GimmickPathMoveFinish = 2,
-    /// The player is ascending to the apex of the jump.
-    Ascending = 16,
-    /// Seen while falling off arena edges in UpdatePositionHandlerInstance.
-    Unk1 = 64,
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
+pub struct JumpState(u8);
+
+bitflags! {
+    impl JumpState : u8 {
+        /// The player begins a gimmick path. Observed during S9 teleportation pads.
+        const GIMMICK_PATH_MOVE_BEGIN = 0x01;
+        /// The player finishes a gimmick path. Observed during S9 teleportation pads.
+        const GIMMICK_PATH_MOVE_FINISH = 0x02;
+        /// The player is ascending to the apex of the jump.
+        const ASCENDING = 0x10;
+        /// Seen while falling off arena edges in UpdatePositionHandlerInstance.
+        const UNK1 = 0x40;
+    }
+}
+
+impl std::fmt::Debug for JumpState {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
 }
 
 /// This allows us (and probably the client as well) to determine which event belongs to each sheet, or type of NPC.
@@ -364,6 +386,8 @@ pub enum HandlerType {
     /// Used for dungeons, including Deep Dungeons.
     InstanceContent = 0x8003,
     PublicContent = 0x8004,
+    /// Used for jail zones like Mordion Gaol.
+    Jail = 0x8005,
     QuestBattle = 0x8006,
     CompanyLeve = 0x8007,
     TreasureHunt = 0x8009,
@@ -401,6 +425,7 @@ impl HandlerType {
             TerritoryIntendedUse::CosmicExploration => Some(Self::MassivePcContent),
             TerritoryIntendedUse::OpenWorldInstanceBattle => Some(Self::QuestBattle),
             TerritoryIntendedUse::LeapOfFaith => Some(Self::PublicContent),
+            TerritoryIntendedUse::Jail => Some(Self::Jail),
             TerritoryIntendedUse::GoldSaucer => Some(Self::GoldSaucer),
             TerritoryIntendedUse::OceanFishing => Some(Self::InstanceContent),
             TerritoryIntendedUse::OccultCrescent => Some(Self::PublicContent), // TODO: Also initializes a FATE director but we can't do that currently!
@@ -412,7 +437,15 @@ impl HandlerType {
 
     /// Whether this handler type needs a ContentFinderCondition to function.
     pub fn requires_content_id(&self) -> bool {
-        !matches!(self, HandlerType::Fate | HandlerType::GoldSaucer)
+        !matches!(
+            self,
+            HandlerType::Fate | HandlerType::GoldSaucer | HandlerType::Jail
+        )
+    }
+
+    /// Whether this handler type still needs a director state packet even without ContentFinderContent.
+    pub fn requires_zone_director_state(&self) -> bool {
+        matches!(self, HandlerType::Jail)
     }
 }
 

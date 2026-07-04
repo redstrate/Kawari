@@ -13,7 +13,7 @@ use crate::{
 use kawari::{common::ObjectId, ipc::zone::ActorControlCategory};
 
 #[derive(Debug)]
-pub struct NetworkState {
+pub(in crate::server) struct NetworkState {
     pub to_remove: Vec<ClientId>,
     pub to_remove_chat: Vec<ClientId>,
     pub clients: HashMap<ClientId, (ClientHandle, ClientState)>,
@@ -40,7 +40,7 @@ impl Default for NetworkState {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum DestinationNetwork {
+pub(in crate::server) enum DestinationNetwork {
     ZoneClients,
     ChatClients,
 }
@@ -118,6 +118,41 @@ impl NetworkState {
             }
 
             // If the actor wasn't spawned for this client, fail silently.
+        }
+    }
+
+    /// Spawn an object that has already been inserted into the instance, using each client's
+    /// client-side object pool to choose the actual spawn index.
+    pub fn spawn_inserted_object_in_range(&mut self, instance: &Instance, object_id: ObjectId) {
+        let Some(object) = instance.find_actor(object_id) else {
+            return;
+        };
+
+        for (id, (handle, state)) in &mut self.clients {
+            let id = *id;
+
+            let Some(viewer) = instance.actors.get(&handle.actor_id) else {
+                continue;
+            };
+            let NetworkedActor::Player { .. } = viewer else {
+                continue;
+            };
+
+            if !viewer.in_range_of(object) || state.has_spawned(object_id) {
+                continue;
+            }
+
+            if let Some(spawn_index) = state.object_allocator.reserve(object_id) {
+                let NetworkedActor::Object { object, .. } = object else {
+                    continue;
+                };
+                let mut object = *object;
+                object.spawn_index = spawn_index;
+
+                if handle.send(FromServer::SpawnObject(object)).is_err() {
+                    self.to_remove.push(id);
+                }
+            }
         }
     }
 

@@ -252,8 +252,11 @@ impl ShopEventHandler {
                 )
                 .await;
 
+                // One transaction batch id shared by both the currency update and the item discard
+                // below, and repeated in the closing InventoryTransactionFinish.
+                let shop_txid = connection.next_transaction_id();
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
-                    sequence: connection.player_data.item_sequence,
+                    sequence: shop_txid,
                     operation_type: ItemOperationKind::Update,
                     src_actor_id: connection.player_data.character.actor_id,
                     src_storage_id: ContainerType::Currency,
@@ -280,7 +283,7 @@ impl ShopEventHandler {
                 connection.player_data.inventory.process_action(&action);
 
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransaction {
-                    sequence: connection.player_data.item_sequence,
+                    sequence: shop_txid,
                     operation_type: ItemOperationKind::Discard,
                     src_actor_id: connection.player_data.character.actor_id,
                     src_storage_id: storage,
@@ -297,7 +300,7 @@ impl ShopEventHandler {
                 connection.send_ipc_self(ipc).await;
 
                 connection
-                    .send_inventory_transaction_finish(0x100, 0x300)
+                    .send_inventory_transaction_finish(shop_txid, 0x100, 0x300)
                     .await;
 
                 Self::send_gilshop_ack(

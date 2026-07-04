@@ -755,6 +755,7 @@ dependencies = [
  "diesel",
  "glam",
  "kawari-core-macro",
+ "libsqlite3-sys",
  "md5",
  "mlua",
  "physis",
@@ -827,6 +828,7 @@ version = "7.51.2"
 dependencies = [
  "axum",
  "kawari",
+ "libsqlite3-sys",
  "physis",
  "serde_json",
  "sha1_smol",
