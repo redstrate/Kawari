@@ -1,3 +1,11 @@
+use diesel::{
+    backend::Backend,
+    deserialize::{self, FromSqlRow},
+    expression::AsExpression,
+    serialize,
+    sql_types::Text,
+    sqlite::Sqlite,
+};
 use icarus::{ClassJob::ClassJobSheet, Race::RaceSheet};
 use kawari::{
     common::{ContainerType, ItemOperationKind, LegacyEquipmentModelId, WeaponModelId},
@@ -39,7 +47,8 @@ use physis::TerritoryIntendedUse;
 const MAX_NORMAL_STORAGE: usize = 35;
 pub const MAX_LARGE_STORAGE: usize = 50;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, AsExpression, FromSqlRow)]
+#[diesel(sql_type = Text)]
 pub struct Inventory {
     pub equipped: EquippedStorage,
     pub pages: [GenericStorage<MAX_NORMAL_STORAGE>; 4],
@@ -58,6 +67,21 @@ pub struct Inventory {
     pub currency: CurrencyStorage,
     pub crystals: CrystalsStorage,
     pub key_items: GenericStorage<MAX_NORMAL_STORAGE>,
+}
+
+impl serialize::ToSql<Text, Sqlite> for Inventory {
+    fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Sqlite>) -> serialize::Result {
+        out.set_value(serde_json::to_string(&self).unwrap());
+        Ok(serialize::IsNull::No)
+    }
+}
+
+impl deserialize::FromSql<Text, Sqlite> for Inventory {
+    fn from_sql(mut bytes: <Sqlite as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
+        Ok(serde_json::from_str(bytes.read_text())
+            .ok()
+            .unwrap_or_default())
+    }
 }
 
 impl Default for Inventory {

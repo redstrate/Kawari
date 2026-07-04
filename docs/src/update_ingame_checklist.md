@@ -93,6 +93,7 @@ Test Moogle Mail:
 - [ ] Once the duty begins, play through it as normal or use debug/GM commands to speed things up if desired.
 - [ ] Also test that Abandon Duty works.
 - [ ] Open a treasure chest.
+- [ ] Enter Eden's Verse: Reflugence (`!unlockcontent 30094`) and ensure falling off the arena KOs your character.
 
 ## Housing
 - [ ] Enter a housing ward and ensure the zone loads correctly.
@@ -117,7 +118,8 @@ The following tests should also be visible to others in the zone upon completion
 - [ ] Set a title for your character. These should be visible to other players.
 - [ ] Visit the market board and ensure you can view items.
 - [ ] Open the party finder and ensure you see the test entries.
+- [ ] Trading: attempt to trade with another player, and ensure the client tells you that the other player is unable trade.
+- [ ] Run the `/playtime` command and ensure it displays your character's total play time.
 For the following, ensure the following items display their correct unimplemented messages when trying to do them.
 - [ ] Fellowships & Fellowship Finder
-- [ ] Trading
 - [ ] Set a friend group/marker on a friend in the friend list

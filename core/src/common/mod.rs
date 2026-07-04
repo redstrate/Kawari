@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 mod customize_data;
-pub use customize_data::CustomizeData;
+pub use customize_data::{customize_data_from_json, customize_data_to_json};
 
 mod position;
 pub use position::Position;

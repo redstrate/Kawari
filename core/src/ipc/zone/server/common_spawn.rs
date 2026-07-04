@@ -1,8 +1,9 @@
 use binrw::binrw;
+use physis::savedata::chardat::CustomizeData;
 use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, CharacterMode, CrestData, CustomizeData, EquipDisplayFlag, HandlerId,
+    CHAR_NAME_MAX_LENGTH, CharacterMode, CrestData, EquipDisplayFlag, HandlerId,
     LegacyEquipmentModelId, ObjectId, ObjectTypeId, Position, WeaponModelId,
     read_quantized_rotation, read_string, write_quantized_rotation, write_string,
 };
@@ -156,8 +157,8 @@ impl From<EquipDisplayFlag> for DisplayFlag {
         if value.intersects(EquipDisplayFlag::CLOSE_VISOR) {
             new_flag.insert(DisplayFlag::CLOSE_VISOR);
         }
-        if value.intersects(EquipDisplayFlag::HIDE_EARS) {
-            new_flag.insert(DisplayFlag::HIDE_EARS);
+        if value.intersects(EquipDisplayFlag::HIDE_VIERA_EARS) {
+            new_flag.insert(DisplayFlag::HIDE_VIERA_EARS);
         }
 
         new_flag
@@ -174,7 +175,7 @@ bitflags! {
         const FADED = 0x100;
         const CLOSE_VISOR = 0x800;
         const UNK1 = 0x40000;
-        const HIDE_EARS = 0x100000;
+        const HIDE_VIERA_EARS = 0x100000;
     }
 }
 

@@ -252,10 +252,12 @@ impl Zone {
                                 scale,
                                 sanctuary: false,
                                 // This is guesswork since there's only one dueling location in-game
-                                duel: event_range.unk_flags[0] == 1
-                                    && event_range.unk_flags[3] == 1
-                                    && event_range.unk_flags[4] == 1
-                                    && event_range.unk_flags[5] == 1,
+                                // TODO: restore duel support by hardcoding its ID
+                                // duel: event_range.unk_flags[0] == 1
+                                //     && event_range.unk_flags[3] == 1
+                                //     && event_range.unk_flags[4] == 1
+                                //     && event_range.unk_flags[5] == 1,
+                                duel: false,
                                 gimmick: None,
                                 instance_id: object.instance_id,
                                 discovery_id: None,
@@ -400,7 +402,6 @@ impl Zone {
         &self,
         instance_id: u32,
     ) -> Option<(&InstanceObject, &ExitRangeInstanceObject)> {
-        // TODO: also check position!
         for layer_group in &self.layer_groups {
             for layer in &layer_group.chunks[0].layers {
                 if !layer.header.has_layer_set(self.layer_set as u32) {
@@ -1207,7 +1208,7 @@ pub fn handle_zone_messages(
                 // Seen when attempting to enter underwater portals in Ruby Sea
                 if new_exit_box.territory_type == 0
                     && new_exit_box.zone_id == 0
-                    && new_exit_box.exit_type == physis::layer::ExitType::Unk
+                    && new_exit_box.exit_type == physis::layer::ExitType::Invisible
                 {
                     destination_zone_id = current_instance.zone.id;
                 }

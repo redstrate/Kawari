@@ -361,7 +361,7 @@ impl LobbyConnection {
                     // On the last packet, add the account-wide information
                     ServiceLoginReply {
                         sequence,
-                        counter: (i * (ServiceLoginReply::MAX_CHARACTERS as u8 * 2)) + 1, // TODO: why the + 1 here?
+                        counter: (i * (ServiceLoginReply::MAX_CHARACTERS as u8 * 2)) + 1,
                         num_in_packet: characters_in_packet.len() as u8,
                         unk3: 0,
                         unk4: 0,

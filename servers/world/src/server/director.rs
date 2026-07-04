@@ -688,11 +688,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     ActorControlSelf {
                         category: ActorControlCategory::DirectorEvent {
                             handler_id: director_id,
-                            event: DirectorEvent::SetBGM,
-                            arg1: *id,
-                            arg2: 0,
-                            arg3: 0,
-                            arg4: 0,
+                            event: DirectorEvent::SetBGM { bgm: *id },
                         },
                     },
                 ));
@@ -763,11 +759,10 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     ActorControlSelf {
                         category: ActorControlCategory::DirectorEvent {
                             handler_id: director_id,
-                            event: DirectorEvent::VariantVoteRoute,
-                            arg1: 1, // TODO: set to the number of players in the instance
-                            arg2: *npc_route,
-                            arg3: 0,
-                            arg4: 0,
+                            event: DirectorEvent::VariantVoteRoute {
+                                votes_needed: 1, // TODO: set to the number of players in the instance
+                                npc_route: *npc_route,
+                            },
                         },
                     },
                 ));
@@ -812,11 +807,12 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     ActorControlSelf {
                         category: ActorControlCategory::DirectorEvent {
                             handler_id: director_id,
-                            event: DirectorEvent::DutyCompleted,
-                            arg1: 0,
-                            arg2: 0,
-                            arg3: 0,
-                            arg4: 0,
+                            event: DirectorEvent::DutyCompleted {
+                                arg1: 0,
+                                arg2: 0,
+                                arg3: 0,
+                                arg4: 0,
+                            },
                         },
                     },
                 ));

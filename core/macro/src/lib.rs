@@ -5,8 +5,6 @@ use proc_macro2::TokenTree;
 use quote::{ToTokens, quote};
 use syn::{Meta, Type, parse::Parse};
 
-// TODO: clean up this mess.
-
 #[proc_macro_attribute]
 pub fn opcode_data(_metadata: TokenStream, input: TokenStream) -> TokenStream {
     let mut input = syn::parse_macro_input!(input as syn::ItemEnum);

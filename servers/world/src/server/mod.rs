@@ -803,7 +803,7 @@ fn server_logic_tick(
             exit_pop_range_id,
             id,
             from_id,
-            WarpType::InstanceContent,
+            WarpType::Event,
             0,
             0,
             0,

@@ -488,7 +488,7 @@ fn walk_layer(
             scale: object.transform.scale,
         };
 
-        if let LayerEntryData::BG(bg) = &object.data
+        if let LayerEntryData::BgPart(bg) = &object.data
             && !bg.collision_asset_path.value.is_empty()
         {
             // NOTE: assert is here to find out the unknown

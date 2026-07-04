@@ -68,8 +68,8 @@ impl CustomIpcConnection {
 
                     // fill inventory
                     inventory.equip_racial_items(
-                        chara_make.customize.race,
-                        chara_make.customize.gender,
+                        chara_make.customize.race as u8,
+                        chara_make.customize.gender as u8,
                         &mut game_data,
                     );
 

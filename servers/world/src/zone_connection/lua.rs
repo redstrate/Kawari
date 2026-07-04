@@ -23,6 +23,7 @@ use kawari::{
         ServerZoneIpcSegment,
     },
 };
+use physis::race::{Gender, Race, Tribe};
 
 impl ZoneConnection {
     pub async fn process_lua_player(
@@ -534,7 +535,7 @@ impl ZoneConnection {
                         let mut database = self.database.lock();
                         let mut chara_make =
                             database.get_chara_make(self.player_data.character.content_id as u64);
-                        chara_make.customize.race = *race;
+                        chara_make.customize.race = Race::from_repr(*race).unwrap();
 
                         database.set_chara_make(
                             self.player_data.character.content_id as u64,
@@ -548,7 +549,7 @@ impl ZoneConnection {
                         let mut database = self.database.lock();
                         let mut chara_make =
                             database.get_chara_make(self.player_data.character.content_id as u64);
-                        chara_make.customize.subrace = *tribe;
+                        chara_make.customize.tribe = Tribe::from_repr(*tribe).unwrap();
 
                         database.set_chara_make(
                             self.player_data.character.content_id as u64,
@@ -562,7 +563,7 @@ impl ZoneConnection {
                         let mut database = self.database.lock();
                         let mut chara_make =
                             database.get_chara_make(self.player_data.character.content_id as u64);
-                        chara_make.customize.gender = *sex;
+                        chara_make.customize.gender = Gender::from_repr(*sex).unwrap();
 
                         database.set_chara_make(
                             self.player_data.character.content_id as u64,
@@ -618,11 +619,12 @@ impl ZoneConnection {
                         ActorControlSelf {
                             category: ActorControlCategory::DirectorEvent {
                                 handler_id: HandlerId(*director_id),
-                                event: DirectorEvent::DutyCommence,
-                                arg1: player.content_data.duration as u32,
-                                arg2: 0,
-                                arg3: 0,
-                                arg4: 0,
+                                event: DirectorEvent::DutyCommence {
+                                    arg1: player.content_data.duration as u32,
+                                    arg2: 0,
+                                    arg3: 0,
+                                    arg4: 0,
+                                },
                             },
                         },
                     ));
@@ -638,11 +640,12 @@ impl ZoneConnection {
                         ActorControlSelf {
                             category: ActorControlCategory::DirectorEvent {
                                 handler_id: HandlerId(*director_id),
-                                event: DirectorEvent::SetDutyTimeRemaining,
-                                arg1: (player.content_data.duration - 1) as u32, // TODO: lol
-                                arg2: 0,
-                                arg3: 0,
-                                arg4: 0,
+                                event: DirectorEvent::SetDutyTimeRemaining {
+                                    arg1: (player.content_data.duration - 1) as u32, // TODO: lol
+                                    arg2: 0,
+                                    arg3: 0,
+                                    arg4: 0,
+                                },
                             },
                         },
                     ));
@@ -830,6 +833,29 @@ impl ZoneConnection {
                             name.clone(),
                         ))
                         .await;
+                }
+                LuaTask::FinishDyeing {} => {
+                    if let Some(dye_information) = &self.dyeing_information {
+                        // TODO: consume the dye
+
+                        let Some(dst_slot) = self.player_data.inventory.get_item_mut(
+                            dye_information.target_container,
+                            dye_information.target_slot as u16,
+                        ) else {
+                            return true;
+                        };
+
+                        dst_slot.stains = [dye_information.dye1, dye_information.dye2];
+
+                        // The client needs to be informed about the newly dyed item, but this is extreme...
+                        self.send_inventory().await;
+                        self.inform_equip().await;
+
+                        self.send_conditions().await; // So the client gets unstuck.
+                        self.dyeing_information = None;
+                    } else {
+                        tracing::warn!("finish_dyeing called without dye information prepared?!");
+                    }
                 }
             }
         }

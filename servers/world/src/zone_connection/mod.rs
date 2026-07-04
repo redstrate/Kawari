@@ -20,7 +20,7 @@ use kawari::{
     config::WorldConfig,
     ipc::zone::{
         ApartmentList, ApartmentListEntry, CWLSMemberListEntry, ClientTriggerCommand,
-        ClientZoneIpcSegment, Condition, Conditions, DutyFinderSetting,
+        ClientZoneIpcSegment, Condition, Conditions, DutyFinderSetting, DyeInformation,
         GrandCompany as IpcGrandCompany, LetterPreview, PlayerEntry, ServerZoneIpcData,
         ServerZoneIpcSegment,
     },
@@ -196,6 +196,8 @@ pub struct ZoneConnection {
     pub is_trading: bool,
     /// For the crappy setup_director() function right now.
     pub director_vars: Option<ServerZoneIpcSegment>,
+    /// Current dye action information.
+    pub dyeing_information: Option<DyeInformation>,
 }
 
 impl ZoneConnection {

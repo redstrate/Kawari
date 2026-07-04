@@ -1,4 +1,5 @@
-use kawari::common::{CustomizeData, EquipDisplayFlag};
+use kawari::common::{EquipDisplayFlag, customize_data_from_json, customize_data_to_json};
+use physis::savedata::chardat::CustomizeData;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use strum_macros::FromRepr;
@@ -74,7 +75,7 @@ impl ClientSelectData {
             unk9: content[10].as_str().unwrap().parse::<i32>().unwrap(),
             zone_id: content[11].as_str().unwrap().parse::<i32>().unwrap(),
             content_finder_condition: content[12].as_str().unwrap().parse::<i32>().unwrap(),
-            customize: CustomizeData::from_json(&content[13]),
+            customize: customize_data_from_json(&content[13]),
             model_main_weapon: content[14].as_str().unwrap().parse::<u64>().unwrap(),
             model_sub_weapon: content[15].as_str().unwrap().parse::<i32>().unwrap(),
             model_ids: content[16]
@@ -130,7 +131,7 @@ impl ClientSelectData {
             self.unk9.to_string(),
             self.zone_id.to_string(),
             self.content_finder_condition.to_string(),
-            self.customize.to_json(),
+            customize_data_to_json(&self.customize),
             self.model_main_weapon.to_string(),
             self.model_sub_weapon.to_string(),
             self.model_ids
@@ -208,7 +209,9 @@ mod tests {
         assert_eq!(chara_make.remake_minutes_remaining, 0);
         assert_eq!(
             chara_make.display_flags,
-            EquipDisplayFlag::HIDE_LEGACY_MARK | EquipDisplayFlag::UNK3 | EquipDisplayFlag::UNK4
+            EquipDisplayFlag::HIDE_LEGACY_MARK
+                | EquipDisplayFlag::STORE_NEW_ITEMS_IN_ARMOURY_CHEST
+                | EquipDisplayFlag::STORE_CRAFTED_ITEMS_IN_INVENTORY
         );
         assert_eq!(chara_make.voice_id, 93);
         assert_eq!(chara_make.unk21, 0);

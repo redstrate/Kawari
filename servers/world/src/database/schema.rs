@@ -38,6 +38,9 @@ diesel::table! {
         content_id -> BigInt,
         completed -> Text,
         active -> Text,
+        completed_legacy -> Text,
+        unlocked_map_markers -> Text,
+        completed_levequests -> Text,
     }
 }
 

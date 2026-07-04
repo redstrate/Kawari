@@ -1,5 +1,6 @@
 use binrw::binrw;
 use kawari_core_macro::opcode_data;
+use physis::savedata::chardat::CustomizeData;
 
 use super::OnlineStatusMask;
 pub use super::social_list::{SocialList, SocialListUIFlags, SocialListUILanguages};
@@ -92,12 +93,12 @@ pub use free_company::FcHierarchy;
 
 mod actor_move;
 use crate::common::{
-    CustomizeData, DeepDungeonRoomFlag, HandlerId, LandData, ObjectTypeId, Position,
-    read_packed_position, read_quantized_rotation, write_packed_position, write_quantized_rotation,
+    DeepDungeonRoomFlag, HandlerId, LandData, ObjectTypeId, Position, read_packed_position,
+    read_quantized_rotation, write_packed_position, write_quantized_rotation,
 };
 use crate::constants::{
-    AVAILABLE_CLASSJOBS, COMPLETED_LEVEQUEST_BITMASK_SIZE, COMPLETED_QUEST_BITMASK_SIZE,
-    TITLE_UNLOCK_BITMASK_SIZE,
+    AVAILABLE_CLASSJOBS, COMPLETED_LEGACY_QUEST_BITMASK_SIZE, COMPLETED_LEVEQUEST_BITMASK_SIZE,
+    COMPLETED_QUEST_BITMASK_SIZE, TITLE_UNLOCK_BITMASK_SIZE, UNLOCKED_MAP_MARKERS_BITMASK_SIZE,
 };
 pub use crate::ipc::zone::server::actor_move::ActorMove;
 
@@ -341,9 +342,10 @@ pub enum ServerZoneIpcData {
         #[br(count = COMPLETED_QUEST_BITMASK_SIZE)]
         #[bw(pad_size_to = COMPLETED_QUEST_BITMASK_SIZE)]
         completed_quests: Vec<u8>,
-        #[br(count = 65)]
-        #[bw(pad_size_to = 65)]
-        unk2: Vec<u8>,
+        #[brw(pad_after = 1)] // unused I guess
+        #[br(count = UNLOCKED_MAP_MARKERS_BITMASK_SIZE)]
+        #[bw(pad_size_to = UNLOCKED_MAP_MARKERS_BITMASK_SIZE)]
+        unlocked_map_markers: Vec<u8>,
     },
     UnkResponse2 {
         #[brw(pad_after = 7)]
@@ -681,7 +683,9 @@ pub enum ServerZoneIpcData {
         layout_id: u32,
     },
     LegacyQuestList {
-        bitmask: [u8; 40],
+        #[br(count = COMPLETED_LEGACY_QUEST_BITMASK_SIZE)]
+        #[bw(pad_size_to = COMPLETED_LEGACY_QUEST_BITMASK_SIZE)]
+        bitmask: Vec<u8>,
     },
     DirectorVars {
         /// ID of this director.
@@ -1452,6 +1456,85 @@ pub enum ServerZoneIpcData {
     },
     UpdateRecastTimes {
         unk: [u8; 640],
+    },
+    AdventurerPlate {
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+        content_id: u64,
+        actor_id: ObjectId,
+        unk5: u32,
+        world_id: u16,
+        favored_class_level: u16,
+        favored_class: u8, // TODO: not actually?!
+        unk7: u8,
+        grand_company: GrandCompany,
+        grand_company_rank: u8,
+        version: u8,
+        expression: u8,
+        camera_zoom: u8,
+        directional_lighting_color_red: u8,
+        directional_lighting_color_green: u8,
+        directional_lighting_color_blue: u8,
+        directional_lighting_color_brightness: u8,
+        ambient_lighting_color_red: u8,
+        ambient_lighting_color_green: u8,
+        ambient_lighting_color_blue: u8,
+        ambient_lighting_color_brightness: u8,
+        class_job_id: u8,
+        customize: CustomizeData,
+        stain_ids1: [u8; 12],
+        gear_visibility_flag: u8,
+        top_border: u8,
+        bottom_border: u8,
+        preferred_class_job_id: u8,
+        active_hours_weekdays: [u8; 3],
+        active_hours_weekends: [u8; 3],
+        play_styles: [u8; 6],
+        flags: u8,
+        unk13: u8,
+        privacy_flags: u8,
+        stain_ids2: [u8; 12],
+        unk14: u8,
+        banner_timeline: u16,
+        animation_progress: u16,
+        head_direction_y: u16,
+        head_direction_x: u16,
+        eye_direction_y: u16,
+        eye_direction_x: u16,
+        camera_position_x: u16,
+        camera_position_y: u16,
+        camera_position_z: u16,
+        camera_target_x: u16,
+        camera_target_y: u16,
+        camera_target_z: u16,
+        image_rotation: u16,
+        directional_lighting_vertical: u16,
+        directional_lighting_horizontal: u16,
+        banner_decoration: u16,
+        banner_bg: u16,
+        banner_frame: u16,
+        title: u16,
+        decorations: [u16; 5],
+        glasses_ids: [u16; 2],
+        unk16: u16,
+        unk18: u32,
+        item_ids: [u32; 12],
+        timestamp: u32,
+        #[brw(pad_after = 132)] // empty? maybe?
+        #[brw(pad_size_to = 60)]
+        #[br(count = 60)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        comment: String,
+        #[brw(pad_before = 1)] // empty
+        #[brw(pad_after = 23)] // empty
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[br(count = CHAR_NAME_MAX_LENGTH)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        name: String,
     },
 }
 

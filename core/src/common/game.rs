@@ -110,6 +110,7 @@ impl DistanceRange {
     }
 }
 
+/// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Application/Network/WorkDefinitions/ClientSelectData.cs>.
 #[binrw]
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 #[cfg_attr(
@@ -151,15 +152,14 @@ impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sq
 
 bitflags! {
     impl EquipDisplayFlag : u16 {
-        const HIDE_LEGACY_MARK = 0x04;
         const HIDE_HEAD = 0x01;
         const HIDE_WEAPON = 0x02;
-        const UNK1 = 0x04;
+        const HIDE_LEGACY_MARK = 0x04;
         const UNK2 = 0x08;
-        const UNK3 = 0x10;
-        const UNK4 = 0x20;
+        const STORE_NEW_ITEMS_IN_ARMOURY_CHEST = 0x10;
+        const STORE_CRAFTED_ITEMS_IN_INVENTORY = 0x20;
         const CLOSE_VISOR = 0x40;
-        const HIDE_EARS = 0x80;
+        const HIDE_VIERA_EARS = 0x80;
     }
 }
 
@@ -687,7 +687,7 @@ pub enum LogMessageType {
 }
 
 /// Names for rows in the Excel sheet of the same name.
-/// Also see this enum in FFXIVClientStructs.
+/// Also see <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/InstanceContent/InstanceContentDirector.cs>.
 #[derive(Debug, FromRepr)]
 #[repr(u8)]
 pub enum InstanceContentType {
@@ -711,6 +711,9 @@ pub enum InstanceContentType {
     TripleTriad = 18,
     VariantDungeon = 19,
     CriterionDungeon = 20,
+    AdvancedVariantDungeon = 21,
+    Unk22 = 22,
+    Unk23 = 23,
 }
 
 // TODO: see if this can be extrapolated from game data
@@ -1043,16 +1046,17 @@ impl std::fmt::Debug for DeepDungeonRoomFlag {
     }
 }
 
+/// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Fate/FateContext.cs>.
 #[binrw]
 #[brw(little)]
 #[brw(repr = u32)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FateState {
-    Preparing = 0x3,
-    Running = 0x4,
-    Ending = 0x5,
-    Ended = 0x7,
-    Failed = 0x8,
+    Preparing = 3,
+    Running = 4,
+    Ending = 5,
+    Ended = 7,
+    Failed = 8,
 }
 
 // TODO: not 100% certain this correponds to specific timelines indices...

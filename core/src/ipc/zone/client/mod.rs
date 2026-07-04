@@ -26,6 +26,9 @@ pub use mail::{MailItemInfo, TakeAttachmentsInfo};
 mod queue_duties;
 pub use queue_duties::{DutyFinderSetting, QueueDuties};
 
+mod dye_information;
+pub use dye_information::DyeInformation;
+
 use crate::ipc::zone::{
     CWLSPermissionRank, InviteReply, InviteType, LETTER_MSG_MAX_LENGTH, LinkshellInviteResponse,
     MAX_MAIL_ATTACHMENTS_STORAGE, OnlineStatusMask, SearchInfo, SearchUIClassJobMask,
@@ -338,7 +341,8 @@ pub enum ClientZoneIpcData {
         unk: [u8; 16], // unsure if this is always empty
     },
     RequestAdventurerPlate {
-        unk: [u8; 16],
+        actor_id: ObjectId,
+        unk: [u8; 12],
     },
     SearchPlayers {
         /// The classjobs to filter by.
@@ -647,6 +651,7 @@ pub enum ClientZoneIpcData {
     FallFromArena {
         unk1: [u8; 24],
     },
+    DyeInformation(DyeInformation),
 }
 
 #[cfg(test)]

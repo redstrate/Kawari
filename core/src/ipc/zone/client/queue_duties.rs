@@ -3,7 +3,6 @@ use bitflags::bitflags;
 
 use crate::ipc::zone::SocialListUILanguages;
 
-// TODO: Rename to DutyFinderSetting
 #[binrw]
 #[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct DutyFinderSetting(u64);
@@ -12,12 +11,22 @@ bitflags! {
     impl DutyFinderSetting: u64 {
         /// Enables join party in progress mode.
         const JOIN_PARTY_IN_PROGRESS = 0x2;
+        /// ???
+        const INITIATED_BY_PARTY_MEMBER = 0x4;
+        /// ???
+        const IN_PROGRESS_PARTY = 0x80;
+        /// ???
+        const GREED_ONLY = 0x800;
         /// Enables unrestricted party mode.
         const UNRESTRICTED_PARTY = 0x2000;
         /// Enables minimum item level mode.
         const MINIMUM_ITEM_LEVEL = 0x4000;
+        /// ???
+        const LOOTMASTER = 0x10000;
         /// Enables level sync mode.
         const LEVEL_SYNC = 0x200000;
+        /// ???
+        const LIMITED_LEVELING_ROULETTE = 0x400000;
         /// Enables silence echo mode.
         const SILENCE_ECHO = 0x10000000;
         /// Enables explorer mode. If the client enables this, no other flags are sent.

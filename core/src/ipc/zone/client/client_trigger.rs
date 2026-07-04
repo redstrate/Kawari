@@ -171,6 +171,14 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 444u32)]
     OpenChocoboSaddlebag {},
 
+    /// The player is preparing to remove materia.
+    #[brw(magic = 437u32)]
+    PrepareRemoveMateria {
+        #[brw(pad_size_to = 4)] // ContainerType is u16
+        dst_container_type: ContainerType,
+        dst_container_index: u32,
+    },
+
     /// The player is preparing to cast a glamour.
     #[brw(magic = 438u32)]
     PrepareCastGlamour {
@@ -287,7 +295,6 @@ pub enum ClientTriggerCommand {
     DirectorTrigger {
         handler_id: HandlerId,
         trigger: DirectorTrigger,
-        arg: u32,
     },
 
     /// When a player requests an NPC (or player?) to a Triple Triad match.

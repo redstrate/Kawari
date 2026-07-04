@@ -1,4 +1,8 @@
 use glam::Vec3;
+use physis::{
+    race::{Gender, Race, Tribe},
+    savedata::chardat::CustomizeData,
+};
 use serde::Deserialize;
 use std::io::Read;
 
@@ -6,10 +10,7 @@ use crate::{
     CharaMake, GameData, WorldDatabase,
     inventory::{Inventory, Item, Storage},
 };
-use kawari::{
-    common::{CustomizeData, Position},
-    ipc::zone::GrandCompany,
-};
+use kawari::{common::Position, ipc::zone::GrandCompany};
 
 #[derive(Deserialize)]
 struct NameValue {
@@ -235,14 +236,14 @@ impl WorldDatabase {
         }
 
         let customize = CustomizeData {
-            race: character.race.value as u8,
-            gender: character.gender.value as u8,
+            race: Race::from_repr(character.race.value as u8).unwrap(),
+            gender: Gender::from_repr(character.gender.value as u8).unwrap(),
             age: character.appearance.model_type as u8,
             height: character.appearance.height as u8,
-            subrace: character.tribe.value as u8,
+            tribe: Tribe::from_repr(character.tribe.value as u8).unwrap(),
             face: character.appearance.face_type as u8,
             hair: character.appearance.hair_style as u8,
-            enable_highlights: character.appearance.has_highlights as u8,
+            enable_highlights: character.appearance.has_highlights as u8 == 1,
             skin_tone: character.appearance.skin_color as u8,
             right_eye_color: character.appearance.eye_color2 as u8,
             hair_tone: character.appearance.hair_color as u8,
