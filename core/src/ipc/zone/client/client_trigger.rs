@@ -1241,9 +1241,22 @@ pub enum ClientTriggerCommand {
         item_maskings: u64,
     },
 
-    /// Unknown usage for now
+    /// Applies a single glamour from the glamour dresser (prism box) onto one equipped item —
+    /// i.e. project the appearance of `src_prism_box_index` (a slot in the 800-entry dresser) onto
+    /// the item currently in `dst_container_type`/`dst_container_index`. The client runs a pile of
+    /// compatibility checks first (item row valid, same model class, equip restrictions, class-job
+    /// match) before sending. This is the per-item counterpart to `ApplyGlamourPlateFromPrismBox`
+    /// (2358), which applies a whole 12-slot plate at once.
     #[brw(magic = 2355u32)]
-    RequestGlamourPlate {},
+    ApplyGlamourFromPrismBox {
+        /// Index into the glamour dresser (prism box) item array — the source appearance.
+        src_prism_box_index: u32,
+        /// The equipped container the target item lives in (normally Equipped = 1000).
+        #[brw(pad_size_to = 4)] // ContainerType is u16
+        dst_container_type: ContainerType,
+        /// The slot within `dst_container_type` of the item to glamour.
+        dst_container_index: u32,
+    },
 
     /// Sent when the glamour plates is first opened in a territory, to request
     /// the character's 20 glamour plates from the server. The client caches the reply
@@ -1253,8 +1266,11 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 2356u32)]
     RequestGlamourPlatesData {},
 
+    /// Open/close notification for the glamour plate editor opened from the character screen.
+    /// `ui_opened` = true when opening, false when closing. The client toggles the Occupied39
+    /// condition locally to match; the server mirrors it so other systems stay consistent.
     #[brw(magic = 2357u32)]
-    ApplyGlamourPlate {
+    OpenGlamourPlateUI {
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         ui_opened: bool,

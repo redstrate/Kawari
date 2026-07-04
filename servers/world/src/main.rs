@@ -2051,13 +2051,20 @@ async fn process_packet(
                                     connection.send_ipc_self(ipc).await;
                                 }
                             }
-                            ClientTriggerCommand::RequestGlamourPlate {} => {
-                                let ipc = ServerZoneIpcSegment::new(
-                                    ServerZoneIpcData::GlamourPlates(
-                                        connection.player_data.glamour.to_wire_plates(),
-                                    ),
+                            ClientTriggerCommand::ApplyGlamourFromPrismBox {
+                                src_prism_box_index,
+                                dst_container_type,
+                                dst_container_index,
+                            } => {
+                                // Per-item glamour from the dresser onto a single equipped item.
+                                // TODO: implement — project dresser[src_prism_box_index]'s appearance
+                                // onto the item in dst_container_type/dst_container_index. Not wired
+                                // up yet; must NOT reply with GlamourPlates (that's the 2356 path).
+                                let _ = (
+                                    src_prism_box_index,
+                                    dst_container_type,
+                                    dst_container_index,
                                 );
-                                connection.send_ipc_self(ipc).await;
                             }
                             ClientTriggerCommand::RequestGlamourPlatesData {} => {
                                 // The client requests its plates once per territory when the
@@ -2068,12 +2075,9 @@ async fn process_packet(
                                 ));
                                 connection.send_ipc_self(ipc).await;
                             }
-                            ClientTriggerCommand::ApplyGlamourPlate { ui_opened } => {
-                                // Despite the name, 2357 is the open/close toggle for the glamour
-                                // plate editor opened from the character screen (NOT an apply — the
-                                // actual apply is 2358 / ApplyGlamourPlateFromPrismBox). Retail sets
-                                // the Occupied39 condition while the editor is open and clears it on
-                                // close (seen as BossMod "Occupied39=True/False").
+                            ClientTriggerCommand::OpenGlamourPlateUI { ui_opened } => {
+                                // 2357 is the open/close toggle for the glamour plate opened from the character screen. 
+                                // Retail sets the Occupied39 condition while is open and clears it on close (seen as BossMod "Occupied39=True/False").
                                 connection.conditions.toggle_condition(
                                     kawari::ipc::zone::Condition::Occupied39,
                                     ui_opened,
