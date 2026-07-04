@@ -176,11 +176,13 @@ pub enum ClientZoneIpcData {
         containers: [ContainerType; 14],
         /// Indices into the containers.
         indices: [i16; 14],
-        /// For the moment, it is completely unclear what unk1 and unk2 are used for or represent.
-        #[brw(pad_before = 6)]
-        unk1: u16,
-        #[brw(pad_after = 2)]
-        unk2: u16,
+        /// Glamour plate id to apply with this gearset (1..=20), or 0 for none.
+        /// The client clamps this to 0 when the plate is not unlocked or the id is out of range.
+        glamour_plate_id: u8,
+        /// Facewear (glasses) ids for this gearset, 0 when none.
+        #[brw(pad_before = 1)]
+        #[brw(pad_after = 6)]
+        glasses: [u16; 2],
     },
     EquipGearset2 {
         /// Index into the list of gearsets that the client keeps on its side.
@@ -190,14 +192,23 @@ pub enum ClientZoneIpcData {
         containers: [ContainerType; 14],
         /// Indices into the containers.
         indices: [i16; 14],
-        /// For the moment, it is completely unclear what unk1/unk2/unk3 are used for or represent.
-        #[brw(pad_before = 6)]
-        unk1: u16,
-        #[brw(pad_after = 2)]
-        unk2: u16,
-        #[br(count = 56)]
-        #[bw(pad_size_to = 56)]
-        unk3: Vec<u8>,
+        /// Glamour plate id to apply with this gearset (1..=20), or 0 for none.
+        /// The client clamps this to 0 when the plate is not unlocked or the id is out of range.
+        glamour_plate_id: u8,
+        /// Facewear (glasses) ids for this gearset, 0 when none.
+        #[brw(pad_before = 1)]
+        #[brw(pad_after = 6)]
+        glasses: [u16; 2],
+        /// The client sends `EquipGearset2` (instead of `EquipGearset`) when the gearset has a
+        /// valid linked portrait/adventurer-plate. This is that 52-byte "banner" display block:
+        /// byte 0 = valid flag, bytes 3..=6 / 7..=10 = directional/ambient light RGB+brightness,
+        /// bytes 48..=51 = a u32 checksum, with camera/pose half-vectors in between. Treated as
+        /// opaque for now — parsed so packet framing is correct, but not applied. There are also
+        /// 4 trailing padding bytes after this block that the client leaves uninitialized.
+        #[br(count = 52)]
+        #[bw(pad_size_to = 52)]
+        #[brw(pad_after = 4)]
+        portrait: Vec<u8>,
     },
     StartWalkInEvent {
         event_arg: u32,

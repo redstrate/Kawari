@@ -11,7 +11,7 @@ use kawari::common::{
     Position, calculate_max_level,
 };
 use kawari::config::{FilesystemConfig, get_config};
-use kawari_world::inventory::{Item, MAX_LARGE_STORAGE, Storage, get_next_free_slot};
+use kawari_world::inventory::{Item, MAX_LARGE_STORAGE};
 use physis::{TerritoryIntendedUse, equipment::EquipSlot};
 
 use kawari::ipc::chat::ClientChatIpcData;
@@ -2605,145 +2605,25 @@ async fn process_packet(
                         indices,
                         ..
                     } => {
-                        // TODO: handle missing items, full inventory and such
-                        // One transaction id for the whole gearset batch: every InventoryTransaction
-                        // we emit below (via swap_items) and the closing InventoryTransactionFinish
-                        // share this id, matching retail. Without a shared id the client can't
-                        // correlate the finish and stays stuck "syncing with the server".
-                        let gearset_txid = connection.next_transaction_id();
-                        for slot in 0..14 {
-                            let from_slot = indices[slot];
-                            let from_container = containers[slot];
-
-                            if from_container == ContainerType::Equipped {
-                                continue;
-                            }
-                            let mut from_item = Item::default();
-
-                            if from_slot != -1
-                                && let Some(the_item) = connection
-                                    .player_data
-                                    .inventory
-                                    .get_item(from_container, from_slot as u16)
-                            {
-                                from_item = the_item;
-                            }
-
-                            let equipped_item = connection
-                                .player_data
-                                .inventory
-                                .equipped
-                                .get_slot(slot as u16);
-
-                            if !from_item.is_empty_slot() && !equipped_item.is_empty_slot() {
-                                // Something is equipped here AND the gearset wants a different
-                                // item in this slot. Swap them: the new item goes to the equip
-                                // slot, the displaced item goes back into the NEW item's source
-                                // slot. This matches client behavior — the client expects the
-                                // displaced gear to land in the slot the new item came from, so
-                                // it stays in sync. (Routing the displaced item to some other
-                                // free armoury slot instead desyncs the client: it later tries to
-                                // move gear back into the now-occupied source slot and stalls with
-                                // "syncing with server".) The source slot is always in the same
-                                // armoury category as the equip slot, so this never scrambles
-                                // gear across categories.
-                                connection
-                                    .swap_items(
-                                        from_container,
-                                        from_slot as u16,
-                                        ContainerType::Equipped,
-                                        slot as u16,
-                                        gearset_txid,
-                                    )
-                                    .await;
-                            } else if !from_item.is_empty_slot() && equipped_item.is_empty_slot() {
-                                // If there is nothing equipped but a new item in that slot, we just have to move it.
-                                // TODO: be a little smarter about this maybe?
-                                connection
-                                    .swap_items(
-                                        from_container,
-                                        from_slot as u16,
-                                        ContainerType::Equipped,
-                                        slot as u16,
-                                        gearset_txid,
-                                    )
-                                    .await;
-                            } else if from_item.is_empty_slot() && !equipped_item.is_empty_slot() {
-                                // If there is something equipped but the slot is empty in the gearset, we have to move it somewhere.
-                                let target_container_type =
-                                    ContainerType::from_equip_slot(slot as u8);
-
-                                if let Some(target_container) = connection
-                                    .player_data
-                                    .inventory
-                                    .get_container(target_container_type)
-                                    && let Some(free_slot) = get_next_free_slot(target_container)
-                                {
-                                    connection
-                                        .swap_items(
-                                            ContainerType::Equipped,
-                                            slot as u16,
-                                            target_container_type,
-                                            free_slot,
-                                            gearset_txid,
-                                        )
-                                        .await;
-                                }
-                            }
-                        }
-
-                        // Inform the client that the gearset was successfully equipped.
                         connection
-                            .actor_control_self(ActorControlCategory::GearSetEquipped {
-                                gearset_index: *gearset_index,
-                            })
+                            .equip_gearset(*gearset_index, containers, indices)
                             .await;
-
-                        // Re-populate the runtime derived fields (item level, defense, base
-                        // params) on the newly-equipped items, so item level and stats are
-                        // correct even if a swapped item carried stale serde-skipped fields.
-                        {
-                            let mut game_data = connection.gamedata.lock();
-                            connection
-                                .player_data
-                                .inventory
-                                .prepare_equipped(&mut game_data);
-                        }
-
-                        // Close the transaction batch. The finish repeats the batch transaction
-                        // id and the retail-observed unk1=0xD1/unk2=0xD00.
-                        connection
-                            .send_inventory_transaction_finish(gearset_txid, 0xD1, 0xD00)
-                            .await;
-
-                        // Retail also re-sends the equipped container
-                        connection.send_equipped_inventory().await;
-                        connection.inform_equip().await;
-
-                        // Change class as needed. If a soul crystal is equipped, the job is
-                        // defined by the crystal (e.g. a SMN gearset equips the SMN stone, and
-                        // the class must become SMN — NOT ACN, which is what the weapon alone
-                        // would resolve to since SMN/ACN share weapons). Fall back to the weapon
-                        // only when no crystal is equipped. This matches the manual ItemOperation
-                        // path.
-                        if connection
-                            .player_data
-                            .inventory
-                            .equipped
-                            .soul_crystal
-                            .quantity
-                            > 0
-                        {
-                            connection.change_class_based_on_soul_crystal().await;
-                        } else {
-                            connection.change_class_based_on_weapon().await;
-                        }
-
-                        // Then finally, resend stats.
-                        connection.send_stats().await;
                     }
-                    ClientZoneIpcData::EquipGearset2 { .. } => {
-                        tracing::warn!("Bigger gearsets not supported yet!");
+                    ClientZoneIpcData::EquipGearset2 {
+                        gearset_index,
+                        containers,
+                        indices,
+                        ..
+                    } => {
+                        // EquipGearset2 carries the same gearset payload as EquipGearset (the client
+                        // sends it instead when the job portrait is considered available), plus an
+                        // extra trailing blob (`unk3`) whose purpose is still unknown. The equip
+                        // behavior is identical, so reuse the shared path and ignore unk3 for now.
+                        // TODO: figure out what the trailing portrait/unk3 data means and whether we
+                        // need to echo anything back for the job portrait UI.
+                        connection
+                            .equip_gearset(*gearset_index, containers, indices)
+                            .await;
                     }
                     ClientZoneIpcData::StartWalkInEvent {
                         event_arg,

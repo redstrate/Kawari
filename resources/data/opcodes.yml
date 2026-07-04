@@ -913,11 +913,11 @@ ClientZoneIpcType:
   opcode: 906
   size: 8
 - name: EquipGearset
-  comment: Unknown purpose.
+  comment: Equip a gearset (index + per-slot container/inventory indices, glamour plate id, glasses).
   opcode: 816
   size: 72
 - name: EquipGearset2
-  comment: Unknown purpose, and also unsure why it's different from EquipGearset.
+  comment: Equip a gearset that has a linked portrait/adventurer-plate; same payload as EquipGearset plus a 52-byte banner display block.
   opcode: 334
   size: 128
 - name: StartWalkInEvent

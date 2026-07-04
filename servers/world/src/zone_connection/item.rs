@@ -2,7 +2,7 @@
 
 use crate::{
     ItemInfoQuery, ToServer, ZoneConnection,
-    inventory::{DesiredHousingInventoryPages, EQUIP_RESTRICTED, Storage},
+    inventory::{DesiredHousingInventoryPages, EQUIP_RESTRICTED, Item, Storage, get_next_free_slot},
 };
 use kawari::{
     common::{ContainerType, ItemOperationKind, LegacyEquipmentModelId, ObjectId, WeaponModelId},
@@ -261,6 +261,134 @@ impl ZoneConnection {
         let id = self.player_data.transaction_sequence;
         self.player_data.transaction_sequence += 1;
         id
+    }
+
+    /// Equips a gearset: moves/swaps the requested items into the equipped container, informs the
+    /// client, re-derives stats, and updates the active class/job.
+    ///
+    /// Shared by both the `EquipGearset` and `EquipGearset2` client packets — they carry the same
+    /// `gearset_index`/`containers`/`indices` payload, so the equip behavior is identical. (The only
+    /// difference is `EquipGearset2` appends an extra trailing blob whose purpose is still unknown.)
+    pub async fn equip_gearset(
+        &mut self,
+        gearset_index: u32,
+        containers: &[ContainerType; 14],
+        indices: &[i16; 14],
+    ) {
+        // TODO: handle missing items, full inventory and such
+        // One transaction id for the whole gearset batch: every InventoryTransaction
+        // we emit below (via swap_items) and the closing InventoryTransactionFinish
+        // share this id, matching retail. Without a shared id the client can't
+        // correlate the finish and stays stuck "syncing with the server".
+        let gearset_txid = self.next_transaction_id();
+        for slot in 0..14 {
+            let from_slot = indices[slot];
+            let from_container = containers[slot];
+
+            if from_container == ContainerType::Equipped {
+                continue;
+            }
+            let mut from_item = Item::default();
+
+            if from_slot != -1
+                && let Some(the_item) = self
+                    .player_data
+                    .inventory
+                    .get_item(from_container, from_slot as u16)
+            {
+                from_item = the_item;
+            }
+
+            let equipped_item = self.player_data.inventory.equipped.get_slot(slot as u16);
+
+            if !from_item.is_empty_slot() && !equipped_item.is_empty_slot() {
+                // Something is equipped here AND the gearset wants a different
+                // item in this slot. Swap them: the new item goes to the equip
+                // slot, the displaced item goes back into the NEW item's source
+                // slot. This matches client behavior — the client expects the
+                // displaced gear to land in the slot the new item came from, so
+                // it stays in sync. (Routing the displaced item to some other
+                // free armoury slot instead desyncs the client: it later tries to
+                // move gear back into the now-occupied source slot and stalls with
+                // "syncing with server".) The source slot is always in the same
+                // armoury category as the equip slot, so this never scrambles
+                // gear across categories.
+                self.swap_items(
+                    from_container,
+                    from_slot as u16,
+                    ContainerType::Equipped,
+                    slot as u16,
+                    gearset_txid,
+                )
+                .await;
+            } else if !from_item.is_empty_slot() && equipped_item.is_empty_slot() {
+                // If there is nothing equipped but a new item in that slot, we just have to move it.
+                // TODO: be a little smarter about this maybe?
+                self.swap_items(
+                    from_container,
+                    from_slot as u16,
+                    ContainerType::Equipped,
+                    slot as u16,
+                    gearset_txid,
+                )
+                .await;
+            } else if from_item.is_empty_slot() && !equipped_item.is_empty_slot() {
+                // If there is something equipped but the slot is empty in the gearset, we have to move it somewhere.
+                let target_container_type = ContainerType::from_equip_slot(slot as u8);
+
+                if let Some(target_container) = self
+                    .player_data
+                    .inventory
+                    .get_container(target_container_type)
+                    && let Some(free_slot) = get_next_free_slot(target_container)
+                {
+                    self.swap_items(
+                        ContainerType::Equipped,
+                        slot as u16,
+                        target_container_type,
+                        free_slot,
+                        gearset_txid,
+                    )
+                    .await;
+                }
+            }
+        }
+
+        // Inform the client that the gearset was successfully equipped.
+        self.actor_control_self(ActorControlCategory::GearSetEquipped { gearset_index })
+            .await;
+
+        // Re-populate the runtime derived fields (item level, defense, base
+        // params) on the newly-equipped items, so item level and stats are
+        // correct even if a swapped item carried stale serde-skipped fields.
+        {
+            let mut game_data = self.gamedata.lock();
+            self.player_data.inventory.prepare_equipped(&mut game_data);
+        }
+
+        // Close the transaction batch. The finish repeats the batch transaction
+        // id and the retail-observed unk1=0xD1/unk2=0xD00.
+        self.send_inventory_transaction_finish(gearset_txid, 0xD1, 0xD00)
+            .await;
+
+        // Retail also re-sends the equipped container
+        self.send_equipped_inventory().await;
+        self.inform_equip().await;
+
+        // Change class as needed. If a soul crystal is equipped, the job is
+        // defined by the crystal (e.g. a SMN gearset equips the SMN stone, and
+        // the class must become SMN — NOT ACN, which is what the weapon alone
+        // would resolve to since SMN/ACN share weapons). Fall back to the weapon
+        // only when no crystal is equipped. This matches the manual ItemOperation
+        // path.
+        if self.player_data.inventory.equipped.soul_crystal.quantity > 0 {
+            self.change_class_based_on_soul_crystal().await;
+        } else {
+            self.change_class_based_on_weapon().await;
+        }
+
+        // Then finally, resend stats.
+        self.send_stats().await;
     }
 
     /// Swaps two items from two (possibly different) containers and informs the client of this change.
