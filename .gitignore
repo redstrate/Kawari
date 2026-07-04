@@ -4,6 +4,11 @@ core/src/constants.rs
 core/src/festivals.rs
 core/src/doc_*.md
 
+# Agent working artifacts (local only, never commit)
+PLAN.md
+.agent-memory/
+*.log
+
 # Rust stuff
 **/target
 /oodle
