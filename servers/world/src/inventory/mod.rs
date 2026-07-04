@@ -25,6 +25,9 @@ pub use equipped::{EQUIP_RESTRICTED, EquippedStorage};
 mod generic;
 pub use generic::GenericStorage;
 
+pub mod glamour;
+pub use glamour::GlamourStorage;
+
 mod item;
 pub use item::Item;
 

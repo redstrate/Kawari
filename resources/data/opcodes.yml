@@ -767,6 +767,18 @@ ServerZoneIpcType:
   comment: Adventurer plate information.
   opcode: 482
   size: 480
+- name: GlamourDresserContents
+  comment: One page of glamour dresser (prism box) contents.
+  opcode: 559
+  size: 2408
+- name: GlamourPlates
+  comment: All 20 glamour plates for the character.
+  opcode: 702
+  size: 1440
+- name: GlamourPlateSaveAck
+  comment: Acknowledges a glamour plate save with the resolved armor/accessory contents.
+  opcode: 605
+  size: 80
 ClientZoneIpcType:
 - name: InitRequest
   comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -931,7 +943,7 @@ ClientZoneIpcType:
 - name: GMCommandName
   comment: Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
   opcode: 439
-  size: 52
+  size: 56
 - name: GMCommandName2
   comment: Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank. Seen in //gm buddy_name.
   opcode: 107
@@ -1188,6 +1200,10 @@ ClientZoneIpcType:
   comment: Happens when you fall off the edge of an arena.
   opcode: 230
   size: 24
+- name: SaveGlamourPlate
+  comment: Sent by the client to save a glamour plate from the dresser.
+  opcode: 823
+  size: 248
 ServerLobbyIpcType:
 - name: NackReply
   comment: Sent by the server to indicate an lobby error occured.

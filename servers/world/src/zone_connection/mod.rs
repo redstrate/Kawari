@@ -37,7 +37,7 @@ use physis::{
 use super::{
     WorldDatabase,
     common::{ClientId, ServerHandle},
-    inventory::{BuyBackList, HousingInventory, Inventory},
+    inventory::{BuyBackList, GlamourStorage, HousingInventory, Inventory},
 };
 
 mod actor;
@@ -115,6 +115,7 @@ pub struct PlayerData {
     pub saw_inn_wakeup: bool,
     pub friends: Friends,
     pub grand_company: GrandCompany,
+    pub glamour: GlamourStorage,
     // TODO: These inventories need to be made persistent and also vary per property, this is just for initial support
     pub house_inventory: HousingInventory,
 }

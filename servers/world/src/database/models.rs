@@ -414,3 +414,23 @@ pub struct GrandCompany {
     pub active_company: kawari::ipc::zone::GrandCompany,
     pub company_ranks: GrandCompanyRanks,
 }
+
+#[derive(
+    Insertable,
+    Identifiable,
+    Queryable,
+    Selectable,
+    Associations,
+    AsChangeset,
+    Debug,
+    Default,
+    Clone,
+)]
+#[diesel(table_name = super::schema::glamour)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[diesel(belongs_to(Character, foreign_key = content_id))]
+#[diesel(primary_key(content_id))]
+pub struct Glamour {
+    pub content_id: i64,
+    pub contents: crate::inventory::glamour::GlamourStorage,
+}

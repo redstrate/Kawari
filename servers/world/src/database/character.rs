@@ -139,6 +139,10 @@ impl WorldDatabase {
                 .select(GrandCompany::as_select())
                 .first(&mut self.connection)
                 .unwrap();
+            let glamour = Glamour::belonging_to(&found_character)
+                .select(Glamour::as_select())
+                .first(&mut self.connection)
+                .unwrap_or_default();
 
             player_data = PlayerData {
                 character: found_character,
@@ -156,6 +160,7 @@ impl WorldDatabase {
                 mentor,
                 search_info,
                 grand_company,
+                glamour: glamour.contents,
                 ..Default::default()
             };
         }
@@ -207,6 +212,26 @@ impl WorldDatabase {
             .unwrap();
     }
 
+    pub fn commit_glamour(&mut self, data: &PlayerData) {
+        use models::*;
+        use schema::glamour::dsl::content_id;
+
+        let glamour = Glamour {
+            content_id: data.character.content_id,
+            contents: data.glamour.clone(),
+        };
+        // Upsert instead of `save_changes` (an UPDATE) so characters created before the
+        // `glamour` table existed — and therefore have no row yet — get one on first commit
+        // rather than panicking with `NotFound`.
+        diesel::insert_into(schema::glamour::table)
+            .values(&glamour)
+            .on_conflict(content_id)
+            .do_update()
+            .set(&glamour)
+            .execute(&mut self.connection)
+            .unwrap();
+    }
+
     /// Commit the dynamic player data back to the database
     pub fn commit_player_data(&mut self, data: &PlayerData) {
         use models::*;
@@ -241,6 +266,7 @@ impl WorldDatabase {
         data.grand_company
             .save_changes::<GrandCompany>(&mut self.connection)
             .unwrap();
+        self.commit_glamour(data);
     }
 
     pub fn get_character_list(
@@ -504,6 +530,15 @@ impl WorldDatabase {
         };
         diesel::insert_into(schema::grand_company::table)
             .values(grand_company)
+            .execute(&mut self.connection)
+            .unwrap();
+
+        let glamour = Glamour {
+            content_id: content_id as i64,
+            ..Default::default()
+        };
+        diesel::insert_into(schema::glamour::table)
+            .values(glamour)
             .execute(&mut self.connection)
             .unwrap();
 

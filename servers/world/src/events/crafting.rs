@@ -102,7 +102,8 @@ impl EventHandler for CraftingEventHandler {
             connection
                 .actor_control_self(ActorControlCategory::LogMessage {
                     log_message: 789,
-                    id: connection.recipe.unwrap().item_id as u32,
+                    param1: connection.recipe.unwrap().item_id as u32,
+                    param2: 0, param3: 0, param4: 0, param5: 0,
                 })
                 .await;
 

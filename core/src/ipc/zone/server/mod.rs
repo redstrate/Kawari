@@ -82,6 +82,9 @@ pub use spawn_object::SpawnObject;
 mod quest_active_list;
 pub use quest_active_list::{ActiveQuest, QuestActiveList};
 
+mod glamour;
+pub use glamour::{GlamourDresserContents, GlamourPlate, GlamourPlateSaveAck, GlamourPlates};
+
 mod effect_result;
 pub use effect_result::{EffectEntry, EffectResult};
 
@@ -433,6 +436,9 @@ pub enum ServerZoneIpcData {
         unlock_bitmask: Vec<u8>,
     },
     QuestActiveList(QuestActiveList),
+    GlamourDresserContents(GlamourDresserContents),
+    GlamourPlates(GlamourPlates),
+    GlamourPlateSaveAck(GlamourPlateSaveAck),
     LevequestCompleteList {
         /// Bitmask of completed levequests.
         #[br(count = COMPLETED_LEVEQUEST_BITMASK_SIZE)]

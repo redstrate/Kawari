@@ -714,7 +714,11 @@ pub enum ActorControlCategory {
     #[brw(magic = 517u32)]
     LogMessage {
         log_message: u32, // Index to LogMessage sheet
-        id: u32,          // Index to variable sheet, depending on LogMessage
+        param1: u32,
+        param2: u32,
+        param3: u32,
+        param4: u32,
+        param5: u32,
     },
 
     #[brw(magic = 519u32)]
@@ -727,6 +731,12 @@ pub enum ActorControlCategory {
     LogMessage2 {
         log_message: u32, // Index to LogMessage sheet
     },
+
+    /// Tells the client to re-evaluate its gearset list against the current equipment (e.g. to
+    /// light up the "Update Gearset" button after equipment/glamour changed). Takes no params —
+    /// the client handler just refreshes the relevant UI. Seen after applying a glamour plate.
+    #[brw(magic = 804u32)]
+    GearSetRefresh {},
 
     /// Calls into some Achievement method, unsure what this does yet.
     #[brw(magic = 538u32)]
@@ -1046,6 +1056,35 @@ pub enum ActorControlCategory {
         unk2: u32,
         unk3: u32,
         unk4: u32,
+    },
+
+    /// Writes a single glamour-dresser/preview entry into the client's MirageManager. The client
+    /// stores it into three parallel 800-element arrays keyed by `index` (item ids, stain0, stain1).
+    /// Sent while putting items into the dresser and while previewing plate edits.
+    #[brw(magic = 1800u32)]
+    UpdateGlamourItemInfoAtIndex {
+        /// Slot index into the MirageManager arrays. Ignored client-side if >= 800.
+        index: u32,
+        /// The catalog item id (HQ items high-bit encoded).
+        item_id: u32,
+        /// First dye/stain. Only the low byte is used client-side.
+        stain0: u32,
+        /// Second dye/stain. Only the low byte is used client-side.
+        stain1: u32,
+        /// When 1, resets an internal MirageManager state byte (batch/refresh marker).
+        flag: u32,
+    },
+
+    /// Finalizes a staged glamour operation on the client: clears the pending MirageManager flag
+    /// and, when requested, plays the "glamour applied" effect. These are param1/param2 of the
+    /// ActorControl (the case only reads the first two params).
+    #[brw(magic = 1801u32)]
+    CommitGlamourOperation {
+        /// param1 — when non-zero, plays the glamour-completion effect (fires UI event 580).
+        play_vfx: u32,
+        /// param2 — when non-zero, the effect targets an alternate actor resolved from a global
+        /// table instead of self.
+        alt_target: u32,
     },
 
     /// Collection UI stuff.

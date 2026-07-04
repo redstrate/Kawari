@@ -269,11 +269,16 @@ impl ZoneConnection {
     /// Shared by both the `EquipGearset` and `EquipGearset2` client packets — they carry the same
     /// `gearset_index`/`containers`/`indices` payload, so the equip behavior is identical. (The only
     /// difference is `EquipGearset2` appends an extra trailing blob whose purpose is still unknown.)
+    ///
+    /// `glamour_plate_id` is the plate linked to the gearset (1..=20, or 0 for none). When non-zero
+    /// the corresponding glamour plate is applied to the freshly-equipped items so the gearset's
+    /// saved appearance is restored.
     pub async fn equip_gearset(
         &mut self,
         gearset_index: u32,
         containers: &[ContainerType; 14],
         indices: &[i16; 14],
+        glamour_plate_id: u8,
     ) {
         // TODO: handle missing items, full inventory and such
         // One transaction id for the whole gearset batch: every InventoryTransaction
@@ -389,6 +394,135 @@ impl ZoneConnection {
 
         // Then finally, resend stats.
         self.send_stats().await;
+
+        // If the gearset has a linked glamour plate, apply it to the items we just equipped so the
+        // gearset's saved appearance is restored. `glamour_plate_id` is 1-based (1..=20); 0 = none.
+        if glamour_plate_id != 0 {
+            let plate_index = (glamour_plate_id as usize - 1)
+                .min(crate::inventory::glamour::NUM_GLAMOUR_PLATES - 1);
+            // Applying the gearset's own linked plate: the resulting look matches the saved
+            // gearset, so do NOT light the "Update Gearset" button (refresh_gearset = false).
+            self.apply_glamour_plate(plate_index, false).await;
+        }
+    }
+
+    /// Applies a glamour plate to the player's currently equipped items.
+    ///
+    /// For each of the 12 plate slots the stored `item_id` is written into the corresponding
+    /// equipped item's `glamour_id` (0 = clear glamour). The two stain values are set at the
+    /// same time so the apparent model and its dye match the saved template.
+    ///
+    /// Plate slot → EquipSlot repr mapping (waist=5 and soul-crystal=13 are absent from plates):
+    ///   plate[0..=4]  → repr 0..=4   (mainhand / offhand / head / body / hands)
+    ///   plate[5]      → repr 6       (legs — waist slot 5 is skipped)
+    ///   plate[6..=11] → repr 7..=12  (feet / ears / neck / wrists / right-ring / left-ring)
+    ///
+    /// `refresh_gearset` controls whether a trailing `GearSetRefresh` (ActorControl 804) is sent.
+    /// Pass `true` for a standalone apply (from the editor / prism box) so the "Update Gearset"
+    /// button lights up (the new look deviates from the saved gearset). Pass `false` when applying
+    /// as part of equipping a gearset that is *linked* to this plate — the result matches the saved
+    /// gearset, so the button must stay dark.
+    pub async fn apply_glamour_plate(&mut self, plate_index: usize, refresh_gearset: bool) {
+        // plate slot → EquipSlot repr (u16 for get_slot_mut)
+        const PLATE_TO_EQUIP: [u16; 12] = [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12];
+
+        let plate = self.player_data.glamour.plates[plate_index];
+        // Collect (base item_id, glamour target id) pairs for the per-item chat log below.
+        // Only slots that actually receive a glamour (glamour_id != 0) over a real equipped
+        // item generate a "projected X onto Y" line, matching retail.
+        let mut glamoured: Vec<(u32, u32)> = Vec::new();
+        // Slots whose glamour actually changed, so we can push a single-slot
+        // UpdateInventorySlot for each — matching retail (0x0123), which sends one
+        // per changed equipped slot and does NOT resend the whole container.
+        let mut changed_slots: Vec<u16> = Vec::new();
+        for (plate_slot, &equip_repr) in PLATE_TO_EQUIP.iter().enumerate() {
+            let glamour_id = plate.item_ids[plate_slot];
+
+            // An empty plate slot (no glamour stored) must NOT clear the equipped item's
+            // existing glamour/dye — leave that slot untouched. Only slots where the plate
+            // actually specifies a glamour get overwritten.
+            if glamour_id == 0 {
+                continue;
+            }
+
+            let stain0 = plate.stain0[plate_slot];
+            let stain1 = plate.stain1[plate_slot];
+            let slot = self.player_data.inventory.equipped.get_slot_mut(equip_repr);
+
+            let changed = slot.glamour_id != glamour_id || slot.stains != [stain0, stain1];
+            slot.glamour_id = glamour_id;
+            slot.stains = [stain0, stain1];
+
+            if changed && slot.item_id != 0 {
+                changed_slots.push(equip_repr);
+            }
+            if slot.item_id != 0 {
+                glamoured.push((slot.item_id, glamour_id));
+            }
+        }
+
+        // Retail applies the plate by sending an UpdateInventorySlot (0x0123) for each
+        // changed equipped slot — NOT a full UpdateItem/ContainerInfo resend.
+        for equip_repr in changed_slots {
+            let item = *self.player_data.inventory.equipped.get_slot(equip_repr);
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
+                sequence: self.player_data.item_sequence,
+                container: ContainerType::Equipped,
+                slot: equip_repr,
+                ..item.into()
+            }));
+            self.send_ipc_self(ipc).await;
+            self.player_data.item_sequence += 1;
+        }
+
+        self.inform_equip().await;
+        self.send_stats().await;
+
+        // "<player>将<sheet(Item,lnum2)>的外型投影到了<sheet(Item,lnum1)>上。"
+        // (LogMessage 4309, param1 = lnum1 = base item_id, param2 = lnum2 = glamour target id)
+        for (base_item_id, glamour_id) in glamoured {
+            self.actor_control_self(ActorControlCategory::LogMessage {
+                log_message: 4309,
+                param1: base_item_id,
+                param2: glamour_id,
+                param3: 0,
+                param4: 0,
+                param5: 0,
+            })
+            .await;
+        }
+
+        // "已使用投影模板<num(lnum1)>进行武具投影。"
+        // (LogMessage 4364, param1 = plate index 1-based)
+        self.actor_control_self(ActorControlCategory::LogMessage {
+            log_message: 4364,
+            param1: plate_index as u32 + 1,
+            param2: 0,
+            param3: 0,
+            param4: 0,
+            param5: 0,
+        })
+        .await;
+
+        // Finalize the staged glamour operation on the client. This clears the pending
+        // MirageManager flag — without it the client stays in a "processing items" state
+        // and refuses to close the glamour editor (LogMessage 7739). Retail sends this as
+        // ActorControlSelf 1801 with param1=1 (play the glamour-applied effect).
+        self.actor_control_self(ActorControlCategory::CommitGlamourOperation {
+            play_vfx: 1,
+            alt_target: 0,
+        })
+        .await;
+
+        // Tell the client to re-evaluate its gearset list against the new equipment appearance,
+        // so the "Update Gearset" button lights up when the applied glamour differs from the
+        // saved gearset. Retail sends ActorControlSelf 804 as part of the apply sequence.
+        // Skipped when applying a gearset's own linked plate — the look then matches the saved
+        // gearset, so the button must stay dark.
+        if refresh_gearset {
+            self.actor_control_self(ActorControlCategory::GearSetRefresh {})
+                .await;
+        }
     }
 
     /// Swaps two items from two (possibly different) containers and informs the client of this change.

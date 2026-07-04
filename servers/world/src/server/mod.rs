@@ -1067,7 +1067,8 @@ fn server_logic_tick(
 
                         let msg = FromServer::ActorControlSelf(ActorControlCategory::LogMessage {
                             log_message,
-                            id: 0,
+                            param1: 0,
+                            param2: 0, param3: 0, param4: 0, param5: 0,
                         });
                         if handle.send(msg).is_err() {
                             // TODO: remove as needed

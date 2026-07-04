@@ -18,7 +18,7 @@ use kawari::ipc::chat::ClientChatIpcData;
 
 use kawari::ipc::zone::{
     ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
-    CrossRealmListings, EventType, FurnitureTranslatedForObserver, ItemInfo,
+    CrossRealmListings, EventType, FurnitureTranslatedForObserver, GlamourDresserContents, ItemInfo,
     LinkshellInviteResponse, MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup,
     SceneFlags, SearchInfo, SocialListRequestType, TrustContent, TrustInformation, WarpType,
 };
@@ -59,6 +59,7 @@ use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 
 use kawari::common::INVENTORY_ACTION_ACK_GENERAL;
+use kawari::common::{INVENTORY_ACTION_ACK_SHOP, ITEM_CONDITION_MAX};
 
 const WORLD_SERVER_CHANNEL_CAPACITY: usize = 4096;
 const CLIENT_SERVER_CHANNEL_CAPACITY: usize = 4096;
@@ -1912,7 +1913,8 @@ async fn process_packet(
                                         } else {
                                             LogMessageType::FurnitureMovedToInventory as u32
                                         },
-                                        id: item_id,
+                                        param1: item_id,
+                                        param2: 0, param3: 0, param4: 0, param5: 0,
                                     })
                                     .await;
 
@@ -2032,6 +2034,198 @@ async fn process_packet(
                                         },
                                     ))
                                     .await;
+                            }
+                            ClientTriggerCommand::RequestPrismBox {} => {
+                                // Retail sends one packet per page (page 0 then page 1).
+                                for page_index in
+                                    0..GlamourDresserContents::PAGE_COUNT as u32
+                                {
+                                    let ipc = ServerZoneIpcSegment::new(
+                                        ServerZoneIpcData::GlamourDresserContents(
+                                            connection
+                                                .player_data
+                                                .glamour
+                                                .to_dresser_page(page_index),
+                                        ),
+                                    );
+                                    connection.send_ipc_self(ipc).await;
+                                }
+                            }
+                            ClientTriggerCommand::RequestGlamourPlate {} => {
+                                let ipc = ServerZoneIpcSegment::new(
+                                    ServerZoneIpcData::GlamourPlates(
+                                        connection.player_data.glamour.to_wire_plates(),
+                                    ),
+                                );
+                                connection.send_ipc_self(ipc).await;
+                            }
+                            ClientTriggerCommand::RequestGlamourPlatesData {} => {
+                                // The client requests its plates once per territory when the
+                                // editor first opens, then caches the reply. Always respond
+                                // with the plate data.
+                                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::GlamourPlates(
+                                    connection.player_data.glamour.to_wire_plates(),
+                                ));
+                                connection.send_ipc_self(ipc).await;
+                            }
+                            ClientTriggerCommand::ApplyGlamourPlate { ui_opened } => {
+                                // Despite the name, 2357 is the open/close toggle for the glamour
+                                // plate editor opened from the character screen (NOT an apply — the
+                                // actual apply is 2358 / ApplyGlamourPlateFromPrismBox). Retail sets
+                                // the Occupied39 condition while the editor is open and clears it on
+                                // close (seen as BossMod "Occupied39=True/False").
+                                connection.conditions.toggle_condition(
+                                    kawari::ipc::zone::Condition::Occupied39,
+                                    ui_opened,
+                                );
+                                connection.send_conditions().await;
+                            }
+                            ClientTriggerCommand::ApplyGlamourPlateFromPrismBox {
+                                plate_index,
+                            } => {
+                                let idx = (plate_index as usize)
+                                    .min(kawari_world::inventory::glamour::NUM_GLAMOUR_PLATES - 1);
+                                // Standalone apply from the prism box: the look now deviates from
+                                // any saved gearset, so light the "Update Gearset" button.
+                                connection.apply_glamour_plate(idx, true).await;
+                            }
+                            ClientTriggerCommand::StoreItemToPrismBox { container, slot } => {
+                                let slot = slot as u16;
+                                let item = connection
+                                    .player_data
+                                    .inventory
+                                    .get_item(container, slot)
+                                    .unwrap_or_default();
+
+                                // Nothing to store if the slot is empty.
+                                if !item.is_empty_slot() {
+                                    let item_id = item.item_id;
+
+                                    // Move the item into the dresser.
+                                    let dresser_index = connection
+                                        .player_data
+                                        .glamour
+                                        .store_item(item_id, item.stains)
+                                        as u32;
+
+                                    // Clear the bag slot.
+                                    if let Some(slot_ref) = connection
+                                        .player_data
+                                        .inventory
+                                        .get_item_mut(container, slot)
+                                    {
+                                        *slot_ref = Item::default();
+                                    }
+
+                                    // Inform the client the source slot is now empty.
+                                    let ipc = ServerZoneIpcSegment::new(
+                                        ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
+                                            sequence: connection.player_data.item_sequence,
+                                            container,
+                                            slot,
+                                            ..Item::default().into()
+                                        }),
+                                    );
+                                    connection.send_ipc_self(ipc).await;
+                                    connection.player_data.item_sequence += 1;
+
+                                    // ActorControl sequence observed in captures. Write the item's
+                                    // appearance into the client's MirageManager at the dresser index.
+                                    connection
+                                        .actor_control_self(
+                                            ActorControlCategory::UpdateGlamourItemInfoAtIndex {
+                                                index: dresser_index,
+                                                item_id,
+                                                stain0: item.stains[0] as u32,
+                                                stain1: item.stains[1] as u32,
+                                                flag: 0,
+                                            },
+                                        )
+                                        .await;
+                                    connection
+                                        .actor_control_self(ActorControlCategory::LogMessage {
+                                            log_message: 0x111C,
+                                            param1: item_id,
+                                            param2: 0, param3: 0, param4: 0, param5: 0,
+                                        })
+                                        .await;
+                                    connection
+                                        .actor_control_self(
+                                            ActorControlCategory::MapMarkerUpdateBegin { flags: 1 },
+                                        )
+                                        .await;
+                                    connection
+                                        .actor_control_self(ActorControlCategory::MapMarkerUpdateEnd {})
+                                        .await;
+                                }
+                            }
+                            ClientTriggerCommand::RestoreItemFromPrsimBox { index } => {
+                                if let Some(removed) = connection
+                                    .player_data
+                                    .glamour
+                                    .remove_by_index(index as usize)
+                                {
+                                    let item_id = removed.item_id;
+                                    let mut item = Item::default();
+                                    item.item_id = removed.item_id;
+                                    item.stains = removed.stains;
+                                    item.quantity = 1;
+                                    item.condition = ITEM_CONDITION_MAX;
+
+                                    if let Some(info) = connection
+                                        .player_data
+                                        .inventory
+                                        .add_in_next_free_slot(item)
+                                    {
+                                        // Clear the appearance stored at the dresser index by
+                                        // writing an empty entry (capture: param1=375=index,
+                                        // param2=0).
+                                        connection
+                                            .actor_control_self(
+                                                ActorControlCategory::UpdateGlamourItemInfoAtIndex {
+                                                    index,
+                                                    item_id: 0,
+                                                    stain0: 0,
+                                                    stain1: 0,
+                                                    flag: 0,
+                                                },
+                                            )
+                                            .await;
+                                        connection
+                                            .actor_control_self(ActorControlCategory::LogMessage {
+                                                log_message: 0x111F,
+                                                param1: item_id,
+                                                param2: 0, param3: 0, param4: 0, param5: 0,
+                                            })
+                                            .await;
+
+                                        connection
+                                            .send_inventory_ack(
+                                                u32::MAX,
+                                                INVENTORY_ACTION_ACK_SHOP as u16,
+                                            )
+                                            .await;
+
+                                        let ipc = ServerZoneIpcSegment::new(
+                                            ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
+                                                sequence: connection.player_data.item_sequence,
+                                                container: info.container,
+                                                slot: info.slot,
+                                                ..item.into()
+                                            }),
+                                        );
+                                        connection.send_ipc_self(ipc).await;
+                                        connection.player_data.item_sequence += 1;
+
+                                        connection
+                                            .actor_control_self(ActorControlCategory::LogMessage {
+                                                log_message: 0x315,
+                                                param1: item_id,
+                                                param2: 0, param3: 0, param4: 0, param5: 0,
+                                            })
+                                            .await;
+                                    }
+                                }
                             }
                             _ => {
                                 // inform the server of our trigger, it will handle sending it to other clients
@@ -2298,6 +2492,32 @@ async fn process_packet(
                     ClientZoneIpcData::DyeInformation(dye_item) => {
                         tracing::info!("Client is preparing to dye an item: {dye_item:#?}");
                         connection.dyeing_information = Some(dye_item.clone());
+                    }
+                    ClientZoneIpcData::SaveGlamourPlate(save) => {
+                        connection.player_data.glamour.save_plate(
+                            save.plate_index as usize,
+                            &save.flags,
+                            &save.glam_indices,
+                            &save.stain0,
+                            &save.stain1,
+                        );
+                        let ack = connection
+                            .player_data
+                            .glamour
+                            .to_save_ack(save.plate_index as usize);
+                        connection
+                            .send_ipc_self(ServerZoneIpcSegment::new(
+                                ServerZoneIpcData::GlamourPlateSaveAck(ack),
+                            ))
+                            .await;
+                        // "投影模板<num(lnum1)>保存完毕。" (LogMessage 4382, param1=plate_index 1-based)
+                        connection
+                            .actor_control_self(ActorControlCategory::LogMessage {
+                                log_message: 4382,
+                                param1: save.plate_index as u32 + 1,
+                                param2: 0, param3: 0, param4: 0, param5: 0,
+                            })
+                            .await;
                     }
                     ClientZoneIpcData::PingSync { timestamp, .. } => {
                         // this is *usually* sent in response, but not always
@@ -2603,16 +2823,23 @@ async fn process_packet(
                         gearset_index,
                         containers,
                         indices,
+                        glamour_plate_id,
                         ..
                     } => {
                         connection
-                            .equip_gearset(*gearset_index, containers, indices)
+                            .equip_gearset(
+                                *gearset_index,
+                                containers,
+                                indices,
+                                *glamour_plate_id,
+                            )
                             .await;
                     }
                     ClientZoneIpcData::EquipGearset2 {
                         gearset_index,
                         containers,
                         indices,
+                        glamour_plate_id,
                         ..
                     } => {
                         // EquipGearset2 carries the same gearset payload as EquipGearset (the client
@@ -2622,7 +2849,12 @@ async fn process_packet(
                         // TODO: figure out what the trailing portrait/unk3 data means and whether we
                         // need to echo anything back for the job portrait UI.
                         connection
-                            .equip_gearset(*gearset_index, containers, indices)
+                            .equip_gearset(
+                                *gearset_index,
+                                containers,
+                                indices,
+                                *glamour_plate_id,
+                            )
                             .await;
                     }
                     ClientZoneIpcData::StartWalkInEvent {

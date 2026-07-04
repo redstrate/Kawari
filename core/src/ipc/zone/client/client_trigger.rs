@@ -1220,8 +1220,20 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 2350u32)]
     RequestPrismBox {},
 
+    /// Sent to store an item from the player's inventory into the glamour dresser.
+    #[brw(magic = 2351u32)]
+    StoreItemToPrismBox {
+        #[brw(pad_size_to = 4)]
+        container: ContainerType,
+        slot: u32,
+    },
+
     #[brw(magic = 2352u32)]
-    RestoreItemFromPrsimBox { item_id: u32 },
+    RestoreItemFromPrsimBox {
+        /// Index into the glamour dresser (prism box) item array, i.e. the wire slot
+        /// the client addresses — NOT a catalog item id.
+        index: u32,
+    },
 
     #[brw(magic = 2353u32)]
     RestoreItemSetFromPrsimBox {
@@ -1229,23 +1241,24 @@ pub enum ClientTriggerCommand {
         item_maskings: u64,
     },
 
+    /// Unknown usage for now
     #[brw(magic = 2355u32)]
     RequestGlamourPlate {},
 
-    /// Sent whenever the Glamour Plates window is opened or closed.
+    /// Sent when the glamour plates is first opened in a territory, to request
+    /// the character's 20 glamour plates from the server. The client caches the reply
+    /// (GlamourPlates, opcode 702) for the rest of the territory and won't ask again.
+    /// Carries no arguments (all-zero payload); the previous `open`/`open_dispell` fields
+    /// were a misinterpretation (confirmed by reversing the client send site).
     #[brw(magic = 2356u32)]
-    ToggleGlamourPlatesWindow {
-        #[br(map = read_bool_from::<u32>)]
-        #[bw(map = write_bool_as::<u32>)]
-        open: bool,
-
-        #[br(map = read_bool_from::<u32>)]
-        #[bw(map = write_bool_as::<u32>)]
-        open_dispell: bool,
-    },
+    RequestGlamourPlatesData {},
 
     #[brw(magic = 2357u32)]
-    ApplyGlamourPlate {},
+    ApplyGlamourPlate {
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        ui_opened: bool,
+    },
 
     #[brw(magic = 2358u32)]
     ApplyGlamourPlateFromPrismBox { plate_index: u32 },

@@ -29,6 +29,9 @@ pub use queue_duties::{DutyFinderSetting, QueueDuties};
 mod dye_information;
 pub use dye_information::DyeInformation;
 
+mod save_glamour_plate;
+pub use save_glamour_plate::SaveGlamourPlate;
+
 use crate::ipc::zone::{
     CWLSPermissionRank, InviteReply, InviteType, LETTER_MSG_MAX_LENGTH, LinkshellInviteResponse,
     MAX_MAIL_ATTACHMENTS_STORAGE, OnlineStatusMask, SearchInfo, SearchUIClassJobMask,
@@ -672,6 +675,7 @@ pub enum ClientZoneIpcData {
         unk1: [u8; 24],
     },
     DyeInformation(DyeInformation),
+    SaveGlamourPlate(SaveGlamourPlate),
 }
 
 #[cfg(test)]

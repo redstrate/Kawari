@@ -233,6 +233,15 @@ diesel::table! {
 
 diesel::joinable!(grand_company -> character (content_id));
 
+diesel::table! {
+    glamour (content_id) {
+        content_id -> BigInt,
+        contents -> Text,
+    }
+}
+
+diesel::joinable!(glamour -> character (content_id));
+
 diesel::allow_tables_to_appear_in_same_query!(
     character,
     classjob,
@@ -248,4 +257,5 @@ diesel::allow_tables_to_appear_in_same_query!(
     mentor,
     search_info,
     grand_company,
+    glamour,
 );

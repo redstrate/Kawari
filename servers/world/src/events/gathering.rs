@@ -148,7 +148,8 @@ impl EventHandler for GatheringEventHandler {
             connection
                 .actor_control_self(ActorControlCategory::LogMessage {
                     log_message: 789,
-                    id: item_id as u32,
+                    param1: item_id as u32,
+                    param2: 0, param3: 0, param4: 0, param5: 0,
                 })
                 .await;
 
