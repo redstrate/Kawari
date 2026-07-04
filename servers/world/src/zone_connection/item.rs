@@ -525,6 +525,98 @@ impl ZoneConnection {
         }
     }
 
+    /// Applies a single glamour from the glamour dresser (prism box) onto one item — the per-item
+    /// counterpart to [`apply_glamour_plate`]. Triggered by ClientTrigger 2355
+    /// (`ApplyGlamourFromPrismBox`) when the player projects one dresser entry onto one equipped
+    /// item from the character screen.
+    ///
+    /// The dresser item at `src_dresser_index` supplies the appearance (its `item_id` becomes the
+    /// target's `glamour_id`) and its dyes (copied into the target's stains). The dresser entry
+    /// itself is never modified. No-ops if the dresser slot is empty/out-of-range or the target
+    /// slot holds no item.
+    ///
+    /// Mirrors the retail down-sequence: a single-slot `UpdateInventorySlot` (0x0123), the standard
+    /// equip refresh when the target is an equipped item, `LogMessage 4309` ("projected X onto Y"),
+    /// `CommitGlamourOperation` (1801) to clear the client's pending flag, and `GearSetRefresh`
+    /// (804) so the "Update Gearset" button lights up. There is no `LogMessage 4364` — that line is
+    /// specific to whole-plate applies.
+    pub async fn apply_glamour_from_dresser(
+        &mut self,
+        src_dresser_index: usize,
+        dst_container: ContainerType,
+        dst_slot: u16,
+    ) {
+        // Resolve the source appearance from the dresser. Empty/out-of-range → nothing to do.
+        let source = match self.player_data.glamour.dresser.get(src_dresser_index) {
+            Some(item) if item.item_id != 0 => *item,
+            _ => return,
+        };
+
+        // Apply onto the target item; bail if the target slot is empty.
+        {
+            let target = match self.player_data.inventory.get_item_mut(dst_container, dst_slot) {
+                Some(item) if !item.is_empty_slot() => item,
+                _ => return,
+            };
+            target.glamour_id = source.item_id;
+            target.stains = source.stains;
+        }
+
+        // The glamoured base item id, for the chat log below.
+        let base_item_id = self
+            .player_data
+            .inventory
+            .get_item(dst_container, dst_slot)
+            .map(|item| item.item_id)
+            .unwrap_or(0);
+
+        // Retail sends a single-slot UpdateInventorySlot (0x0123) for the changed item.
+        let item = self
+            .player_data
+            .inventory
+            .get_item(dst_container, dst_slot)
+            .unwrap_or_default();
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(ItemInfo {
+            sequence: self.player_data.item_sequence,
+            container: dst_container,
+            slot: dst_slot,
+            ..item.into()
+        }));
+        self.send_ipc_self(ipc).await;
+        self.player_data.item_sequence += 1;
+
+        // Changing an equipped item's appearance requires refreshing the visible model + stats.
+        if dst_container == ContainerType::Equipped {
+            self.inform_equip().await;
+            self.send_stats().await;
+        }
+
+        // "<player>将<sheet(Item,lnum2)>的外型投影到了<sheet(Item,lnum1)>上。"
+        // (LogMessage 4309, param1 = lnum1 = base item_id, param2 = lnum2 = glamour target id)
+        self.actor_control_self(ActorControlCategory::LogMessage {
+            log_message: 4309,
+            param1: base_item_id,
+            param2: source.item_id,
+            param3: 0,
+            param4: 0,
+            param5: 0,
+        })
+        .await;
+
+        // Finalize the staged glamour operation on the client (clears the pending MirageManager
+        // flag; without it the client stays in a "processing items" state and refuses to close the
+        // editor — LogMessage 7739). Retail sends ActorControlSelf 1801 with param1=1 (play VFX).
+        self.actor_control_self(ActorControlCategory::CommitGlamourOperation {
+            play_vfx: 1,
+            alt_target: 0,
+        })
+        .await;
+
+        // The look now deviates from any saved gearset, so light the "Update Gearset" button.
+        self.actor_control_self(ActorControlCategory::GearSetRefresh {})
+            .await;
+    }
+
     /// Swaps two items from two (possibly different) containers and informs the client of this change.
     ///
     /// `transaction_id` is the InventoryTransaction batch id. All swaps that belong to the same

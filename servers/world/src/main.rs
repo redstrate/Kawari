@@ -2056,15 +2056,17 @@ async fn process_packet(
                                 dst_container_type,
                                 dst_container_index,
                             } => {
-                                // Per-item glamour from the dresser onto a single equipped item.
-                                // TODO: implement — project dresser[src_prism_box_index]'s appearance
-                                // onto the item in dst_container_type/dst_container_index. Not wired
-                                // up yet; must NOT reply with GlamourPlates (that's the 2356 path).
-                                let _ = (
-                                    src_prism_box_index,
-                                    dst_container_type,
-                                    dst_container_index,
-                                );
+                                // Per-item glamour from the dresser onto a single equipped item:
+                                // project dresser[src_prism_box_index]'s appearance onto the item in
+                                // dst_container_type/dst_container_index. Must NOT reply with
+                                // GlamourPlates (that's the 2356 path).
+                                connection
+                                    .apply_glamour_from_dresser(
+                                        src_prism_box_index as usize,
+                                        dst_container_type,
+                                        dst_container_index as u16,
+                                    )
+                                    .await;
                             }
                             ClientTriggerCommand::RequestGlamourPlatesData {} => {
                                 // The client requests its plates once per territory when the
