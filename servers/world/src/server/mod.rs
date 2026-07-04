@@ -104,7 +104,7 @@ impl WorldServer {
                 .iter()
                 .any(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
             {
-                tracing::info!("Creating new public instance for {zone_id}!");
+                tracing::info!("Creating new public instance for zone {zone_id}!");
                 self.instances.push(Instance::new(zone_id, game_data));
             }
 
@@ -113,7 +113,7 @@ impl WorldServer {
                 .find(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
                 .unwrap()
         } else {
-            tracing::info!("Creating new private instance for {zone_id}!");
+            tracing::info!("Creating new private instance for zone {zone_id}!");
             self.instances.push(Instance::new(zone_id, game_data));
             self.instances.last_mut().unwrap()
         }
@@ -1039,7 +1039,7 @@ pub async fn server_main_loop(
             match msg {
                 ToServer::NewClient(handle) => {
                     tracing::info!(
-                        "New zone client {:?} is connecting with actor id {}",
+                        "New zone client {:?} created with actor {}",
                         handle.id,
                         handle.actor_id
                     );
@@ -1064,19 +1064,16 @@ pub async fn server_main_loop(
                         .insert(handle.id, (handle.clone(), ClientState::default()));
 
                     if let Some(party_id) = party_id {
-                        tracing::info!("{} is rejoining party {}", handle.actor_id, party_id);
                         network.send_to(
                             handle_id,
                             FromServer::RejoinPartyAfterDisconnect(party_id),
                             DestinationNetwork::ZoneClients,
                         );
-                    } else {
-                        tracing::info!("{} was not in a party before connecting.", handle.actor_id);
                     }
                 }
                 ToServer::NewChatClient(handle) => {
                     tracing::info!(
-                        "New chat client {:?} is connecting with actor id {}",
+                        "New chat client {:?} created with actor {}",
                         handle.id,
                         handle.actor_id
                     );
@@ -1105,7 +1102,7 @@ pub async fn server_main_loop(
                     rotation,
                     city_state_opening,
                 ) => {
-                    tracing::info!("Player {from_id:?} is now spawning into {zone_id}....");
+                    tracing::info!("Player {from_id:?} is spawning into zone {zone_id}....");
 
                     let mut network = network.lock();
                     let mut data = data.lock();
@@ -1945,7 +1942,7 @@ pub async fn server_main_loop(
                                 0,
                             );
                         }
-                        _ => tracing::warn!("Server doesn't know what to do with {:#?}", trigger),
+                        _ => tracing::warn!("Unknown client trigger {:#?}", trigger),
                     }
                 }
                 ToServer::Config(_from_id, from_actor_id, config) => {

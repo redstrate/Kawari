@@ -41,7 +41,7 @@ pub struct ClientId(usize);
 
 impl std::fmt::Debug for ClientId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ClientId ({})", self.0)
+        write!(f, "ClientId({})", self.0)
     }
 }
 

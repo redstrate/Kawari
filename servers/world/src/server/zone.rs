@@ -130,7 +130,6 @@ impl Zone {
         }
 
         let path = format!("bg/{}.lvb", &bg_path);
-        tracing::info!("Loading {}", path);
         if let Ok(lvb) = game_data.resource.parsed::<Lvb>(&path) {
             let mut load_lgb = |path: &str| -> Option<Lgb> {
                 // Skip LGBs that aren't relevant for the server
@@ -143,7 +142,6 @@ impl Zone {
 
                 let lgb = game_data.resource.parsed::<Lgb>(path);
 
-                tracing::info!("Loading {path}");
                 if let Err(e) = &lgb {
                     tracing::warn!(
                         "Failed to parse {path}: {e}, this is most likely a bug in Physis and should be reported somewhere!"

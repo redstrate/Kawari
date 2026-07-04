@@ -240,11 +240,9 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn initialize(&mut self, actor_id: ObjectId) {
+    pub async fn initialize(&mut self) {
         self.player_data.item_sequence = 0;
         self.player_data.shop_sequence = 0;
-
-        tracing::info!("Client {actor_id} is initializing zone session...");
 
         // We have send THEM a keep alive
         {

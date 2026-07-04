@@ -51,8 +51,6 @@ fn do_game_version_check(
             expected_exe_len
         );
         return false;
-    } else {
-        tracing::info!("Client's game executable length is OK.")
     }
 
     if client_version_data.game_exe_sha1_hash != expected_exe_hash {
@@ -62,8 +60,6 @@ fn do_game_version_check(
             expected_exe_hash
         );
         return false;
-    } else {
-        tracing::info!("Client's game executable hash is OK.");
     }
 
     for (client_version, expected_version) in client_version_data
@@ -83,7 +79,6 @@ fn do_game_version_check(
         }
     }
 
-    tracing::info!("All client version checks succeeded! Allowing session!");
     true
 }
 

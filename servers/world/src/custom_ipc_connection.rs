@@ -109,8 +109,6 @@ impl CustomIpcConnection {
                     actor_id = database.find_actor_id(*content_id);
                 }
 
-                tracing::info!("We found an actor id: {actor_id}");
-
                 // send them the actor id
                 {
                     self.send_custom_response(PacketSegment {

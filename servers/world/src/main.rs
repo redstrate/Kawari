@@ -132,6 +132,10 @@ async fn initial_setup(
                         ),
                     }
                 }
+
+                tracing::info!(
+                    "Dropping connection from {id:?} because all custom IPC segments were sent"
+                )
             } else if header.connection_type == ConnectionType::Zone {
                 let state = ConnectionState::Zone {
                     clientbound_oodle: OodleNetwork::new(),
@@ -200,22 +204,20 @@ async fn initial_setup(
                                 break;
                             };
 
-                            let actor_id = ObjectId(actor_id);
-
                             // initialize player data if it doesn't exist
                             if !connection.player_data.character.actor_id.is_valid() {
                                 let player_data;
                                 {
                                     let mut game_data = connection.gamedata.lock();
                                     let mut database = connection.database.lock();
-                                    player_data =
-                                        database.find_player_data(actor_id, &mut game_data);
+                                    player_data = database
+                                        .find_player_data(ObjectId(actor_id), &mut game_data);
                                 }
                                 connection.player_data = player_data;
                             }
 
                             // collect actor data
-                            connection.initialize(actor_id).await;
+                            connection.initialize().await;
                             zone_ready = true;
                         }
                         _ => panic!(
@@ -378,7 +380,7 @@ async fn client_chat_loop(
                         if n == 0 {
                             let now = Instant::now();
                             if now.duration_since(connection.last_keep_alive) > NETWORK_TIMEOUT {
-                                tracing::info!("ChatConnection {:#?} was killed because of timeout", client_handle.id);
+                                tracing::info!("Dropping chat connection from {:?} because it timed out", client_handle.id);
                                 break;
                             }
                         } else {
@@ -408,7 +410,7 @@ async fn client_chat_loop(
                                                 tracing::info!("Chatting in alliances is unimplemented");
                                             }
                                             ClientChatIpcData::Unknown { unk } => {
-                                                tracing::warn!("Unknown Chat packet {:?} recieved ({} bytes), this should be handled!", data.header.op_code, unk.len());
+                                                tracing::warn!("Unknown chat packet {:?} recieved ({} bytes)", data.header.op_code, unk.len());
                                             }
                                         }
                                     }
@@ -530,7 +532,7 @@ async fn process_packet(
         let now = Instant::now();
         if now.duration_since(connection.last_keep_alive) > NETWORK_TIMEOUT {
             tracing::info!(
-                "ZoneConnection {:#?} was killed because of timeout",
+                "Dropping zone connection from {:?} because it timed out",
                 client_handle.id
             );
             return false;
@@ -548,8 +550,6 @@ async fn process_packet(
                 SegmentData::Ipc(data) => {
                     match &data.data {
                         ClientZoneIpcData::InitRequest { .. } => {
-                            tracing::info!("Client is now requesting zone information. Sending!");
-
                             // IPC Init(?)
                             {
                                 let ipc =
@@ -3619,7 +3619,7 @@ async fn process_packet(
                         }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
-                                "Unknown Zone packet {:?} recieved ({} bytes), this should be handled!",
+                                "Unknown Zone packet {:?} recieved ({} bytes)",
                                 data.header.op_code,
                                 unk.len()
                             );
@@ -4316,8 +4316,9 @@ async fn main() {
     });
 
     loop {
-        if let Ok((socket, _)) = listener.accept().await {
+        if let Ok((socket, addr)) = listener.accept().await {
             let id = handle.next_id();
+            tracing::info!("New connection from {addr}, now referring to it as {id:?}");
 
             spawn_initial_setup(
                 id,

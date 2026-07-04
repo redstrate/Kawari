@@ -61,7 +61,9 @@ async fn main() {
     tracing::info!("Server started on {addr}");
 
     loop {
-        let (socket, _) = listener.accept().await.unwrap();
+        let (socket, addr) = listener.accept().await.unwrap();
+
+        tracing::info!("New connection from {addr}");
 
         let mut connection = LobbyConnection {
             socket,
@@ -98,7 +100,9 @@ async fn main() {
                         if n == 0 {
                             let now = Instant::now();
                             if now.duration_since(connection.last_keep_alive) > NETWORK_TIMEOUT {
-                                tracing::info!("Connection was killed because of timeout");
+                                tracing::info!(
+                                    "Dropping connection from {addr} because it timed out"
+                                );
                                 break;
                             }
                         } else {
@@ -153,10 +157,6 @@ async fn main() {
                                             content_id,
                                             ..
                                         } => {
-                                            tracing::info!(
-                                                "Client is joining the world with {content_id}"
-                                            );
-
                                             let our_actor_id;
 
                                             // find the actor id for this content id
@@ -199,7 +199,7 @@ async fn main() {
                                         }
                                         ClientLobbyIpcData::Unknown { unk } => {
                                             tracing::warn!(
-                                                "Unknown packet {:?} recieved ({} bytes), this should be handled!",
+                                                "Unknown packet {:?} recieved ({} bytes)",
                                                 data.header.op_code,
                                                 unk.len()
                                             );

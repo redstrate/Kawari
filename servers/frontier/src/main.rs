@@ -66,7 +66,7 @@ async fn get_headline() -> Json<Headline> {
 }
 
 async fn fallback(uri: Uri) -> (StatusCode, String) {
-    tracing::warn!("{}", uri);
+    tracing::warn!("Unhandled route {}", uri);
     (StatusCode::NOT_FOUND, format!("No route for {uri}"))
 }
 

@@ -118,8 +118,6 @@ impl LoginDatabase {
     ) -> Result<String, LoginError> {
         use crate::schema::user::dsl::*;
 
-        tracing::info!("Finding user with username {for_username}");
-
         if let Ok(selected_user) = user
             .filter(username.eq(for_username))
             .select(User::as_select())
