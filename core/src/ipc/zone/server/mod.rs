@@ -200,6 +200,138 @@ use crate::ipc::zone::{ActionType, InviteReply, InviteType, InviteUpdateType, Se
 pub type ServerZoneIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ServerZoneIpcType>, ServerZoneIpcType, ServerZoneIpcData>;
 
+/// The editable "design block" of an adventurer plate (CharaCard).
+///
+/// This is the 192-byte span from `version` to `timestamp` (inclusive) that the client
+/// submits verbatim when saving a plate (opcode 487, `SubmitAdventurerPlate`) and that the
+/// server echoes back inside the `AdventurerPlate` response (opcode 482). The client treats
+/// this as a frozen snapshot: it includes not only style/portrait fields but also a snapshot
+/// of the character's customize (face) data, gear dye stains, and equipped item ids taken at
+/// save time. That is why the game has a "reset due to Fantasia" flag (`flags & 1`) and a
+/// "gear info mismatch" warning — the plate does not track the live character.
+#[binrw]
+#[derive(Debug, Clone)]
+pub struct PlateDesign {
+    pub version: u8,
+    pub expression: u8,
+    pub camera_zoom: u8,
+    pub directional_lighting_color_red: u8,
+    pub directional_lighting_color_green: u8,
+    pub directional_lighting_color_blue: u8,
+    pub directional_lighting_color_brightness: u8,
+    pub ambient_lighting_color_red: u8,
+    pub ambient_lighting_color_green: u8,
+    pub ambient_lighting_color_blue: u8,
+    pub ambient_lighting_color_brightness: u8,
+    pub class_job_id: u8,
+    pub customize: CustomizeData,
+    pub stain_ids1: [u8; 12],
+    pub gear_visibility_flag: u8,
+    pub top_border: u8,
+    pub bottom_border: u8,
+    pub preferred_class_job_id: u8,
+    pub active_hours_weekdays: [u8; 3],
+    pub active_hours_weekends: [u8; 3],
+    pub play_styles: [u8; 6],
+    /// `& 1` == the plate was reset because the character used a Fantasia (the snapshot's
+    /// customize no longer matches the live character); `& 2` == visibility is "no one"
+    /// (only yourself).
+    pub flags: u8,
+    pub unk13: u8,
+    /// `& 1` == visibility is "friends only".
+    pub privacy_flags: u8,
+    pub stain_ids2: [u8; 12],
+    pub unk14: u8,
+    pub banner_timeline: u16,
+    pub animation_progress: u16,
+    pub head_direction_y: u16,
+    pub head_direction_x: u16,
+    pub eye_direction_y: u16,
+    pub eye_direction_x: u16,
+    pub camera_position_x: u16,
+    pub camera_position_y: u16,
+    pub camera_position_z: u16,
+    pub camera_target_x: u16,
+    pub camera_target_y: u16,
+    pub camera_target_z: u16,
+    pub image_rotation: u16,
+    pub directional_lighting_vertical: u16,
+    pub directional_lighting_horizontal: u16,
+    pub banner_decoration: u16,
+    pub banner_bg: u16,
+    pub banner_frame: u16,
+    pub title: u16,
+    pub decorations: [u16; 5],
+    pub glasses_ids: [u16; 2],
+    pub unk16: u16,
+    pub unk18: u32,
+    pub item_ids: [u32; 12],
+    pub timestamp: u32,
+}
+
+impl Default for PlateDesign {
+    /// A sensible default plate design, used when a character opens their own plate before ever
+    /// saving one. The camera/lighting/banner values are the "fairly standard" defaults captured
+    /// from a freshly-opened plate on retail, so the portrait renders reasonably. Character-
+    /// specific snapshot fields (customize, gear stains, item ids, name) and visibility flags are
+    /// left empty/zero here and get filled in by the character's live data on first save.
+    fn default() -> Self {
+        Self {
+            version: 4,
+            expression: 0,
+            camera_zoom: 160,
+            directional_lighting_color_red: 255,
+            directional_lighting_color_green: 255,
+            directional_lighting_color_blue: 255,
+            directional_lighting_color_brightness: 127,
+            ambient_lighting_color_red: 51,
+            ambient_lighting_color_green: 51,
+            ambient_lighting_color_blue: 51,
+            ambient_lighting_color_brightness: 127,
+            class_job_id: 0,
+            customize: CustomizeData::default(),
+            stain_ids1: [0; 12],
+            gear_visibility_flag: 0,
+            top_border: 3,
+            bottom_border: 3,
+            preferred_class_job_id: 0,
+            active_hours_weekdays: [0; 3],
+            active_hours_weekends: [0; 3],
+            play_styles: [0; 6],
+            flags: 0,
+            unk13: 0,
+            privacy_flags: 0,
+            stain_ids2: [0; 12],
+            unk14: 0,
+            banner_timeline: 1,
+            animation_progress: 0,
+            head_direction_y: 0,
+            head_direction_x: 0,
+            eye_direction_y: 0,
+            eye_direction_x: 0,
+            camera_position_x: 0,
+            camera_position_y: 0,
+            camera_position_z: 15564,
+            camera_target_x: 0,
+            camera_target_y: 0,
+            camera_target_z: 0,
+            image_rotation: 0,
+            directional_lighting_vertical: 133,
+            directional_lighting_horizontal: 65459,
+            banner_decoration: 1,
+            banner_bg: 8,
+            banner_frame: 1,
+            title: 0,
+            decorations: [3, 11, 2, 0, 0],
+            glasses_ids: [0, 0],
+            unk16: 0,
+            unk18: 0,
+            item_ids: [0; 12],
+            timestamp: 0,
+        }
+    }
+}
+
 #[opcode_data(ServerZoneIpcType)]
 #[binrw]
 #[br(import(magic: &ServerZoneIpcType, size: &u32))]
@@ -1457,57 +1589,9 @@ pub enum ServerZoneIpcData {
         unk7: u8,
         grand_company: GrandCompany,
         grand_company_rank: u8,
-        version: u8,
-        expression: u8,
-        camera_zoom: u8,
-        directional_lighting_color_red: u8,
-        directional_lighting_color_green: u8,
-        directional_lighting_color_blue: u8,
-        directional_lighting_color_brightness: u8,
-        ambient_lighting_color_red: u8,
-        ambient_lighting_color_green: u8,
-        ambient_lighting_color_blue: u8,
-        ambient_lighting_color_brightness: u8,
-        class_job_id: u8,
-        customize: CustomizeData,
-        stain_ids1: [u8; 12],
-        gear_visibility_flag: u8,
-        top_border: u8,
-        bottom_border: u8,
-        preferred_class_job_id: u8,
-        active_hours_weekdays: [u8; 3],
-        active_hours_weekends: [u8; 3],
-        play_styles: [u8; 6],
-        flags: u8,
-        unk13: u8,
-        privacy_flags: u8,
-        stain_ids2: [u8; 12],
-        unk14: u8,
-        banner_timeline: u16,
-        animation_progress: u16,
-        head_direction_y: u16,
-        head_direction_x: u16,
-        eye_direction_y: u16,
-        eye_direction_x: u16,
-        camera_position_x: u16,
-        camera_position_y: u16,
-        camera_position_z: u16,
-        camera_target_x: u16,
-        camera_target_y: u16,
-        camera_target_z: u16,
-        image_rotation: u16,
-        directional_lighting_vertical: u16,
-        directional_lighting_horizontal: u16,
-        banner_decoration: u16,
-        banner_bg: u16,
-        banner_frame: u16,
-        title: u16,
-        decorations: [u16; 5],
-        glasses_ids: [u16; 2],
-        unk16: u16,
-        unk18: u32,
-        item_ids: [u32; 12],
-        timestamp: u32,
+        /// The editable design block (`version`..`timestamp`). This is a frozen snapshot the
+        /// client submits when saving (see `SubmitAdventurerPlate`) and the server echoes back.
+        design: PlateDesign,
         #[brw(pad_after = 132)] // empty? maybe?
         #[brw(pad_size_to = 60)]
         #[br(count = 60)]
@@ -1521,6 +1605,17 @@ pub enum ServerZoneIpcData {
         #[br(map = read_string)]
         #[bw(map = write_string)]
         name: String,
+    },
+    /// Sent instead of `AdventurerPlate` when a plate request cannot be fulfilled: the requested
+    /// player has never set up a plate, their plate is not visible to the viewer, or the data is
+    /// otherwise unavailable. The client shows `log_message_id` from the LogMessage sheet
+    /// (5856 = not set, 5858 = not public, 5860 = other reason) and closes the plate window.
+    RequestAdventurerPlateError {
+        log_message_id: u32,
+        /// The target's content/actor id on retail; not read by the client's message handler.
+        unk1: u32,
+        /// Empty on the wire (16 bytes).
+        padding: [u8; 16],
     },
 }
 

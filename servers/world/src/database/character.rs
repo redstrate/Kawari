@@ -8,7 +8,6 @@ use crate::{
 use kawari::{
     common::{
         BasicCharacterData, ObjectId, WORLD_NAME, WeaponModelId, determine_initial_homepoint,
-        timestamp_secs,
     },
     config::get_config,
     ipc::{
@@ -143,6 +142,10 @@ impl WorldDatabase {
                 .select(Glamour::as_select())
                 .first(&mut self.connection)
                 .unwrap_or_default();
+            let plate = AdventurerPlate::belonging_to(&found_character)
+                .select(AdventurerPlate::as_select())
+                .first(&mut self.connection)
+                .unwrap_or_default();
 
             player_data = PlayerData {
                 character: found_character,
@@ -161,6 +164,7 @@ impl WorldDatabase {
                 search_info,
                 grand_company,
                 glamour: glamour.contents,
+                plate: plate.contents,
                 ..Default::default()
             };
         }
@@ -232,6 +236,51 @@ impl WorldDatabase {
             .unwrap();
     }
 
+    pub fn commit_plate(&mut self, data: &PlayerData) {
+        use models::*;
+        use schema::adventurer_plate::dsl::content_id;
+
+        let plate = AdventurerPlate {
+            content_id: data.character.content_id,
+            contents: data.plate.clone(),
+        };
+        // Upsert instead of `save_changes` (an UPDATE) so characters created before the
+        // `adventurer_plate` table existed — and therefore have no row yet — get one on first
+        // commit rather than panicking with `NotFound`.
+        diesel::insert_into(schema::adventurer_plate::table)
+            .values(&plate)
+            .on_conflict(content_id)
+            .do_update()
+            .set(&plate)
+            .execute(&mut self.connection)
+            .unwrap();
+    }
+
+    /// Flags a character's adventurer plate as reset by a Fantasia (the snapshot portrait no
+    /// longer matches the re-customized character). Sets `flags & 1` on the stored design
+    /// without otherwise clearing the plate; no-op if the character has no plate row or has
+    /// never saved a plate.
+    pub fn mark_plate_reset_by_fantasia(&mut self, for_content_id: u64) {
+        use models::*;
+        use schema::adventurer_plate::dsl::content_id;
+
+        let mut plate = match schema::adventurer_plate::table
+            .filter(content_id.eq(for_content_id as i64))
+            .select(AdventurerPlate::as_select())
+            .first(&mut self.connection)
+        {
+            Ok(plate) => plate,
+            // No row yet (character predates the table or was never loaded) — nothing to reset.
+            Err(_) => return,
+        };
+
+        plate.contents.mark_reset_by_fantasia();
+
+        plate
+            .save_changes::<AdventurerPlate>(&mut self.connection)
+            .unwrap();
+    }
+
     /// Commit the dynamic player data back to the database
     pub fn commit_player_data(&mut self, data: &PlayerData) {
         use models::*;
@@ -267,6 +316,7 @@ impl WorldDatabase {
             .save_changes::<GrandCompany>(&mut self.connection)
             .unwrap();
         self.commit_glamour(data);
+        self.commit_plate(data);
     }
 
     pub fn get_character_list(
@@ -542,6 +592,15 @@ impl WorldDatabase {
             .execute(&mut self.connection)
             .unwrap();
 
+        let plate = AdventurerPlate {
+            content_id: content_id as i64,
+            ..Default::default()
+        };
+        diesel::insert_into(schema::adventurer_plate::table)
+            .values(plate)
+            .execute(&mut self.connection)
+            .unwrap();
+
         (content_id as u64, actor_id)
     }
 
@@ -663,6 +722,13 @@ impl WorldDatabase {
                 .unwrap();
         }
 
+        {
+            use schema::adventurer_plate::dsl::*;
+            diesel::delete(adventurer_plate.filter(content_id.eq(for_content_id as i64)))
+                .execute(&mut self.connection)
+                .unwrap();
+        }
+
         // Since linkshell management is a little more complex than just deleting all rows with this content id, we do it the slightly slower way. We want orphaned linkshells with zero members to auto-disband.
         // TODO: Implement the ToServer protocol for CustomIpcConnection so we can notify the global server about this character's departures from their linkshells
         if let Some(linkshells) = self.find_linkshells(for_content_id as i64) {
@@ -778,7 +844,18 @@ impl WorldDatabase {
             .unwrap_or_default()
     }
 
-    pub fn lookup_adventurer_plate(&mut self, for_actor_id: ObjectId) -> ServerZoneIpcSegment {
+    /// Builds the adventurer plate response for `for_actor_id`, as requested by the player with
+    /// `viewer_content_id`.
+    ///
+    /// Returns a full `AdventurerPlate` when the plate is visible to the viewer, or a
+    /// `RequestAdventurerPlateError` (a LogMessage the client shows before closing the plate
+    /// window) when the target has no plate or has restricted its visibility. A player can always
+    /// see their own plate, even before saving one for the first time.
+    pub fn lookup_adventurer_plate(
+        &mut self,
+        for_actor_id: ObjectId,
+        viewer_content_id: u64,
+    ) -> ServerZoneIpcSegment {
         use models::*;
 
         let for_character;
@@ -792,22 +869,35 @@ impl WorldDatabase {
                 .unwrap();
         }
 
-        let volatile = Volatile::belonging_to(&for_character)
-            .select(Volatile::as_select())
+        let plate = AdventurerPlate::belonging_to(&for_character)
+            .select(AdventurerPlate::as_select())
             .first(&mut self.connection)
-            .unwrap();
-        let inventory = Inventory::belonging_to(&for_character)
-            .select(Inventory::as_select())
-            .first(&mut self.connection)
-            .unwrap();
-        let classjob = ClassJob::belonging_to(&for_character)
-            .select(ClassJob::as_select())
-            .first(&mut self.connection)
-            .unwrap();
-        let customize = Customize::belonging_to(&for_character)
-            .select(Customize::as_select())
-            .first(&mut self.connection)
-            .unwrap();
+            .unwrap_or_default()
+            .contents;
+
+        let is_self = for_character.content_id as u64 == viewer_content_id;
+
+        // Decide whether the viewer is allowed to see this plate. The owner always can.
+        if !is_self {
+            if !plate.has_plate {
+                return Self::adventurer_plate_error(LOG_MESSAGE_PLATE_NOT_SET);
+            }
+            let design = plate.design();
+            // `flags & 2` == visible to no one (only yourself).
+            let only_self = design.flags & 2 != 0;
+            // `privacy_flags & 1` == friends only.
+            let friends_only = design.privacy_flags & 1 != 0;
+            let is_friend =
+                self.are_friends(viewer_content_id, for_character.content_id as u64);
+            if only_self || (friends_only && !is_friend) {
+                return Self::adventurer_plate_error(LOG_MESSAGE_PLATE_NOT_PUBLIC);
+            }
+        }
+
+        // Visible: echo the persisted design snapshot, merging in the live header fields that are
+        // not part of the submitted design block (name, comment, grand company, world, etc.).
+        let mut design = plate.design();
+
         let grand_company = GrandCompany::belonging_to(&for_character)
             .select(GrandCompany::as_select())
             .first(&mut self.connection)
@@ -816,6 +906,75 @@ impl WorldDatabase {
             .select(SearchInfo::as_select())
             .first(&mut self.connection)
             .unwrap();
+        let classjob = ClassJob::belonging_to(&for_character)
+            .select(ClassJob::as_select())
+            .first(&mut self.connection)
+            .unwrap();
+
+        // When the owner opens a plate they have never saved, the stored design is only a set of
+        // default style values with no character snapshot (job/customize/gear are all zero). A
+        // plate with `class_job_id == 0` and empty customize/gear cannot be rendered by the
+        // client, so the plate window silently fails to open. Fill the snapshot fields from the
+        // character's live data so the first-time editor shows the current appearance — this
+        // mirrors how retail initializes a fresh plate.
+        if is_self && !plate.has_plate {
+            let inventory = Inventory::belonging_to(&for_character)
+                .select(Inventory::as_select())
+                .first(&mut self.connection)
+                .unwrap();
+            let customize = Customize::belonging_to(&for_character)
+                .select(Customize::as_select())
+                .first(&mut self.connection)
+                .unwrap();
+            let equipped = &inventory.contents.equipped;
+
+            design.class_job_id = classjob.current_class as u8;
+            design.customize = customize.chara_make.customize;
+            design.stain_ids1 = [
+                equipped.main_hand.stains[0],
+                equipped.off_hand.stains[0],
+                equipped.head.stains[0],
+                equipped.body.stains[0],
+                equipped.hands.stains[0],
+                equipped.legs.stains[0],
+                equipped.feet.stains[0],
+                equipped.ears.stains[0],
+                equipped.neck.stains[0],
+                equipped.wrists.stains[0],
+                equipped.left_ring.stains[0],
+                equipped.right_ring.stains[0],
+            ];
+            design.stain_ids2 = [
+                equipped.main_hand.stains[1],
+                equipped.off_hand.stains[1],
+                equipped.head.stains[1],
+                equipped.body.stains[1],
+                equipped.hands.stains[1],
+                equipped.legs.stains[1],
+                equipped.feet.stains[1],
+                equipped.ears.stains[1],
+                equipped.neck.stains[1],
+                equipped.wrists.stains[1],
+                equipped.left_ring.stains[1],
+                equipped.right_ring.stains[1],
+            ];
+            // Use the apparent (glamoured) id so glamoured gear shows its glamour on the plate,
+            // matching what the player sees on their character.
+            design.item_ids = [
+                equipped.main_hand.apparent_id(),
+                equipped.off_hand.apparent_id(),
+                equipped.head.apparent_id(),
+                equipped.body.apparent_id(),
+                equipped.hands.apparent_id(),
+                equipped.legs.apparent_id(),
+                equipped.feet.apparent_id(),
+                equipped.ears.apparent_id(),
+                equipped.neck.apparent_id(),
+                equipped.wrists.apparent_id(),
+                equipped.right_ring.apparent_id(),
+                equipped.left_ring.apparent_id(),
+            ];
+        }
 
         // Ranks are 1-indexed by the active company; a character with no grand company
         // has `active_company == None` (0), so guard against underflowing the array index.
@@ -825,7 +984,6 @@ impl WorldDatabase {
             0
         };
 
-        // NOTE: sending dummy data for now so at least the menu works
         let config = get_config();
         ServerZoneIpcSegment::new(ServerZoneIpcData::AdventurerPlate {
             unk1: 0,
@@ -841,98 +999,38 @@ impl WorldDatabase {
             unk7: 1,
             grand_company: grand_company.active_company,
             grand_company_rank,
-            version: 4,
-            expression: 22,
-            camera_zoom: 94,
-            directional_lighting_color_red: 118,
-            directional_lighting_color_green: 54,
-            directional_lighting_color_blue: 0,
-            directional_lighting_color_brightness: 199,
-            ambient_lighting_color_red: 126,
-            ambient_lighting_color_green: 103,
-            ambient_lighting_color_blue: 255,
-            ambient_lighting_color_brightness: 42,
-            class_job_id: classjob.current_class as u8,
-            customize: customize.chara_make.customize,
-            stain_ids1: [
-                inventory.contents.equipped.main_hand.stains[0],
-                inventory.contents.equipped.off_hand.stains[0],
-                inventory.contents.equipped.head.stains[0],
-                inventory.contents.equipped.body.stains[0],
-                inventory.contents.equipped.hands.stains[0],
-                inventory.contents.equipped.legs.stains[0],
-                inventory.contents.equipped.feet.stains[0],
-                inventory.contents.equipped.ears.stains[0],
-                inventory.contents.equipped.neck.stains[0],
-                inventory.contents.equipped.wrists.stains[0],
-                inventory.contents.equipped.left_ring.stains[0],
-                inventory.contents.equipped.right_ring.stains[0],
-            ],
-            gear_visibility_flag: 5,
-            top_border: 30,
-            bottom_border: 0,
-            preferred_class_job_id: 38,
-            active_hours_weekdays: [15, 0, 240],
-            active_hours_weekends: [15, 240, 255],
-            play_styles: [14, 1, 20, 25, 31, 0],
-            flags: 0,
-            unk13: 0,
-            privacy_flags: 0,
-            stain_ids2: [
-                inventory.contents.equipped.main_hand.stains[1],
-                inventory.contents.equipped.off_hand.stains[1],
-                inventory.contents.equipped.head.stains[1],
-                inventory.contents.equipped.body.stains[1],
-                inventory.contents.equipped.hands.stains[1],
-                inventory.contents.equipped.legs.stains[1],
-                inventory.contents.equipped.feet.stains[1],
-                inventory.contents.equipped.ears.stains[1],
-                inventory.contents.equipped.neck.stains[1],
-                inventory.contents.equipped.wrists.stains[1],
-                inventory.contents.equipped.left_ring.stains[1],
-                inventory.contents.equipped.right_ring.stains[1],
-            ],
-            unk14: 0,
-            banner_timeline: 5,
-            animation_progress: 340,
-            head_direction_y: 44994,
-            head_direction_x: 45771,
-            eye_direction_y: 45293,
-            eye_direction_x: 46485,
-            camera_position_x: 13398,
-            camera_position_y: 44758,
-            camera_position_z: 14135,
-            camera_target_x: 11330,
-            camera_target_y: 44393,
-            camera_target_z: 42093,
-            image_rotation: 4,
-            directional_lighting_vertical: 17,
-            directional_lighting_horizontal: 65442,
-            banner_decoration: 1,
-            banner_bg: 5,
-            banner_frame: 2,
-            title: volatile.title as u16,
-            decorations: [78, 18, 8, 28, 339],
-            glasses_ids: [0, 0],
-            unk16: 0,
-            unk18: 0,
-            item_ids: [
-                inventory.contents.equipped.main_hand.item_id,
-                inventory.contents.equipped.off_hand.item_id,
-                inventory.contents.equipped.head.item_id,
-                inventory.contents.equipped.body.item_id,
-                inventory.contents.equipped.hands.item_id,
-                inventory.contents.equipped.legs.item_id,
-                inventory.contents.equipped.feet.item_id,
-                inventory.contents.equipped.ears.item_id,
-                inventory.contents.equipped.neck.item_id,
-                inventory.contents.equipped.wrists.item_id,
-                inventory.contents.equipped.right_ring.item_id,
-                inventory.contents.equipped.left_ring.item_id,
-            ],
-            timestamp: timestamp_secs(),
+            design,
             comment: search_info.comment.clone(),
             name: for_character.name.clone(),
         })
     }
+
+    /// Builds the "plate request error" response (not set / not visible / unavailable) carrying
+    /// the given LogMessage row id.
+    fn adventurer_plate_error(log_message_id: u32) -> ServerZoneIpcSegment {
+        ServerZoneIpcSegment::new(ServerZoneIpcData::RequestAdventurerPlateError {
+            log_message_id,
+            unk1: 0,
+            padding: [0; 16],
+        })
+    }
+
+    /// Returns whether two characters are mutual (non-pending) friends.
+    fn are_friends(&mut self, content_id_a: u64, content_id_b: u64) -> bool {
+        use schema::friends::dsl::*;
+
+        friends
+            .filter(content_id.eq(content_id_a as i64))
+            .filter(friend_content_id.eq(content_id_b as i64))
+            .filter(is_pending.eq(0))
+            .count()
+            .first::<i64>(&mut self.connection)
+            .unwrap_or(0)
+            > 0
+    }
 }
+
+/// LogMessage row id shown when a plate has never been set up.
+const LOG_MESSAGE_PLATE_NOT_SET: u32 = 5856;
+/// LogMessage row id shown when a plate exists but is not visible to the viewer.
+const LOG_MESSAGE_PLATE_NOT_PUBLIC: u32 = 5858;

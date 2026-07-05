@@ -28,6 +28,9 @@ pub use generic::GenericStorage;
 pub mod glamour;
 pub use glamour::GlamourStorage;
 
+pub mod plate;
+pub use plate::PlateStorage;
+
 mod item;
 pub use item::Item;
 

@@ -34,7 +34,7 @@ pub use save_glamour_plate::SaveGlamourPlate;
 
 use crate::ipc::zone::{
     CWLSPermissionRank, InviteReply, InviteType, LETTER_MSG_MAX_LENGTH, LinkshellInviteResponse,
-    MAX_MAIL_ATTACHMENTS_STORAGE, OnlineStatusMask, SearchInfo, SearchUIClassJobMask,
+    MAX_MAIL_ATTACHMENTS_STORAGE, OnlineStatusMask, PlateDesign, SearchInfo, SearchUIClassJobMask,
     SearchUIGrandCompanies, SocialListUILanguages, StrategyBoard, StrategyBoardUpdate,
     WaymarkPreset,
 };
@@ -362,8 +362,27 @@ pub enum ClientZoneIpcData {
         unk: [u8; 16], // unsure if this is always empty
     },
     RequestAdventurerPlate {
-        actor_id: ObjectId,
-        unk: [u8; 12],
+        /// The target identifier: a content id when `flag` == 0, or an actor id when
+        /// `flag` == 1. Always 8 bytes on the wire regardless of which one it holds.
+        target_id: u64,
+        /// 1 - Request the adventurer plate data for the target actor id / content id.
+        /// 2 - Request the adventurer plate data for the local player.
+        request_type: u32,
+        /// 0 - `target_id` is a content id.
+        /// 1 - `target_id` is an actor id.
+        flag: u32,
+    },
+    /// Sent when the player saves edits to their own adventurer plate. The `design` block is a
+    /// verbatim snapshot of the plate's `version`..`timestamp` span (identical layout to the
+    /// `AdventurerPlate` response). After acknowledging this, the client re-requests the plate
+    /// (opcode 677) so the server can merge the design with the non-submitted header fields
+    /// (name, comment, free company, grand company) and send back the full plate.
+    SubmitAdventurerPlate {
+        /// The save action; observed as 3 (apply/commit).
+        action: u32,
+        design: PlateDesign,
+        /// Empty on the wire.
+        pad: u32,
     },
     SearchPlayers {
         /// The classjobs to filter by.

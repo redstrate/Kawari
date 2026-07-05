@@ -1043,6 +1043,20 @@ impl GameData {
         Some(content_finder_row.Content)
     }
 
+    /// Returns whether the given ContentFinderCondition is a single-player (solo) duty.
+    ///
+    /// Solo duties reference the one ContentMemberType (row 1) whose party composition is a
+    /// single member in a single party (`MembersPerParty == 1 && PartyCount == 1`); all other
+    /// member types describe multi-player parties or alliances.
+    pub fn is_single_player_content(&mut self, content_finder_row_id: u16) -> bool {
+        const SOLO_CONTENT_MEMBER_TYPE: u8 = 1;
+
+        self.content_finder_condition_sheet
+            .row(content_finder_row_id as u32)
+            .map(|row| row.ContentMemberType == SOLO_CONTENT_MEMBER_TYPE)
+            .unwrap_or(false)
+    }
+
     /// Returns the time limit in minutes for a given InstanceContent id.
     pub fn find_content_time_limit(&mut self, instance_content_id: u16) -> Option<u16> {
         let row = self

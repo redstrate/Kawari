@@ -228,6 +228,10 @@ impl CustomIpcConnection {
 
                     // reset flag
                     database.set_remake_mode(*content_id, RemakeMode::None);
+
+                    // Re-customizing via Fantasia invalidates the adventurer plate's portrait
+                    // snapshot; mark it so the client knows it was reset.
+                    database.mark_plate_reset_by_fantasia(*content_id);
                 }
 
                 // send response
