@@ -161,11 +161,29 @@ mod tests {
 
     #[test]
     fn quantized_rotations() {
-        assert_eq!(read_quantized_rotation(0), -std::f32::consts::PI);
-        assert_eq!(read_quantized_rotation(65535), std::f32::consts::PI);
+        let pi = std::f32::consts::PI;
 
-        assert_eq!(write_quantized_rotation(&-std::f32::consts::PI), 0);
-        assert_eq!(write_quantized_rotation(&std::f32::consts::PI), 65535);
+        assert_eq!(read_quantized_rotation(0), -pi);
+        assert_eq!(read_quantized_rotation(65535), pi);
+
+        // `write_quantized_rotation` normalizes into (-π, π] before quantizing. `-π` and `+π`
+        // describe the same physical facing, and `(-π).rem_euclid(2π) == π`, so both map to the
+        // same `π` bucket (65535) rather than `-π` saturating/wrapping. This is intentional:
+        // the previous naive `as u16` saturation mapped any out-of-range facing to 65535, which
+        // made actors face the wrong way.
+        assert_eq!(write_quantized_rotation(&pi), 65535);
+        assert_eq!(write_quantized_rotation(&-pi), 65535);
+
+        // Interior angles round-trip cleanly through the quantization.
+        assert_eq!(write_quantized_rotation(&0.0), 32767);
+        for angle in [-pi / 2.0, 0.0, pi / 2.0] {
+            let quantized = write_quantized_rotation(&angle);
+            let restored = read_quantized_rotation(quantized);
+            assert!(
+                (restored - angle).abs() < 1e-3,
+                "angle {angle} round-tripped to {restored} (quantized {quantized})"
+            );
+        }
     }
 
     #[test]

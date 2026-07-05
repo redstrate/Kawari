@@ -767,6 +767,10 @@ ServerZoneIpcType:
   comment: Adventurer plate information.
   opcode: 482
   size: 480
+- name: RequestAdventurerPlateError
+  comment: Sent instead of AdventurerPlate when the plate request cannot be fulfilled - the target has no plate set, it is not visible to the viewer, or the data is otherwise unavailable. body[0] is a LogMessage row id (5856 = not set, 5858 = not public, 5860 = other reason).
+  opcode: 610
+  size: 24
 - name: GlamourDresserContents
   comment: One page of glamour dresser (prism box) contents.
   opcode: 559
@@ -1020,6 +1024,10 @@ ClientZoneIpcType:
   comment: Happens when the client requests the adventurer plate for any player.
   opcode: 677
   size: 16
+- name: SubmitAdventurerPlate
+  comment: Happens when the client saves edits to their own adventurer plate.
+  opcode: 487
+  size: 200
 - name: SearchPlayers
   comment: Happens when the client searches for players under the Social window.
   opcode: 225

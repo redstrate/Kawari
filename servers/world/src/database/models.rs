@@ -434,3 +434,23 @@ pub struct Glamour {
     pub content_id: i64,
     pub contents: crate::inventory::glamour::GlamourStorage,
 }
+
+#[derive(
+    Insertable,
+    Identifiable,
+    Queryable,
+    Selectable,
+    Associations,
+    AsChangeset,
+    Debug,
+    Default,
+    Clone,
+)]
+#[diesel(table_name = super::schema::adventurer_plate)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[diesel(belongs_to(Character, foreign_key = content_id))]
+#[diesel(primary_key(content_id))]
+pub struct AdventurerPlate {
+    pub content_id: i64,
+    pub contents: crate::inventory::plate::PlateStorage,
+}

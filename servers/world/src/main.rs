@@ -2774,6 +2774,28 @@ async fn process_packet(
                         connection.send_ipc_self(ipc).await;
                     }
                     ClientZoneIpcData::QueueDuties(queue_duties) => {
+                        // Single-player duties are not supported: kick the client if it queues for
+                        // one. The client shows a generic "90002" disconnect on its own, so we just
+                        // drop the connection after logging.
+                        let single_player_duty = {
+                            let mut game_data = connection.gamedata.lock();
+                            queue_duties
+                                .content_ids
+                                .iter()
+                                .filter(|content_id| **content_id != 0)
+                                .find(|content_id| {
+                                    game_data.is_single_player_content(**content_id)
+                                })
+                                .copied()
+                        };
+                        if let Some(content_id) = single_player_duty {
+                            tracing::info!(
+                                actor_id = ?connection.player_data.character.actor_id,
+                                "Disconnecting client that queued for single-player duty (ContentFinderCondition {content_id})"
+                            );
+                            return false;
+                        }
+
                         connection.content_settings = Some(queue_duties.settings);
                         lua_player.content_data.settings =
                             DutyOption::from_content_flags(queue_duties.settings).bits(); // TODO: is this the best place to update this?
@@ -3131,13 +3153,47 @@ async fn process_packet(
                         let ipc = ServerZoneIpcSegment::new(search_info);
                         connection.send_ipc_self(ipc).await;
                     }
-                    ClientZoneIpcData::RequestAdventurerPlate { actor_id, .. } => {
+                    ClientZoneIpcData::RequestAdventurerPlate {
+                        target_id, flag, ..
+                    } => {
+                        let viewer_content_id =
+                            connection.player_data.character.content_id as u64;
                         let ipc;
                         {
                             let mut database = connection.database.lock();
-                            ipc = database.lookup_adventurer_plate(*actor_id);
+                            // `flag` selects how `target_id` is interpreted: 0 = content id,
+                            // 1 = actor id. `lookup_adventurer_plate` keys off the actor id, so
+                            // resolve a content id to its actor id first.
+                            let for_actor_id = if *flag == 0 {
+                                database.find_actor_id(*target_id)
+                            } else {
+                                ObjectId(*target_id as u32)
+                            };
+                            ipc = database
+                                .lookup_adventurer_plate(for_actor_id, viewer_content_id);
                         }
                         connection.send_ipc_self(ipc).await;
+                    }
+                    ClientZoneIpcData::SubmitAdventurerPlate { action, design, .. } => {
+                        // Persist the submitted design snapshot. The client re-requests the plate
+                        // (opcode 677) after the acknowledgement below, so commit immediately to
+                        // the database — that request reads the plate back from there.
+                        connection.player_data.plate.set_design(design.clone());
+                        {
+                            let mut database = connection.database.lock();
+                            database.commit_plate(&connection.player_data);
+                        }
+
+                        // Acknowledge the save. `result == 0` tells the client the edit succeeded
+                        // (it then promotes its staged design to current and re-requests the plate);
+                        // a non-zero result would make it discard the edit.
+                        connection
+                            .actor_control_self(ActorControlCategory::CharaCardUpdateResult {
+                                result: 0,
+                                action: *action,
+                                token: design.timestamp,
+                            })
+                            .await;
                     }
                     ClientZoneIpcData::SearchPlayers {
                         classjobs,

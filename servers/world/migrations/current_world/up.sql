@@ -180,6 +180,12 @@ CREATE TABLE `glamour`(
 	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
 );
 
+CREATE TABLE `adventurer_plate`(
+	`content_id` BIGINT NOT NULL PRIMARY KEY,
+	`contents` TEXT NOT NULL,
+	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
+);
+
 CREATE TABLE `character`(
 	`content_id` BIGINT NOT NULL PRIMARY KEY,
 	`service_account_id` BIGINT NOT NULL,

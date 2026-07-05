@@ -1087,6 +1087,19 @@ pub enum ActorControlCategory {
         alt_target: u32,
     },
 
+    /// Acknowledges an adventurer plate (CharaCard) save submitted via `SubmitAdventurerPlate`
+    /// (opcode 487). Corresponds to the client's `CharaCard::HandleCharaCardUpdatePacket`.
+    #[brw(magic = 3102u32)]
+    CharaCardUpdateResult {
+        /// param1 — 0 == success (the client promotes its staged design to current data and
+        /// refreshes the CharaCard UI); non-zero == failure (the client discards the edit).
+        result: u32,
+        /// param2 — echoed save action (see `SubmitAdventurerPlate::action`).
+        action: u32,
+        /// param3 — a timestamp/token the client stores; may echo the submitted timestamp.
+        token: u32,
+    },
+
     /// Collection UI stuff.
     #[brw(magic = 2251u32)]
     McGuffinUnk {
