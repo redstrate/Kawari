@@ -54,7 +54,7 @@ mod quest;
 mod social;
 pub mod spawn_allocator;
 mod stats;
-pub use stats::BaseParameters;
+pub use stats::{BaseParameters, DamageRollModifiers};
 mod unlock;
 mod zone;
 

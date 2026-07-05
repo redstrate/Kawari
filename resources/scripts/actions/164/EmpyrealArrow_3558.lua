@@ -1,6 +1,8 @@
--- Burst Shot (BRD, ClassJob 23) - Level 76 weaponskill
--- Potency: 220 (upgrades from Heavy Shot at level 76)
-POTENCY = 220
+-- Empyreal Arrow (BRD, ClassJob 23) - Level 54 ability
+-- Potency: 240
+-- Recast: 15s (CooldownGroup 3)
+-- Does not share a recast timer with other weaponskills
+POTENCY = 240
 
 function doAction(player, in_combo)
     effects = EffectsBuilder()

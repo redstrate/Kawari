@@ -7,7 +7,8 @@ use mlua::Function;
 use parking_lot::Mutex;
 
 use crate::{
-    ClientId, FromServer, GameData, PlayerData, StatusEffects, TickEffectKind, ToServer,
+    ClientId, FromServer, GameData, PlayerData, StatusEffects, TickDamageSnapshot, TickEffectKind,
+    ToServer,
     lua::{
         EffectsBuilder, EnmityAction, KawariLua, KawariLuaState, LuaContent, LuaPlayer, LuaZone,
         TickKind,
@@ -18,11 +19,11 @@ use crate::{
         combat_state::PlayerCombatState,
         effect::{gain_effect, send_effects_list},
         instance::{Instance, QueuedTaskData},
-        jobs::summoner,
+        jobs::{bard, summoner},
         network::{DestinationNetwork, NetworkState},
         set_character_mode, set_shared_group_timeline_state,
     },
-    zone_connection::BaseParameters,
+    zone_connection::{BaseParameters, DamageRollModifiers},
 };
 use kawari::{
     common::{
@@ -45,6 +46,12 @@ const HEAL_ENMITY_MODIFIER: f32 = 0.5;
 const STATUS_FEINT: u16 = 1195;
 const STATUS_ADDLE: u16 = 1203;
 const STATUS_SWIFTCAST: u16 = 167;
+const STATUS_RAGING_STRIKES: u16 = 125;
+const STATUS_BATTLE_VOICE: u16 = 141;
+const STATUS_RADIANT_FINALE: u16 = 2964;
+const STATUS_MAGES_BALLAD: u16 = 2217;
+const STATUS_ARMYS_PAEON: u16 = 2218;
+const STATUS_WANDERERS_MINUET: u16 = 2216;
 
 /// The cooldown group used by GCD weaponskills/spells (Action.CooldownGroup). Only this group's
 /// recast is shortened by skill/spell speed; oGCD ability cooldowns are fixed.
@@ -82,6 +89,78 @@ fn actor_has_status(actor: &NetworkedActor, status_id: u16) -> bool {
     actor
         .status_effects()
         .is_some_and(|status_effects| status_effects.get(status_id).is_some())
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub(crate) struct ActionDamageModifiers {
+    pub(crate) roll: DamageRollModifiers,
+    raging_strikes: bool,
+    mages_ballad: bool,
+    radiant_finale_bonus_percent: u8,
+}
+
+impl ActionDamageModifiers {
+    pub(crate) fn apply_base_damage(self, amount: u32) -> u32 {
+        let mut amount = amount;
+        if self.raging_strikes {
+            amount = apply_damage_percent(amount, 115);
+        }
+        if self.mages_ballad {
+            amount = apply_damage_percent(amount, 101);
+        }
+        if self.radiant_finale_bonus_percent > 0 {
+            amount =
+                apply_damage_percent(amount, 100 + u32::from(self.radiant_finale_bonus_percent));
+        }
+        amount
+    }
+}
+
+fn apply_damage_percent(amount: u32, percent: u32) -> u32 {
+    (u64::from(amount) * u64::from(percent) / 100).min(u64::from(u32::MAX)) as u32
+}
+
+pub(crate) fn action_damage_modifiers(actor: Option<&NetworkedActor>) -> ActionDamageModifiers {
+    let Some(actor) = actor else {
+        return ActionDamageModifiers::default();
+    };
+
+    let mut modifiers = ActionDamageModifiers {
+        raging_strikes: actor_has_status(actor, STATUS_RAGING_STRIKES),
+        mages_ballad: actor_has_status(actor, STATUS_MAGES_BALLAD),
+        ..Default::default()
+    };
+
+    if actor_has_status(actor, STATUS_BATTLE_VOICE) {
+        modifiers.roll.direct_hit_rate_bonus += 0.20;
+    }
+    if actor_has_status(actor, STATUS_ARMYS_PAEON) {
+        modifiers.roll.direct_hit_rate_bonus += 0.03;
+    }
+    if actor_has_status(actor, STATUS_WANDERERS_MINUET) {
+        modifiers.roll.crit_rate_bonus += 0.02;
+    }
+    if actor_has_status(actor, STATUS_RADIANT_FINALE)
+        && let NetworkedActor::Player { combat_state, .. } = actor
+    {
+        modifiers.radiant_finale_bonus_percent =
+            combat_state.bard.radiant_finale_damage_bonus_percent;
+    }
+
+    modifiers
+}
+
+pub(crate) fn apply_target_player_mitigation(
+    amount: u32,
+    target: Option<&NetworkedActor>,
+    damage_type: DamageType,
+) -> u32 {
+    if let Some(NetworkedActor::Player { parameters, .. }) = target {
+        let mitigation = parameters.mitigation_against(damage_type == DamageType::Magic);
+        return ((amount as f64) * (1.0 - mitigation)).floor() as u32;
+    }
+
+    amount
 }
 
 fn remove_status_from_actor_instance(
@@ -181,6 +260,28 @@ fn build_aoe_effect_packet(
         17..=24 => build_variant!(AoeEffect24, AoeEffect24, 24),
         _ => build_variant!(AoeEffect32, AoeEffect32, 32),
     })
+}
+
+fn target_action_result_effects(effects: &[ActionEffect]) -> ([ActionEffect; 8], u8) {
+    let mut target_effects = [ActionEffect::default(); 8];
+    let mut count = 0usize;
+
+    for effect in effects {
+        if matches!(
+            effect.kind,
+            EffectKind::GainEffectSelf { .. } | EffectKind::LoseEffect { .. }
+        ) {
+            continue;
+        }
+        if count == target_effects.len() {
+            break;
+        }
+
+        target_effects[count] = *effect;
+        count += 1;
+    }
+
+    (target_effects, count as u8)
 }
 
 fn cooldown_groups_for_action(game_data: &mut GameData, action_id: u32) -> Vec<usize> {
@@ -392,25 +493,39 @@ fn resolve_player_action_id(
 
     let class_job = actor.get_common_spawn().class_job;
     let level = actor.get_common_spawn().level;
-    let resolved_action_id =
-        if request.action_type == ActionType::Action && summoner::is_summoner(class_job) {
-            let resolved =
-                summoner::resolve_summoner_action(request, combat_state, level, game_data);
-            if !summoner::can_execute_summoner_action(resolved, combat_state, level) {
-                tracing::warn!(
-                    ?actor_id,
-                    action_id = request.action_id,
-                    resolved_action_id = resolved,
-                    level,
-                    state = ?combat_state.summoner,
-                    "Rejected Summoner action because the current job state does not allow it",
-                );
-                return None;
-            }
-            resolved
-        } else {
-            request.action_id
-        };
+    let resolved_action_id = if request.action_type == ActionType::Action
+        && summoner::is_summoner(class_job)
+    {
+        let resolved = summoner::resolve_summoner_action(request, combat_state, level, game_data);
+        if !summoner::can_execute_summoner_action(resolved, combat_state, level) {
+            tracing::warn!(
+                ?actor_id,
+                action_id = request.action_id,
+                resolved_action_id = resolved,
+                level,
+                state = ?combat_state.summoner,
+                "Rejected Summoner action because the current job state does not allow it",
+            );
+            return None;
+        }
+        resolved
+    } else if request.action_type == ActionType::Action && bard::is_bard(class_job) {
+        let resolved = bard::resolve_bard_action(request, combat_state, level, game_data);
+        if !bard::can_execute_bard_action(resolved, combat_state, level) {
+            tracing::warn!(
+                ?actor_id,
+                action_id = request.action_id,
+                resolved_action_id = resolved,
+                level,
+                state = ?combat_state.bard,
+                "Rejected Bard action because the current job state does not allow it",
+            );
+            return None;
+        }
+        resolved
+    } else {
+        request.action_id
+    };
 
     // Only the immediate message handler checks the cooldown (to reject genuine double-casts). The
     // tick-driven execute path passes false, so the 500ms server-tick granularity can't spuriously
@@ -770,6 +885,8 @@ pub fn execute_action(
     if let Some(mut effects_builder) = effects_builder {
         let cleared_cooldown_groups;
         let summoner_gauge_data;
+        let bard_gauge_data;
+        let bard_action_update;
         let action_mp_cost = if resolved_request.action_type == ActionType::Action {
             let mut game_data = game_data.lock();
             game_data.get_action_mp_cost(resolved_request.action_id)
@@ -781,6 +898,7 @@ pub fn execute_action(
         let aoe_damage_type: DamageType;
         let aoe_radius: f32;
         let consume_swiftcast: bool;
+        let source_damage_modifiers: ActionDamageModifiers;
         // Whether this action summons a generic carbuncle; the spawn is deferred until after the
         // result packet so the client plays the summon animation before the pet appears.
         let mut summon_pet_after = false;
@@ -923,6 +1041,7 @@ pub fn execute_action(
                         .find_actor(from_actor_id)
                         .is_some_and(|actor| actor_has_status(actor, STATUS_SWIFTCAST))
             };
+            source_damage_modifiers = action_damage_modifiers(instance.find_actor(from_actor_id));
 
             for effect in &mut effects_builder.effects {
                 match &mut effect.kind {
@@ -935,18 +1054,16 @@ pub fn execute_action(
                     } => {
                         // Roll crit/direct-hit/variance from the attacker's stats, and tell the
                         // client the resulting hit severity so it shows the right number style.
-                        let (rolled, kind) = lua_player.base_parameters.roll_damage(*amount);
-                        *amount = rolled;
+                        let base_amount = source_damage_modifiers.apply_base_damage(*amount);
+                        let (rolled, kind) = lua_player
+                            .base_parameters
+                            .roll_damage_with_modifiers(base_amount, source_damage_modifiers.roll);
+                        *amount = apply_target_player_mitigation(
+                            rolled,
+                            instance.find_actor(resolved_request.target.object_id),
+                            *damage_type,
+                        );
                         *damage_kind = kind;
-
-                        // Player targets (PvP/duels) mitigate by their defense; NPCs have none.
-                        if let Some(NetworkedActor::Player { parameters, .. }) =
-                            instance.find_actor(resolved_request.target.object_id)
-                        {
-                            let mitigation =
-                                parameters.mitigation_against(*damage_type == DamageType::Magic);
-                            *amount = ((*amount as f64) * (1.0 - mitigation)).floor() as u32;
-                        }
 
                         if let Some(actor) =
                             instance.find_actor_mut(resolved_request.target.object_id)
@@ -1091,7 +1208,16 @@ pub fn execute_action(
                     instance.find_actor_mut(from_actor_id)
             {
                 for gauge_action in &effects_builder.gauge_actions {
-                    summoner::apply_gauge_action(combat_state, gauge_action);
+                    if summoner::is_summoner(class_job) {
+                        summoner::apply_gauge_action(combat_state, gauge_action);
+                    }
+                    if bard::is_bard(class_job) {
+                        bard::apply_bard_gauge_action(
+                            combat_state,
+                            gauge_action.index,
+                            gauge_action.amount,
+                        );
+                    }
                 }
             }
 
@@ -1110,6 +1236,27 @@ pub fn execute_action(
                     TickKind::Heal => TickEffectKind::Heal,
                     TickKind::RestoreMp => TickEffectKind::RestoreMp,
                 };
+                let damage_snapshot = match tick_action.kind {
+                    TickKind::DamageMagic => {
+                        let base_amount = lua_player
+                            .base_parameters
+                            .calc_magical_damage(tick_action.potency as u32);
+                        Some(TickDamageSnapshot {
+                            base_amount: source_damage_modifiers.apply_base_damage(base_amount),
+                            roll_modifiers: source_damage_modifiers.roll,
+                        })
+                    }
+                    TickKind::DamagePhysical => {
+                        let base_amount = lua_player
+                            .base_parameters
+                            .calc_physical_damage(tick_action.potency as u32);
+                        Some(TickDamageSnapshot {
+                            base_amount: source_damage_modifiers.apply_base_damage(base_amount),
+                            roll_modifiers: source_damage_modifiers.roll,
+                        })
+                    }
+                    TickKind::Heal | TickKind::RestoreMp => None,
+                };
                 if let Some(actor) = instance.find_actor_mut(tick_target)
                     && let Some(status_effects) = actor.status_effects_mut()
                 {
@@ -1119,6 +1266,7 @@ pub fn execute_action(
                         tick_action.duration,
                         kind,
                         tick_action.potency,
+                        damage_snapshot,
                         from_actor_id,
                     );
                 }
@@ -1130,16 +1278,9 @@ pub fn execute_action(
                 // HoTs (on_self) and any non-NPC target are skipped.
                 if !tick_action.on_self {
                     let initial_enmity = match tick_action.kind {
-                        TickKind::DamageMagic => Some(
-                            lua_player
-                                .base_parameters
-                                .calc_magical_damage(tick_action.potency as u32),
-                        ),
-                        TickKind::DamagePhysical => Some(
-                            lua_player
-                                .base_parameters
-                                .calc_physical_damage(tick_action.potency as u32),
-                        ),
+                        TickKind::DamageMagic | TickKind::DamagePhysical => {
+                            damage_snapshot.map(|snapshot| snapshot.base_amount)
+                        }
                         TickKind::Heal => None,
                         TickKind::RestoreMp => None,
                     };
@@ -1194,6 +1335,27 @@ pub fn execute_action(
                 None
             };
 
+            bard_gauge_data = if let Some(actor) = instance.find_actor_mut(from_actor_id)
+                && bard::is_bard(class_job)
+            {
+                let action_update = bard::update_bard_state_after_action(
+                    resolved_request.action_id,
+                    actor,
+                    from_actor_id,
+                );
+                let level = actor.get_common_spawn().level;
+                let gauge_data = if let NetworkedActor::Player { combat_state, .. } = actor {
+                    Some(bard::build_bard_gauge_data(combat_state, level))
+                } else {
+                    None
+                };
+                bard_action_update = action_update;
+                gauge_data
+            } else {
+                bard_action_update = bard::BardActionUpdate::default();
+                None
+            };
+
             if remove_cooldowns {
                 if let Some(actor) = instance.find_actor_mut(from_actor_id) {
                     let mut game_data = game_data.lock();
@@ -1240,6 +1402,18 @@ pub fn execute_action(
                     DestinationNetwork::ZoneClients,
                 );
             }
+
+            if let Some(cooldown_update) = bard_action_update.cooldown_update {
+                network.send_to_by_actor_id(
+                    from_actor_id,
+                    FromServer::ActorControlSelf(ActorControlCategory::SetCooldownTimer {
+                        cooldown_group: cooldown_update.cooldown_group,
+                        elapsed_centisec: cooldown_update.elapsed_centisec,
+                        total_centisec: cooldown_update.total_centisec,
+                    }),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
         }
 
         if has_summoner_pet_transition {
@@ -1257,8 +1431,7 @@ pub fn execute_action(
         }
 
         {
-            let mut effects = [ActionEffect::default(); 8];
-            effects[..effects_builder.effects.len()].copy_from_slice(&effects_builder.effects);
+            let (effects, effect_count) = target_action_result_effects(&effects_builder.effects);
 
             let action_animation_id = {
                 let mut game_data = game_data.lock();
@@ -1332,8 +1505,16 @@ pub fn execute_action(
                     }
 
                     for target_id in secondaries {
-                        let (rolled, kind) =
-                            lua_player.base_parameters.roll_damage(aoe_base_damage);
+                        let base_amount =
+                            source_damage_modifiers.apply_base_damage(aoe_base_damage);
+                        let (rolled, kind) = lua_player
+                            .base_parameters
+                            .roll_damage_with_modifiers(base_amount, source_damage_modifiers.roll);
+                        let rolled = apply_target_player_mitigation(
+                            rolled,
+                            instance.find_actor(target_id),
+                            aoe_damage_type,
+                        );
 
                         if let Some(actor) = instance.find_actor_mut(target_id)
                             && let Some(hate_list) = actor.npc_hate_list_mut()
@@ -1382,7 +1563,7 @@ pub fn execute_action(
                         rotation: common_spawn.rotation,
                         spell_id: action_animation_id,
                         source_sequence: resolved_request.sequence,
-                        effect_count: effects_builder.effects.len() as u8,
+                        effect_count,
                         effects,
                         action_type: resolved_request.action_type,
                         global_sequence: net.global_action_sequence,
@@ -1451,6 +1632,16 @@ pub fn execute_action(
         if let Some(data) = summoner_gauge_data {
             let mut network = network.lock();
             send_job_gauge_update(&mut network, from_actor_id, class_job, data);
+        }
+
+        if let Some(data) = bard_gauge_data {
+            let mut network = network.lock();
+            send_job_gauge_update(
+                &mut network,
+                from_actor_id,
+                bard::gauge_class_job_id(),
+                data,
+            );
         }
 
         if has_summoner_pet_transition {
@@ -1547,7 +1738,11 @@ pub fn execute_action(
                     num_self_entries += 1;
                 }
 
-                if let EffectKind::LoseEffect { .. } = effect.kind {
+                if let EffectKind::LoseEffect { effect_id, .. } = effect.kind {
+                    let mut data = data.lock();
+                    if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+                        remove_status_from_actor_instance(instance, from_actor_id, effect_id);
+                    }
                     self_entries[num_self_entries as usize] = EffectEntry::default();
                     num_self_entries += 1;
                 }
@@ -1622,6 +1817,20 @@ pub fn execute_action(
                     FromServer::PacketSegment(ipc, resolved_request.target.object_id),
                     DestinationNetwork::ZoneClients,
                 );
+            }
+
+            {
+                let mut data = data.lock();
+                if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+                    send_dirty_status_effects(network.clone(), instance, from_actor_id);
+                    if resolved_request.target.object_id != from_actor_id {
+                        send_dirty_status_effects(
+                            network.clone(),
+                            instance,
+                            resolved_request.target.object_id,
+                        );
+                    }
+                }
             }
         }
     }

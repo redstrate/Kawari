@@ -6,15 +6,15 @@ use mlua::Function;
 use parking_lot::Mutex;
 
 use crate::{
-    ClientId, FromServer, PlayerData, StatusEffects, ToServer,
     lua::{KawariLua, KawariLuaState, LuaContent, LuaPlayer, LuaZone},
     server::{
-        WorldServer,
         combat_state::PlayerCombatState,
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
+        WorldServer,
     },
     zone_connection::BaseParameters,
+    ClientId, FromServer, PlayerData, StatusEffects, ToServer,
 };
 use kawari::{
     common::ObjectId,
@@ -94,7 +94,7 @@ pub fn send_effects_list(
 
     let mut statuses = [StatusEffect::default(); 30];
     let status_data = status_effects.data();
-    statuses[..status_data.len()].copy_from_slice(status_data);
+    statuses[..status_data.len()].copy_from_slice(&status_data);
 
     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::StatusEffectList(StatusEffectList {
         statuses,

@@ -1460,8 +1460,17 @@ impl GameData {
         let row = self.action_sheet.row(id).unwrap();
         let base_charges = row.MaxCharges.max(1);
 
+        // Enhanced Bloodletter (BRD Lv84) raises Bloodletter/Rain of Death to 3 charges, and
+        // Heartbreak Shot is the Lv92 replacement with 3 charges baked in.
+        const ACTION_BLOODLETTER: u32 = 110;
+        const ACTION_RAIN_OF_DEATH: u32 = 117;
+        const ACTION_HEARTBREAK_SHOT: u32 = 36975;
+        const LEVEL_ENHANCED_BLOODLETTER: u8 = 84;
+
         // Enhanced Radiant Aegis (Trait#480, Lv88) raises Radiant Aegis from 1 to 2 charges.
         match id {
+            ACTION_BLOODLETTER | ACTION_RAIN_OF_DEATH if level >= LEVEL_ENHANCED_BLOODLETTER => 3,
+            ACTION_HEARTBREAK_SHOT => 3,
             25799 if level >= 88 => 2,
             _ => base_charges,
         }

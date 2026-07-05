@@ -19,7 +19,10 @@ use crate::{
         NetworkedActor, WorldServer,
         combat_state::PlayerCombatState,
         instance::{Instance, QueuedTaskData},
-        jobs::summoner::{apply_summon_pet_effect, build_summoner_gauge_data, is_summoner},
+        jobs::{
+            bard::{build_bard_gauge_data, gauge_class_job_id, is_bard},
+            summoner::{apply_summon_pet_effect, build_summoner_gauge_data, is_summoner},
+        },
         network::{DestinationNetwork, NetworkState},
     },
     zone_connection::BaseParameters,
@@ -1290,8 +1293,19 @@ pub fn handle_zone_messages(
             // whether a pet was summoned, and (for jobs with one) the job-gauge bytes to re-send so
             // the gauge shows immediately instead of staying blank until the next action.
             let had_pet = combat_state.summoner.carbuncle_summoned;
-            let gauge_data = is_summoner(player_spawn.common.class_job)
-                .then(|| build_summoner_gauge_data(&combat_state, player_spawn.common.level));
+            let gauge_data = if is_summoner(player_spawn.common.class_job) {
+                Some((
+                    player_spawn.common.class_job,
+                    build_summoner_gauge_data(&combat_state, player_spawn.common.level),
+                ))
+            } else if is_bard(player_spawn.common.class_job) {
+                Some((
+                    gauge_class_job_id(),
+                    build_bard_gauge_data(&combat_state, player_spawn.common.level),
+                ))
+            } else {
+                None
+            };
 
             *instance.find_actor_mut(*from_actor_id).unwrap() = NetworkedActor::Player {
                 spawn: player_spawn.clone(),
@@ -1328,11 +1342,9 @@ pub fn handle_zone_messages(
 
             // Re-send the job gauge so the carried-over state shows immediately (the zone-in setup
             // sends a blank gauge, which would otherwise leave it empty until the next action).
-            if let Some(data) = gauge_data {
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorGauge {
-                    classjob_id: player_spawn.common.class_job,
-                    data,
-                });
+            if let Some((classjob_id, data)) = gauge_data {
+                let ipc =
+                    ServerZoneIpcSegment::new(ServerZoneIpcData::ActorGauge { classjob_id, data });
                 let mut network = network.lock();
                 network.send_to_by_actor_id(
                     *from_actor_id,

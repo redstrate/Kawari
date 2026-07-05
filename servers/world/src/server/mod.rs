@@ -15,8 +15,8 @@ use crate::{
     lua::KawariLua,
     server::{
         action::{
-            execute_action, execute_enemy_action, handle_action_messages, kill_actor,
-            update_actor_hp_mp,
+            action_damage_modifiers, apply_target_player_mitigation, execute_action,
+            execute_enemy_action, handle_action_messages, kill_actor, update_actor_hp_mp,
         },
         actor::{NetworkedActor, NpcState},
         chat::handle_chat_messages,
@@ -26,7 +26,7 @@ use crate::{
         },
         effect::{handle_effect_messages, remove_effect, send_effects_list},
         instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
-        jobs::summoner,
+        jobs::{bard, summoner},
         linkshell::handle_linkshell_messages,
         network::{DestinationNetwork, NetworkState},
         party::{
@@ -50,8 +50,9 @@ use kawari::{
     },
     config::{FilesystemConfig, get_config},
     ipc::zone::{
-        ActorControlCategory, ClientTriggerCommand, Condition, Conditions, EnmityList, Hater,
-        HaterList, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, WarpType, WaymarkPreset,
+        ActorControlCategory, ClientTriggerCommand, Condition, Conditions, DamageType, EnmityList,
+        Hater, HaterList, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, WarpType,
+        WaymarkPreset,
     },
 };
 
@@ -161,53 +162,91 @@ fn refresh_runtime_job_state(instance: &mut Instance, network: &mut NetworkState
         };
 
         let class_job = common.class_job;
-        if !summoner::is_summoner(class_job) {
+        if summoner::is_summoner(class_job) {
+            let result = summoner::refresh_summoner_runtime_state_on_actor(actor_id, actor);
+            let status_timer_refreshed = result.status_timer_refreshed;
+            let gauge_data = if result.changed {
+                let level = actor
+                    .common_spawn()
+                    .expect("summoner runtime actor has common spawn")
+                    .level;
+                if let NetworkedActor::Player { combat_state, .. } = actor {
+                    Some(summoner::build_summoner_gauge_data(combat_state, level))
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+
+            if let Some(gauge_data) = gauge_data
+                && !result.demi_just_ended
+            {
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorGauge {
+                    classjob_id: class_job,
+                    data: gauge_data,
+                });
+                network.send_to_by_actor_id(
+                    actor_id,
+                    FromServer::PacketSegment(ipc, actor_id),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
+
+            // Demi window just expired this tick — retail kills/despawns the demi actor, clears the
+            // demi hotbar, then re-spawns/re-binds carbuncle instead of only flipping UI state.
+            if result.demi_just_ended {
+                summoner::apply_demi_summon_revert(
+                    network,
+                    instance,
+                    actor_id,
+                    gauge_data.map(|data| (class_job, data)),
+                );
+            }
+
+            if status_timer_refreshed {
+                refreshed.push(actor_id);
+            }
+
             continue;
         }
 
-        let result = summoner::refresh_summoner_runtime_state_on_actor(actor_id, actor);
-        let status_timer_refreshed = result.status_timer_refreshed;
-        let gauge_data = if result.changed {
+        if bard::is_bard(class_job) {
+            let result = bard::refresh_bard_runtime_state_on_actor(actor_id, actor);
             let level = actor
                 .common_spawn()
-                .expect("summoner runtime actor has common spawn")
+                .expect("bard runtime actor has common spawn")
                 .level;
-            if let NetworkedActor::Player { combat_state, .. } = actor {
-                Some(summoner::build_summoner_gauge_data(combat_state, level))
-            } else {
-                None
+            if result.changed
+                && let NetworkedActor::Player { combat_state, .. } = actor
+            {
+                let gauge_data = bard::build_bard_gauge_data(combat_state, level);
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorGauge {
+                    classjob_id: bard::gauge_class_job_id(),
+                    data: gauge_data,
+                });
+                network.send_to_by_actor_id(
+                    actor_id,
+                    FromServer::PacketSegment(ipc, actor_id),
+                    DestinationNetwork::ZoneClients,
+                );
             }
-        } else {
-            None
-        };
 
-        if let Some(gauge_data) = gauge_data
-            && !result.demi_just_ended
-        {
-            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorGauge {
-                classjob_id: class_job,
-                data: gauge_data,
-            });
-            network.send_to_by_actor_id(
-                actor_id,
-                FromServer::PacketSegment(ipc, actor_id),
-                DestinationNetwork::ZoneClients,
-            );
-        }
+            if let Some(cooldown_update) = result.cooldown_update {
+                network.send_to_by_actor_id(
+                    actor_id,
+                    FromServer::ActorControlSelf(ActorControlCategory::SetCooldownTimer {
+                        cooldown_group: cooldown_update.cooldown_group,
+                        elapsed_centisec: cooldown_update.elapsed_centisec,
+                        total_centisec: cooldown_update.total_centisec,
+                    }),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
 
-        // Demi window just expired this tick — retail kills/despawns the demi actor, clears the
-        // demi hotbar, then re-spawns/re-binds carbuncle instead of only flipping UI state.
-        if result.demi_just_ended {
-            summoner::apply_demi_summon_revert(
-                network,
-                instance,
-                actor_id,
-                gauge_data.map(|data| (class_job, data)),
-            );
-        }
-
-        if status_timer_refreshed {
-            refreshed.push(actor_id);
+            if result.status_timer_refreshed {
+                refreshed.push(actor_id);
+            }
         }
     }
 
@@ -564,7 +603,9 @@ fn process_regen_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance
         // damage from the caster's stats). NPC sources have no BaseParameters, so fall back to a
         // rough flat value derived from potency.
         for tick in &ticks {
-            let source_params = instance.find_actor(tick.source_actor_id).and_then(|a| {
+            let source_actor = instance.find_actor(tick.source_actor_id);
+            let source_damage_modifiers = action_damage_modifiers(source_actor);
+            let source_params = source_actor.and_then(|a| {
                 if let NetworkedActor::Player { parameters, .. } = a {
                     Some(parameters.clone())
                 } else {
@@ -576,11 +617,37 @@ fn process_regen_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance
             let magnitude = match tick.kind {
                 TickEffectKind::DamageMagic => source_params
                     .as_ref()
-                    .map(|p| p.calc_magical_damage(tick.potency as u32) as i64)
+                    .map(|p| {
+                        let (base, roll_modifiers) = if let Some(snapshot) = tick.damage_snapshot {
+                            (snapshot.base_amount, snapshot.roll_modifiers)
+                        } else {
+                            let base = p.calc_magical_damage(tick.potency as u32);
+                            (
+                                source_damage_modifiers.apply_base_damage(base),
+                                source_damage_modifiers.roll,
+                            )
+                        };
+                        let (rolled, _) = p.roll_damage_with_modifiers(base, roll_modifiers);
+                        apply_target_player_mitigation(rolled, Some(actor), DamageType::Magic)
+                            as i64
+                    })
                     .unwrap_or((tick.potency / 2) as i64),
                 TickEffectKind::DamagePhysical => source_params
                     .as_ref()
-                    .map(|p| p.calc_physical_damage(tick.potency as u32) as i64)
+                    .map(|p| {
+                        let (base, roll_modifiers) = if let Some(snapshot) = tick.damage_snapshot {
+                            (snapshot.base_amount, snapshot.roll_modifiers)
+                        } else {
+                            let base = p.calc_physical_damage(tick.potency as u32);
+                            (
+                                source_damage_modifiers.apply_base_damage(base),
+                                source_damage_modifiers.roll,
+                            )
+                        };
+                        let (rolled, _) = p.roll_damage_with_modifiers(base, roll_modifiers);
+                        apply_target_player_mitigation(rolled, Some(actor), DamageType::Physical)
+                            as i64
+                    })
                     .unwrap_or((tick.potency / 2) as i64),
                 TickEffectKind::Heal => source_params
                     .as_ref()

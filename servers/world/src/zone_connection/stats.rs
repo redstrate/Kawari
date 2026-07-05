@@ -561,6 +561,19 @@ fn tank_attack_modifier_for_level(level: u32) -> f64 {
     }
 }
 
+fn positive_scaled_bonus(value: u32, baseline: u16, coefficient: f64, divisor: u16) -> u32 {
+    let baseline = u32::from(baseline);
+    if value <= baseline || divisor == 0 {
+        return 0;
+    }
+
+    (coefficient * (value - baseline) as f64 / f64::from(divisor)).floor() as u32
+}
+
+fn apply_factor(value: u64, factor: u32, divisor: u64) -> u64 {
+    value.saturating_mul(u64::from(factor)) / divisor
+}
+
 fn classjob_uses_dexterity(classjob_id: u8) -> bool {
     matches!(classjob_id, 5 | 23 | 29 | 30 | 31 | 38 | 41)
 }
@@ -706,6 +719,14 @@ pub struct BaseParameters {
     pub classjob_id: u8,
     pub level: u8,
     pub job_attack_modifier: u16,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct DamageRollModifiers {
+    pub crit_rate_bonus: f64,
+    pub direct_hit_rate_bonus: f64,
+    pub force_critical: bool,
+    pub force_direct_hit: bool,
 }
 
 impl BaseParameters {
@@ -890,46 +911,32 @@ impl BaseParameters {
     }
 
     fn expected_crit_rate(&self, level_modifier: LevelModifier) -> f64 {
-        ((200.0 * (self.critical_hit as f64 - level_modifier.sub as f64)
-            / level_modifier.div as f64)
-            .floor()
-            + 50.0)
-            / 1000.0
+        f64::from(
+            50 + positive_scaled_bonus(
+                self.critical_hit,
+                level_modifier.sub,
+                200.0,
+                level_modifier.div,
+            ),
+        ) / 1000.0
     }
 
-    fn crit_multiplier(&self, level_modifier: LevelModifier) -> f64 {
-        ((200.0 * (self.critical_hit as f64 - level_modifier.sub as f64)
-            / level_modifier.div as f64)
-            .floor()
-            + 1400.0)
-            / 1000.0
-    }
-
-    fn determination_bonus(&self, level_modifier: LevelModifier) -> f64 {
-        ((140.0 * (self.determination as f64 - level_modifier.main as f64)
-            / level_modifier.div as f64)
-            .floor()
-            / 1000.0)
-            .max(0.0)
+    fn crit_damage_factor(&self, level_modifier: LevelModifier) -> u32 {
+        1400 + positive_scaled_bonus(
+            self.critical_hit,
+            level_modifier.sub,
+            200.0,
+            level_modifier.div,
+        )
     }
 
     fn direct_hit_rate_bonus(&self, level_modifier: LevelModifier) -> f64 {
-        ((550.0 * (self.direct_hit_rate as f64 - level_modifier.sub as f64)
-            / level_modifier.div as f64)
-            .floor()
-            / 1000.0)
-            .max(0.0)
-    }
-
-    fn tenacity_damage_bonus(&self, level_modifier: LevelModifier) -> f64 {
-        if !classjob_uses_tenacity(self.classjob_id) {
-            return 0.0;
-        }
-
-        ((112.0 * (self.tenacity as f64 - level_modifier.sub as f64) / level_modifier.div as f64)
-            .floor()
-            / 1000.0)
-            .max(0.0)
+        f64::from(positive_scaled_bonus(
+            self.direct_hit_rate,
+            level_modifier.sub,
+            550.0,
+            level_modifier.div,
+        )) / 1000.0
     }
 
     fn offensive_weapon_damage(&self) -> u32 {
@@ -940,70 +947,116 @@ impl BaseParameters {
         }
     }
 
+    fn weapon_damage_factor(&self, level_modifier: LevelModifier) -> u32 {
+        self.offensive_weapon_damage()
+            + (u32::from(level_modifier.main) * u32::from(self.job_attack_modifier) / 1000)
+    }
+
+    fn attack_factor(&self, level_modifier: LevelModifier) -> u32 {
+        let coefficient = if classjob_uses_tenacity(self.classjob_id) {
+            tank_attack_modifier_for_level(u32::from(self.level))
+        } else {
+            attack_modifier_for_level(u32::from(self.level))
+        };
+        100 + positive_scaled_bonus(
+            self.primary_damage_stat_value(),
+            level_modifier.main,
+            coefficient,
+            level_modifier.main,
+        )
+    }
+
+    fn heal_factor(&self, level_modifier: LevelModifier) -> u32 {
+        100 + positive_scaled_bonus(
+            self.primary_damage_stat_value(),
+            level_modifier.main,
+            heal_modifier_for_level(u32::from(self.level)),
+            level_modifier.main,
+        )
+    }
+
+    fn determination_factor(&self, level_modifier: LevelModifier) -> u32 {
+        1000 + positive_scaled_bonus(
+            self.determination,
+            level_modifier.main,
+            140.0,
+            level_modifier.div,
+        )
+    }
+
+    fn tenacity_factor(&self, level_modifier: LevelModifier) -> u32 {
+        if !classjob_uses_tenacity(self.classjob_id) {
+            return 1000;
+        }
+
+        1000 + positive_scaled_bonus(self.tenacity, level_modifier.sub, 112.0, level_modifier.div)
+    }
+
+    fn damage_trait_factor(&self) -> u32 {
+        (classjob_damage_trait_modifier(self.classjob_id, u32::from(self.level)) * 100.0).round()
+            as u32
+    }
+
     fn calc_expected_damage(&self, potency: u32) -> u32 {
         if potency == 0 {
             return 0;
         }
 
         let level_modifier = level_modifier_for(u32::from(self.level));
-        let primary_stat = self.primary_damage_stat_value() as f64;
-        let weapon_base_damage = self.offensive_weapon_damage() as f64;
-
-        if primary_stat <= 0.0 || weapon_base_damage <= 0.0 {
+        let weapon_damage_factor = self.weapon_damage_factor(level_modifier);
+        if self.primary_damage_stat_value() == 0 || weapon_damage_factor == 0 {
             return 0;
         }
 
-        let weapon_damage = (weapon_base_damage
-            + (level_modifier.main as f64 * self.job_attack_modifier as f64 / 1000.0))
-            .floor()
-            / 100.0;
-        let attack_modifier = if classjob_uses_tenacity(self.classjob_id) {
-            tank_attack_modifier_for_level(u32::from(self.level))
-        } else {
-            attack_modifier_for_level(u32::from(self.level))
-        };
-        let attack_power = (100.0
-            + attack_modifier * (primary_stat - level_modifier.main as f64)
-                / level_modifier.main as f64)
-            .floor()
-            / 100.0;
-
-        let base_damage = (potency as f64 * attack_power * weapon_damage).floor();
-        let with_determination =
-            (base_damage * (1.0 + self.determination_bonus(level_modifier))).floor();
-        let with_tenacity =
-            (with_determination * (1.0 + self.tenacity_damage_bonus(level_modifier))).floor();
-        let normal_damage = (with_tenacity
-            * classjob_damage_trait_modifier(self.classjob_id, u32::from(self.level)))
-        .floor();
+        let mut damage = u64::from(potency);
+        damage = apply_factor(damage, self.attack_factor(level_modifier), 100);
+        damage = apply_factor(damage, weapon_damage_factor, 100);
+        damage = apply_factor(damage, self.determination_factor(level_modifier), 1000);
+        damage = apply_factor(damage, self.tenacity_factor(level_modifier), 1000);
+        damage = apply_factor(damage, self.damage_trait_factor(), 100);
 
         // Return the *base* (pre-crit, pre-direct-hit, pre-variance) damage. The crit/direct-hit
         // roll and ±5% variance are applied later by `roll_damage` at the point of impact, so the
         // client can be told the actual hit severity (and so each hit varies).
-        normal_damage.clamp(0.0, u32::MAX as f64) as u32
+        damage.min(u64::from(u32::MAX)) as u32
     }
 
     /// Rolls a single damage instance from a base amount: independently rolls critical hit and
     /// direct hit from this character's rates, applies the ±5% damage variance, and reports which
     /// (if any) occurred so the client can show the right hit severity.
     pub fn roll_damage(&self, base: u32) -> (u32, DamageKind) {
+        self.roll_damage_with_modifiers(base, DamageRollModifiers::default())
+    }
+
+    /// Rolls a single damage instance, allowing action/status effects to add crit or direct-hit
+    /// chance, or force either roll.
+    pub fn roll_damage_with_modifiers(
+        &self,
+        base: u32,
+        modifiers: DamageRollModifiers,
+    ) -> (u32, DamageKind) {
         if base == 0 {
             return (0, DamageKind::Normal);
         }
 
         let level_modifier = level_modifier_for(u32::from(self.level));
-        let is_crit = fastrand::f64() < self.expected_crit_rate(level_modifier);
-        let is_direct = fastrand::f64() < self.direct_hit_rate_bonus(level_modifier);
+        let crit_rate =
+            (self.expected_crit_rate(level_modifier) + modifiers.crit_rate_bonus).clamp(0.0, 1.0);
+        let direct_hit_rate = (self.direct_hit_rate_bonus(level_modifier)
+            + modifiers.direct_hit_rate_bonus)
+            .clamp(0.0, 1.0);
+        let is_crit = modifiers.force_critical || fastrand::f64() < crit_rate;
+        let is_direct = modifiers.force_direct_hit || fastrand::f64() < direct_hit_rate;
 
-        let mut damage = base as f64;
+        let mut damage = u64::from(base);
         if is_crit {
-            damage *= self.crit_multiplier(level_modifier);
+            damage = apply_factor(damage, self.crit_damage_factor(level_modifier), 1000);
         }
         if is_direct {
-            damage *= 1.25;
+            damage = apply_factor(damage, 125, 100);
         }
-        // ±5% variance, matching retail.
-        damage *= 0.95 + fastrand::f64() * 0.10;
+        // Retail damage variance is a whole-percent roll from 95% through 105%.
+        damage = apply_factor(damage, 95 + fastrand::u32(0..11), 100);
 
         let kind = match (is_crit, is_direct) {
             (true, true) => DamageKind::CriticalDirectHit,
@@ -1012,7 +1065,7 @@ impl BaseParameters {
             (false, false) => DamageKind::Normal,
         };
 
-        (damage.clamp(0.0, u32::MAX as f64) as u32, kind)
+        (damage.min(u64::from(u32::MAX)) as u32, kind)
     }
 
     /// Fraction of incoming damage (0.0–0.99) mitigated by this character's defense, per the
@@ -1068,44 +1121,27 @@ impl BaseParameters {
         }
 
         let level_modifier = level_modifier_for(u32::from(self.level));
-        let primary_stat = self.primary_damage_stat_value() as f64;
-        let weapon_base_damage = self.offensive_weapon_damage() as f64;
-
-        if primary_stat <= 0.0 || weapon_base_damage <= 0.0 {
+        let weapon_damage_factor = self.weapon_damage_factor(level_modifier);
+        if self.primary_damage_stat_value() == 0 || weapon_damage_factor == 0 {
             return 0;
         }
 
-        let weapon_damage = (weapon_base_damage
-            + (level_modifier.main as f64 * self.job_attack_modifier as f64 / 1000.0))
-            .floor()
-            / 100.0;
-        let heal_power = (100.0
-            + heal_modifier_for_level(u32::from(self.level))
-                * (primary_stat - level_modifier.main as f64)
-                / level_modifier.main as f64)
-            .floor()
-            / 100.0;
-
-        let base_heal = (potency as f64 * heal_power * weapon_damage).floor();
-        let with_determination =
-            (base_heal * (1.0 + self.determination_bonus(level_modifier))).floor();
-        let with_tenacity =
-            (with_determination * (1.0 + self.tenacity_damage_bonus(level_modifier))).floor();
-        let normal_heal = (with_tenacity
-            * if classjob_is_caster_like(self.classjob_id) {
-                classjob_damage_trait_modifier(self.classjob_id, u32::from(self.level))
-            } else {
-                1.0
-            })
-        .floor();
-        // Roll a critical heal (heals can crit but never direct-hit) plus ±5% variance.
-        let mut heal = normal_heal;
-        if fastrand::f64() < self.expected_crit_rate(level_modifier) {
-            heal = (heal * self.crit_multiplier(level_modifier)).floor();
+        let mut heal = u64::from(potency);
+        heal = apply_factor(heal, self.heal_factor(level_modifier), 100);
+        heal = apply_factor(heal, weapon_damage_factor, 100);
+        heal = apply_factor(heal, self.determination_factor(level_modifier), 1000);
+        heal = apply_factor(heal, self.tenacity_factor(level_modifier), 1000);
+        if classjob_is_caster_like(self.classjob_id) {
+            heal = apply_factor(heal, self.damage_trait_factor(), 100);
         }
-        heal *= 0.95 + fastrand::f64() * 0.10;
+        // Roll a critical heal (heals can crit but never direct-hit) plus ±5% variance.
+        let mut heal = heal;
+        if fastrand::f64() < self.expected_crit_rate(level_modifier) {
+            heal = apply_factor(heal, self.crit_damage_factor(level_modifier), 1000);
+        }
+        heal = apply_factor(heal, 95 + fastrand::u32(0..11), 100);
 
-        heal.clamp(0.0, u32::MAX as f64) as u32
+        heal.min(u64::from(u32::MAX)) as u32
     }
 
     /// Iterates over the given equipped items and calculates defense, along with any stat bonuses.

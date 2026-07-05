@@ -2,6 +2,8 @@ use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 
+use super::jobs::bard::BardState;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum SummonerAttunement {
     #[default]
@@ -136,12 +138,36 @@ impl CooldownState {
             .map(|started_at| self.charge_duration.saturating_sub(started_at.elapsed()))
             .unwrap_or_default()
     }
+
+    pub fn reduce_recovery(&mut self, amount: Duration) {
+        self.refresh();
+        if let Some(started_at) = self.started_at {
+            self.started_at = Some(started_at.checked_sub(amount).unwrap_or(started_at));
+            self.refresh();
+        }
+    }
+
+    pub fn timer_values(&mut self) -> (u32, u32) {
+        self.refresh();
+        let Some(started_at) = self.started_at else {
+            return (0, 0);
+        };
+
+        let total_centisec = duration_to_centisec(self.charge_duration);
+        let elapsed_centisec = duration_to_centisec(started_at.elapsed().min(self.charge_duration));
+        (elapsed_centisec, total_centisec)
+    }
+}
+
+fn duration_to_centisec(duration: Duration) -> u32 {
+    (duration.as_millis() / 10).min(u128::from(u32::MAX)) as u32
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct PlayerCombatState {
     pub cooldowns: Vec<Option<CooldownState>>,
     pub summoner: SummonerState,
+    pub bard: BardState,
     /// Whether the player currently has aggro (something hates them). Tracked so the server only
     /// sends a battle-state toggle (weapon drawn + combat music) when it actually changes.
     pub in_combat: bool,
@@ -217,5 +243,16 @@ impl PlayerCombatState {
     pub fn clear_cooldown(&mut self, cooldown_group_index: usize) {
         self.ensure_capacity();
         self.cooldowns[cooldown_group_index] = None;
+    }
+
+    pub fn reduce_cooldown_recovery(
+        &mut self,
+        cooldown_group_index: usize,
+        amount: Duration,
+    ) -> Option<(u32, u32)> {
+        self.ensure_capacity();
+        let cooldown = self.cooldowns[cooldown_group_index].as_mut()?;
+        cooldown.reduce_recovery(amount);
+        Some(cooldown.timer_values())
     }
 }

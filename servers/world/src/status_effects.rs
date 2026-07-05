@@ -1,3 +1,6 @@
+use std::time::{Duration, Instant};
+
+use crate::zone_connection::DamageRollModifiers;
 use kawari::common::ObjectId;
 use kawari::ipc::zone::StatusEffect;
 
@@ -16,6 +19,12 @@ pub enum TickEffectKind {
     RestoreMp,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct TickDamageSnapshot {
+    pub base_amount: u32,
+    pub roll_modifiers: DamageRollModifiers,
+}
+
 /// A periodic effect attached to a status. Lives alongside the wire [`StatusEffect`] (which only
 /// carries id/param/duration/source) so the every-3s regen tick can resolve DoTs/HoTs without
 /// changing the network format.
@@ -26,6 +35,8 @@ pub struct TickEffect {
     pub kind: TickEffectKind,
     /// Per-tick potency, or raw MP amount for [`TickEffectKind::RestoreMp`].
     pub potency: u16,
+    /// Damage modifiers captured when the DoT was applied or refreshed.
+    pub damage_snapshot: Option<TickDamageSnapshot>,
     /// Who applied the DoT/HoT, for damage attribution.
     pub source_actor_id: ObjectId,
 }
@@ -38,9 +49,16 @@ pub struct BarrierEffect {
     pub remaining: u32,
 }
 
+#[derive(Debug, Clone, Copy)]
+struct StatusExpiration {
+    effect_id: u16,
+    expires_at: Instant,
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct StatusEffects {
     status_effects: Vec<StatusEffect>,
+    expirations: Vec<StatusExpiration>,
     /// Periodic tick effects (DoT/HoT) keyed by their owning status id. Server-side only.
     tick_effects: Vec<TickEffect>,
     /// Damage barriers keyed by their owning status id. Server-side only.
@@ -65,9 +83,11 @@ impl StatusEffects {
         duration: f32,
         source_actor_id: ObjectId,
     ) {
-        let status_effect = self.find_or_create_status_effect(effect_id, effect_param);
+        let status_effect = self.find_or_create_status_effect(effect_id);
+        status_effect.param = effect_param;
         status_effect.duration = duration;
         status_effect.source_actor_id = source_actor_id;
+        self.set_expiration(effect_id, duration);
         self.dirty = true
     }
 
@@ -81,6 +101,7 @@ impl StatusEffects {
         duration: f32,
         kind: TickEffectKind,
         potency: u16,
+        damage_snapshot: Option<TickDamageSnapshot>,
         source_actor_id: ObjectId,
     ) {
         self.add_with_source(effect_id, effect_param, duration, source_actor_id);
@@ -89,6 +110,7 @@ impl StatusEffects {
             effect_id,
             kind,
             potency,
+            damage_snapshot,
             source_actor_id,
         });
     }
@@ -177,6 +199,8 @@ impl StatusEffects {
             self.barriers.retain(|barrier| barrier.remaining > 0);
             self.status_effects
                 .retain(|effect| !broken_effect_ids.contains(&effect.effect_id));
+            self.expirations
+                .retain(|expiration| !broken_effect_ids.contains(&expiration.effect_id));
             self.tick_effects
                 .retain(|tick| !broken_effect_ids.contains(&tick.effect_id));
             self.dirty = true;
@@ -185,11 +209,7 @@ impl StatusEffects {
         remaining_damage
     }
 
-    fn find_or_create_status_effect(
-        &mut self,
-        effect_id: u16,
-        effect_param: u16,
-    ) -> &mut StatusEffect {
+    fn find_or_create_status_effect(&mut self, effect_id: u16) -> &mut StatusEffect {
         if let Some(i) = self
             .status_effects
             .iter()
@@ -199,10 +219,38 @@ impl StatusEffects {
         } else {
             self.status_effects.push(StatusEffect {
                 effect_id,
-                param: effect_param,
                 ..Default::default()
             });
             self.status_effects.last_mut().unwrap()
+        }
+    }
+
+    fn set_expiration(&mut self, effect_id: u16, duration: f32) {
+        self.expirations
+            .retain(|expiration| expiration.effect_id != effect_id);
+        if duration > 0.0 {
+            self.expirations.push(StatusExpiration {
+                effect_id,
+                expires_at: Instant::now() + Duration::from_secs_f32(duration),
+            });
+        }
+    }
+
+    fn remaining_duration(&self, effect: StatusEffect) -> StatusEffect {
+        let Some(expiration) = self
+            .expirations
+            .iter()
+            .find(|expiration| expiration.effect_id == effect.effect_id)
+        else {
+            return effect;
+        };
+
+        StatusEffect {
+            duration: expiration
+                .expires_at
+                .saturating_duration_since(Instant::now())
+                .as_secs_f32(),
+            ..effect
         }
     }
 
@@ -210,7 +258,7 @@ impl StatusEffects {
         self.status_effects
             .iter()
             .position(|effect| effect.effect_id == effect_id)
-            .map(|i| self.status_effects[i])
+            .map(|i| self.remaining_duration(self.status_effects[i]))
     }
 
     /// Returns the slot index of a status by id, matching the layout sent in StatusEffectList. The
@@ -229,6 +277,8 @@ impl StatusEffects {
             .position(|effect| effect.effect_id == effect_id)
         {
             self.status_effects.remove(i);
+            self.expirations
+                .retain(|expiration| expiration.effect_id != effect_id);
             self.dirty = true;
         }
         self.tick_effects.retain(|t| t.effect_id != effect_id);
@@ -239,8 +289,12 @@ impl StatusEffects {
         }
     }
 
-    pub fn data(&self) -> &[StatusEffect] {
-        &self.status_effects
+    pub fn data(&self) -> Vec<StatusEffect> {
+        self.status_effects
+            .iter()
+            .copied()
+            .map(|effect| self.remaining_duration(effect))
+            .collect()
     }
 
     /// If the list is dirty and must be propagated to the client
@@ -294,6 +348,28 @@ mod tests {
         status_effects.remove(0);
         assert_eq!(status_effects.get(0), None);
         assert_eq!(status_effects.is_dirty(), true);
+    }
+
+    #[test]
+    fn status_list_reports_remaining_duration_per_effect() {
+        let mut status_effects = StatusEffects::default();
+        status_effects.add(1200, 0, 1.0);
+        std::thread::sleep(Duration::from_millis(50));
+        status_effects.add(1201, 0, 1.0);
+
+        let status_data = status_effects.data();
+        let first = status_data
+            .iter()
+            .find(|effect| effect.effect_id == 1200)
+            .unwrap();
+        let second = status_data
+            .iter()
+            .find(|effect| effect.effect_id == 1201)
+            .unwrap();
+
+        assert!(first.duration < second.duration);
+        assert!(first.duration < 1.0);
+        assert!(second.duration <= 1.0);
     }
 
     #[test]

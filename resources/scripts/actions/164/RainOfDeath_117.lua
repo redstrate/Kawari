@@ -1,6 +1,7 @@
--- Burst Shot (BRD, ClassJob 23) - Level 76 weaponskill
--- Potency: 220 (upgrades from Heavy Shot at level 76)
-POTENCY = 220
+-- Rain of Death (BRD, ClassJob 23) - Level 45 ability (AoE)
+-- Potency: 100 (all targets in range)
+-- Recast: 15s (CooldownGroup 10)
+POTENCY = 100
 
 function doAction(player, in_combo)
     effects = EffectsBuilder()

@@ -23,7 +23,7 @@ mod event;
 pub use event::{Event, EventHandler};
 
 mod status_effects;
-pub use status_effects::{StatusEffects, TickEffect, TickEffectKind};
+pub use status_effects::{StatusEffects, TickDamageSnapshot, TickEffect, TickEffectKind};
 
 mod server;
 pub use server::{Party, server_main_loop};
