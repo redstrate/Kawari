@@ -1209,6 +1209,25 @@ impl From<LegacyEquipmentModelId> for u32 {
     }
 }
 
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
+pub struct QuestSpecialFlags(u8);
+
+bitflags! {
+    impl QuestSpecialFlags: u8 {
+        /// If the player is playing on a legacy account (unconfirmed)
+        const LEGACY = 1;
+        /// IF the player character is a legacy "Warrior of Light" from 1.0.
+        const WARRIOR_OF_LIGHT = 2;
+    }
+}
+
+impl std::fmt::Debug for QuestSpecialFlags {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;

@@ -3,7 +3,7 @@ use binrw::binrw;
 use crate::{
     common::{
         FestivalId, ObjectId, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3,
-        read_bool_from, read_string, write_bool_as, write_string,
+        QuestSpecialFlags, read_bool_from, read_string, write_bool_as, write_string,
     },
     constants::{
         ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
@@ -86,7 +86,7 @@ pub struct PlayerSetup {
     pub city_state: u8,
     /// The Aetheryte used for the Return action. Indexed into the Aetheryte Excel sheet.
     pub homepoint: u16,
-    pub quest_special_flags: u8,
+    pub quest_special_flags: QuestSpecialFlags,
     pub pet_data: u8,
     pub companion_rank: u8,
     pub companion_stars: u8,

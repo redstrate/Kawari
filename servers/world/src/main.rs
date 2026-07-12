@@ -5,9 +5,9 @@ use axum::Router;
 use axum::routing::get;
 use kawari::common::{
     ContainerType, DEBUG_COMMAND_TRIGGER, DirectorEvent, DirectorTrigger, DutyOption, FestivalId,
-    HandlerId, HandlerType, ItemOperationKind, LogMessageType, ObjectId, ObjectTypeId,
+    HandlerId, HandlerType, ItemOperationKind, LogMessageType, MaxEx, ObjectId, ObjectTypeId,
     ObjectTypeKind, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position,
-    calculate_max_level,
+    QuestSpecialFlags, calculate_max_level,
 };
 use kawari::config::{FilesystemConfig, get_config};
 use kawari_world::inventory::{Item, MAX_LARGE_STORAGE, Storage, get_next_free_slot};
@@ -579,12 +579,10 @@ async fn process_packet(
                                 return false;
                             };
 
-                            let expansion = login_reply
-                                .body_mut()
-                                .read_to_string()
-                                .unwrap()
-                                .parse()
-                                .unwrap();
+                            let expansion: MaxEx = serde_json::from_str(
+                                &login_reply.body_mut().read_to_string().unwrap(),
+                            )
+                            .unwrap();
                             // Send inventory
                             connection.send_inventory().await;
 
@@ -651,6 +649,14 @@ async fn process_packet(
                                     player_state_flags3.set(PlayerStateFlags3::TRADE_MENTOR, true);
                                 }
 
+                                let mut quest_special_flags = QuestSpecialFlags::empty();
+                                if connection.player_data.character.legacy == 1 {
+                                    quest_special_flags.insert(QuestSpecialFlags::WARRIOR_OF_LIGHT);
+                                }
+                                if expansion.legacy {
+                                    quest_special_flags.insert(QuestSpecialFlags::LEGACY);
+                                }
+
                                 let config = get_config();
                                 let ipc = ServerZoneIpcSegment::new(
                                     ServerZoneIpcData::PlayerSetup(PlayerSetup {
@@ -660,8 +666,8 @@ async fn process_packet(
                                         player_state_flags2,
                                         player_state_flags3,
                                         exp: padded_exp,
-                                        max_level: calculate_max_level(expansion),
-                                        expansion,
+                                        max_level: calculate_max_level(expansion.max_ex as u8),
+                                        expansion: expansion.max_ex as u8,
                                         name: connection.player_data.character.name.clone(),
                                         actor_id: connection.player_data.character.actor_id,
                                         race: chara_make.customize.race as u8,
@@ -847,6 +853,7 @@ async fn process_packet(
                                             .world
                                             .active_festivals
                                             .map(FestivalId),
+                                        quest_special_flags,
                                         ..Default::default()
                                     }),
                                 );

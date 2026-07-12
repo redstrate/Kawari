@@ -4,10 +4,13 @@ use physis::blowfish::LobbyBlowfish;
 use tokio::net::TcpStream;
 
 use kawari::{
-    common::{GAME_SERVICE, ObjectId, WORLD_NAME},
+    common::{GAME_SERVICE, MAX_CHARACTERS, MaxEx, ObjectId, WORLD_NAME},
     config::get_config,
     constants::SUPPORTED_EXPAC_VERSIONS,
-    ipc::lobby::{DistRetainerInfo, NackReply},
+    ipc::lobby::{
+        DistRetainerInfo, NackReply,
+        service_login_reply::{ServiceLoginReplyFlag2, ServiceLoginReplyFlag4},
+    },
     packet::{
         CompressionType, ConnectionState, ConnectionType, PacketSegment, SegmentData, SegmentType,
         generate_encryption_key, parse_packet, send_custom_world_packet, send_packet,
@@ -311,14 +314,8 @@ impl LobbyConnection {
             return;
         };
 
-        let entitled_expansion = login_reply
-            .body_mut()
-            .read_to_string()
-            .unwrap()
-            .parse()
-            .unwrap();
-
-        // Send inventory
+        let entitled_expansion: MaxEx =
+            serde_json::from_str(&login_reply.body_mut().read_to_string().unwrap()).unwrap();
 
         // now send them the character list
         {
@@ -337,9 +334,7 @@ impl LobbyConnection {
             };
 
             let mut characters = characters.to_vec();
-
-            let max_characters_per_world = 8;
-            let can_create_character = characters.len() < max_characters_per_world;
+            let can_create_character = characters.len() < MAX_CHARACTERS;
 
             for i in 0..4 {
                 let mut characters_in_packet = Vec::new();
@@ -352,21 +347,25 @@ impl LobbyConnection {
                     CharacterDetails::default(),
                 );
 
+                let mut flag2 = ServiceLoginReplyFlag2::HIDE_SUBSCRIPTION_INFORMATION; // There's no point in showing this in Kawari
+                if entitled_expansion.legacy {
+                    flag2.insert(ServiceLoginReplyFlag2::LEGACY_ACCOUNT);
+                }
+
                 let lobby_character_list = if i == 3 {
-                    // On the last packet, add the account-wide information
+                    // On the last packet, add account-wide information:
                     ServiceLoginReply {
                         sequence,
                         counter: (i * (ServiceLoginReply::MAX_CHARACTERS as u8 * 2)) + 1,
                         num_in_packet: characters_in_packet.len() as u8,
-                        unk3: 0,
-                        unk4: 0,
-                        unk6: 64,
-                        days_subscribed: 30,
-                        remaining_days: 30,
-                        days_to_next_rank: 0,
-                        unk8: if can_create_character { 1 } else { 0 },
-                        max_characters_on_world: max_characters_per_world as u16,
-                        entitled_expansion,
+                        flag2,
+                        flag4: if can_create_character {
+                            ServiceLoginReplyFlag4::CAN_CREATE_NEW_CHARACTERS
+                        } else {
+                            ServiceLoginReplyFlag4::default()
+                        },
+                        max_characters_on_world: MAX_CHARACTERS as u16,
+                        entitled_expansion: entitled_expansion.max_ex,
                         characters: characters_in_packet,
                         ..Default::default()
                     }

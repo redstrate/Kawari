@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 
-#[derive(Insertable, Queryable, Selectable)]
+#[derive(Insertable, Queryable, Selectable, Default)]
 #[diesel(table_name = crate::schema::service_account)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 #[diesel(belongs_to(User))]
@@ -8,6 +8,7 @@ pub struct ServiceAccount {
     pub id: i64,
     pub user_id: i64,
     pub max_ex: i32,
+    pub legacy: i32,
 }
 
 #[derive(Insertable, Queryable, Selectable)]

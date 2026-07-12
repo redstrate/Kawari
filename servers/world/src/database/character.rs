@@ -373,7 +373,7 @@ impl WorldDatabase {
             actor_id,
             gm_rank: GameMasterRank::Debug,
             name: name.to_string(),
-            time_played_minutes: 0,
+            ..Default::default()
         };
         diesel::insert_into(schema::character::table)
             .values(character)

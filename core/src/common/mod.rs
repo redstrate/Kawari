@@ -165,6 +165,9 @@ pub const NETWORK_TIMEOUT: Duration = Duration::from_secs(5);
 /// Name of the World used in certain scenarios.
 pub const WORLD_NAME: &str = "Kawari";
 
+/// Maximum amount of characters that should be allowed per-service account.
+pub const MAX_CHARACTERS: usize = 8;
+
 #[derive(Serialize, Deserialize)]
 pub struct User {
     pub id: u32,
@@ -175,6 +178,12 @@ pub struct User {
 pub struct BasicCharacterData {
     pub content_id: u64,
     pub name: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct MaxEx {
+    pub max_ex: u32,
+    pub legacy: bool,
 }
 
 /// Turns a Quest row ID into a "normal" one. For example: 65537 to 1.

@@ -2,6 +2,7 @@ use crate::models::*;
 use diesel::prelude::*;
 use diesel::{Connection, SqliteConnection};
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
+use kawari::common::MaxEx;
 use serde::Serialize;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
@@ -98,6 +99,7 @@ impl LoginDatabase {
                     id: Self::generate_account_id() as i64,
                     user_id: user_id as i64,
                     max_ex: self.num_expansions as i32,
+                    ..Default::default()
                 })
                 .execute(&mut self.connection)
                 .unwrap();
@@ -355,17 +357,24 @@ impl LoginDatabase {
     }
 
     /// Returns the max expansion level for the `service_account_id`
-    pub fn get_max_expansion(&mut self, for_service_account_id: u64) -> Option<u8> {
+    pub fn get_max_expansion(&mut self, for_service_account_id: u64) -> Option<MaxEx> {
         use crate::schema::service_account::dsl::*;
 
-        Some(
-            service_account
+        Some(MaxEx {
+            max_ex: service_account
                 .filter(id.eq(for_service_account_id as i64))
                 .select(ServiceAccount::as_select())
                 .first(&mut self.connection)
                 .ok()?
-                .max_ex as u8,
-        )
+                .max_ex as u32,
+            legacy: service_account
+                .filter(id.eq(for_service_account_id as i64))
+                .select(ServiceAccount::as_select())
+                .first(&mut self.connection)
+                .ok()?
+                .legacy
+                == 1,
+        })
     }
 
     /// Returns the max expansion level for this `user_id`.

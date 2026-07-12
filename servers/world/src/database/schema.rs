@@ -6,6 +6,7 @@ diesel::table! {
         gm_rank -> Integer,
         name -> Text,
         time_played_minutes -> BigInt,
+        legacy -> Integer,
     }
 }
 

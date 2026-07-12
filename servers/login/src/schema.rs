@@ -22,6 +22,7 @@ diesel::table! {
         id -> BigInt,
         user_id -> BigInt,
         max_ex -> Integer,
+        legacy -> Integer,
     }
 }
 

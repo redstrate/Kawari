@@ -199,7 +199,8 @@ async fn get_max_ex(
     // TODO: introduce a better failure state
     let mut database = state.database.lock();
     let max_ex = database.get_max_expansion(params.service.parse().unwrap());
-    max_ex.unwrap_or(0).to_string()
+
+    serde_json::to_string(&max_ex.unwrap()).unwrap()
 }
 
 async fn login() -> Html<String> {
