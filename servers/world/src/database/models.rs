@@ -33,7 +33,7 @@ pub struct Character {
     pub gm_rank: GameMasterRank,
     pub name: String,
     pub time_played_minutes: i64,
-    pub legacy: i32,
+    pub warrior_of_light: i32,
 }
 
 #[derive(

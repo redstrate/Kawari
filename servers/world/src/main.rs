@@ -650,7 +650,7 @@ async fn process_packet(
                                 }
 
                                 let mut quest_special_flags = QuestSpecialFlags::empty();
-                                if connection.player_data.character.legacy == 1 {
+                                if connection.player_data.character.warrior_of_light == 1 {
                                     quest_special_flags.insert(QuestSpecialFlags::WARRIOR_OF_LIGHT);
                                 }
                                 if expansion.legacy {
