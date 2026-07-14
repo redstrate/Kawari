@@ -100,7 +100,7 @@ pub struct Zone {
     dropin_layers: Vec<DropInLayer>,
     cached_objects: HashMap<u32, SpawnObject>,
     cached_npcs: HashMap<u32, SpawnNpc>,
-    cached_treasure: HashMap<u8, SpawnTreasure>,
+    cached_treasure: HashMap<u32, SpawnTreasure>,
     layer_set: i32,
     bg_path: String,
     cached_housing_plots: Vec<HousingPlot>,
@@ -529,15 +529,15 @@ impl Zone {
                         Affine3A::from(object.transform).to_scale_rotation_translation();
 
                     if let LayerEntryData::EventObject(eobj) = &object.data {
-                        let targetable_status = if let Some(event_type) = HandlerType::from_repr(
+                        let not_targetable = if let Some(event_type) = HandlerType::from_repr(
                             game_data.get_eobj_data(eobj.parent_data.base_id) >> 16,
                         ) && matches!(
                             event_type,
                             HandlerType::Invalid | HandlerType::GimmickRect
                         ) {
-                            1
+                            true
                         } else {
-                            0 // make it unselectable to be on the safe side.
+                            false // make it selectable to be on the safe side.
                         };
 
                         let base_id = if eobj.parent_data.base_id == EOBJ_SHORTCUT && explorer_mode
@@ -551,7 +551,7 @@ impl Zone {
                         let event_state = if eobj.parent_data.base_id == EOBJ_SHORTCUT
                             || eobj.parent_data.base_id == EOBJ_EXIT
                         {
-                            EventState::UNK1 | EventState::UNK2 | EventState::UNK3
+                            EventState::OFF | EventState::UNK2 | EventState::UNK3
                         } else {
                             EventState::empty()
                         };
@@ -559,7 +559,7 @@ impl Zone {
                         let spawn = SpawnObject {
                             kind: ObjectKind::EventObj,
                             base_id,
-                            targetable_status,
+                            not_targetable,
                             event_state,
                             entity_id: ObjectId(fastrand::u32(..)),
                             layout_id: object.instance_id,
@@ -580,9 +580,9 @@ impl Zone {
 
                     if let LayerEntryData::Treasure(treasure) = &object.data {
                         self.cached_treasure.insert(
-                            treasure.base_id,
+                            treasure.parent_data.base_id,
                             SpawnTreasure {
-                                base_id: treasure.base_id as u32,
+                                base_id: treasure.parent_data.base_id,
                                 entity_id: ObjectId(fastrand::u32(..)),
                                 layout_id: object.instance_id,
                                 rotation: euler_to_direction(rotation.to_euler(EulerRot::XYZ)),
@@ -643,7 +643,7 @@ impl Zone {
     }
 
     /// Returns an SpawnTreasure for the given base ID.
-    pub fn get_treasure(&self, base_id: u8) -> Option<SpawnTreasure> {
+    pub fn get_treasure(&self, base_id: u32) -> Option<SpawnTreasure> {
         self.cached_treasure.get(&base_id).cloned()
     }
 

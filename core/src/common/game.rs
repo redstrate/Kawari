@@ -761,13 +761,16 @@ pub fn get_aether_current_comp_flg_set_to_screenimage() -> HashMap<u32, u32> {
     HashMap::from(AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE)
 }
 
+// TODO: At some point we need to come up with a better name for this. It mostly controls animation state, actually.
 #[binrw]
 #[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct EventState(u8);
 
 bitflags! {
     impl EventState: u8 {
-        const UNK1 = 1;
+        /// Animates the SGB into the "off" state, if it has an animation set for that.
+        /// If this is not set, the SGB is in the "on" state.
+        const OFF = 1;
         const UNK2 = 2;
         const UNK3 = 4;
     }

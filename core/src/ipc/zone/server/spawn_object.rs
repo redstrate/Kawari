@@ -2,8 +2,8 @@ use binrw::binrw;
 
 use crate::{
     common::{
-        EventState, HandlerId, ObjectId, Position, read_quantized_rotation,
-        write_quantized_rotation,
+        EventState, HandlerId, ObjectId, Position, read_bool_from, read_quantized_rotation,
+        write_bool_as, write_quantized_rotation,
     },
     ipc::zone::ObjectKind,
 };
@@ -16,10 +16,14 @@ pub struct SpawnObject {
     pub spawn_index: u8,
     /// What kind of object this is.
     pub kind: ObjectKind,
-    /// Seems to control whether or not its targetable? TODO: This is a flag I'm pretty sure!
-    pub targetable_status: u8,
-    /// Unsure of the purpose of this field.
-    pub visibility: u8,
+    /// Whether this object should be targetable or not.
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub not_targetable: bool,
+    /// Whether this object is initially hidden or not.
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub is_hidden: bool,
     /// If this is an ENPC, represents an index into the EObj Excel sheet.
     /// If this is an AreaObject, represents an index into the VFX Excel sheet.
     pub base_id: u32,
@@ -27,12 +31,13 @@ pub struct SpawnObject {
     pub entity_id: ObjectId,
     /// Instance ID of the EventObject in the LGB.
     pub layout_id: u32,
+    /// The event handler that owns this object.
     pub handler_id: HandlerId,
+    /// The owner actor for this object.
     pub owner_id: ObjectId,
     /// Bound ID of the EventObject in the LGB, usually a SharedGroup.
-    /// If set to 0, then `radius` is used.
     pub bind_layout_id: u32,
-    /// Radius of the hitbox(?)
+    /// Radius of the hitbox(?) If `bind_layout_id` is set, this value is ignored.
     #[brw(pad_after = 2)] // padding for alignment, not read by the client
     pub radius: f32,
     /// The rotation to create the object, in radians.
@@ -46,9 +51,9 @@ pub struct SpawnObject {
     pub event_state: EventState,
     /// For EventObjs, this is the default SharedGroupTimelineState.
     pub args1: u32,
-    /// Part of this is used for housing entrances.
+    /// Part of this is used for housing entrances. EventObj uses this too, but it varies based on SubKind.
     pub args2: u32,
-    /// The position to create the object at.
+    /// The position to place this object at.
     pub position: Position,
 }
 

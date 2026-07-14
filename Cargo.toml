@@ -64,7 +64,7 @@ fastrand = { version = "2.4", features = ["std"], default-features = false }
 minijinja = { version = "2.21", features = ["serde", "loader", "multi_template"], default-features = false }
 
 # For server-side scripting
-mlua = { version = "0.11", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false }
+mlua = { version = "0.12", features = ["lua54", "vendored", "send", "async", "serialize", "userdata-wrappers"], default-features = false }
 
 # For character backup decompression
 zip = { version = "8.6", features = ["deflate", "lzma", "bzip2"], default-features = false }
@@ -95,7 +95,7 @@ strum_macros = { version = "0.28", default-features = false }
 binrw = { version = "0.15", features = ["std"], default-features = false }
 
 # Used to more cleanly handle SEStrings
-bstr = { version = "1.12" }
+bstr = { version = "1.13" }
 
 # Reading Excel sheet data
 icarus = { git = "https://github.com/redstrate/Icarus", branch = "ver/2026.04.21.0000.0000", features = ["Warp", "Tribe", "ClassJob", "TerritoryType", "Race", "Aetheryte", "EquipSlotCategory", "Action", "WeatherRate", "PlaceName", "GilShopItem", "InstanceContent", "ContentFinderCondition", "BNpcBase", "Mount", "AetherCurrentCompFlgSet", "WarpLogic", "Item", "AetherCurrentCompFlgSet", "CustomTalk", "Opening", "ItemAction", "PreHandler", "SwitchTalkVariation", "HalloweenNpcSelect", "Quest", "TopicSelect", "ParamGrow", "FateShop", "EObj", "GimmickRect", "SpecialShop", "BaseParam", "ContentDirectorManagedSG", "FittingShopCategoryItem", "RecastNavimesh", "AetheryteSystemDefine", "GatheringPoint", "GatheringPointBase", "BNpcCustomize", "Recipe", "CraftAction", "GatheringItem", "OnlineStatus", "ItemLevel", "HousingAethernet", "Emote", "Battalion", "NpcYell", "HousingLandSet", "NpcEquip", "HousingFurniture", "ENpcBase", "IKDRoute"], default-features = false }

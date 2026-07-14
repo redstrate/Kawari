@@ -514,7 +514,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     continue;
                 };
 
-                let state = EventState::UNK1 | EventState::UNK2 | EventState::UNK3;
+                let state = EventState::OFF | EventState::UNK2 | EventState::UNK3;
 
                 let mut network = network.lock();
                 network.send_ac_in_range_instance(
@@ -743,7 +743,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 }
             }
             LuaDirectorTask::SpawnTreasure { id } => {
-                if let Some(mut treasure) = instance.zone.get_treasure(*id as u8) {
+                if let Some(mut treasure) = instance.zone.get_treasure(*id) {
                     treasure.handler_id = director_id;
 
                     let actor_id = ObjectId(fastrand::u32(..));

@@ -2172,7 +2172,7 @@ pub async fn server_main_loop(
                 ToServer::CommenceDuty(from_actor_id) => {
                     let mut data = data.lock();
                     let entrance_actor_id;
-                    let state = EventState::UNK1 | EventState::UNK2 | EventState::UNK3;
+                    let state = EventState::OFF | EventState::UNK2 | EventState::UNK3;
 
                     {
                         let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
@@ -2191,7 +2191,7 @@ pub async fn server_main_loop(
                             instance.find_actor_mut(entrance_actor_id)
                         {
                             object.event_state = state;
-                            object.targetable_status = 1;
+                            object.not_targetable = true;
                         }
                     }
 
