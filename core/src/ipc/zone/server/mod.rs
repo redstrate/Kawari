@@ -894,12 +894,12 @@ pub enum ServerZoneIpcData {
     DirectorMapEffect {
         /// Should be the ID of the instance's director.
         handler_id: HandlerId,
-        /// The new state of this map effect.
+        /// The new state of this map effect. Also used as a fallback if `timeline_id` doesn't work.
+        /// Note that this seems to be an arbitrary value, it needs to be different than the current state - otherwise the current animation restarts?
         state: u16,
-        /// Seems to control the animation of the mape effect.
-        // TODO: unsure if this is correct, but its what makes the most sense right now!
+        /// Which timeline_id to start playing. This is an index into `timeline_indices` of the SGB.
         timeline_id: u16,
-        /// The index of the map effect to change.
+        /// The index of the map effect item to change.
         #[brw(pad_after = 7)] // padding, not read by the client
         index: u8,
     },

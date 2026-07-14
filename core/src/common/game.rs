@@ -1062,25 +1062,46 @@ pub enum FateState {
     Failed = 8,
 }
 
-// TODO: not 100% certain this correponds to specific timelines indices...
+/// This is basically a bitflag of what timelines should be playing.
+/// These correspond to indices in the SGB, which then are linked to the underlying timeline by sub ID.
 #[binrw]
 #[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct SharedGroupTimelineState(u32);
 
 bitflags! {
     impl SharedGroupTimelineState: u32 {
-        /// Plays the first timeline.
+        /// Plays the first timeline. This corresponds to `timeline_indices[0]` in `ScnSGActionDescriptors`.
         const TIMELINE_1 = 0x1;
-        /// Plays the second timeline.
+        /// Plays the second timeline. This corresponds to `timeline_indices[1]` in `ScnSGActionDescriptors`.
         const TIMELINE_2 = 0x2;
-        /// Plays the third timeline.
+        /// Plays the third timeline. This corresponds to `timeline_indices[2]` in `ScnSGActionDescriptors`.
         const TIMELINE_3 = 0x4;
-        /// Plays the fourth timeline.
+        /// Plays the fourth timeline. This corresponds to `timeline_indices[3]` in `ScnSGActionDescriptors`.
         const TIMELINE_4 = 0x8;
-        /// Plays the fifth timeline.
+        /// Plays the fifth timeline. This corresponds to `timeline_indices[4]` in `ScnSGActionDescriptors`.
         const TIMELINE_5 = 0x10;
-        /// Plays the sixth timeline.
+        /// Plays the sixth timeline. This corresponds to `timeline_indices[5]` in `ScnSGActionDescriptors`.
         const TIMELINE_6 = 0x20;
+        /// Plays the seventh timeline. This corresponds to `timeline_indices[6]` in `ScnSGActionDescriptors`.
+        const TIMELINE_7 = 0x40;
+        /// Plays the eighth timeline. This corresponds to `timeline_indices[7]` in `ScnSGActionDescriptors`.
+        const TIMELINE_8 = 0x80;
+        /// Plays the ninth timeline. This corresponds to `timeline_indices[8]` in `ScnSGActionDescriptors`.
+        const TIMELINE_9 = 0x100;
+        /// Plays the tenth timeline. This corresponds to `timeline_indices[9]` in `ScnSGActionDescriptors`.
+        const TIMELINE_10 = 0x200;
+        /// Plays the eleventh timeline. This corresponds to `timeline_indices[10]` in `ScnSGActionDescriptors`.
+        const TIMELINE_11 = 0x400;
+        /// Plays the twelfth timeline. This corresponds to `timeline_indices[11]` in `ScnSGActionDescriptors`.
+        const TIMELINE_12 = 0x800;
+        /// Plays the thirteenth timeline. This corresponds to `timeline_indices[12]` in `ScnSGActionDescriptors`.
+        const TIMELINE_13 = 0x1000;
+        /// Plays the fourteenth timeline. This corresponds to `timeline_indices[13]` in `ScnSGActionDescriptors`.
+        const TIMELINE_14 = 0x2000;
+        /// Plays the fifteenth timeline. This corresponds to `timeline_indices[14]` in `ScnSGActionDescriptors`.
+        const TIMELINE_15 = 0x4000;
+        /// Plays the sixteenth timeline. This corresponds to `timeline_indices[15]` in `ScnSGActionDescriptors`.
+        const TIMELINE_16 = 0x8000;
     }
 }
 

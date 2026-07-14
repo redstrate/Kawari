@@ -530,7 +530,9 @@ pub enum ActorControlCategory {
     #[brw(magic = 409u32)]
     SetSharedGroupTimelineState {
         state: SharedGroupTimelineState,
-        // NOTE: There is another u32 in here, but I don't believe it's read by the client. And it looks like nonsense...
+        arg2: u32,        // unsued?
+        object_type: u32, // If 0, then search for an EventObject using the ActorControl Entity ID
+        layout_id: u32, // If arg3 is not 0, then search in g_Client::Game::Object::StandObjectManager_Instance using this layoutId
     },
 
     /// Plays an animation for a SharedGroup object.

@@ -136,20 +136,10 @@ pub enum DirectorEvent {
 pub enum DirectorTrigger {
     /// Seen while GATEs were spawning.
     #[brw(magic = 0u32)]
-    GoldSaucerUnk1 {
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
-        unk4: u32,
-    },
+    GoldSaucerUnk1 { unk1: u32, unk2: u32, unk3: u32 },
     /// Seen while GATEs were spawning.
     #[brw(magic = 1u32)]
-    GoldSaucerUnk2 {
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
-        unk4: u32,
-    },
+    GoldSaucerUnk2 { unk1: u32, unk2: u32, unk3: u32 },
     /// Seen when voting in a Variant Dungeon, but probably used for other things.
     #[brw(magic = 0x10000002u32)]
     VariantVote {
@@ -163,29 +153,17 @@ pub enum DirectorTrigger {
         unk1: u32,
         unk2: u32,
         unk3: u32,
-        unk4: u32,
     },
     /// When the player requests to summon a striking dummy. `arg` always seems to be 1.
     #[brw(magic = 0x40000006u32)]
-    SummonStrikingDummy {
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
-        unk4: u32,
-    },
+    SummonStrikingDummy { unk1: u32, unk2: u32, unk3: u32 },
     /// Unknown purpose.
     #[brw(magic = 0x80000000u32)]
-    Sync {
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
-        unk4: u32,
-    },
+    Sync { unk1: u32, unk2: u32, unk3: u32 },
     Unknown {
         id: u32,
         unk1: u32,
         unk2: u32,
         unk3: u32,
-        unk4: u32,
     },
 }

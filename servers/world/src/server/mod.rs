@@ -322,6 +322,16 @@ fn set_shared_group_timeline_state(
             4 => SharedGroupTimelineState::TIMELINE_4,
             5 => SharedGroupTimelineState::TIMELINE_5,
             6 => SharedGroupTimelineState::TIMELINE_6,
+            7 => SharedGroupTimelineState::TIMELINE_7,
+            8 => SharedGroupTimelineState::TIMELINE_8,
+            9 => SharedGroupTimelineState::TIMELINE_9,
+            10 => SharedGroupTimelineState::TIMELINE_10,
+            11 => SharedGroupTimelineState::TIMELINE_11,
+            12 => SharedGroupTimelineState::TIMELINE_12,
+            13 => SharedGroupTimelineState::TIMELINE_13,
+            14 => SharedGroupTimelineState::TIMELINE_14,
+            15 => SharedGroupTimelineState::TIMELINE_15,
+            16 => SharedGroupTimelineState::TIMELINE_16,
             _ => unimplemented!(),
         });
     }
@@ -343,7 +353,12 @@ fn set_shared_group_timeline_state(
     network.send_ac_in_range_inclusive_instance(
         instance,
         from_actor_id,
-        ActorControlCategory::SetSharedGroupTimelineState { state },
+        ActorControlCategory::SetSharedGroupTimelineState {
+            state,
+            arg2: 0,
+            object_type: 0,
+            layout_id: 0,
+        },
     );
 }
 
