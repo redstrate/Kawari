@@ -597,7 +597,11 @@ impl Zone {
                         entity_id: ObjectId(fastrand::u32(..)),
                         layout_id: object.layout_id,
                         radius: 1.0,
-                        args1: 50334724, // TODO: what is this value? it varies between nodes, and I *believe* it has to be about grouping.
+                        // Only the last value is needed to spawn the node.
+                        // First value is remaining count I believe, but it's immediately overwriten by an ActorControl so I don't see the point in setting it here?
+                        // Third value might be index?
+                        // If it's >3 then the node doesn't seme to spawn.
+                        args1: u32::from_le_bytes([0, 0, 0, 1]),
                         position: object.position,
                         ..Default::default()
                     };

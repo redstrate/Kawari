@@ -1343,6 +1343,8 @@ async fn process_packet(
                                                 base_id: base_id as u32,
                                                 level: level as u32,
                                                 count: count as u32,
+                                                remaining_count: count as u32,
+                                                unk1: 0,
                                             },
                                         )
                                         .await;
