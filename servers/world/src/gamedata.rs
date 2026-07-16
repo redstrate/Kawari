@@ -724,8 +724,8 @@ impl GameData {
         Some(content_finder_row.TerritoryType)
     }
 
-    /// Grabs needed BattleNPC information such as their name, model id and more.
-    pub fn find_bnpc(&mut self, id: u32) -> Option<(u16, u8, CustomizeData, u8, u16)> {
+    /// Grabs needed BattleNPC information such as their model id and more.
+    pub fn find_bnpc(&mut self, id: u32) -> Option<(u16, u8, CustomizeData, u8, u16, u16)> {
         let bnpc_row = self.bnpc_base_sheet.row(id)?;
         let model_row_id = bnpc_row.ModelChara;
         let customize_row_id = bnpc_row.BNpcCustomize;
@@ -766,11 +766,12 @@ impl GameData {
             customize,
             bnpc_row.Rank,
             bnpc_row.NpcEquip,
+            bnpc_row.Behavior,
         ))
     }
 
     /// Grabs needed EventNpc information such as their name, model id and more.
-    pub fn find_enpc(&mut self, id: u32) -> Option<(u16, CustomizeData, u16)> {
+    pub fn find_enpc(&mut self, id: u32) -> Option<(u16, CustomizeData, u16, u16)> {
         let row = self.enpc_base_sheet.row(id)?;
         let model_row_id = row.ModelChara;
 
@@ -803,7 +804,7 @@ impl GameData {
             face_paint_color: row.FacePaintColor,
         };
 
-        Some((model_row_id, customize, row.NpcEquip))
+        Some((model_row_id, customize, row.NpcEquip, row.Behavior))
     }
 
     /// Gets the content type for the given InstanceContent.
@@ -998,10 +999,13 @@ impl GameData {
     }
 
     /// Returns the pop type for this EObj.
-    pub fn get_eobj_pop_type(&mut self, eobj_id: u32) -> u8 {
+    pub fn get_eobj_extra_data(&mut self, eobj_id: u32) -> (u8, bool) {
         let row = self.eobj_sheet.row(eobj_id).unwrap();
 
-        row.PopType
+        (
+            row.PopType,
+            row.EyeCollision, // TODO: Will be renamed to Targetable in the future
+        )
     }
 
     /// Returns the InstanceContent for a given ContentFinderCondition id.

@@ -38,6 +38,7 @@ pub struct SpawnObject {
     /// Bound ID of the EventObject in the LGB, usually a SharedGroup.
     pub bind_layout_id: u32,
     /// Radius of the hitbox(?) If `bind_layout_id` is set, this value is ignored.
+    /// It seems that the server will send the scale of the EventObject in the layout, if applicable.
     #[brw(pad_after = 2)] // padding for alignment, not read by the client
     pub radius: f32,
     /// The rotation to create the object, in radians.
@@ -46,7 +47,7 @@ pub struct SpawnObject {
     pub rotation: f32,
     /// The FATE to associate with.
     pub fate_id: u16,
-    /// Controls the visibility of the event object.
+    /// Controls the animation of the event object.
     #[brw(pad_after = 5)] // padding for alignment, and then an unused u32
     pub event_state: EventState,
     /// For EventObjs, this is the default SharedGroupTimelineState.

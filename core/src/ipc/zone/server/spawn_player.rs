@@ -16,9 +16,9 @@ pub struct SpawnPlayer {
     /// Index into the Title Excel sheet.
     pub title_id: u16,
     pub timeline_base_override: u16,
-    /// The World this player is currently spawned in.
+    /// The World this player is currently spawned in. Index into the World Excel sheet.
     pub current_world_id: u16,
-    /// The World this player originates from.
+    /// The World this player originates from. Index into the World Excel sheet.
     pub home_world_id: u16,
 
     /// What GM rank this player has.

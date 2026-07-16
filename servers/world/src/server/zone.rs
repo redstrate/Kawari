@@ -529,17 +529,6 @@ impl Zone {
                         Affine3A::from(object.transform).to_scale_rotation_translation();
 
                     if let LayerEntryData::EventObject(eobj) = &object.data {
-                        let not_targetable = if let Some(event_type) = HandlerType::from_repr(
-                            game_data.get_eobj_data(eobj.parent_data.base_id) >> 16,
-                        ) && matches!(
-                            event_type,
-                            HandlerType::Invalid | HandlerType::GimmickRect
-                        ) {
-                            true
-                        } else {
-                            false // make it selectable to be on the safe side.
-                        };
-
                         let base_id = if eobj.parent_data.base_id == EOBJ_SHORTCUT && explorer_mode
                         {
                             EOBJ_SHORTCUT_EXPLORER_MODE
@@ -556,15 +545,18 @@ impl Zone {
                             EventState::empty()
                         };
 
+                        let (pop_type, targetable) =
+                            game_data.get_eobj_extra_data(eobj.parent_data.base_id);
+
                         let spawn = SpawnObject {
                             kind: ObjectKind::EventObj,
                             base_id,
-                            not_targetable,
+                            not_targetable: !targetable,
                             event_state,
                             entity_id: ObjectId(fastrand::u32(..)),
                             layout_id: object.instance_id,
                             bind_layout_id: eobj.bound_instance_id,
-                            radius: 1.0,
+                            radius: object.transform.scale[0],
                             rotation: euler_to_direction(rotation.to_euler(EulerRot::XYZ)),
                             position: Position(translation),
                             ..Default::default()
@@ -573,7 +565,7 @@ impl Zone {
                         self.cached_eobj_base_ids
                             .insert(spawn.entity_id, spawn.base_id);
 
-                        if game_data.get_eobj_pop_type(eobj.parent_data.base_id) == 1 {
+                        if pop_type == 1 {
                             object_spawns.push((spawn, layer.header.name.value.clone()));
                         }
                     }
@@ -667,7 +659,7 @@ impl Zone {
                     link_range,
                 } = object.data
                 {
-                    let (model_chara, battalion, customize, rank, equip) =
+                    let (model_chara, battalion, customize, rank, equip, behavior) =
                         game_data.find_bnpc(base_id).unwrap();
 
                     let usable_hp;
@@ -722,6 +714,7 @@ impl Zone {
                             rotation: object.rotation,
                             look: customize,
                             layout_id: object.layout_id,
+                            behavior,
                             ..game_data.get_npc_equip(equip as u32).unwrap_or_default()
                         },
                         ..Default::default()
@@ -733,7 +726,8 @@ impl Zone {
                     }
                 }
                 if let DropInObjectData::EventNpc { base_id } = object.data {
-                    let (model_chara, customize, equip) = game_data.find_enpc(base_id).unwrap();
+                    let (model_chara, customize, equip, behavior) =
+                        game_data.find_enpc(base_id).unwrap();
 
                     let spawn = SpawnNpc {
                         common: CommonSpawn {
@@ -745,6 +739,7 @@ impl Zone {
                             rotation: object.rotation,
                             look: customize,
                             layout_id: object.layout_id,
+                            behavior,
                             ..game_data.get_npc_equip(equip as u32).unwrap_or_default()
                         },
                         ..Default::default()

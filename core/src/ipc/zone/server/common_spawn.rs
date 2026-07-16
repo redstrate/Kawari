@@ -3,9 +3,9 @@ use physis::savedata::chardat::CustomizeData;
 use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::common::{
-    CHAR_NAME_MAX_LENGTH, CharacterMode, CrestData, EquipDisplayFlag, HandlerId,
-    LegacyEquipmentModelId, ObjectId, ObjectTypeId, Position, WeaponModelId,
-    read_quantized_rotation, read_string, write_quantized_rotation, write_string,
+    CHAR_NAME_MAX_LENGTH, CharacterMode, CrestData, EquipDisplayFlag, EventState, HandlerId,
+    LegacyEquipmentModelId, ObjectId, ObjectTypeId, Position, WeaponModelId, read_bool_from,
+    read_quantized_rotation, read_string, write_bool_as, write_quantized_rotation, write_string,
 };
 use bitflags::bitflags;
 
@@ -195,15 +195,15 @@ pub struct CommonSpawn {
     pub craft_tool_model: WeaponModelId,
     /// Unknown purpose, but seen filled with enemy data that a Player has aggro'd. Also seen for Quests that spawn an enemy the player must fight (filled on the enemy's CommonSpawn.)
     pub combat_tagger_id: ObjectTypeId,
-    /// See BNpcBase/ENpcBase Excel sheet.
+    /// Index into the BNpcBase/ENpcBase Excel sheets.
     pub base_id: u32,
-    /// See BNpcName/ENpcResident Excel sheet.
+    /// Index into the BNpcName/ENpcResident Excel sheets.
     pub name_id: u32,
-    /// Refers to the original game object ID associated with this character.
+    /// Refers to a game object in the layout, if applicable.
     pub layout_id: u32,
-    /// Index into the Pet Excel sheet. Seems only relevant for Carbuncles and other "pets".
+    /// Index into the Pet Excel sheet. Seems to only be relevant for Carbuncles and other "pets".
     pub pet_id: u32,
-    /// Which director spawned and is managing this actor, if any.
+    /// The director who spawned and is managing this actor, if any.
     pub handler_id: HandlerId,
     /// Seen set to the player owners of Carbuncles and Chocobos.
     pub owner_id: ObjectId,
@@ -221,9 +221,9 @@ pub struct CommonSpawn {
     pub resource_points: u16,
     /// Their maximum MP/CP etc.
     pub max_resource_points: u16,
-    /// Unknown purpose.
-    pub unk: u16,
-    /// See ModelChara Excel sheet.
+    /// Index into the Behavior Excel sheet.
+    pub behavior: u16,
+    /// Index into the ModelChara Excel sheet.
     pub model_chara: u16,
     /// Their initial rotation.
     #[br(map = read_quantized_rotation)]
@@ -241,10 +241,11 @@ pub struct CommonSpawn {
     pub tether_id: u16,
     /// Unique for each actor, and is used to eventually free them from the allocator.
     pub spawn_index: u8,
-    /// What mode this actor should initially be in.
+    /// The mode this character should initially be in.
     pub mode: CharacterMode,
     /// The argument for `mode`.
     pub mode_arg: u8,
+    /// What kind of game object this is.
     #[brw(pad_size_to = 2)] // for kinds that don't have a param
     pub object_kind: ObjectKind,
     /// The character's voice.
@@ -257,10 +258,12 @@ pub struct CommonSpawn {
     pub level: u8,
     /// See ClassJob Excel sheet.
     pub class_job: u8,
-    /// Unknown purpose.
-    pub event_state: u8,
-    /// Unknown purpose.
-    pub unk79: u8,
+    /// Controls the animation of the event object.
+    pub event_state: EventState,
+    /// Whether this object is initially hidden or not.
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub is_hidden: bool,
     /// Unknown purpose.
     pub combat_tag_type: u8,
     /// Unknown purpose.

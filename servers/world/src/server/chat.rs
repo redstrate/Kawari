@@ -177,14 +177,19 @@ fn process_debug_commands(
                         return true;
                     };
 
-                    let model_chara;
+                    let (model_chara, battalion, customize, rank, npc_equip, equip, behavior);
                     {
                         let mut game_data = game_data.lock();
-                        (model_chara, _, _, _, _) = game_data.find_bnpc(id).unwrap();
+                        (model_chara, battalion, customize, rank, npc_equip, behavior) =
+                            game_data.find_bnpc(id).unwrap();
+                        equip = game_data
+                            .get_npc_equip(npc_equip as u32)
+                            .unwrap_or_default()
                     }
 
                     npc_spawn = SpawnNpc {
                         character_data_flags: CharacterDataFlag::HOSTILE,
+                        character_data_icon: rank,
                         common: CommonSpawn {
                             health_points: 1500,
                             max_health_points: 1500,
@@ -194,10 +199,12 @@ fn process_debug_commands(
                             name_id: 405,
                             object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
                             level: 1,
-                            battalion: 4,
+                            battalion,
                             model_chara,
                             position: spawn.common.position,
-                            ..Default::default()
+                            look: customize,
+                            behavior,
+                            ..equip
                         },
                         ..Default::default()
                     };

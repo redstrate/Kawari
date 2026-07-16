@@ -30,10 +30,9 @@ pub struct SpawnNpc {
     pub gimmick_id: u32,
     /// At least filled for Quests, where this is the originating Event NPC layout ID if it turned into a Battle NPC.
     pub event_npc_instance_id: u32,
-
-    /// Misc flags about for this NPC.
+    /// Misc flags for this NPC. Despite being a flag, the only one that has any actual effect is 0x2 (is hostile.)
+    /// Despite that, the retail server sends other flags like 0x1, but this is meaningless and translates to flag 0 in the client.
     pub character_data_flags: CharacterDataFlag,
-
     /// Roughly correlates to mob difficulty and rank, supposedly:
     /// 0 = grey alien icon
     /// 1 = spiky blue icon of some sort
@@ -44,32 +43,28 @@ pub struct SpawnNpc {
     /// 6 = triangle but only with two circles and what looks like closed eyes
     /// 7 = super big horns
     pub character_data_icon: u8,
-
     /// This is probably *not* what this actually means, but I have seen this false for:
     /// - BNpcs that don't follow regular HP scaling like striking dummies, elite marks
     /// - Bosses and dungeon enemies
     /// They then have a customized, unusual HP value regardless of their own level. Let me know if this assumption is incorrect.
+    /// This flag seems to not have any effect in the client, despite being written into a variable it doesn't seem to be read.
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]
     pub normal_scaling: bool,
-
     /// How many other BNpcs can be linked in this family.
     pub max_links: u8,
-
     /// If not zero, specifies which family this BNpc is linked to.
     pub link_family: u8,
-
     /// How far the link family can be apart.
     pub link_range: u8,
-
     pub u5d: u8,
+    /// This flag seems to not have any effect in the client, despite being written into a variable it doesn't seem to be read.
     #[br(map = read_bool_from::<u8>)]
     #[bw(map = write_bool_as::<u8>)]
     pub unk_f: bool,
-
-    /// Other spawn data such as appearance and equipped items.
+    /// Common spawn data shared with NPCs such as appearance and equipped items.
     pub common: CommonSpawn,
-    // The following fields modify stuff in ModelContainer.
+    // The following fields modify the ModelContainer struct on the client.
     pub unk288: u8,
     pub unk289: u8,
     pub unk28a: u8,
