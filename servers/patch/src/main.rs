@@ -113,14 +113,14 @@ async fn verify_session(
 
         // Their game version is too old, serve them patch files
         let mut send_patches = Vec::new();
-        let patches = list_patch_files(&format!("{}/game", &config.patch.patches_location));
+        let patches = list_patch_files(&format!("{}/game", config.patch.patches_location));
         let mut patch_length = 0;
         for patch in patches {
             let patch_str: &str = &patch;
             if game_version.0.partial_cmp(patch_str).unwrap() == Ordering::Less {
                 let file = std::fs::File::open(&*format!(
                     "{}/game/{}.patch",
-                    &config.patch.patches_location, patch_str
+                    config.patch.patches_location, patch_str
                 ))
                 .unwrap();
                 let metadata = file.metadata().unwrap();
@@ -148,14 +148,14 @@ async fn verify_session(
 
             let patches = list_patch_files(&format!(
                 "{}/{expansion_name}",
-                &config.patch.patches_location
+                config.patch.patches_location
             ));
             for patch in patches {
                 let patch_str: &str = &patch;
                 if expansion_version.partial_cmp(patch_str).unwrap() == Ordering::Less {
                     let file = std::fs::File::open(&*format!(
                         "{}/{expansion_name}/{}.patch",
-                        &config.patch.patches_location, patch_str
+                        config.patch.patches_location, patch_str
                     ))
                     .unwrap();
                     let metadata = file.metadata().unwrap();
@@ -265,14 +265,14 @@ async fn verify_boot(
 
         // check if we need any patching
         let mut send_patches = Vec::new();
-        let patches = list_patch_files(&format!("{}/boot", &config.patch.patches_location));
+        let patches = list_patch_files(&format!("{}/boot", config.patch.patches_location));
         let mut patch_length = 0;
         for patch in patches {
             let patch_str: &str = &patch;
             if actual_boot_version.partial_cmp(patch_str).unwrap() == Ordering::Less {
                 let file = std::fs::File::open(&*format!(
                     "{}/boot/{}.patch",
-                    &config.patch.patches_location, patch_str
+                    config.patch.patches_location, patch_str
                 ))
                 .unwrap();
                 let metadata = file.metadata().unwrap();

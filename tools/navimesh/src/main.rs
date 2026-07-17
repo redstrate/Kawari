@@ -50,7 +50,7 @@ fn main() {
     let bg_path = row.Bg;
     let name = row.Name;
 
-    let path = format!("bg/{}.lvb", &bg_path);
+    let path = format!("bg/{}.lvb", bg_path);
     let lvb = resolver.parsed::<Lvb>(&path).unwrap();
 
     let navimesh_sheet = RecastNavimeshSheet::read_from(&mut resolver, Language::None).unwrap();

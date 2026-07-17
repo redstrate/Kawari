@@ -70,7 +70,7 @@ impl ZoneConnection {
                     /* TODO: Instead of panicking we ought to send a message to the player
                      * and the console log, and abandon execution. */
                     lua.0.load(
-                        std::fs::read(&file_name).unwrap_or_else(|_| panic!("Failed to load script file {}!", &file_name)),
+                        std::fs::read(&file_name).unwrap_or_else(|_| panic!("Failed to load script file {}!", file_name)),
                     )
                     .set_name("@".to_string() + &file_name)
                     .exec()?;

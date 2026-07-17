@@ -129,7 +129,7 @@ impl Zone {
             return zone;
         }
 
-        let path = format!("bg/{}.lvb", &bg_path);
+        let path = format!("bg/{}.lvb", bg_path);
         if let Ok(lvb) = game_data.resource.parsed::<Lvb>(&path) {
             let mut load_lgb = |path: &str| -> Option<Lgb> {
                 // Skip LGBs that aren't relevant for the server
