@@ -14,3 +14,4 @@ tracing = { workspace = true }
 recastnavigation-sys = { workspace = true }
 tracing-subscriber = { workspace = true }
 kawari-world = { path = "../../servers/world" }
+glam = { workspace = true }

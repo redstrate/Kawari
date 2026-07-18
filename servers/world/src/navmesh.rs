@@ -146,7 +146,7 @@ impl Navmesh {
 
             let mut path = [0; 128];
             let mut path_count = 0;
-            dtNavMeshQuery_findPath(
+            let status = dtNavMeshQuery_findPath(
                 self.navmesh_query,
                 start_poly,
                 end_poly,
@@ -157,6 +157,11 @@ impl Navmesh {
                 &mut path_count,
                 128,
             ); // TODO: error check
+            if status != DT_SUCCESS {
+                tracing::warn!(
+                    "Error in dtNavMeshQuery_findPath: {status} start poly: {start_poly} end poly: {end_poly}"
+                );
+            }
 
             let mut straight_path = [0.0; 128 * 3];
             let mut straight_path_count = 0;
