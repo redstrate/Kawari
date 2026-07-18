@@ -478,4 +478,22 @@ impl ZoneConnection {
             db.commit_grand_companies(&self.player_data);
         }
     }
+
+    pub async fn send_crafting_gathering_information(&mut self) {
+        // gathering log
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::GatheringLog {
+                bitmask: self.player_data.quest.gathered_gathering_items.data.clone(),
+            });
+            self.send_ipc_self(ipc).await;
+        }
+
+        // crafting log
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::CraftingLog {
+                bitmask: Vec::default(),
+            });
+            self.send_ipc_self(ipc).await;
+        }
+    }
 }

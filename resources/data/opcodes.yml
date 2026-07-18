@@ -759,6 +759,10 @@ ServerZoneIpcType:
   comment: Adventurer plate information.
   opcode: 482
   size: 480
+- name: RecordGatheringLog
+  comment: Sent when a new item is recorded in the gathering log.
+  opcode: 878
+  size: 8
 ClientZoneIpcType:
 - name: InitRequest
   comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)

@@ -13,6 +13,13 @@ use crate::{
 #[binrw]
 #[derive(Debug, PartialEq, Clone)]
 pub enum LiveEventType {
+    /// "[Item] recorded in gathering log". Only prints the text, doesn't set the bitmask.
+    #[brw(magic = 5u32)]
+    RecordInGatheringLog {
+        /// The actual Item ID, not the GathertingItem one.
+        item_id: u32,
+    },
+
     /// Begins a new crafting session.
     #[brw(magic = 8u32)]
     StartCraft {

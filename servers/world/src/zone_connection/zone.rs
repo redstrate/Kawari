@@ -277,6 +277,7 @@ impl ZoneConnection {
 
         if initial_login {
             self.send_quest_information().await;
+            self.send_crafting_gathering_information().await;
         }
 
         if lua_zone.intended_use == TerritoryIntendedUse::HousingOutdoor as u8 {

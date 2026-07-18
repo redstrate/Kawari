@@ -1,8 +1,11 @@
 use async_trait::async_trait;
 use bitflags::bitflags;
 use kawari::{
-    common::{CharacterMode, ObjectTypeId},
-    ipc::zone::{ActorControlCategory, Condition, SceneFlags},
+    common::{CharacterMode, ObjectTypeId, value_to_flag_byte_index_value_quests},
+    ipc::zone::{
+        ActorControlCategory, Condition, LiveEventType, SceneFlags, ServerZoneIpcData,
+        ServerZoneIpcSegment,
+    },
 };
 
 use crate::{Event, EventHandler, ItemInfoQuery, ZoneConnection, inventory::Item, lua::LuaPlayer};
@@ -157,6 +160,39 @@ impl EventHandler for GatheringEventHandler {
 
             connection.send_inventory().await;
 
+            if !player
+                .player_data
+                .quest
+                .gathered_gathering_items
+                .contains(items[item_index as usize].gathering_id as u32)
+            {
+                let (value, index) = value_to_flag_byte_index_value_quests(
+                    items[item_index as usize].gathering_id as u32,
+                );
+
+                connection.player_data.quest.gathered_gathering_items.data[index as usize] ^= value;
+
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::RecordGatheringLog {
+                    index: index as u8,
+                    value: connection.player_data.quest.gathered_gathering_items.data
+                        [index as usize],
+                });
+                connection.send_ipc_self(ipc).await;
+
+                connection
+                    .actor_control_self(ActorControlCategory::LiveEvent {
+                        event: LiveEventType::RecordInGatheringLog {
+                            item_id: gather_item_id as u32,
+                        },
+                    })
+                    .await;
+
+                // Add EXP
+                // TODO: don't use placeholder EXP
+                // TODO: the first time EXP doesn't take into account bonus?
+                connection.add_exp(516).await;
+            }
+
             // Add EXP
             // TODO: don't use placeholder EXP
             connection.add_exp(96).await;
@@ -189,6 +225,14 @@ impl EventHandler for GatheringEventHandler {
             let mut flags = GatheringItemFlag::default();
             if item.hidden {
                 flags.insert(GatheringItemFlag::HIDDEN);
+            }
+            if !player
+                .player_data
+                .quest
+                .gathered_gathering_items
+                .contains(item.gathering_id as u32)
+            {
+                flags.insert(GatheringItemFlag::NOT_GATHERED_YET);
             }
 
             params.append(&mut vec![
