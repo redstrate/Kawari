@@ -21,6 +21,7 @@ use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::FateShop::FateShopSheet;
 use icarus::FittingShopCategoryItem::FittingShopCategoryItemSheet;
 use icarus::GatheringItem::GatheringItemSheet;
+use icarus::GatheringItemLevelConvertTable::GatheringItemLevelConvertTableSheet;
 use icarus::GatheringPoint::GatheringPointSheet;
 use icarus::GatheringPointBase::GatheringPointBaseSheet;
 use icarus::GilShopItem::GilShopItemSheet;
@@ -215,6 +216,14 @@ pub enum Roulette {
     NormalRaid = 17,
     CrystallineConflictCasual = 40,
     CrystallineConflictRanked = 41,
+}
+
+#[derive(Debug, Default, Copy, Clone)]
+pub struct GatheringPointItem {
+    pub gathering_id: i32,
+    pub item_id: i32,
+    pub level: u8,
+    pub hidden: bool,
 }
 
 impl GameData {
@@ -1286,7 +1295,7 @@ impl GameData {
     }
 
     /// Returns the base id, level and count for a GatheringPoint.
-    pub fn get_gathering_point(&mut self, id: u32) -> (i32, u8, u8) {
+    pub fn get_gathering_point(&mut self, id: u32) -> (i32, u8, u8, [u16; 2]) {
         let sheet = GatheringPointSheet::read_from(&mut self.resource, Language::None).unwrap();
         let row = sheet.row(id).unwrap();
 
@@ -1295,11 +1304,16 @@ impl GameData {
             GatheringPointBaseSheet::read_from(&mut self.resource, Language::None).unwrap();
         let base_row = base_sheet.row(base_id as u32).unwrap();
 
-        (base_id, base_row.GatheringLevel, row.Count)
+        (
+            base_id,
+            base_row.GatheringLevel,
+            row.Count,
+            row.GatheringPointBonus,
+        )
     }
 
     /// Returns the item list for a gathering point.
-    pub fn get_gathering_point_items(&mut self, id: u32) -> [i32; 8] {
+    pub fn get_gathering_point_items(&mut self, id: u32) -> [GatheringPointItem; 8] {
         let sheet = GatheringPointSheet::read_from(&mut self.resource, Language::None).unwrap();
         let row = sheet.row(id).unwrap();
 
@@ -1308,15 +1322,27 @@ impl GameData {
             GatheringPointBaseSheet::read_from(&mut self.resource, Language::None).unwrap();
         let base_row = base_sheet.row(base_id as u32).unwrap();
 
-        base_row.Item
-    }
+        let mut new_items = [GatheringPointItem::default(); 8];
+        for (i, new_item) in new_items.iter_mut().enumerate() {
+            let sheet = GatheringItemSheet::read_from(&mut self.resource, Language::None).unwrap();
+            let row = sheet.row(base_row.Item[i] as u32).unwrap();
 
-    /// Converts from a GatheringItem to a regular Item.
-    pub fn convert_gathering_point_item(&mut self, id: u32) -> i32 {
-        let sheet = GatheringItemSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let row = sheet.row(id).unwrap();
+            let convert_sheet =
+                GatheringItemLevelConvertTableSheet::read_from(&mut self.resource, Language::None)
+                    .unwrap();
 
-        row.Item
+            *new_item = GatheringPointItem {
+                gathering_id: base_row.Item[i],
+                item_id: row.Item,
+                level: convert_sheet
+                    .row(row.GatheringItemLevel as u32)
+                    .unwrap()
+                    .GatheringItemLevel,
+                hidden: row.IsHidden,
+            };
+        }
+
+        new_items
     }
 
     /// Returns the ClassJobCategory for this item.

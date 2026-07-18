@@ -128,7 +128,15 @@ pub fn dispatch_event(
                 generic_lua_event(&script_path)
             }
         }
-        HandlerType::GatheringPoint => Some(Box::new(GatheringEventHandler::new())),
+        HandlerType::GatheringPoint => {
+            let count;
+            {
+                let mut gamedata = game_data.lock();
+                (_, _, count, _) = gamedata.get_gathering_point(handler_id.event_id());
+            }
+
+            Some(Box::new(GatheringEventHandler::new(count)))
+        }
         HandlerType::Aetheryte => {
             // The Aetheryte sheet actually begins at 0, not 327680
             let aetheryte_id = handler_id.0 & 0xFFF;

@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use bitflags::bitflags;
 use kawari::{
     common::{CharacterMode, ObjectTypeId},
     ipc::zone::{ActorControlCategory, Condition, SceneFlags},
@@ -8,19 +9,35 @@ use crate::{Event, EventHandler, ItemInfoQuery, ZoneConnection, inventory::Item,
 
 /// For gathering events.
 #[derive(Debug)]
-pub struct GatheringEventHandler;
-
-impl Default for GatheringEventHandler {
-    fn default() -> Self {
-        Self::new()
-    }
+pub struct GatheringEventHandler {
+    count: u8,
 }
 
 impl GatheringEventHandler {
-    pub const SCENE_HIDING_ROD: u16 = 3;
+    pub fn new(count: u8) -> Self {
+        Self { count }
+    }
+}
 
-    pub fn new() -> Self {
-        Self {}
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
+pub struct GatheringItemFlag(u8);
+
+bitflags! {
+    impl GatheringItemFlag : u8 {
+        const GATHERING_CHANCE_BONUS = 1;
+        const BOON_CHANCE_BONUS = 2;
+        const UNK1 = 4;
+        const HIDDEN = 8;
+        const RARE = 16;
+        const BONUS = 32;
+        const NOT_GATHERED_YET = 64;
+        const UNK2 = 128;
+    }
+}
+
+impl std::fmt::Debug for GatheringItemFlag {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
     }
 }
 
@@ -35,7 +52,7 @@ impl EventHandler for GatheringEventHandler {
                 0,
                 event.id & 0xFFFF,
                 2147485320,
-                262148,
+                u32::from_le_bytes([self.count, 0, self.count, 0]), // first: count, second: ??, third: remaining count, fourth: ??
                 24,
                 1310820,
                 67305316,
@@ -119,12 +136,7 @@ impl EventHandler for GatheringEventHandler {
         if results[2] == 2 {
             // gather
             let item_index = results[1];
-            let gather_item_id = items[item_index as usize];
-            let item_id;
-            {
-                let mut gamedata = connection.gamedata.lock();
-                item_id = gamedata.convert_gathering_point_item(gather_item_id as u32);
-            }
+            let gather_item_id = items[item_index as usize].item_id;
 
             // plays the animation
             player.play_scene(1, SceneFlags::NO_DEFAULT_CAMERA, vec![2, 266]);
@@ -133,7 +145,8 @@ impl EventHandler for GatheringEventHandler {
             {
                 let mut gamedata = connection.gamedata.lock();
 
-                if let Some(item_info) = gamedata.get_item_info(ItemInfoQuery::ById(item_id as u32))
+                if let Some(item_info) =
+                    gamedata.get_item_info(ItemInfoQuery::ById(gather_item_id as u32))
                 {
                     connection
                         .player_data
@@ -144,11 +157,15 @@ impl EventHandler for GatheringEventHandler {
 
             connection.send_inventory().await;
 
+            // Add EXP
+            // TODO: don't use placeholder EXP
+            connection.add_exp(96).await;
+
             // The item was added to your inventory.
             connection
                 .actor_control_self(ActorControlCategory::LogMessage {
                     log_message: 789,
-                    id: item_id as u32,
+                    id: gather_item_id as u32,
                 })
                 .await;
 
@@ -161,81 +178,30 @@ impl EventHandler for GatheringEventHandler {
             return;
         }
 
-        // TODO: figure out these params
-        // TODO: why is the items in such a weird order?
-        player.play_scene(
-            0,
-            SceneFlags::NO_DEFAULT_CAMERA,
-            vec![
-                7,
-                event.id & 0xFFFF,
-                2147485320,
-                262148,
-                // first item
-                items[0] as u32,
-                1310820,
-                67305316,
-                9437184,
-                2365587564,
-                0,
-                // second item
-                items[1] as u32,
-                32756,
-                0,
-                0,
-                2373844992,
-                32756,
-                // third item
-                items[2] as u32,
+        let mut params = vec![
+            7,
+            event.id & 0xFFFF,
+            2147485320,
+            u32::from_le_bytes([self.count, 0, self.count, 0]), // first: count, second: ??, third: remaining count, fourth: ??
+        ];
+
+        for item in items {
+            let mut flags = GatheringItemFlag::default();
+            if item.hidden {
+                flags.insert(GatheringItemFlag::HIDDEN);
+            }
+
+            params.append(&mut vec![
+                item.gathering_id as u32,
+                u32::from_le_bytes([0, 0, item.level, 0]), // first: ??, second: ??, third: displayed level, fourth: ??
+                u32::from_le_bytes([100, 0, 1, flags.0]), // first: gathering chance, second: HQ gathering chance, third: count, fourth: flag (see above)
                 0,
                 0,
                 0,
-                2373910528,
-                32756,
-                // fourth item
-                items[3] as u32,
-                32756,
-                0,
-                0,
-                2373910528,
-                32756,
-                // fifth item
-                items[4] as u32,
-                65636,
-                67305316,
-                1638400,
-                2365587485,
-                0,
-                // sixth item
-                items[5] as u32,
-                48,
-                0,
-                32756,
-                2373844992,
-                32756,
-                // seventh item
-                items[6] as u32,
-                32756,
-                0,
-                0,
-                0,
-                0,
-                // eight item
-                items[7] as u32,
-                32756,
-                0,
-                0,
-                2945843200,
-                32756,
-                859451662,
-                1,
-                0,
-                0,
-                0,
-                0,
-                33024,
-            ],
-        );
+            ]);
+        }
+
+        player.play_scene(0, SceneFlags::NO_DEFAULT_CAMERA, params);
     }
 
     fn condition(&self) -> Condition {
