@@ -282,7 +282,7 @@ pub struct PlayerSetup {
     #[br(count = BEGINNER_TRAINING_ARRAY_SIZE)]
     #[bw(pad_size_to = BEGINNER_TRAINING_ARRAY_SIZE)]
     pub completed_beginner_training: Vec<u8>, // TODO: not confirmed because I can't access this menu right now
-    pub unk_completion2: [u8; 11],
+    pub unk_completion2: [u8; 9],
 
     pub weekly_bingo_order_data: [u8; 16],
     pub weekly_bingo_reward_data: [u8; 4],
@@ -358,5 +358,5 @@ pub struct PlayerSetup {
     #[bw(pad_size_to = MISC_CONTENT_ARRAY_SIZE)]
     pub cleared_misc_content: Vec<u8>,
 
-    pub unknown949: [u8; 3],
+    pub unknown949: [u8; 5],
 }
