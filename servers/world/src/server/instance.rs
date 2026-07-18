@@ -18,7 +18,7 @@ use crate::{
 };
 use kawari::{
     common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, Position},
-    config::{FilesystemConfig, get_config},
+    config::{Config, get_config},
     ipc::zone::{
         ActionRequest, Conditions, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer,
         SpawnTreasure,
@@ -158,8 +158,9 @@ impl Instance {
         }
 
         // Load initial NPCs into instance
+        let config = get_config();
         for npc in instance.zone.get_npcs(game_data) {
-            instance.insert_npc(ObjectId(fastrand::u32(..)), npc);
+            instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
         }
 
         instance
@@ -173,15 +174,15 @@ impl Instance {
         self.actors.get_mut(&id)
     }
 
-    pub fn insert_npc(&mut self, id: ObjectId, spawn: SpawnNpc) {
+    pub fn insert_npc(&mut self, id: ObjectId, spawn: SpawnNpc, config: &Config) {
         // Load drop-ins
         let mut timeline = serde_json::from_str(
-            &std::fs::read_to_string(FilesystemConfig::locate_timeline_file("Default.json"))
+            &std::fs::read_to_string(config.filesystem.locate_timeline_file("Default.json"))
                 .unwrap(),
         )
         .unwrap();
 
-        let mut search_dirs: Vec<String> = get_config()
+        let mut search_dirs: Vec<String> = config
             .filesystem
             .additional_resource_paths
             .iter()

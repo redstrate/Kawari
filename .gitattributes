@@ -1,2 +1,4 @@
 servers/world/migrations/current_world/up.sql linguist-generated
 servers/login/migrations/current_login/up.sql linguist-generated
+resources/dropins/** linguist-generated
+resources/data/scrambler/** linguist-generated

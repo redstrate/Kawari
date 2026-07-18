@@ -23,7 +23,7 @@ use kawari::{
         ANIMATION_LOCK_TIME, COMBO_TIMEOUT, CharacterMode, DEAD_FADE_OUT_TIME, ObjectId,
         STRIKING_DUMMY_NAME_ID, TimepointData,
     },
-    config::FilesystemConfig,
+    config::get_config,
     ipc::zone::{
         ActionEffect, ActionRequest, ActionResult, ActionType, ActorControlCategory,
         BattleNpcSubKind, CommonSpawn, EffectEntry, EffectKind, EffectResult, ObjectKind,
@@ -347,6 +347,7 @@ pub fn execute_action(
 
                         let pet_actor_id = ObjectId(fastrand::u32(..));
 
+                        let config = get_config();
                         instance.insert_npc(
                             pet_actor_id,
                             SpawnNpc {
@@ -366,6 +367,7 @@ pub fn execute_action(
                                 },
                                 ..Default::default()
                             },
+                            &config,
                         );
 
                         network.send_to_by_actor_id(
@@ -883,8 +885,10 @@ pub fn execute_item_action(
                 Ok((action_script, arg)) => {
                     lua.0
                         .load(
-                            std::fs::read(FilesystemConfig::locate_script_file(&action_script))
-                                .expect("Failed to locate scripts directory!"),
+                            std::fs::read(
+                                get_config().filesystem.locate_script_file(&action_script),
+                            )
+                            .expect("Failed to locate scripts directory!"),
                         )
                         .set_name("@".to_string() + &action_script)
                         .exec()

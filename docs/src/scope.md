@@ -4,6 +4,8 @@ This is a rough outline of what we currently don't support or accept contributio
 
 * Quests
   * We currently don't want any quests apart from the ones needed to make the opening function.
+* Instanced content
+  * The two exceptions at the moment are Sastasha and A Merchant's Tale.
 * Older/regional patch versions
   * We only support what's currently released on Global.
   * Other regions (Korea, Mainland China and Taiwan) are supported *as long* as it's the same patch date - indicating compatibility.

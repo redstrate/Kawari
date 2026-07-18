@@ -94,6 +94,11 @@ pub struct GameData {
     pub content_finder_condition_sheet: ContentFinderConditionSheet,
     pub instance_content_sheet: InstanceContentSheet,
     pub ikd_route_sheet: IKDRouteSheet,
+    pub npc_equip_sheet: NpcEquipSheet,
+    pub gathering_point_sheet: GatheringPointSheet,
+    pub gathering_point_base_sheet: GatheringPointBaseSheet,
+    pub gathering_item_sheet: GatheringItemSheet,
+    pub gathering_item_level_convert_table_sheet: GatheringItemLevelConvertTableSheet,
 }
 
 impl Default for GameData {
@@ -340,6 +345,22 @@ impl GameData {
         let ikd_route_sheet =
             IKDRouteSheet::read_from(&mut resource_resolver, config.world.language()).unwrap();
 
+        let npc_equip_sheet =
+            NpcEquipSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
+        let gathering_point_sheet =
+            GatheringPointSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
+        let gathering_point_base_sheet =
+            GatheringPointBaseSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
+        let gathering_item_sheet =
+            GatheringItemSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
+        let gathering_item_level_convert_table_sheet =
+            GatheringItemLevelConvertTableSheet::read_from(&mut resource_resolver, Language::None)
+                .unwrap();
+
         Self {
             resource: resource_resolver,
             item_sheet,
@@ -367,6 +388,11 @@ impl GameData {
             content_finder_condition_sheet,
             instance_content_sheet,
             ikd_route_sheet,
+            npc_equip_sheet,
+            gathering_point_sheet,
+            gathering_point_base_sheet,
+            gathering_item_sheet,
+            gathering_item_level_convert_table_sheet,
         }
     }
 
@@ -1043,6 +1069,7 @@ impl GameData {
         self.gimmick_rect_sheet.row(gimmick_rect_id)
     }
 
+    // TODO: this can be quite expensive, any way we can speed it up?
     /// Returns information about a specific GimmickRect based on the layout id.
     pub fn lookup_gimmick_rect(&mut self, layout_id: u32) -> Option<GimmickRectRow> {
         self.gimmick_rect_sheet
@@ -1295,46 +1322,40 @@ impl GameData {
     }
 
     /// Returns the base id, level and count for a GatheringPoint.
-    pub fn get_gathering_point(&mut self, id: u32) -> (i32, u8, u8, [u16; 2]) {
-        let sheet = GatheringPointSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let row = sheet.row(id).unwrap();
+    pub fn get_gathering_point(&mut self, id: u32) -> (i32, u8, u8, [u16; 2], u8) {
+        let row = self.gathering_point_sheet.row(id).unwrap();
 
         let base_id = row.GatheringPointBase;
-        let base_sheet =
-            GatheringPointBaseSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let base_row = base_sheet.row(base_id as u32).unwrap();
+        let base_row = self.gathering_point_base_sheet.row(base_id as u32).unwrap();
 
         (
             base_id,
             base_row.GatheringLevel,
             row.Count,
             row.GatheringPointBonus,
+            row.Type,
         )
     }
 
     /// Returns the item list for a gathering point.
     pub fn get_gathering_point_items(&mut self, id: u32) -> [GatheringPointItem; 8] {
-        let sheet = GatheringPointSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let row = sheet.row(id).unwrap();
+        let row = self.gathering_point_sheet.row(id).unwrap();
 
         let base_id = row.GatheringPointBase;
-        let base_sheet =
-            GatheringPointBaseSheet::read_from(&mut self.resource, Language::None).unwrap();
-        let base_row = base_sheet.row(base_id as u32).unwrap();
+        let base_row = self.gathering_point_base_sheet.row(base_id as u32).unwrap();
 
         let mut new_items = [GatheringPointItem::default(); 8];
         for (i, new_item) in new_items.iter_mut().enumerate() {
-            let sheet = GatheringItemSheet::read_from(&mut self.resource, Language::None).unwrap();
-            let row = sheet.row(base_row.Item[i] as u32).unwrap();
-
-            let convert_sheet =
-                GatheringItemLevelConvertTableSheet::read_from(&mut self.resource, Language::None)
-                    .unwrap();
+            let row = self
+                .gathering_item_sheet
+                .row(base_row.Item[i] as u32)
+                .unwrap();
 
             *new_item = GatheringPointItem {
                 gathering_id: base_row.Item[i],
                 item_id: row.Item,
-                level: convert_sheet
+                level: self
+                    .gathering_item_level_convert_table_sheet
                     .row(row.GatheringItemLevel as u32)
                     .unwrap()
                     .GatheringItemLevel,
@@ -1538,8 +1559,7 @@ impl GameData {
 
     /// Returns a CommonSpawn with the NPC's equipment.
     pub fn get_npc_equip(&mut self, equip_id: u32) -> Option<CommonSpawn> {
-        let sheet = NpcEquipSheet::read_from(&mut self.resource, Language::None).ok()?;
-        let row = sheet.row(equip_id)?;
+        let row = self.npc_equip_sheet.row(equip_id)?;
 
         // TODO: support dyes
         Some(CommonSpawn {

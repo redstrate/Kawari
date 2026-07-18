@@ -11,7 +11,7 @@ use crate::{
 };
 use kawari::{
     common::{HandlerType, WORLD_NAME},
-    config::{FilesystemConfig, get_config},
+    config::get_config,
     ipc::zone::{
         Condition, DamageKind, DamageType, EventType, GameMasterRank, SceneFlags, ServerNoticeFlags,
     },
@@ -52,7 +52,7 @@ impl KawariLua {
         lua.globals().set("WORLD_NAME", WORLD_NAME).unwrap();
 
         // Load Global.lua
-        let file_name = FilesystemConfig::locate_script_file("Global.lua");
+        let file_name = config.filesystem.locate_script_file("Global.lua");
         lua.load(std::fs::read(file_name).expect("Failed to locate scripts directory!"))
             .exec()
             .unwrap();
@@ -164,7 +164,7 @@ impl KawariLua {
 
         lua.globals().set("GAME_DATA", game_data.clone())?;
 
-        let file_name = FilesystemConfig::locate_script_file("Init.lua");
+        let file_name = get_config().filesystem.locate_script_file("Init.lua");
         lua.load(std::fs::read(&file_name).expect("Failed to locate scripts directory!"))
             .set_name("@".to_string() + &file_name)
             .exec()?;

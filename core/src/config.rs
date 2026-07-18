@@ -528,9 +528,8 @@ impl FilesystemConfig {
     /// Locates a script file and returns its path, taking into account additional search paths.
     ///
     /// This is infallible as it will always return our built-in path.
-    pub fn locate_script_file(path: &str) -> String {
-        let config = get_config();
-        for search_path in config.filesystem.additional_resource_paths {
+    pub fn locate_script_file(&self, path: &str) -> String {
+        for search_path in &self.additional_resource_paths {
             let file_name = format!("{search_path}/scripts/{path}");
             if std::fs::exists(&file_name).unwrap_or_default() {
                 return file_name;
@@ -543,9 +542,8 @@ impl FilesystemConfig {
     /// Locates a timeline file and returns its path, taking into account additional search paths.
     ///
     /// This is infallible as it will always return our built-in path.
-    pub fn locate_timeline_file(path: &str) -> String {
-        let config = get_config();
-        for search_path in config.filesystem.additional_resource_paths {
+    pub fn locate_timeline_file(&self, path: &str) -> String {
+        for search_path in &self.additional_resource_paths {
             let file_name = format!("{search_path}/timelines/{path}");
             if std::fs::exists(&file_name).unwrap_or_default() {
                 return file_name;

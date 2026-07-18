@@ -5,6 +5,7 @@ use kawari::{
         DirectorEvent, EOBJ_EXIT, EOBJ_SHORTCUT, EventState, HandlerId, ObjectId, ObjectTypeId,
         ObjectTypeKind, Position,
     },
+    config::get_config,
     ipc::zone::{ActorControlCategory, ActorControlSelf, ServerZoneIpcData, ServerZoneIpcSegment},
 };
 use mlua::{Function, LuaSerdeExt, UserData, UserDataMethods, Value};
@@ -660,7 +661,8 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
             LuaDirectorTask::SpawnBattleNpc { id } => {
                 if let Some(mut npc) = instance.zone.get_battle_npc(*id) {
                     npc.common.handler_id = director_id;
-                    instance.insert_npc(ObjectId(fastrand::u32(..)), npc);
+                    let config = get_config();
+                    instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
                 } else {
                     tracing::warn!("Failed to find bnpc {id} for SpawnBattleNpc, it won't spawn!");
                 }
@@ -727,7 +729,8 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     npc.common.handler_id = director_id;
 
                     let actor_id = ObjectId(fastrand::u32(..));
-                    instance.insert_npc(actor_id, npc);
+                    let config = get_config();
+                    instance.insert_npc(actor_id, npc, &config);
                     bosses.insert(
                         *bnpc_id,
                         DirectorBoss {

@@ -9,7 +9,7 @@ use kawari::common::{
     ObjectTypeKind, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position,
     QuestSpecialFlags, calculate_max_level,
 };
-use kawari::config::{FilesystemConfig, get_config};
+use kawari::config::get_config;
 use kawari_world::inventory::{Item, MAX_LARGE_STORAGE, Storage, get_next_free_slot};
 use physis::{TerritoryIntendedUse, equipment::EquipSlot};
 
@@ -1332,25 +1332,34 @@ async fn process_packet(
                                     let level;
                                     let count;
                                     let gathering_point_bonus;
+                                    let point_type;
                                     {
                                         let mut gamedata = connection.gamedata.lock();
-                                        (base_id, level, count, gathering_point_bonus) =
-                                            gamedata.get_gathering_point(id);
+                                        (
+                                            base_id,
+                                            level,
+                                            count,
+                                            gathering_point_bonus,
+                                            point_type,
+                                        ) = gamedata.get_gathering_point(id);
                                     }
 
-                                    connection
-                                        .actor_control_self(
-                                            ActorControlCategory::SetupGatheringPoint {
-                                                id,
-                                                base_id: base_id as u32,
-                                                level: level as u32,
-                                                count: count as u32,
-                                                remaining_count: count as u32,
-                                                unk1: 0,
-                                                gathering_point_bonus,
-                                            },
-                                        )
-                                        .await;
+                                    // TODO: document in EXDSchema that 3 seems to mean levequest ones
+                                    if point_type != 3 {
+                                        connection
+                                            .actor_control_self(
+                                                ActorControlCategory::SetupGatheringPoint {
+                                                    id,
+                                                    base_id: base_id as u32,
+                                                    level: level as u32,
+                                                    count: count as u32,
+                                                    remaining_count: count as u32,
+                                                    unk1: 0,
+                                                    gathering_point_bonus,
+                                                },
+                                            )
+                                            .await;
+                                    }
                                 }
                                 ClientTriggerCommand::BeginCraft { end, id } => {
                                     let handler_id = HandlerId::new(HandlerType::Craft, 1).0;
@@ -1859,8 +1868,9 @@ async fn process_packet(
                                     if let Some(command_script) =
                                         state.command_scripts.get(command_name)
                                     {
-                                        let file_name =
-                                            FilesystemConfig::locate_script_file(command_script);
+                                        let file_name = get_config()
+                                            .filesystem
+                                            .locate_script_file(command_script);
 
                                         let mut run_script = || -> mlua::Result<()> {
                                             lua.0.scope(|scope| {

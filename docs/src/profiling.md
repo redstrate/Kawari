@@ -13,7 +13,7 @@ cargo install  addr2line --features="bin"
 Depending on your system you need to force frame pointers otherwise the callgraphs are wrong:
 
 ```shell
-RUSTFLAGS="-Cstrip=none -Cforce-frame-pointers=yes" cargo build --workspace --release --features oodle
+RUSTFLAGS="-Cstrip=none -Cforce-frame-pointers=yes" cargo build --workspace --features oodle
 ```
 
 And now you finally run `perf`:

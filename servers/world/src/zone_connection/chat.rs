@@ -15,7 +15,7 @@ use kawari::{
     common::{
         DirectorEvent, ERR_INVENTORY_ADD_FAILED, FateState, HandlerId, HandlerType, ObjectTypeId,
     },
-    config::FilesystemConfig,
+    config::get_config,
     ipc::zone::{
         ActorControlCategory, ChatMessage, Condition, Conditions, GameMasterRank,
         ServerNoticeFlags, ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -61,7 +61,8 @@ impl ZoneConnection {
         let state = lua.0.app_data_ref::<KawariLuaState>().unwrap();
 
         if let Some(command_script) = state.gm_command_scripts.get(&command) {
-            let file_name = FilesystemConfig::locate_script_file(command_script);
+            let config = get_config();
+            let file_name = config.filesystem.locate_script_file(command_script);
 
             let run_script = || -> mlua::Result<()> {
                 lua.0.scope(|scope| {

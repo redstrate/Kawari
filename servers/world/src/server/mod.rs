@@ -43,7 +43,7 @@ use kawari::{
         MAX_SPAWNED_OBJECTS, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
         SharedGroupTimelineState, determine_initial_pop_range, euler_to_direction, is_private_area,
     },
-    config::{FilesystemConfig, get_config},
+    config::get_config,
     ipc::zone::{
         ActorControlCategory, ClientTriggerCommand, Condition, Conditions, EnmityList, Hater,
         HaterList, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, WarpType, WaymarkPreset,
@@ -160,8 +160,9 @@ impl WorldServer {
         let content_short_name = game_data
             .get_content_short_name(content_finder_condition)
             .unwrap();
-        let file_name =
-            FilesystemConfig::locate_script_file(&format!("content/{content_short_name}.lua"));
+        let file_name = get_config()
+            .filesystem
+            .locate_script_file(&format!("content/{content_short_name}.lua"));
 
         let result = std::fs::read(&file_name);
         if let Err(err) = result {
@@ -2428,7 +2429,8 @@ pub async fn server_main_loop(
 
                     if let Some(mut npc) = instance.zone.get_battle_npc(layout_id) {
                         npc.common.handler_id = HandlerId::new(HandlerType::GoldSaucer, 1319); // TODO: hardcoded to gold saucer for now
-                        instance.insert_npc(ObjectId(fastrand::u32(..)), npc);
+                        let config = get_config();
+                        instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
                     } else {
                         tracing::warn!(
                             "Failed to find npc {layout_id} for SpawnLayoutNpc, it won't spawn!"

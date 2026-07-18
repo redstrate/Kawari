@@ -3,6 +3,7 @@ use std::sync::Arc;
 use bstr::BString;
 use kawari::{
     common::{DEBUG_COMMAND_TRIGGER, ObjectId},
+    config::get_config,
     ipc::zone::{
         ActionRequest, ActionType, BattleNpcSubKind, CharacterDataFlag, CommonSpawn, ObjectKind,
         ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, WarpType,
@@ -209,7 +210,8 @@ fn process_debug_commands(
                         ..Default::default()
                     };
 
-                    instance.insert_npc(actor_id, npc_spawn.clone());
+                    let config = get_config();
+                    instance.insert_npc(actor_id, npc_spawn.clone(), &config);
                 }
             }
             true
@@ -237,7 +239,8 @@ fn process_debug_commands(
                     ..Default::default()
                 };
 
-                instance.insert_npc(actor_id, npc_spawn.clone());
+                let config = get_config();
+                instance.insert_npc(actor_id, npc_spawn.clone(), &config);
             }
 
             true
