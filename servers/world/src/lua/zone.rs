@@ -18,7 +18,7 @@ pub struct LuaZone {
     pub queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
     // NOTE: These are here to be accessed in Lua via the injected BASE_ID
     pub cached_npc_base_ids: HashMap<ObjectId, u32>,
-    pub cached_eobj_base_ids: HashMap<ObjectId, u32>,
+    pub cached_eobj_base_ids: HashMap<u32, u32>,
 }
 
 impl UserData for LuaZone {

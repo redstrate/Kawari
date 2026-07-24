@@ -50,7 +50,6 @@ mod mail;
 mod party;
 mod quest;
 mod social;
-pub mod spawn_allocator;
 mod stats;
 pub use stats::BaseParameters;
 mod unlock;

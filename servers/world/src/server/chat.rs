@@ -216,35 +216,6 @@ fn process_debug_commands(
             }
             true
         }
-        "!spawnclone" => {
-            let mut data = data.lock();
-
-            let actor_id = Instance::generate_actor_id();
-            let npc_spawn;
-            {
-                let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                    return true;
-                };
-
-                let Some(actor) = instance.find_actor(from_actor_id) else {
-                    return true;
-                };
-
-                let NetworkedActor::Player { spawn, .. } = actor else {
-                    return true;
-                };
-
-                npc_spawn = SpawnNpc {
-                    common: spawn.common.clone(),
-                    ..Default::default()
-                };
-
-                let config = get_config();
-                instance.insert_npc(actor_id, npc_spawn.clone(), &config);
-            }
-
-            true
-        }
         "!mount" => {
             if let Some((_, mount)) = chat_message.split_once(' ') {
                 let mount_id = match mount.parse::<u16>() {

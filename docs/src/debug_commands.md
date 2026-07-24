@@ -31,7 +31,6 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!shortcut <id>` | Teleports to a content shortcut defined in the Lua script. |
 | `!skipintro` | Teleports you to Limsa, unlocks all features and completes all quests. |
 | `!spawnmonster <id>` | Spawn a monster for debugging. |
-| `!spawnclone` | Spawn a clone of yourself. |
 | `!togglemount <id>` | Toggles the unlock status of the specified mount ID. |
 | `!toggleglassesstyle <id>` | Toggles the unlock status of the specified GlassesStyle ID. |
 | `!toggleornament <id>` | Toggles the unlock status of the specified ornament ID. |

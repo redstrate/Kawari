@@ -20,20 +20,16 @@ use parking_lot::Mutex;
 
 use crate::{
     ClientId, FromServer, GameData,
-    lua::KawariLua,
     server::{
-        action::execute_enemy_action,
-        actor::{NetworkedActor, NpcState},
+        actor::{NetworkedActor, NpcState, set_shared_group_timeline_state},
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
-        set_shared_group_timeline_state,
     },
 };
 
 /// Updates NPCs in this instance.
 pub fn npc_behavior(
     network: Arc<Mutex<NetworkState>>,
-    lua: Arc<Mutex<KawariLua>>,
     gamedata: Arc<Mutex<GameData>>,
     instance: &mut Instance,
     haters: &mut HashMap<ObjectId, Vec<ObjectId>>,
@@ -327,7 +323,15 @@ pub fn npc_behavior(
 
         for (id, request, cast_time) in new_action_requests {
             if cast_time == 0.0 {
-                execute_enemy_action(network.clone(), instance, lua.clone(), id, request);
+                instance.insert_task(
+                    ClientId::default(),
+                    id,
+                    Duration::from_secs_f32(0.0),
+                    QueuedTaskData::CastAction {
+                        request: request.clone(),
+                        interruptible: false,
+                    },
+                );
             } else {
                 let position;
                 {
@@ -361,8 +365,9 @@ pub fn npc_behavior(
                     ClientId::default(),
                     id,
                     Duration::from_secs_f32(cast_time),
-                    QueuedTaskData::CastEnemyAction {
+                    QueuedTaskData::CastAction {
                         request: request.clone(),
+                        interruptible: true, // TODO: not always true?
                     },
                 );
             }

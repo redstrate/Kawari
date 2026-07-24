@@ -57,7 +57,7 @@ pub enum MapGimmick {
 }
 
 /// Simpler form of a MapRange object designed for collision detection.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct MapRange {
     /// Trigger box shape.
     pub trigger_box_shape: TriggerBoxShape,
@@ -104,7 +104,7 @@ pub struct Zone {
     layer_set: i32,
     bg_path: String,
     cached_housing_plots: Vec<HousingPlot>,
-    cached_eobj_base_ids: HashMap<ObjectId, u32>,
+    cached_eobj_base_ids: HashMap<u32, u32>,
 }
 
 impl Zone {
@@ -232,15 +232,13 @@ impl Zone {
                                 position: translation,
                                 scale,
                                 sanctuary: map_range.rest_bonus_enabled,
-                                duel: false,
-                                gimmick: None,
                                 instance_id: object.instance_id,
                                 discovery_id: if map_range.discovery_enabled {
                                     Some(map_range.discovery_id)
                                 } else {
                                     None
                                 },
-                                entrance: false,
+                                ..Default::default()
                             });
                         }
                         if let LayerEntryData::EventRange(event_range) = &object.data {
@@ -248,29 +246,18 @@ impl Zone {
                                 trigger_box_shape: event_range.parent_data.trigger_box_shape,
                                 position: translation,
                                 scale,
-                                sanctuary: false,
-                                // This is guesswork since there's only one dueling location in-game
-                                // TODO: restore duel support by hardcoding its ID
-                                // duel: event_range.unk_flags[0] == 1
-                                //     && event_range.unk_flags[3] == 1
-                                //     && event_range.unk_flags[4] == 1
-                                //     && event_range.unk_flags[5] == 1,
-                                duel: false,
-                                gimmick: None,
+                                duel: object.instance_id == 6445254, // From the LVD_duel_01 layer in Wolves Den Pier
                                 instance_id: object.instance_id,
-                                discovery_id: None,
-                                // Set later!
-                                entrance: false,
+                                ..Default::default()
                             });
                         }
                     }
 
                     // Second pass for eobjs
                     for object in &layer.objects {
-                        // TODO: restore
-                        // if !layer.header.has_layer_set(zone.layer_set as u32) {
-                        //     continue;
-                        // }
+                        if !layer.header.has_layer_set(zone.layer_set as u32) {
+                            continue;
+                        }
 
                         if let LayerEntryData::EventObject(eobj) = &object.data {
                             let eobj_data = game_data.get_eobj_data(eobj.parent_data.base_id);
@@ -562,8 +549,9 @@ impl Zone {
                             ..Default::default()
                         };
                         self.cached_objects.insert(eobj.parent_data.base_id, spawn);
+                        // NOTE: I think the use of layout_id here is intentional(?) Try the Grand Company Barracks entrance.
                         self.cached_eobj_base_ids
-                            .insert(spawn.entity_id, spawn.base_id);
+                            .insert(spawn.layout_id, spawn.base_id);
 
                         if pop_type == 1 {
                             object_spawns.push((spawn, layer.header.name.value.clone()));

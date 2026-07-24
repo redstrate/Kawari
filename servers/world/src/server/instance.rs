@@ -44,9 +44,6 @@ pub enum QueuedTaskData {
         /// Currently means if it has a cast bar.
         interruptible: bool,
     },
-    CastEnemyAction {
-        request: ActionRequest,
-    },
     LoseStatusEffect {
         effect_id: u16,
         effect_param: u16,

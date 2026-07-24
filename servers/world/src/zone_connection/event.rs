@@ -109,7 +109,7 @@ impl ZoneConnection {
         let base_id = lua_player
             .zone_data
             .cached_eobj_base_ids
-            .get(&actor_id.object_id)
+            .get(&actor_id.object_id.0)
             .copied()
             .or(lua_player
                 .zone_data

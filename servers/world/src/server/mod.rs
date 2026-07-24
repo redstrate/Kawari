@@ -11,37 +11,26 @@ use std::{
 use tokio::sync::mpsc::Receiver;
 
 use crate::{
-    GameData, Navmesh, SpawnAllocator,
+    GameData, Navmesh,
     lua::KawariLua,
     server::{
         action::{
-            execute_action, execute_enemy_action, handle_action_messages, kill_actor,
-            update_actor_hp_mp,
-        },
-        actor::{NetworkedActor, NpcState},
-        chat::handle_chat_messages,
-        director::{DirectorData, director_tick, handle_director_messages},
-        effect::{handle_effect_messages, remove_effect, send_effects_list},
-        instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
-        linkshell::handle_linkshell_messages,
-        network::{DestinationNetwork, NetworkState},
-        party::{
+            execute_action, handle_action_messages,
+        }, actor::{NetworkedActor, NpcState, kill_actor, set_character_mode, set_player_minion, update_actor_hp_mp}, chat::handle_chat_messages, director::{DirectorData, director_tick, handle_director_messages}, effect::{handle_effect_messages, remove_effect, send_effects_list}, instance::{Instance, NavmeshGenerationStep, QueuedTaskData}, linkshell::handle_linkshell_messages, network::{DestinationNetwork, NetworkState}, party::{
             NUM_TARGET_SIGNS, get_party_id_from_actor_id, handle_party_messages,
             send_party_positions, update_party_position, update_party_waymark,
             update_party_waymarks,
-        },
-        social::handle_social_messages,
-        zone::{
+        }, social::handle_social_messages, spawn_allocator::SpawnAllocator, zone::{
             MapGimmick, change_zone_to_player, change_zone_warp_to_entrance,
             change_zone_warp_to_pop_range, handle_zone_messages,
-        },
+        }
     },
 };
 use kawari::{
     common::{
         CharacterMode, DEAD_DESPAWN_TIME, EventState, HandlerId, HandlerType, MAX_SPAWNED_ACTORS,
         MAX_SPAWNED_OBJECTS, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
-        SharedGroupTimelineState, determine_initial_pop_range, euler_to_direction, is_private_area,
+        determine_initial_pop_range, euler_to_direction, is_private_area,
     },
     config::get_config,
     ipc::zone::{
@@ -65,6 +54,7 @@ pub use party::{Party, PartyMember};
 mod npc_behavior;
 mod social;
 mod zone;
+mod spawn_allocator;
 
 #[derive(Default, Debug, Clone)]
 struct ClientState {
@@ -246,127 +236,10 @@ impl WorldServer {
     }
 }
 
-// TODO: move elsewhere...
-fn set_player_minion(
-    data: &mut WorldServer,
-    network: &mut NetworkState,
-    minion_id: u32,
-    from_actor_id: ObjectId,
-) {
-    // Update our common spawn to reflect the new minion
-    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-        return;
-    };
-
-    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-        return;
-    };
-
-    let NetworkedActor::Player { spawn, .. } = actor else {
-        return;
-    };
-
-    spawn.common.active_minion = minion_id as u16;
-
-    network.send_ac_in_range_inclusive(
-        data,
-        from_actor_id,
-        ActorControlCategory::MinionSpawnControl { minion_id },
-    );
-}
-
-fn set_character_mode(
-    instance: &mut Instance,
-    network: &mut NetworkState,
-    from_actor_id: ObjectId,
-    mode: CharacterMode,
-    mode_arg: u8,
-) {
-    // Update internal data model for new spawns
-    {
-        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-            return;
-        };
-
-        // Skip if this mode is already set.
-        if actor.get_common_spawn().mode == mode && actor.get_common_spawn().mode_arg == mode_arg {
-            return;
-        }
-
-        actor.get_common_spawn_mut().mode = mode;
-        actor.get_common_spawn_mut().mode_arg = mode_arg;
-    }
-
-    // Inform actors
-    network.send_ac_in_range_inclusive_instance(
-        instance,
-        from_actor_id,
-        ActorControlCategory::SetMode {
-            mode,
-            mode_arg: mode_arg as u32,
-        },
-    );
-}
-
-fn set_shared_group_timeline_state(
-    instance: &mut Instance,
-    network: &mut NetworkState,
-    from_actor_id: ObjectId,
-    timelines: &[u32],
-) {
-    let mut state = SharedGroupTimelineState::empty();
-    for timeline in timelines {
-        state.toggle(match timeline {
-            1 => SharedGroupTimelineState::TIMELINE_1,
-            2 => SharedGroupTimelineState::TIMELINE_2,
-            3 => SharedGroupTimelineState::TIMELINE_3,
-            4 => SharedGroupTimelineState::TIMELINE_4,
-            5 => SharedGroupTimelineState::TIMELINE_5,
-            6 => SharedGroupTimelineState::TIMELINE_6,
-            7 => SharedGroupTimelineState::TIMELINE_7,
-            8 => SharedGroupTimelineState::TIMELINE_8,
-            9 => SharedGroupTimelineState::TIMELINE_9,
-            10 => SharedGroupTimelineState::TIMELINE_10,
-            11 => SharedGroupTimelineState::TIMELINE_11,
-            12 => SharedGroupTimelineState::TIMELINE_12,
-            13 => SharedGroupTimelineState::TIMELINE_13,
-            14 => SharedGroupTimelineState::TIMELINE_14,
-            15 => SharedGroupTimelineState::TIMELINE_15,
-            16 => SharedGroupTimelineState::TIMELINE_16,
-            _ => unimplemented!(),
-        });
-    }
-
-    // Update internal data model for new spawns
-    {
-        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
-            return;
-        };
-
-        let NetworkedActor::Object { object, .. } = actor else {
-            return;
-        };
-
-        object.args1 = state.bits();
-    }
-
-    // Inform actors
-    network.send_ac_in_range_inclusive_instance(
-        instance,
-        from_actor_id,
-        ActorControlCategory::SetSharedGroupTimelineState {
-            state,
-            arg2: 0,
-            object_type: 0,
-            layout_id: 0,
-        },
-    );
-}
 
 fn server_logic_tick(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
-    lua: Arc<Mutex<KawariLua>>,
     gamedata: Arc<Mutex<GameData>>,
 ) {
     let mut actors_to_update_hp_mp = Vec::new();
@@ -390,7 +263,6 @@ fn server_logic_tick(
             let mut haters = HashMap::new();
             npc_behavior::npc_behavior(
                 network.clone(),
-                lua.clone(),
                 gamedata.clone(),
                 instance,
                 &mut haters,
@@ -865,7 +737,6 @@ pub async fn server_main_loop(
                 server_logic_tick(
                     data.clone(),
                     network.clone(),
-                    lua.clone(),
                     game_data.clone(),
                 );
 
@@ -899,18 +770,6 @@ pub async fn server_main_loop(
                                     task.from_actor_id,
                                     request.clone(),
                                 );
-                            }
-                            QueuedTaskData::CastEnemyAction { request, .. } => {
-                                let mut data = data.lock();
-                                if let Some(instance) = data.instances.get_mut(*instance_index) {
-                                    execute_enemy_action(
-                                        network.clone(),
-                                        instance,
-                                        lua.clone(),
-                                        task.from_actor_id,
-                                        request.clone(),
-                                    );
-                                }
                             }
                             QueuedTaskData::LoseStatusEffect {
                                 effect_id,
