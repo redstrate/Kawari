@@ -898,6 +898,19 @@ fn begin_change_zone<'a>(
     }
 }
 
+/// Finds a random position from the pop range. Most have several positions available to stop people from spawning in the same place.
+fn pick_point_in_pop_range(object: &InstanceObject) -> Position {
+    let LayerEntryData::PopRange(pop_range) = &object.data else {
+        return Position(glam::Vec3::from_array(object.transform.translation));
+    };
+
+    let Some(rand) = fastrand::choice(&pop_range.positions) else {
+        return Position(glam::Vec3::from_array(object.transform.translation));
+    };
+
+    Position(glam::Vec3::from_array(object.transform.translation) + glam::Vec3::from_slice(rand))
+}
+
 /// Sends the needed information to ZoneConnection for a zone change.
 pub fn change_zone_warp_to_pop_range(
     data: &mut WorldServer,
@@ -929,9 +942,9 @@ pub fn change_zone_warp_to_pop_range(
     if let Some((destination_object, _)) =
         target_instance.zone.find_pop_range(destination_instance_id)
     {
-        let (_, rotation, translation) =
+        let (_, rotation, _) =
             Affine3A::from(destination_object.transform).to_scale_rotation_translation();
-        exit_position = Some(Position(translation));
+        exit_position = Some(pick_point_in_pop_range(destination_object));
         exit_rotation = Some(euler_to_direction(rotation.to_euler(EulerRot::XYZ)));
     } else {
         tracing::warn!(
@@ -979,9 +992,9 @@ pub fn change_zone_warp_to_entrance(
     let exit_position;
     let exit_rotation;
     if let Some(destination_object) = destiation_object.or(target_instance.zone.find_entrance()) {
-        let (_, rotation, translation) =
+        let (_, rotation, _) =
             Affine3A::from(destination_object.transform).to_scale_rotation_translation();
-        exit_position = Some(Position(translation));
+        exit_position = Some(pick_point_in_pop_range(destination_object));
         exit_rotation = Some(euler_to_direction(rotation.to_euler(EulerRot::XYZ)));
     } else {
         tracing::warn!(

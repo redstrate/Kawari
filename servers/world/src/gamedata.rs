@@ -527,8 +527,8 @@ impl GameData {
                 AetheryteSheet::read_from(&mut self.resource, config.world.language()).ok()?;
             let row = sheet.row(aetheryte_id)?;
 
-            // TODO: just look in the level sheet?
-            let pop_range_id = row.Level[0];
+            // Pick a random pop range to stop people from spawning in the same position
+            let pop_range_id = fastrand::choice(row.Level).unwrap();
             let zone_id = row.Territory;
 
             Some((pop_range_id, zone_id))
@@ -537,7 +537,6 @@ impl GameData {
                 HousingAethernetSheet::read_from(&mut self.resource, Language::None).ok()?;
             let row = sheet.row(aetheryte_id)?;
 
-            // TODO: just look in the level sheet?
             // Note that the HousingAethernet sheet's Level column isn't an array.
             let pop_range_id = row.Level;
             let zone_id = row.TerritoryType;
