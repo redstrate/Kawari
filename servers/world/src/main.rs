@@ -3639,6 +3639,13 @@ async fn process_packet(
                         ClientZoneIpcData::DyeInformation(dye_information) => {
                             connection.dyeing_information = Some(dye_information.clone());
                         }
+                        ClientZoneIpcData::RequestRecruitingPartyCount { .. } => {
+                            // Send an empty packet so it's at least says zero!
+                            let ipc = ServerZoneIpcSegment::new(
+                                ServerZoneIpcData::RecruitingPartyCount { unk1: [0; 968] },
+                            );
+                            connection.send_ipc_self(ipc).await;
+                        }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
                                 "Unknown Zone packet {:?} recieved ({} bytes)",

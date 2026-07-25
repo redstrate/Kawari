@@ -1551,6 +1551,9 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 6)] // unused
         value: u8,
     },
+    RecruitingPartyCount {
+        unk1: [u8; 968], // not exactly sure what this is yet...
+    },
 }
 
 #[cfg(test)]

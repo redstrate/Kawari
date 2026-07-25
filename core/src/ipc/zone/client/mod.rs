@@ -652,6 +652,9 @@ pub enum ClientZoneIpcData {
         unk1: [u8; 24],
     },
     DyeInformation(DyeInformation),
+    RequestRecruitingPartyCount {
+        unk1: [u8; 8], // empty, as far as i've seen
+    },
 }
 
 #[cfg(test)]

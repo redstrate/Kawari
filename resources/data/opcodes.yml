@@ -763,6 +763,10 @@ ServerZoneIpcType:
   comment: Sent when a new item is recorded in the gathering log.
   opcode: 878
   size: 8
+- name: RecruitingPartyCount
+  comment: Sent to update the recruiting party count (somehow) in the Duty Finder window.
+  opcode: 441
+  size: 968
 ClientZoneIpcType:
 - name: InitRequest
   comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -1148,6 +1152,10 @@ ClientZoneIpcType:
   comment: Information about the dye about to be applied.
   opcode: 380
   size: 24
+- name: RequestRecruitingPartyCount
+  comment: Sent when opening up the Duty Finder.
+  opcode: 545
+  size: 8
 ServerLobbyIpcType:
 - name: NackReply
   comment: Sent by the server to indicate an lobby error occured.
