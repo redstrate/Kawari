@@ -19,7 +19,6 @@ pub struct Timeline {
 impl Timeline {
     /// Duration of the entire timeline in seconds.
     pub fn duration(&self) -> i32 {
-        // TODO: maybe don't calculate it this way?
         let mut duration = 0;
         for point in &self.timepoints {
             duration = duration.max(point.time);

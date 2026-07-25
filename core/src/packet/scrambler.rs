@@ -60,8 +60,6 @@ impl ScramblerKeyGenerator {
     }
 
     fn derive(&self, set: u8, n_seed_1: u8, n_seed_2: u8, epoch: u32) -> u8 {
-        // FIXME: so many probably unnecessary casts here
-
         let mid_index = 8 * (n_seed_1 as usize % (self.mid_table.len() / 8));
         let mid_table_value = self.mid_table[4 + mid_index];
         let mut mid_bytes = [0u8; 4];
@@ -107,7 +105,6 @@ impl ScramblerKeyGenerator {
 #[derive(Debug, Clone)]
 pub struct ScramblerKeys {
     keys: [u8; 3],
-    // TODO: maybe move somewhere else?
     opcode_key_table: Vec<i32>,
 }
 

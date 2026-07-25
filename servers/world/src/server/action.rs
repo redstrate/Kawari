@@ -696,8 +696,6 @@ pub fn execute_item_action(
         is_misc = gamedata.item_is_misc(key);
     }
 
-    // FIXME: we should check if this data is valid instead of silently returning zeroes
-
     let mut effects_builder = None;
     lua.0
         .scope(|scope| {

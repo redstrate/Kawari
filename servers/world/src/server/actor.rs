@@ -313,8 +313,6 @@ pub fn kill_actor(
     instance: &mut Instance,
     from_actor_id: ObjectId,
 ) {
-    // TODO: set HP/MP to zero here
-
     let mut network = network.lock();
 
     // First, set their state (otherwise they can still walk)

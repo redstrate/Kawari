@@ -671,13 +671,14 @@ impl Zone {
                             .expect("Failed to read param grow");
 
                         let mut base_parameters = BaseParameters::default();
-                        base_parameters.calculate_based_on_level(
+                        let primary_stat = 1; // TODO, does this make sense for enemies...?
+                        base_parameters.perform_calculations(
+                            primary_stat,
                             &attributes,
-                            level,
                             &param_grow,
                             &modifiers,
                         );
-                        base_parameters.calculate_potencies(level, &param_grow, None); // TODO: If NPCs have classjob modifiers and such, change that None!
+                        base_parameters.calculate_potencies(&param_grow, None); // TODO: If NPCs have classjob modifiers and such, change that None!
 
                         usable_hp = base_parameters.hp;
                     }

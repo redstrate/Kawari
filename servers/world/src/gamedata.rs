@@ -665,7 +665,6 @@ impl GameData {
     }
 
     /// Calculates the current weather at the current time
-    // TODO: instead allow targetting a specific time to calculate forcecasts
     pub fn get_weather_rate(&mut self, weather_rate_id: u32) -> Option<i32> {
         let row = self.weather_rate_sheet.row(weather_rate_id)?;
 
@@ -735,6 +734,13 @@ impl GameData {
         let row = self.classjob_sheet.row(classjob_id as u32)?;
 
         Some(row.JobIndex)
+    }
+
+    /// Gets the primary stat for a given class.
+    pub fn get_job_primary_stat(&mut self, classjob_id: u16) -> Option<u8> {
+        let row = self.classjob_sheet.row(classjob_id as u32)?;
+
+        Some(row.PrimaryStat)
     }
 
     /// Gets the item and its cost from the specified shop.

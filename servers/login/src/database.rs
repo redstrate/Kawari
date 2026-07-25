@@ -209,7 +209,11 @@ impl LoginDatabase {
                     .map(|(i, x)| kawari::ipc::lobby::ServiceAccount {
                         id: x.id as u64,
                         index: i as u32,
-                        name: format!("FINAL FANTASY XIV {}", i + 1), // TODO: don't add the "1" if you only have one service account
+                        name: if service_accounts.len() == 1 {
+                            "FINAL FANTASY XIV".to_string()
+                        } else {
+                            format!("FINAL FANTASY XIV {}", i + 1)
+                        },
                     })
                     .collect()
             } else {

@@ -2284,8 +2284,12 @@ pub async fn server_main_loop(
                         continue;
                     };
 
+                    let Some(director) = &instance.director else {
+                        continue;
+                    };
+
                     if let Some(mut npc) = instance.zone.get_battle_npc(layout_id) {
-                        npc.common.handler_id = HandlerId::new(HandlerType::GoldSaucer, 1319); // TODO: hardcoded to gold saucer for now
+                        npc.common.handler_id = director.id;
                         let config = get_config();
                         instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
                     } else {

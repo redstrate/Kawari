@@ -156,7 +156,7 @@ impl Navmesh {
                 path.as_mut_ptr(),
                 &mut path_count,
                 128,
-            ); // TODO: error check
+            );
             if status != DT_SUCCESS {
                 tracing::warn!(
                     "Error in dtNavMeshQuery_findPath: {status} start poly: {start_poly} end poly: {end_poly}"

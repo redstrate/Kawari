@@ -149,7 +149,7 @@ fn process_debug_commands(
     lua: Arc<Mutex<KawariLua>>,
     from_id: ClientId,
     from_actor_id: ObjectId,
-    chat_message: &BString, // TODO: Replace this with an SEString
+    chat_message: &BString,
 ) -> bool {
     // TODO: Ensure the message has no SEString macros (e.g. auto-translate phrases)?
     let chat_message = chat_message.to_string();

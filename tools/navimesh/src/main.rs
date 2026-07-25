@@ -189,7 +189,6 @@ fn main() {
             }
         };
 
-        // TODO: i think we know which layer is specifically used for navmesh gen, better check that LVB
         for chunk in &lgb.chunks {
             for layer in &chunk.layers {
                 // Exclude festival objects which *usually* don't have collision, but this is to exclude non-Global festivals that include non-existent SGBs.

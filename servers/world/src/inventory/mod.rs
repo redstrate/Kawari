@@ -258,8 +258,10 @@ impl Inventory {
                 if let Some(dst_item) =
                     self.get_item_mut(action.dst_storage_id, action.dst_container_index)
                 {
-                    // TODO: We ought to check the max stack size for a given item id and disallow overflow
-                    dst_item.quantity += src_item.quantity;
+                    dst_item.quantity = dst_item
+                        .quantity
+                        .saturating_add(src_item.quantity)
+                        .min(dst_item.stack_size);
                 }
             }
             ItemOperationKind::SplitStack => {

@@ -376,8 +376,6 @@ impl ZoneConnection {
 
     /// Updates the online status not just on yourself but also informing other players.
     pub async fn update_online_status(&mut self) {
-        // TODO: re-review this now that OnlineStatusMask can be calculated independently from any ZoneConnection
-
         let online_status_mask = self.get_online_status_mask();
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SetOnlineStatus(online_status_mask));

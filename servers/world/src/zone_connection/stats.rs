@@ -173,10 +173,10 @@ impl BaseParameters {
     }
 
     /// Calculates a set of attributes based on the level and class modifiers.
-    pub fn calculate_based_on_level(
+    pub fn perform_calculations(
         &mut self,
+        primary_stat: u8,
         attributes: &Attributes,
-        _level: u32,
         param_grow: &ParamGrowRow,
         modifiers: &Modifiers,
     ) {
@@ -202,7 +202,7 @@ impl BaseParameters {
 
         self.spell_speed = param_grow.BaseSpeed as u32;
         self.tenacity = param_grow.BaseSpeed as u32;
-        self.attack_power = *self.get_mut(4); // TODO: don't hardcode PrimaryStat
+        self.attack_power = *self.get_mut(primary_stat);
         self.skill_speed = self.tenacity;
         self.haste = 100; // Controls cast times
 
@@ -213,7 +213,6 @@ impl BaseParameters {
     // This should be called after item stat calculations.
     pub fn calculate_potencies(
         &mut self,
-        _level: u32,
         param_grow: &ParamGrowRow,
         modifiers: Option<&Modifiers>,
     ) {
@@ -236,7 +235,7 @@ impl BaseParameters {
         };
 
         let hp_mod = param_grow.HpModifier as f32;
-        let base_vit = (param_grow.BaseSpeed as f32) * classjob_vit_mod; // TODO: Tribe adjustments, if we care about such a minimal change?
+        let base_vit = (param_grow.BaseSpeed as f32) * classjob_vit_mod;
         let lv_mod = param_grow.LevelModifier as f32;
 
         self.hp = (100.0
@@ -280,11 +279,12 @@ impl BaseParameters {
                         // Make sure to cap attributes when ilvl syncing:
                         let value = if let Some(item_level_attributes) = item_level_attributes {
                             let attribute_cap = item_level_attributes[i];
-                            (slot.base_param_values[i].min(attribute_cap as i16)) as u32 // TODO: is there ever negative values?
+                            (slot.base_param_values[i].min(attribute_cap as i16)) as i32
                         } else {
-                            slot.base_param_values[i] as u32 // TODO: is there ever negative values?
+                            slot.base_param_values[i] as i32
                         };
-                        *self.get_mut(*param_id) += value;
+                        *self.get_mut(*param_id) =
+                            self.get_mut(*param_id).saturating_add_signed(value);
                     }
                 }
             }
@@ -400,13 +400,12 @@ impl ZoneConnection {
             .get_param_grow(level as u32)
             .expect("Failed to read param grow");
 
+        let primary_stat = game_data
+            .get_job_primary_stat(self.player_data.classjob.current_class as u16)
+            .unwrap_or(1);
+
         let mut base_parameters = BaseParameters::default();
-        base_parameters.calculate_based_on_level(
-            &attributes,
-            level as u32,
-            &param_grow,
-            &modifiers,
-        );
+        base_parameters.perform_calculations(primary_stat, &attributes, &param_grow, &modifiers);
         base_parameters.calculate_stat_across_all_items(
             &self.player_data.inventory.equipped,
             if item_level_sync.is_some() {
@@ -415,7 +414,7 @@ impl ZoneConnection {
                 None
             },
         );
-        base_parameters.calculate_potencies(level as u32, &param_grow, Some(&modifiers));
+        base_parameters.calculate_potencies(&param_grow, Some(&modifiers));
 
         base_parameters
     }
@@ -438,15 +437,14 @@ impl ZoneConnection {
             .get_param_grow(level as u32)
             .expect("Failed to read param grow");
 
+        let primary_stat = game_data
+            .get_job_primary_stat(self.player_data.classjob.current_class as u16)
+            .unwrap_or(1);
+
         let mut base_parameters = BaseParameters::default();
-        base_parameters.calculate_based_on_level(
-            &attributes,
-            level as u32,
-            &param_grow,
-            &modifiers,
-        );
+        base_parameters.perform_calculations(primary_stat, &attributes, &param_grow, &modifiers);
         base_parameters.calculate_stat_across_all_items(&self.player_data.inventory.equipped, None);
-        base_parameters.calculate_potencies(level as u32, &param_grow, Some(&modifiers));
+        base_parameters.calculate_potencies(&param_grow, Some(&modifiers));
 
         base_parameters
     }

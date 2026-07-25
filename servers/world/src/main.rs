@@ -2366,7 +2366,6 @@ async fn process_packet(
                             }
 
                             // If we don't send this, the content finder gets stuck.
-                            // TODO: this may be screwing up the in-duty menu, probably need to fill it with data!
                             let ipc =
                                 ServerZoneIpcSegment::new(ServerZoneIpcData::UnkContentFinder {
                                     unk: [0; 16],
@@ -2801,7 +2800,7 @@ async fn process_packet(
                                 .mask()
                                 .last()
                                 .copied()
-                                .unwrap_or(OnlineStatus::Online); // TODO: unsure if this makes sense?
+                                .unwrap_or(OnlineStatus::Online);
                             connection.player_data.search_info.comment =
                                 search_info.comment.clone();
                             connection.player_data.search_info.selected_languages =
