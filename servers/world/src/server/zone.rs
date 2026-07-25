@@ -17,6 +17,7 @@ use crate::{
     lua::LuaZone,
     server::{
         NetworkedActor, WorldServer,
+        actor::create_npc_common_spawn,
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
@@ -30,9 +31,9 @@ use kawari::{
     },
     config::get_config,
     ipc::zone::{
-        ActorControlCategory, ActorSetPos, BattleNpcSubKind, CharacterDataFlag, CommonSpawn,
-        Conditions, DisplayFlag, ObjectKind, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc,
-        SpawnObject, SpawnTreasure, WarpType,
+        ActorControlCategory, ActorSetPos, CharacterDataFlag, CommonSpawn, Conditions, DisplayFlag,
+        ObjectKind, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnTreasure,
+        WarpType,
     },
 };
 
@@ -651,38 +652,7 @@ impl Zone {
                     link_range,
                 } = object.data
                 {
-                    let (model_chara, battalion, customize, rank, equip, behavior) =
-                        game_data.find_bnpc(base_id).unwrap();
-
-                    let usable_hp;
-                    if let Some(hp) = hp {
-                        usable_hp = hp;
-                    } else {
-                        let modifiers = game_data
-                            .get_class_job_modifiers(0)
-                            .expect("Failed to read param grow");
-
-                        let attributes = game_data
-                            .get_racial_base_attributes(0)
-                            .expect("Failed to read racial attributes");
-
-                        let param_grow = game_data
-                            .get_param_grow(level)
-                            .expect("Failed to read param grow");
-
-                        let mut base_parameters = BaseParameters::default();
-                        let primary_stat = 1; // TODO, does this make sense for enemies...?
-                        base_parameters.perform_calculations(
-                            primary_stat,
-                            &attributes,
-                            &param_grow,
-                            &modifiers,
-                        );
-                        base_parameters.calculate_potencies(&param_grow, None); // TODO: If NPCs have classjob modifiers and such, change that None!
-
-                        usable_hp = base_parameters.hp;
-                    }
-
+                    let base_npc = create_npc_common_spawn(game_data, base_id, name_id, hp, level);
                     let spawn = SpawnNpc {
                         gimmick_id,
                         character_data_flags: if hostile {
@@ -690,27 +660,16 @@ impl Zone {
                         } else {
                             CharacterDataFlag::empty()
                         },
-                        character_data_icon: rank,
                         max_links,
                         link_family,
                         link_range,
                         common: CommonSpawn {
-                            base_id,
-                            name_id,
-                            max_health_points: usable_hp,
-                            health_points: usable_hp,
-                            model_chara,
-                            object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
-                            battalion,
-                            level: level as u8,
                             position: object.position,
                             rotation: object.rotation,
-                            look: customize,
                             layout_id: object.layout_id,
-                            behavior,
-                            ..game_data.get_npc_equip(equip as u32).unwrap_or_default()
+                            ..base_npc.common
                         },
-                        ..Default::default()
+                        ..base_npc
                     };
 
                     self.cached_npcs.insert(object.layout_id, spawn.clone());

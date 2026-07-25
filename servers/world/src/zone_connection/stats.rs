@@ -95,6 +95,7 @@ pub struct BaseParameters {
 impl BaseParameters {
     pub fn get_mut(&mut self, index: u8) -> &mut u32 {
         match index {
+            0 => &mut self.strength, // HACK: Classjob #0 (used by enemies) index this value I think, so don't remove that without thinking first.
             1 => &mut self.strength,
             2 => &mut self.dexterity,
             3 => &mut self.vitality,

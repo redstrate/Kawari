@@ -3,10 +3,9 @@ use std::sync::Arc;
 use bstr::BString;
 use kawari::{
     common::{DEBUG_COMMAND_TRIGGER, ObjectId},
-    config::get_config,
     ipc::zone::{
-        ActionRequest, ActionType, BattleNpcSubKind, CharacterDataFlag, CommonSpawn, ObjectKind,
-        ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, WarpType,
+        ActionRequest, ActionType, ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment,
+        WarpType,
     },
 };
 use parking_lot::Mutex;
@@ -17,8 +16,7 @@ use crate::{
     server::{
         WorldServer,
         action::execute_action,
-        actor::NetworkedActor,
-        instance::Instance,
+        actor::spawn_custom_bnpc,
         network::{DestinationNetwork, NetworkState},
         zone::change_zone_warp_to_pop_range,
     },
@@ -162,57 +160,9 @@ fn process_debug_commands(
                 && let Ok(id) = id.parse::<u32>()
             {
                 let mut data = data.lock();
+                let mut game_data = game_data.lock();
 
-                let actor_id = Instance::generate_actor_id();
-                let npc_spawn;
-                {
-                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                        return true;
-                    };
-
-                    let Some(actor) = instance.find_actor(from_actor_id) else {
-                        return true;
-                    };
-
-                    let NetworkedActor::Player { spawn, .. } = actor else {
-                        return true;
-                    };
-
-                    let (model_chara, battalion, customize, rank, npc_equip, equip, behavior);
-                    {
-                        let mut game_data = game_data.lock();
-                        (model_chara, battalion, customize, rank, npc_equip, behavior) =
-                            game_data.find_bnpc(id).unwrap();
-                        equip = game_data
-                            .get_npc_equip(npc_equip as u32)
-                            .unwrap_or_default()
-                    }
-
-                    npc_spawn = SpawnNpc {
-                        character_data_flags: CharacterDataFlag::HOSTILE,
-                        character_data_icon: rank,
-                        common: CommonSpawn {
-                            health_points: 1500,
-                            max_health_points: 1500,
-                            resource_points: 100,
-                            max_resource_points: 100,
-                            base_id: id,
-                            name_id: 405,
-                            object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
-                            level: 1,
-                            battalion,
-                            model_chara,
-                            position: spawn.common.position,
-                            look: customize,
-                            behavior,
-                            ..equip
-                        },
-                        ..Default::default()
-                    };
-
-                    let config = get_config();
-                    instance.insert_npc(actor_id, npc_spawn.clone(), &config);
-                }
+                spawn_custom_bnpc(&mut data, &mut game_data, from_actor_id, id, 405);
             }
             true
         }
@@ -302,6 +252,13 @@ fn process_debug_commands(
                     0,
                 );
             }
+
+            true
+        }
+        "!strikingdummy" => {
+            let mut data = data.lock();
+            let mut game_data = game_data.lock();
+            spawn_custom_bnpc(&mut data, &mut game_data, from_actor_id, 11744, 541);
 
             true
         }

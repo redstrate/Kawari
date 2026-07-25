@@ -878,21 +878,6 @@ pub fn handle_director_messages(data: Arc<Mutex<WorldServer>>, msg: &ToServer) -
 
             true
         }
-        ToServer::VariantVote(from_actor_id, vote) => {
-            let mut data = data.lock();
-            let Some(instance) = data.find_actor_instance_mut(*from_actor_id) else {
-                tracing::warn!("Somehow failed to find an instance for actor?");
-                return true;
-            };
-
-            if let Some(director) = &mut instance.director {
-                director.variant_vote(*vote);
-            } else {
-                tracing::warn!("Expected a director when recieving a VariantVote?");
-            }
-
-            true
-        }
         _ => false,
     }
 }

@@ -4,10 +4,10 @@ use std::time::{Instant, SystemTime};
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    ContainerType, DEBUG_COMMAND_TRIGGER, DirectorEvent, DirectorTrigger, DutyOption, FestivalId,
-    HandlerId, HandlerType, ItemOperationKind, LogMessageType, MaxEx, ObjectId, ObjectTypeId,
-    ObjectTypeKind, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position,
-    QuestSpecialFlags, calculate_max_level,
+    ContainerType, DEBUG_COMMAND_TRIGGER, DutyOption, FestivalId, HandlerId, HandlerType,
+    ItemOperationKind, LogMessageType, MaxEx, ObjectId, ObjectTypeId, ObjectTypeKind,
+    PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position, QuestSpecialFlags,
+    calculate_max_level,
 };
 use kawari::config::get_config;
 use kawari_world::inventory::{Item, MAX_LARGE_STORAGE, Storage, get_next_free_slot};
@@ -1084,116 +1084,6 @@ async fn process_packet(
                                 }
                                 ClientTriggerCommand::SeenCutscene { id } => {
                                     connection.player_data.unlock.cutscene_seen.set(id);
-                                }
-                                ClientTriggerCommand::DirectorTrigger {
-                                    handler_id,
-                                    trigger,
-                                } => {
-                                    // TODO: move to server state? why is this here?
-
-                                    match trigger {
-                                        DirectorTrigger::Sync { .. } => {
-                                            // Always send a sync response for now
-                                            connection
-                                                .actor_control_self(
-                                                    ActorControlCategory::DirectorEvent {
-                                                        handler_id,
-                                                        event: DirectorEvent::SyncResponse {
-                                                            arg1: 1,
-                                                            arg2: 0,
-                                                            arg3: 0,
-                                                            arg4: 0,
-                                                        },
-                                                    },
-                                                )
-                                                .await;
-                                        }
-                                        DirectorTrigger::SummonStrikingDummy { .. } => {
-                                            tracing::info!(
-                                                "Spawning a striking dummy is unsupported!"
-                                            );
-                                        }
-                                        DirectorTrigger::GoldSaucerUnk1 { .. } => {
-                                            // dummied out
-                                        }
-                                        DirectorTrigger::GoldSaucerUnk2 { .. } => {
-                                            // hardcoded for now
-
-                                            connection
-                                                .actor_control_self(
-                                                    ActorControlCategory::DirectorEvent {
-                                                        handler_id,
-                                                        event: DirectorEvent::Unknown {
-                                                            id: 9,
-                                                            arg1: 74,
-                                                            arg2: 1,
-                                                            arg3: 0,
-                                                            arg4: 0,
-                                                        },
-                                                    },
-                                                )
-                                                .await;
-
-                                            connection
-                                                .actor_control_self(
-                                                    ActorControlCategory::DirectorEvent {
-                                                        handler_id,
-                                                        event: DirectorEvent::Unknown {
-                                                            id: 6,
-                                                            arg1: 7773571, // TODO: hardcoded to the air force one attendant for now
-                                                            arg2: 1775917801,
-                                                            arg3: 0,
-                                                            arg4: 0,
-                                                        },
-                                                    },
-                                                )
-                                                .await;
-
-                                            connection
-                                                .actor_control_self(
-                                                    ActorControlCategory::DirectorEvent {
-                                                        handler_id,
-                                                        event: DirectorEvent::Unknown {
-                                                            id: 11,
-                                                            arg1: 3,
-                                                            arg2: 0,
-                                                            arg3: 0,
-                                                            arg4: 0,
-                                                        },
-                                                    },
-                                                )
-                                                .await;
-
-                                            connection
-                                                .handle
-                                                .send(ToServer::SpawnLayoutNpc(
-                                                    connection.player_data.character.actor_id,
-                                                    7773571, // TODO: hardcoded to airforce one NPC for now
-                                                ))
-                                                .await;
-                                        }
-                                        DirectorTrigger::VariantVote { route } => {
-                                            connection
-                                                .handle
-                                                .send(ToServer::VariantVote(
-                                                    connection.player_data.character.actor_id,
-                                                    route,
-                                                ))
-                                                .await;
-
-                                            connection
-                                                .actor_control_self(
-                                                    ActorControlCategory::DirectorEvent {
-                                                        handler_id,
-                                                        event: DirectorEvent::HideVariantVoteRoute,
-                                                    },
-                                                )
-                                                .await;
-                                        }
-                                        _ => tracing::info!(
-                                            "DirectorTrigger: {handler_id} {trigger:?}"
-                                        ),
-                                    }
                                 }
                                 ClientTriggerCommand::OpenGoldSaucerGeneralTab {} => {
                                     let ipc = ServerZoneIpcSegment::new(

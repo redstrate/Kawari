@@ -465,8 +465,6 @@ pub enum ToServer {
     Jump(ClientId, String),
     /// Teleport the player to this one.
     Call(ObjectId, String),
-    /// Spawns an NPC defined by the layout or drop-in.
-    SpawnLayoutNpc(ObjectId, u32),
     /// The client places a piece of furniture.
     PlaceFurniture(
         ObjectId,
@@ -483,8 +481,6 @@ pub enum ToServer {
     TranslateFurniture(ObjectId, (bool, u8), u16, Position, f32, bool),
     /// The client offers a teleport to nearby party members.
     OfferTeleportToParty(Option<u64>, ObjectId, u16, TeleportQuery),
-    /// A Variant Dungeon route was chosen.
-    VariantVote(ObjectId, u32),
 }
 
 #[derive(Clone, Debug)]

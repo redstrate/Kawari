@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, sync::Arc};
 
 use crate::{
-    ClientId, FromServer, StatusEffects,
+    ClientId, FromServer, GameData, StatusEffects,
     server::{
         WorldServer,
         instance::{Instance, QueuedTaskData},
@@ -15,9 +15,10 @@ use kawari::{
         CharacterMode, DEAD_FADE_OUT_TIME, DistanceRange, ObjectId, Position,
         SharedGroupTimelineState, Timeline, TimepointData,
     },
+    config::get_config,
     ipc::zone::{
-        ActorControlCategory, CommonSpawn, Conditions, ServerZoneIpcData, ServerZoneIpcSegment,
-        SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure,
+        ActorControlCategory, BattleNpcSubKind, CommonSpawn, Conditions, ObjectKind,
+        ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure,
     },
 };
 use parking_lot::Mutex;
@@ -436,5 +437,97 @@ pub fn update_actor_hp_mp(
 
     if send_kill_actor {
         kill_actor(network.clone(), instance, target_actor_id);
+    }
+}
+
+pub fn spawn_custom_bnpc(
+    data: &mut WorldServer,
+    game_data: &mut GameData,
+    from_actor_id: ObjectId,
+    base_id: u32,
+    name_id: u32,
+) {
+    let actor_id = Instance::generate_actor_id();
+    {
+        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+            return;
+        };
+
+        let Some(actor) = instance.find_actor(from_actor_id) else {
+            return;
+        };
+
+        let NetworkedActor::Player { spawn, .. } = actor else {
+            return;
+        };
+
+        let base_npc = create_npc_common_spawn(game_data, base_id, name_id, None, 1);
+        let npc_spawn = SpawnNpc {
+            common: CommonSpawn {
+                position: spawn.common.position,
+                ..base_npc.common
+            },
+            ..base_npc
+        };
+
+        let config = get_config();
+        instance.insert_npc(actor_id, npc_spawn.clone(), &config);
+    }
+}
+
+/// Creates the NPC spawn data based off of game data and whatever parameters you require.
+pub fn create_npc_common_spawn(
+    game_data: &mut GameData,
+    base_id: u32,
+    name_id: u32,
+    hp: Option<u32>,
+    level: u32,
+) -> SpawnNpc {
+    let (model_chara, battalion, customize, rank, equip, behavior) =
+        game_data.find_bnpc(base_id).unwrap();
+
+    let usable_hp;
+    if let Some(hp) = hp {
+        usable_hp = hp;
+    } else {
+        let classjob_id = 0; // Pretty sure it's this for all enemies
+        let modifiers = game_data
+            .get_class_job_modifiers(classjob_id as u32)
+            .expect("Failed to read param grow");
+
+        let attributes = game_data
+            .get_racial_base_attributes(classjob_id)
+            .expect("Failed to read racial attributes");
+
+        let param_grow = game_data
+            .get_param_grow(level)
+            .expect("Failed to read param grow");
+
+        let mut base_parameters = BaseParameters::default();
+        let primary_stat = game_data
+            .get_job_primary_stat(classjob_id as u16)
+            .unwrap_or(1);
+        base_parameters.perform_calculations(primary_stat, &attributes, &param_grow, &modifiers);
+        base_parameters.calculate_potencies(&param_grow, None); // TODO: If NPCs have classjob modifiers and such, change that None!
+
+        usable_hp = base_parameters.hp;
+    }
+
+    SpawnNpc {
+        character_data_icon: rank,
+        common: CommonSpawn {
+            base_id,
+            name_id,
+            max_health_points: usable_hp,
+            health_points: usable_hp,
+            model_chara,
+            object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Enemy),
+            battalion,
+            level: level as u8,
+            look: customize,
+            behavior,
+            ..game_data.get_npc_equip(equip as u32).unwrap_or_default()
+        },
+        ..Default::default()
     }
 }

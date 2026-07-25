@@ -10,7 +10,7 @@ use crate::{
     lua::{EffectsBuilder, KawariLua, KawariLuaState, LuaContent, LuaPlayer, LuaZone},
     server::{
         WorldServer,
-        actor::{NetworkedActor, update_actor_hp_mp},
+        actor::{NetworkedActor, create_npc_common_spawn, update_actor_hp_mp},
         effect::gain_effect,
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
@@ -344,24 +344,27 @@ pub fn execute_action(
                         let pet_actor_id = ObjectId(fastrand::u32(..));
 
                         let config = get_config();
+                        let mut game_data = game_data.lock();
+                        let base_npc = create_npc_common_spawn(
+                            &mut game_data,
+                            13498,
+                            10261,
+                            None,
+                            actor.get_common_spawn().level as u32,
+                        ); // TODO: hardcoded pet base id/name
                         instance.insert_npc(
                             pet_actor_id,
                             SpawnNpc {
                                 common: CommonSpawn {
-                                    base_id: 13498, // TODO: hardcoded
-                                    name_id: 10261,
                                     pet_id,
                                     owner_id: from_actor_id,
-                                    max_health_points: 100, // TODO
-                                    health_points: 100,
-                                    model_chara: 411, // TODO: hardcoded
                                     object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Pet),
                                     level: actor.get_common_spawn().level,
                                     position: actor.position(),
                                     rotation: actor.rotation(),
-                                    ..Default::default()
+                                    ..base_npc.common
                                 },
-                                ..Default::default()
+                                ..base_npc
                             },
                             &config,
                         );
