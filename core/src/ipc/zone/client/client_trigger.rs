@@ -433,6 +433,10 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 2100u32)]
     ToggleNoviceStatus {},
 
+    /// Sent when the "Join Novice Network" button is pressed in the chat window.
+    #[brw(magic = 2102u32)]
+    JoinNoviceNetwork {},
+
     /// Sent whenever the client requests to duel another player.
     #[brw(magic = 2200u32)]
     RequestDuel {
