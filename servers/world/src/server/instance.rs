@@ -50,32 +50,19 @@ pub enum QueuedTaskData {
         effect_source_actor_id: ObjectId,
     },
     /// Fade out a dead actor.
-    DeadFadeOut {
-        actor_id: ObjectId,
-    },
+    DeadFadeOut { actor_id: ObjectId },
     /// Despawn a dead actor.
-    DeadDespawn {
-        actor_id: ObjectId,
-    },
+    DeadDespawn { actor_id: ObjectId },
     /// Complete an EventAction
-    CastEventAction {
-        target: ObjectId,
-    },
+    CastEventAction { target: ObjectId },
     /// Make a fish bite.
     FishBite,
     /// Seal a boss wall.
-    SealBossWall {
-        id: u32,
-        place_name: u32,
-    },
+    SealBossWall { id: u32, place_name: u32 },
     /// Generically send a packet segment, only used for `do_change_zone`. Don't abuse this as a generic task, you almost certainly want to create a new variant.
-    PacketSegment {
-        segment: ServerZoneIpcSegment,
-    },
+    PacketSegment { segment: ServerZoneIpcSegment },
     /// Used by directors since its tough to fit this into the director logic.
-    WarpToPopRange {
-        id: u32,
-    },
+    WarpToPopRange { id: u32 },
     /// Reset a player's action combo status.
     ResetCombo,
 }

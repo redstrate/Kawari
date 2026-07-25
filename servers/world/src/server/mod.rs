@@ -14,16 +14,28 @@ use crate::{
     GameData, Navmesh,
     lua::KawariLua,
     server::{
-        action::{
-            execute_action, handle_action_messages,
-        }, actor::{NetworkedActor, NpcState, kill_actor, set_character_mode, set_player_minion, update_actor_hp_mp}, chat::handle_chat_messages, director::{DirectorData, director_tick, handle_director_messages}, effect::{handle_effect_messages, remove_effect, send_effects_list}, instance::{Instance, NavmeshGenerationStep, QueuedTaskData}, linkshell::handle_linkshell_messages, network::{DestinationNetwork, NetworkState}, party::{
+        action::{execute_action, handle_action_messages},
+        actor::{
+            NetworkedActor, NpcState, kill_actor, set_character_mode, set_player_minion,
+            update_actor_hp_mp,
+        },
+        chat::handle_chat_messages,
+        director::{DirectorData, director_tick, handle_director_messages},
+        effect::{handle_effect_messages, remove_effect, send_effects_list},
+        instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
+        linkshell::handle_linkshell_messages,
+        network::{DestinationNetwork, NetworkState},
+        party::{
             NUM_TARGET_SIGNS, get_party_id_from_actor_id, handle_party_messages,
             send_party_positions, update_party_position, update_party_waymark,
             update_party_waymarks,
-        }, social::handle_social_messages, spawn_allocator::SpawnAllocator, zone::{
+        },
+        social::handle_social_messages,
+        spawn_allocator::SpawnAllocator,
+        zone::{
             MapGimmick, change_zone_to_player, change_zone_warp_to_entrance,
             change_zone_warp_to_pop_range, handle_zone_messages,
-        }
+        },
     },
 };
 use kawari::{
@@ -53,8 +65,8 @@ mod party;
 pub use party::{Party, PartyMember};
 mod npc_behavior;
 mod social;
-mod zone;
 mod spawn_allocator;
+mod zone;
 
 #[derive(Default, Debug, Clone)]
 struct ClientState {
@@ -154,6 +166,11 @@ impl WorldServer {
             .filesystem
             .locate_script_file(&format!("content/{content_short_name}.lua"));
 
+        let mut director = DirectorData {
+            id,
+            ..Default::default()
+        };
+
         let result = std::fs::read(&file_name);
         if let Err(err) = result {
             tracing::warn!(
@@ -176,24 +193,14 @@ impl WorldServer {
                     err
                 );
             } else {
-                let mut director = DirectorData {
-                    id,
-                    flag: 0,
-                    data: [0; 10],
-                    lua,
-                    tasks: Vec::new(),
-                    bosses: HashMap::new(),
-                    shortcut_poprange_id: None,
-                };
+                director.lua = lua;
 
                 // Call into the onSetup function before returning, as we need the flag to be initialized before any players change zones.
                 director.setup();
-
-                instance.director = Some(director);
             }
         }
 
-        // TODO: init director even if script isn't found
+        instance.director = Some(director);
 
         // Ensure we have the entrance set correctly
         let entrance_id = game_data
@@ -236,7 +243,6 @@ impl WorldServer {
     }
 }
 
-
 fn server_logic_tick(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
@@ -261,12 +267,7 @@ fn server_logic_tick(
 
         for instance in &mut data.instances {
             let mut haters = HashMap::new();
-            npc_behavior::npc_behavior(
-                network.clone(),
-                gamedata.clone(),
-                instance,
-                &mut haters,
-            );
+            npc_behavior::npc_behavior(network.clone(), gamedata.clone(), instance, &mut haters);
 
             let mut actors_now_gimmick_jumping = Vec::new();
             let mut actors_now_inside_instance_exits = Vec::new();
@@ -734,11 +735,7 @@ pub async fn server_main_loop(
                 interval.tick().await;
 
                 // Execute general server logic
-                server_logic_tick(
-                    data.clone(),
-                    network.clone(),
-                    game_data.clone(),
-                );
+                server_logic_tick(data.clone(), network.clone(), game_data.clone());
 
                 // Execute list of queued tasks
                 {
@@ -1972,6 +1969,7 @@ pub async fn server_main_loop(
 
                                 change_zone_warp_to_entrance(
                                     &mut network,
+                                    &mut game_data,
                                     target_instance,
                                     true, // TODO: this shouldn't be hardcoded
                                     *client_id,

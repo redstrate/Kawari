@@ -258,7 +258,7 @@ pub struct DirectorBoss {
     place_name: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct DirectorData {
     pub id: HandlerId,
     pub flag: u8,

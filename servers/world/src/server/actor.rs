@@ -1,12 +1,24 @@
 use std::{collections::VecDeque, sync::Arc};
 
 use crate::{
-    ClientId, FromServer, StatusEffects, server::{WorldServer, instance::{Instance, QueuedTaskData}, network::{DestinationNetwork, NetworkState}}, zone_connection::{BaseParameters, TeleportQuery}
+    ClientId, FromServer, StatusEffects,
+    server::{
+        WorldServer,
+        instance::{Instance, QueuedTaskData},
+        network::{DestinationNetwork, NetworkState},
+    },
+    zone_connection::{BaseParameters, TeleportQuery},
 };
 use glam::Vec3;
 use kawari::{
-    common::{CharacterMode, DEAD_FADE_OUT_TIME, DistanceRange, ObjectId, Position, SharedGroupTimelineState, Timeline, TimepointData},
-    ipc::zone::{ActorControlCategory, CommonSpawn, Conditions, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure},
+    common::{
+        CharacterMode, DEAD_FADE_OUT_TIME, DistanceRange, ObjectId, Position,
+        SharedGroupTimelineState, Timeline, TimepointData,
+    },
+    ipc::zone::{
+        ActorControlCategory, CommonSpawn, Conditions, ServerZoneIpcData, ServerZoneIpcSegment,
+        SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure,
+    },
 };
 use parking_lot::Mutex;
 
@@ -326,67 +338,67 @@ pub fn kill_actor(
     let mut position = None;
     if let Some(actor) = instance.find_actor(from_actor_id)
         && let Some(npc) = actor.get_npc_spawn()
-        {
-            npc_id = Some(npc.common.layout_id);
+    {
+        npc_id = Some(npc.common.layout_id);
+    }
+
+    // Transistion into the dead state so they stop moving.
+    if let Some(actor) = instance.find_actor_mut(from_actor_id)
+        && let NetworkedActor::Npc { state, spawn, .. } = actor
+    {
+        *state = NpcState::Dead;
+        position = Some(spawn.common.position);
+    }
+
+    if let Some(npc_id) = npc_id
+        && let Some(director) = &mut instance.director
+    {
+        director.on_actor_death(npc_id, position.unwrap());
+    }
+
+    // Cancel existing tasks
+    instance.cancel_actor_tasks(from_actor_id);
+
+    // Queue up despawn if this is an NPC
+    if let Some(actor) = instance.find_actor_mut(from_actor_id)
+        && let NetworkedActor::Npc {
+            spawn, timeline, ..
+        } = actor
+    {
+        let mut new_timeline_states = Vec::new();
+
+        // Play any timeline actions on death.
+        // TODO: please de-duplicate with the other handler if possible!
+        for action in &timeline.on_death {
+            match action {
+                TimepointData::TimelineState { states } => {
+                    // Find the event object bound to our gimmick.
+                    let gimmick_id = spawn.gimmick_id;
+                    new_timeline_states.push((gimmick_id, states.clone()));
+                }
+                _ => unimplemented!(),
+            }
         }
 
-        // Transistion into the dead state so they stop moving.
-        if let Some(actor) = instance.find_actor_mut(from_actor_id)
-            && let NetworkedActor::Npc { state, spawn, .. } = actor
+        for (gimmick_id, states) in new_timeline_states {
+            let actor_id;
             {
-                *state = NpcState::Dead;
-                position = Some(spawn.common.position);
+                actor_id = instance.find_object_by_bind_layout_id(gimmick_id);
             }
+            if let Some(actor_id) = actor_id {
+                set_shared_group_timeline_state(instance, &mut network, actor_id, &states);
+            }
+        }
 
-            if let Some(npc_id) = npc_id
-                && let Some(director) = &mut instance.director
-                {
-                    director.on_actor_death(npc_id, position.unwrap());
-                }
-
-                // Cancel existing tasks
-                instance.cancel_actor_tasks(from_actor_id);
-
-            // Queue up despawn if this is an NPC
-            if let Some(actor) = instance.find_actor_mut(from_actor_id)
-                && let NetworkedActor::Npc {
-                    spawn, timeline, ..
-                } = actor
-                {
-                    let mut new_timeline_states = Vec::new();
-
-                    // Play any timeline actions on death.
-                    // TODO: please de-duplicate with the other handler if possible!
-                    for action in &timeline.on_death {
-                        match action {
-                            TimepointData::TimelineState { states } => {
-                                // Find the event object bound to our gimmick.
-                                let gimmick_id = spawn.gimmick_id;
-                                new_timeline_states.push((gimmick_id, states.clone()));
-                            }
-                            _ => unimplemented!(),
-                        }
-                    }
-
-                    for (gimmick_id, states) in new_timeline_states {
-                        let actor_id;
-                        {
-                            actor_id = instance.find_object_by_bind_layout_id(gimmick_id);
-                        }
-                        if let Some(actor_id) = actor_id {
-                            set_shared_group_timeline_state(instance, &mut network, actor_id, &states);
-                        }
-                    }
-
-                    instance.insert_task(
-                        ClientId::default(),
-                                         from_actor_id,
-                                         DEAD_FADE_OUT_TIME,
-                                         QueuedTaskData::DeadFadeOut {
-                                             actor_id: from_actor_id,
-                                         },
-                    );
-                }
+        instance.insert_task(
+            ClientId::default(),
+            from_actor_id,
+            DEAD_FADE_OUT_TIME,
+            QueuedTaskData::DeadFadeOut {
+                actor_id: from_actor_id,
+            },
+        );
+    }
 }
 
 /// Updates other actors about this actor's HP and MP.
@@ -415,7 +427,7 @@ pub fn update_actor_hp_mp(
                 target_actor_id,
                 instance,
                 FromServer::PacketSegment(ipc, target_actor_id),
-                                                     DestinationNetwork::ZoneClients,
+                DestinationNetwork::ZoneClients,
             );
         }
 

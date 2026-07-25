@@ -956,13 +956,29 @@ pub fn change_zone_warp_to_pop_range(
 /// Sends the needed information to ZoneConnection for a zone change.
 pub fn change_zone_warp_to_entrance(
     network: &mut NetworkState,
+    game_data: &mut GameData,
     target_instance: &mut Instance,
     needs_init_zone: bool,
     from_id: ClientId,
 ) {
+    let mut destiation_object = None;
+
+    if let Some(director) = &target_instance.director {
+        // Some PublicContent has the pop range defined in the Excel sheet, we can use that if available.
+        if director.id.handler_type() == HandlerType::PublicContent
+            && let Some(pop_range_id) =
+                game_data.find_public_content_pop_range(director.id.event_id())
+        {
+            destiation_object = target_instance
+                .zone
+                .find_pop_range(pop_range_id)
+                .map(|(x, _)| x);
+        }
+    }
+
     let exit_position;
     let exit_rotation;
-    if let Some(destination_object) = target_instance.zone.find_entrance() {
+    if let Some(destination_object) = destiation_object.or(target_instance.zone.find_entrance()) {
         let (_, rotation, translation) =
             Affine3A::from(destination_object.transform).to_scale_rotation_translation();
         exit_position = Some(Position(translation));

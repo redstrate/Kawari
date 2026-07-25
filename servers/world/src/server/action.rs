@@ -18,10 +18,7 @@ use crate::{
     zone_connection::{BaseParameters, TeleportQuery},
 };
 use kawari::{
-    common::{
-        ANIMATION_LOCK_TIME, COMBO_TIMEOUT, CharacterMode, ObjectId,
-        STRIKING_DUMMY_NAME_ID,
-    },
+    common::{ANIMATION_LOCK_TIME, COMBO_TIMEOUT, CharacterMode, ObjectId, STRIKING_DUMMY_NAME_ID},
     config::get_config,
     ipc::zone::{
         ActionEffect, ActionRequest, ActionResult, ActionType, ActorControlCategory,
@@ -802,4 +799,3 @@ pub fn execute_mount_action(
 
     None
 }
-

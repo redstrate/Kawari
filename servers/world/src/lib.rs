@@ -10,9 +10,7 @@ use diesel::sql_types::Text;
 use diesel::sqlite::Sqlite;
 use kawari::constants::CLASSJOB_ARRAY_SIZE;
 use serde::{Deserialize, Serialize};
-pub use zone_connection::{
-    ObsfucationData, PlayerData, TeleportReason, ZoneConnection,
-};
+pub use zone_connection::{ObsfucationData, PlayerData, TeleportReason, ZoneConnection};
 
 mod database;
 pub use database::{Content, Unlock, WorldDatabase};

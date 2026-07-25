@@ -42,6 +42,7 @@ use icarus::Opening::OpeningSheet;
 use icarus::ParamGrow::{ParamGrowRow, ParamGrowSheet};
 use icarus::PlaceName::PlaceNameSheet;
 use icarus::PreHandler::PreHandlerSheet;
+use icarus::PublicContent::PublicContentSheet;
 use icarus::Quest::QuestSheet;
 use icarus::Recipe::RecipeSheet;
 use icarus::SpecialShop::SpecialShopSheet;
@@ -99,6 +100,7 @@ pub struct GameData {
     pub gathering_point_base_sheet: GatheringPointBaseSheet,
     pub gathering_item_sheet: GatheringItemSheet,
     pub gathering_item_level_convert_table_sheet: GatheringItemLevelConvertTableSheet,
+    pub public_content_sheet: PublicContentSheet,
 }
 
 impl Default for GameData {
@@ -361,6 +363,9 @@ impl GameData {
             GatheringItemLevelConvertTableSheet::read_from(&mut resource_resolver, Language::None)
                 .unwrap();
 
+        let public_content_sheet =
+            PublicContentSheet::read_from(&mut resource_resolver, config.world.language()).unwrap();
+
         Self {
             resource: resource_resolver,
             item_sheet,
@@ -393,6 +398,7 @@ impl GameData {
             gathering_point_base_sheet,
             gathering_item_sheet,
             gathering_item_level_convert_table_sheet,
+            public_content_sheet,
         }
     }
 
@@ -1637,6 +1643,11 @@ impl GameData {
             .find(|x| x.1.Data == id)
             .map(|x| x.0)
             .unwrap_or_default()
+    }
+
+    /// Returns the pop range ID for this public content, if one is defined.
+    pub fn find_public_content_pop_range(&mut self, id: u32) -> Option<u32> {
+        Some(self.public_content_sheet.row(id)?.LGBPopRange).filter(|x| *x != 0)
     }
 }
 
