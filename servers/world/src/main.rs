@@ -2627,6 +2627,12 @@ async fn process_packet(
                         }
                         ClientZoneIpcData::SetClientLanguage { language } => {
                             connection.player_data.volatile.client_language = *language;
+
+                            // We need to commit this to the database again since this is read everywhere.
+                            {
+                                let mut database = connection.database.lock();
+                                database.commit_volatile(&connection.player_data);
+                            }
                         }
                         ClientZoneIpcData::RequestCharaInfoFromContentIds { .. } => {
                             tracing::info!(
