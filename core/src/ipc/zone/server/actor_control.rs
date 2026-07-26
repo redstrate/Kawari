@@ -947,12 +947,11 @@ pub enum ActorControlCategory {
 
     /// Sets progress and other fields too. Unsure why this is used sometimes instead of FateProgress?
     #[brw(magic = 2364u32)]
-    UnkFate7 {
+    FateUpdate {
         /// Index into the FATE Excel sheet.
         fate_id: u32,
-        unk2: u32,
-        unk3: u32,
-        unk4: u32,
+        progress: u32,
+        param: u32,
     },
 
     #[brw(magic = 2365u32)]

@@ -58,10 +58,10 @@ pub struct ActorSetPos {
     /// What kind of warp this is.
     pub warp_type: WarpType,
     /// Argument based on `warp_type`.
-    pub warp_type_arg: u8,
+    pub arg: u8,
     /// Unknown purpose.
     pub transition_territory_filter_key: u32,
     /// The position to warp the player to.
-    #[brw(pad_after = 4)] // padding
+    #[brw(pad_after = 4)] // padding, not read by the client
     pub position: Position,
 }

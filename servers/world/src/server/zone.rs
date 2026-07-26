@@ -1050,7 +1050,7 @@ fn do_change_zone(
             position: exit_position.unwrap_or_default(),
             rotation: exit_rotation.unwrap_or_default(),
             warp_type,
-            warp_type_arg: 2, // unknown
+            arg: 2, // unknown
             ..Default::default()
         }));
         target_instance.insert_task(
