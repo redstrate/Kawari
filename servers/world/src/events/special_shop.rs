@@ -54,7 +54,7 @@ impl SpecialShopEventHandler {
 
         {
             let mut game_data = connection.gamedata.lock();
-            result = game_data.get_specialshop_item(event.id, item_index as u16);
+            result = game_data.get_specialshop_item(event.id.0, item_index as u16);
         }
 
         // TODO: Use the ItemCost field to determine which currency is used
@@ -84,7 +84,7 @@ impl SpecialShopEventHandler {
                     ShopEventHandler::send_gilshop_item_update(connection, add_result).await;
                     Self::send_gilshop_ack(
                         connection,
-                        event.id,
+                        event.id.0,
                         item_info.id,
                         1,
                         item_info.price_mid,

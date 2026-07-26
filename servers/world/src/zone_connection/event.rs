@@ -30,7 +30,7 @@ impl ZoneConnection {
 
         let scene = EventScene {
             actor_id: event.actor_id,
-            handler_id: HandlerId(event.id),
+            handler_id: event.id,
             scene,
             scene_flags,
             params_count: params.len() as u8,
@@ -64,7 +64,7 @@ impl ZoneConnection {
             // sent event finish
             {
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventFinish {
-                    handler_id: HandlerId(event_id),
+                    handler_id: event_id,
                     event_type,
                     result: 1,
                     arg: event_arg,
@@ -74,7 +74,7 @@ impl ZoneConnection {
         }
 
         if let Some(event) = events.last() {
-            self.event_handler_id = Some(HandlerId(event.1.id));
+            self.event_handler_id = Some(event.1.id);
         } else {
             self.event_handler_id = None;
         }
@@ -84,20 +84,20 @@ impl ZoneConnection {
     pub async fn start_event(
         &mut self,
         actor_id: ObjectTypeId,
-        event_id: u32,
+        event_id: HandlerId,
         event_type: EventType,
         event_arg: u32,
         events: &mut Vec<(Box<dyn EventHandler>, Event)>,
         lua_player: &LuaPlayer,
     ) -> bool {
         let old_event_handler_id = self.event_handler_id;
-        self.event_handler_id = Some(HandlerId(event_id));
+        self.event_handler_id = Some(event_id);
 
         // tell the client the event has started
         {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventStart(EventStart {
                 target_id: actor_id,
-                handler_id: HandlerId(event_id),
+                handler_id: event_id,
                 event_type,
                 event_arg,
                 ..Default::default()
@@ -118,7 +118,7 @@ impl ZoneConnection {
                 .copied());
 
         // call into the event dispatcher, get the event
-        let handler = dispatch_event(HandlerId(event_id), base_id, self.gamedata.clone());
+        let handler = dispatch_event(event_id, base_id, self.gamedata.clone());
 
         if let Some(handler) = handler {
             let condition = handler.condition();
@@ -142,15 +142,12 @@ impl ZoneConnection {
 
             true
         } else {
-            tracing::warn!(
-                "Event {:?} isn't scripted yet! Ignoring...",
-                HandlerId(event_id)
-            );
+            tracing::warn!("Event {:?} isn't scripted yet! Ignoring...", event_id);
 
             // give control back to the player so they aren't stuck
             {
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::EventFinish {
-                    handler_id: HandlerId(event_id),
+                    handler_id: event_id,
                     event_type,
                     result: 1,
                     arg: event_arg,

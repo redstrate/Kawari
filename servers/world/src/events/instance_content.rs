@@ -63,7 +63,7 @@ impl EventHandler for InstanceContentEventHandler {
         player: &mut LuaPlayer,
     ) {
         if event.event_type == EventType::EnterTerritory {
-            player.commence_duty(event.id);
+            player.commence_duty(event.id.0);
         }
         player.finish_event();
     }

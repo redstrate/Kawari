@@ -53,7 +53,7 @@ impl EventHandler for GatheringEventHandler {
             SceneFlags::NO_DEFAULT_CAMERA,
             vec![
                 0,
-                event.id & 0xFFFF,
+                event.id.event_id(),
                 2147485320,
                 u32::from_le_bytes([self.count, 0, self.count, 0]), // first: count, second: ??, third: remaining count, fourth: ??
                 24,
@@ -133,7 +133,7 @@ impl EventHandler for GatheringEventHandler {
         let items;
         {
             let mut gamedata = connection.gamedata.lock();
-            items = gamedata.get_gathering_point_items(event.id & 0xFFFF);
+            items = gamedata.get_gathering_point_items(event.id.event_id());
         }
 
         if results[2] == 2 {
@@ -216,7 +216,7 @@ impl EventHandler for GatheringEventHandler {
 
         let mut params = vec![
             7,
-            event.id & 0xFFFF,
+            event.id.event_id(),
             2147485320,
             u32::from_le_bytes([self.count, 0, self.count, 0]), // first: count, second: ??, third: remaining count, fourth: ??
         ];

@@ -349,7 +349,7 @@ impl ZoneConnection {
 
                     self.start_event(
                         target_object,
-                        *event_id,
+                        HandlerId(*event_id),
                         *event_type,
                         *event_arg,
                         events,

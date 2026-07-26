@@ -1155,7 +1155,7 @@ async fn process_packet(
                                     connection.glamour_information = Some(trigger.trigger.clone());
                                 }
                                 ClientTriggerCommand::BeginOrEndFishing { end } => {
-                                    let handler_id = HandlerId::new(HandlerType::Fishing, 1).0;
+                                    let handler_id = HandlerId::new(HandlerType::Fishing, 1);
                                     if !end {
                                         connection
                                             .start_event(
@@ -1188,7 +1188,7 @@ async fn process_packet(
 
                                         let ipc = ServerZoneIpcSegment::new(
                                             ServerZoneIpcData::LogMessage {
-                                                handler_id: HandlerId(handler_id),
+                                                handler_id,
                                                 message_type: 1110,
                                                 params_count: 1,
                                                 item_id: 28,
@@ -1252,7 +1252,7 @@ async fn process_packet(
                                     }
                                 }
                                 ClientTriggerCommand::BeginCraft { end, id } => {
-                                    let handler_id = HandlerId::new(HandlerType::Craft, 1).0;
+                                    let handler_id = HandlerId::new(HandlerType::Craft, 1);
                                     if !end {
                                         connection
                                             .start_event(
@@ -2064,7 +2064,7 @@ async fn process_packet(
                             if connection
                                 .start_event(
                                     *actor_id,
-                                    handler_id.0,
+                                    *handler_id,
                                     EventType::Talk,
                                     0,
                                     events,
@@ -2393,7 +2393,7 @@ async fn process_packet(
                             connection
                                 .start_event(
                                     actor_id,
-                                    handler_id.0,
+                                    *handler_id,
                                     EventType::WithinRange,
                                     *event_arg,
                                     events,
@@ -2434,7 +2434,7 @@ async fn process_packet(
                             connection
                                 .start_event(
                                     actor_id,
-                                    handler_id.0,
+                                    *handler_id,
                                     EventType::OutsideRange,
                                     *event_arg,
                                     events,
@@ -2726,7 +2726,7 @@ async fn process_packet(
                                         object_id: connection.player_data.character.actor_id,
                                         object_type: ObjectTypeKind::None,
                                     },
-                                    handler_id.0,
+                                    *handler_id,
                                     EventType::EnterTerritory,
                                     connection.player_data.volatile.zone_id as u32,
                                     events,
@@ -3827,7 +3827,7 @@ async fn process_server_msg(
                     object_id: connection.player_data.character.actor_id,
                     object_type: ObjectTypeKind::None,
                 };
-                let handler_id = HandlerId::new(HandlerType::GimmickRect, 1).0;
+                let handler_id = HandlerId::new(HandlerType::GimmickRect, 1);
 
                 connection
                     .start_event(
@@ -4019,7 +4019,7 @@ async fn process_server_msg(
                             object_id: connection.player_data.character.actor_id,
                             object_type: ObjectTypeKind::None,
                         },
-                        connection.content_handler_id.0,
+                        connection.content_handler_id,
                         EventType::GameProgress,
                         1,
                         events,

@@ -140,7 +140,7 @@ impl ShopEventHandler {
             let result;
             {
                 let mut game_data = connection.gamedata.lock();
-                result = game_data.get_gilshop_item(event.id, item_index as u16);
+                result = game_data.get_gilshop_item(event.id.0, item_index as u16);
             }
 
             if let Some(item_info) = result {
@@ -171,7 +171,7 @@ impl ShopEventHandler {
                         Self::send_gilshop_item_update(connection, add_result).await;
                         Self::send_gilshop_ack(
                             connection,
-                            event.id,
+                            event.id.0,
                             item_info.id,
                             item_quantity,
                             item_info.price_mid,
@@ -229,7 +229,7 @@ impl ShopEventHandler {
                 connection
                     .player_data
                     .buyback_list
-                    .push_item(event.id, bb_item);
+                    .push_item(event.id.0, bb_item);
 
                 connection.player_data.inventory.currency.gil.quantity +=
                     quantity * item_info.price_low;
@@ -302,7 +302,7 @@ impl ShopEventHandler {
 
                 Self::send_gilshop_ack(
                     connection,
-                    event.id,
+                    event.id.0,
                     item_info.id,
                     quantity,
                     item_info.price_low,
@@ -313,7 +313,7 @@ impl ShopEventHandler {
                 let mut params = connection
                     .player_data
                     .buyback_list
-                    .as_scene_params(event.id, false);
+                    .as_scene_params(event.id.0, false);
                 params[0] = SELL as u32;
                 params[1] = 0; // The "terminator" is 0 for sell mode.
                 connection
@@ -392,7 +392,7 @@ impl EventHandler for ShopEventHandler {
         // When the client concludes business with the shop, the scene finishes and returns control to the server. The server will then have the client play scene 255 with no params.
 
         if scene == Self::SCENE_GREETING {
-            let buyback_list = Self::get_buyback_list(connection, event.id, true);
+            let buyback_list = Self::get_buyback_list(connection, event.id.0, true);
             player.play_scene(
                 Self::SCENE_SHOW_SHOP,
                 SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR,
@@ -403,9 +403,9 @@ impl EventHandler for ShopEventHandler {
             // It shouldn't even be possible to get into a situation where results[1] isn't BUYBACK, but we'll leave it as a guard.
             if !results.is_empty() && results[0] == buyback {
                 let item_index = results[1];
-                Self::do_gilshop_buyback(connection, event.id, item_index as u32).await;
+                Self::do_gilshop_buyback(connection, event.id.0, item_index as u32).await;
 
-                let mut buyback_list = Self::get_buyback_list(connection, event.id, false);
+                let mut buyback_list = Self::get_buyback_list(connection, event.id.0, false);
                 buyback_list[0] = buyback as u32;
                 buyback_list[1] = 100; // Unknown what this 100 represents: a terminator, perhaps? For sell mode it's 0, while buy and buyback are both 100.
                 player.play_scene(

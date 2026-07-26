@@ -18,7 +18,7 @@ use super::lua::LuaPlayer;
 
 #[derive(Debug)]
 pub struct Event {
-    pub id: u32,
+    pub id: HandlerId,
     pub event_type: EventType,
     pub event_arg: u32,
     /// The condition set for this event.
@@ -139,7 +139,7 @@ pub fn dispatch_event(
         }
         HandlerType::Aetheryte => {
             // The Aetheryte sheet actually begins at 0, not 327680
-            let aetheryte_id = handler_id.0 & 0xFFF;
+            let aetheryte_id = handler_id.event_id();
 
             // Aetherytes and Aethernet shards are handled by different event scripts
             let is_aetheryte;
