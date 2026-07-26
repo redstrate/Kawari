@@ -9,14 +9,14 @@ use crate::{
 use kawari::{
     common::{
         FestivalId, HandlerId, HandlerType, HouseId, HouseUnit, HousingFlag, LandData, Position,
-        timestamp_secs,
+        WarpType, timestamp_secs,
     },
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
         ActorControlCategory, Condition, DutyFinderSetting, FurnitureList, House, HouseExterior,
         HouseList, HouseStatus, HousingInteriorDetails, MapEffects, PlotSize, ServerZoneIpcData,
-        ServerZoneIpcSegment, WarpType, WeatherChange, ZoneInit, ZoneInitFlags,
+        ServerZoneIpcSegment, WeatherChange, ZoneInit, ZoneInitFlags,
     },
     packet::{ConnectionState, PacketSegment, ScramblerKeyGenerator, SegmentData, SegmentType},
 };

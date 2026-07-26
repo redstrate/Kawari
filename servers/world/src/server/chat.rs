@@ -2,10 +2,9 @@ use std::sync::Arc;
 
 use bstr::BString;
 use kawari::{
-    common::{DEBUG_COMMAND_TRIGGER, ObjectId},
+    common::{DEBUG_COMMAND_TRIGGER, ObjectId, WarpType},
     ipc::zone::{
         ActionRequest, ActionType, ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment,
-        WarpType,
     },
 };
 use parking_lot::Mutex;

@@ -9,7 +9,7 @@ use crate::{
 use kawari::{
     common::{
         ContainerType, DirectorEvent, ERR_INVENTORY_ADD_FAILED, HandlerId, InstanceContentType,
-        ObjectTypeId, ObjectTypeKind,
+        ObjectTypeId, ObjectTypeKind, WarpType,
     },
     constants::{
         ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
@@ -20,7 +20,7 @@ use kawari::{
     },
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, ClientTriggerCommand, ItemInfo, ServerZoneIpcData,
-        ServerZoneIpcSegment, WarpType,
+        ServerZoneIpcSegment,
     },
 };
 use physis::race::{Gender, Race, Tribe};

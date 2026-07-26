@@ -5,6 +5,7 @@ use physis::savedata::chardat::CustomizeData;
 
 use super::OnlineStatusMask;
 pub use super::social_list::{SocialList, SocialListUIFlags, SocialListUILanguages};
+use crate::common::WarpType;
 
 mod chara_info;
 use chara_info::CharaInfoFromContentIdsData;
@@ -64,7 +65,7 @@ pub use action_result::{
 };
 
 mod actor_set_pos;
-pub use actor_set_pos::{ActorSetPos, WarpType};
+pub use actor_set_pos::ActorSetPos;
 
 mod equip;
 pub use equip::Equip;

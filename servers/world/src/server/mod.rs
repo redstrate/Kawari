@@ -42,12 +42,13 @@ use kawari::{
     common::{
         CharacterMode, DEAD_DESPAWN_TIME, DirectorEvent, DirectorTrigger, EventState, HandlerId,
         HandlerType, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, ObjectId, ObjectTypeId,
-        ObjectTypeKind, Position, determine_initial_pop_range, euler_to_direction, is_private_area,
+        ObjectTypeKind, Position, WarpType, determine_initial_pop_range, euler_to_direction,
+        is_private_area,
     },
     config::get_config,
     ipc::zone::{
         ActorControlCategory, ClientTriggerCommand, Condition, Conditions, EnmityList, Hater,
-        HaterList, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, WarpType, WaymarkPreset,
+        HaterList, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPreset,
     },
 };
 

@@ -17,7 +17,8 @@ use crate::{
 use kawari::{
     common::{
         CharacterMode, ContainerType, JumpState, LegacyEquipmentModelId, LogMessageType,
-        MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId, Position, WeaponModelId,
+        MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId, Position, WarpType,
+        WeaponModelId,
     },
     ipc::{
         chat::{CWLinkshellMessage, ChatChannelType, PartyMessage, TellMessage},
@@ -26,7 +27,7 @@ use kawari::{
             ClientTrigger, Conditions, Config, CrossworldLinkshellInvite, InviteReply, InviteType,
             OnlineStatus, PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus,
             ReadyCheckReply, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer,
-            SpawnTreasure, StrategyBoard, StrategyBoardUpdate, WarpType, WaymarkPlacementMode,
+            SpawnTreasure, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
             WaymarkPosition, WaymarkPreset,
         },
     },

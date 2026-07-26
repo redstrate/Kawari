@@ -27,13 +27,13 @@ use kawari::{
     common::{
         DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_EXIT,
         EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, EventState, HandlerType,
-        ObjectId, Position, WARP_DELAY, euler_to_direction, internal_housing_row,
+        ObjectId, Position, WARP_DELAY, WarpType, euler_to_direction, internal_housing_row,
     },
     config::get_config,
     ipc::zone::{
         ActorControlCategory, ActorSetPos, CharacterDataFlag, CommonSpawn, Conditions, DisplayFlag,
         ObjectKind, PrepareZoningFlag, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc,
-        SpawnObject, SpawnTreasure, WarpType,
+        SpawnObject, SpawnTreasure,
     },
 };
 
