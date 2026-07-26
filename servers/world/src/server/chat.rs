@@ -248,8 +248,6 @@ fn process_debug_commands(
                     from_id,
                     WarpType::Normal,
                     0,
-                    0,
-                    0,
                 );
             }
 

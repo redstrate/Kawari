@@ -29,7 +29,8 @@ impl ZoneConnection {
         new_zone_id: u16,
         new_position: Option<Position>,
         new_rotation: Option<f32>,
-        warp_type_info: Option<(WarpType, u8, u8, u8)>,
+        warp_type: WarpType,
+        loading_screen_vfx_id: u16,
     ) {
         self.teleport_reason = TeleportReason::NotSpecified;
         self.handle
@@ -39,7 +40,8 @@ impl ZoneConnection {
                 new_zone_id,
                 new_position,
                 new_rotation,
-                warp_type_info,
+                warp_type,
+                loading_screen_vfx_id,
             ))
             .await;
     }

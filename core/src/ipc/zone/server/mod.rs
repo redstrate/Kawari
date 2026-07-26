@@ -1,4 +1,5 @@
 use binrw::binrw;
+use bitflags::bitflags;
 use kawari_core_macro::opcode_data;
 use physis::savedata::chardat::CustomizeData;
 
@@ -196,6 +197,28 @@ use crate::ipc::zone::{ActionType, InviteReply, InviteType, InviteUpdateType, Se
 pub type ServerZoneIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ServerZoneIpcType>, ServerZoneIpcType, ServerZoneIpcData>;
 
+#[binrw]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
+pub struct PrepareZoningFlag(u8);
+
+bitflags! {
+    impl PrepareZoningFlag: u8 {
+        /// If set, the text that usually indicates the territory name is not shown.
+        const HIDE_TERRITORY_NAME = 0x1;
+        const UNK2 = 0x2; // Seen while teleporting, water->air
+        const UNK4 = 0x4; // Seen while going from portal->water, water->air
+        /// If set, the companion does not play a visible and loud despawn animation.
+        const PRESERVE_COMPANION = 0x8;
+        const UNK16 = 0x10;
+    }
+}
+
+impl std::fmt::Debug for PrepareZoningFlag {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
+    }
+}
+
 #[opcode_data(ServerZoneIpcType)]
 #[binrw]
 #[br(import(magic: &ServerZoneIpcType, size: &u32))]
@@ -218,19 +241,24 @@ pub enum ServerZoneIpcData {
     ActorSetPos(ActorSetPos),
     ServerNoticeMessage(ServerNoticeMessage),
     PrepareZoning {
+        /// If non-zero, prints this log message to the chat. Index into the LogMessage Excel sheet.
         log_message: u32,
-        /// What zone we're about to load into. Index into the TerritoryType Excel sheet.
-        target_zone: u16,
-        animation: u16,
-        /// This, in conjunction with unk1, seem to influence visual effects displayed during the zoning transition. For example, when diving, param4 is 218, and unk1 is 6 (with hide_character set to 1). When surfacing, param4 is 227, unk1 6, and hide_character 1. When going through an underwater portal, param4 is 15, unk1 is 4, and hide_character is 2.
-        param4: u8,
-        hide_character: u8,
+        /// Affects what's displayed on the loading screen. Index into the TerritoryType Excel sheet.
+        territory_type_id: u16,
+        /// If non-zero, begins playing this VFX. Index into the VFX Excel sheet.
+        vfx_id: u16,
+        /// If non-zero, uses this VFX as the loading screen background. Index into the VFX Excel sheet.
+        loading_screen_vfx_id: u16,
         /// Must match what is used in ActorSetPos (if applicable) otherwise weird stuff like EnterTerritoryEvent is sent by the client again.
         warp_type: WarpType,
-        param_7: u8,
-        fade_out_time: u8,
-        unk1: u8,
-        unk2: u16,
+        /// If set to one, the character is hidden.
+        /// This is not a boolean because technically there is a "third" mode for values 1, >2 but I'm not sure what they do or if they're even used by retail.
+        hide_character: u8,
+        /// Seems to always be set to 1, but mostly unused by the client. If set to 0xFF (255) then the screen never fades out.
+        fade_out_delay: u8,
+        /// Miscellaneous flags.
+        #[brw(pad_after = 2)] // not read by the client it seems
+        flags: PrepareZoningFlag,
     },
     ActorControl(ActorControl),
     ActorMove(ActorMove),

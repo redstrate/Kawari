@@ -304,10 +304,11 @@ pub enum ToServer {
         u16,
         Option<Position>,
         Option<f32>,
-        Option<(WarpType, u8, u8, u8)>,
+        WarpType,
+        u16,
     ),
     /// The player walks through a zone change line or passes through an underwater portal (e.g. in Ruby Sea).
-    EnterZoneJump(ClientId, ObjectId, u32, Option<(WarpType, u8, u8, u8)>),
+    EnterZoneJump(ClientId, ObjectId, u32, WarpType, u16),
     /// The connection disconnected.
     Disconnected(ClientId, ObjectId),
     /// A fatal error occured.

@@ -1919,7 +1919,8 @@ async fn process_packet(
                                     connection.id,
                                     connection.player_data.character.actor_id,
                                     *exit_box,
-                                    None,
+                                    WarpType::Normal,
+                                    0,
                                 ))
                                 .await;
                         }
@@ -3204,7 +3205,8 @@ async fn process_packet(
                                     connection.player_data.volatile.zone_id as u16,
                                     Some(*target_position),
                                     Some(*rotation),
-                                    Some((WarpType::Dive, 218, 1, 6)),
+                                    WarpType::Dive,
+                                    218,
                                 )
                                 .await;
                         }
@@ -3225,7 +3227,8 @@ async fn process_packet(
                                             connection.id,
                                             connection.player_data.character.actor_id,
                                             *param1,
-                                            Some((WarpType::Event, 15, 2, 4)),
+                                            WarpType::Event,
+                                            526,
                                         ))
                                         .await;
                                 }
@@ -3236,7 +3239,8 @@ async fn process_packet(
                                             connection.player_data.volatile.zone_id as u16,
                                             Some(*position),
                                             Some(connection.player_data.volatile.rotation as f32),
-                                            Some((WarpType::Dive, 227, 1, 6)),
+                                            WarpType::Dive,
+                                            483,
                                         )
                                         .await;
                                 }

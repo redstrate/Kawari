@@ -694,8 +694,6 @@ fn server_logic_tick(
             from_id,
             WarpType::Event,
             0,
-            0,
-            0,
         );
     }
 }
@@ -863,8 +861,6 @@ pub async fn server_main_loop(
                                     task.from_actor_id,
                                     from_id,
                                     WarpType::Normal,
-                                    0,
-                                    0,
                                     0,
                                 );
                             }

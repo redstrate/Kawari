@@ -20,7 +20,7 @@ use kawari::{
     },
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, ClientTriggerCommand, ItemInfo, ServerZoneIpcData,
-        ServerZoneIpcSegment,
+        ServerZoneIpcSegment, WarpType,
     },
 };
 use physis::race::{Gender, Race, Tribe};
@@ -53,8 +53,14 @@ impl ZoneConnection {
                     exit_position,
                     exit_rotation,
                 } => {
-                    self.change_zone(*zone_id, *exit_position, *exit_rotation, None)
-                        .await
+                    self.change_zone(
+                        *zone_id,
+                        *exit_position,
+                        *exit_rotation,
+                        WarpType::Normal,
+                        0,
+                    )
+                    .await
                 }
                 LuaTask::SetRemakeMode(remake_mode) => {
                     let mut database = self.database.lock();

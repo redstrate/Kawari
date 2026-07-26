@@ -32,8 +32,8 @@ use kawari::{
     config::get_config,
     ipc::zone::{
         ActorControlCategory, ActorSetPos, CharacterDataFlag, CommonSpawn, Conditions, DisplayFlag,
-        ObjectKind, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnTreasure,
-        WarpType,
+        ObjectKind, PrepareZoningFlag, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc,
+        SpawnObject, SpawnTreasure, WarpType,
     },
 };
 
@@ -791,24 +791,20 @@ fn begin_change_zone<'a>(
     destination_zone_id: Option<u16>,
     actor_id: ObjectId,
     warp_type: WarpType,
-    param4: u8,
-    hide_character: u8,
-    unk1: u8,
+    loading_screen_vfx_id: u16,
 ) -> (&'a mut Instance, bool) {
     if let Some(destination_zone_id) = destination_zone_id {
         let mut needs_init_zone = false;
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
-            target_zone: destination_zone_id,
+            territory_type_id: destination_zone_id,
             warp_type,
-            fade_out_time: 1,
             log_message: 0,
-            animation: 0,
-            param4,
-            hide_character,
-            param_7: 0,
-            unk1,
-            unk2: 0,
+            vfx_id: 0,
+            loading_screen_vfx_id,
+            hide_character: 0,
+            fade_out_delay: 1,
+            flags: PrepareZoningFlag::default(),
         });
 
         network.send_to_by_actor_id(
@@ -836,16 +832,14 @@ fn begin_change_zone<'a>(
         let instance = data.find_actor_instance_mut(actor_id).unwrap();
 
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
-            target_zone: instance.zone.id,
+            territory_type_id: instance.zone.id,
             warp_type,
-            fade_out_time: 1,
             log_message: 0,
-            animation: 0,
-            param4,
-            hide_character,
-            param_7: 0,
-            unk1,
-            unk2: 0,
+            vfx_id: 0,
+            loading_screen_vfx_id,
+            hide_character: 0,
+            fade_out_delay: 1,
+            flags: PrepareZoningFlag::default(),
         });
 
         network.send_to_by_actor_id(
@@ -881,9 +875,7 @@ pub fn change_zone_warp_to_pop_range(
     actor_id: ObjectId,
     from_id: ClientId,
     warp_type: WarpType,
-    param4: u8,
-    hide_character: u8,
-    unk1: u8,
+    loading_screen_vfx_id: u16,
 ) {
     let (target_instance, needs_init_zone) = begin_change_zone(
         data,
@@ -892,9 +884,7 @@ pub fn change_zone_warp_to_pop_range(
         destination_zone_id,
         actor_id,
         warp_type,
-        param4,
-        hide_character,
-        unk1,
+        loading_screen_vfx_id,
     );
 
     let exit_position;
@@ -1001,8 +991,6 @@ pub fn change_zone_to_player(
         Some(destination_zone_id),
         from_actor_id,
         WarpType::Normal,
-        0,
-        0,
         0,
     );
 
@@ -1114,7 +1102,8 @@ pub fn handle_zone_messages(
             zone_id,
             new_position,
             new_rotation,
-            warp_type_info,
+            warp_type,
+            loading_screen_vfx_id,
         ) => {
             tracing::info!("{from_id:?} is requesting to go to zone {zone_id}");
 
@@ -1122,23 +1111,14 @@ pub fn handle_zone_messages(
             let mut network = network.lock();
             let mut game_data = game_data.lock();
 
-            let (warp_type, param4, hide_character, unk1) =
-                if let Some((w_type, param, hide, unk)) = warp_type_info {
-                    (*w_type, *param, *hide, *unk)
-                } else {
-                    (WarpType::Normal, 0, 0, 0)
-                };
-
             let (target_instance, needs_init_zone) = begin_change_zone(
                 &mut data,
                 &mut network,
                 &mut game_data,
                 Some(*zone_id),
                 *actor_id,
-                warp_type,
-                param4,
-                hide_character,
-                unk1,
+                *warp_type,
+                *loading_screen_vfx_id,
             );
             do_change_zone(
                 &mut network,
@@ -1147,12 +1127,18 @@ pub fn handle_zone_messages(
                 *new_position,
                 *new_rotation,
                 *from_id,
-                warp_type,
+                *warp_type,
             );
 
             true
         }
-        ToServer::EnterZoneJump(from_id, actor_id, exitbox_id, warp_type_info) => {
+        ToServer::EnterZoneJump(
+            from_id,
+            actor_id,
+            exitbox_id,
+            warp_type,
+            loading_screen_vfx_id,
+        ) => {
             let mut data = data.lock();
             let mut network = network.lock();
 
@@ -1181,13 +1167,6 @@ pub fn handle_zone_messages(
                 return true;
             }
 
-            let (warp_type, param4, hide_character, unk1) =
-                if let Some((w_type, param, hide, unk)) = warp_type_info {
-                    (*w_type, *param, *hide, *unk)
-                } else {
-                    (WarpType::Normal, 0, 0, 0)
-                };
-
             let mut game_data = game_data.lock();
             change_zone_warp_to_pop_range(
                 &mut data,
@@ -1197,10 +1176,8 @@ pub fn handle_zone_messages(
                 destination_instance_id,
                 *actor_id,
                 *from_id,
-                warp_type,
-                param4,
-                hide_character,
-                unk1,
+                *warp_type,
+                *loading_screen_vfx_id,
             );
 
             true
@@ -1224,8 +1201,6 @@ pub fn handle_zone_messages(
                 *actor_id,
                 *from_id,
                 WarpType::Normal,
-                0,
-                0,
                 0,
             );
 
@@ -1251,8 +1226,6 @@ pub fn handle_zone_messages(
                 *from_id,
                 WarpType::Normal,
                 0,
-                0,
-                0,
             );
 
             true
@@ -1271,8 +1244,6 @@ pub fn handle_zone_messages(
                 *from_actor_id,
                 *from_id,
                 WarpType::Normal,
-                0,
-                0,
                 0,
             );
 
@@ -1349,8 +1320,6 @@ pub fn handle_zone_messages(
                 } else {
                     WarpType::None
                 },
-                0,
-                0,
                 0,
             );
 

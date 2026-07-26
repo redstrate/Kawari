@@ -201,6 +201,7 @@ pub struct CommonSpawn {
     pub name_id: u32,
     /// Refers to a game object in the layout, if applicable.
     pub layout_id: u32,
+    // TODO: This is more generic than this, and only a subset of the u32 is used for pet data.
     /// Index into the Pet Excel sheet. Seems to only be relevant for Carbuncles and other "pets".
     pub pet_id: u32,
     /// The director who spawned and is managing this actor, if any.
