@@ -867,11 +867,15 @@ pub enum ActorControlCategory {
 
     /// Collection UI stuff.
     #[brw(magic = 2251u32)]
-    McGuffinUnk {
-        unk1: u32,
-        unk2: u32,
-        unk3: u32,
-        unk4: u32,
+    UpdateMcGuffin {
+        /// Data specific to this McBuffin.
+        data: u32,
+        /// Index into the McGuffin Excel sheet.
+        id: u32,
+        /// If this McGuffin is unlocked or not.
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        unlocked: bool,
     },
 
     #[brw(magic = 2351u32)]
