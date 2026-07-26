@@ -1555,7 +1555,7 @@ async fn process_packet(
                                         continue;
                                     }
 
-                                    let catalog_id;
+                                    let item_id;
                                     {
                                         let mut gamedata = connection.gamedata.lock();
                                         let Some(the_item) = connection
@@ -1566,12 +1566,12 @@ async fn process_packet(
                                             continue;
                                         };
                                         let Some(the_id) =
-                                            gamedata.get_furniture_catalog_id(the_item.item_id)
+                                            gamedata.get_furniture_item_id(the_item.item_id)
                                         else {
                                             continue;
                                         };
 
-                                        catalog_id = the_id;
+                                        item_id = the_id;
                                     }
 
                                     // This acts as a preview, and we don't actually spawn the furniture until the client sends a PlaceFurniture. Therefore, we don't network this.
@@ -1586,7 +1586,7 @@ async fn process_packet(
                                                 ServerZoneIpcData::InteriorFurniturePlaced {
                                                     storage_id: container_type,
                                                     slot: container_index,
-                                                    catalog_id,
+                                                    item_id,
                                                     unk1: 1,
                                                     stain,
                                                     unk2: [0; 3],
@@ -1606,7 +1606,7 @@ async fn process_packet(
                                                     plot_index: 0xFF, // During preview mode, the plot index and slot are 0xFF.
                                                     slot: 0xFF,
                                                     unk1: [0; 2],
-                                                    catalog_id,
+                                                    item_id,
                                                     unk2: 0,
                                                     stain,
                                                     unk3: [0; 3],
@@ -1963,13 +1963,13 @@ async fn process_packet(
                                         src_storage_id: action.src_storage_id,
                                         src_container_index: action.src_container_index,
                                         src_stack: action.src_stack,
-                                        src_catalog_id: action.src_catalog_id,
+                                        src_item_id: action.src_item_id,
                                         dummy_container: ContainerType::DiscardingItemSentinel,
                                         dst_storage_id: ContainerType::DiscardingItemSentinel,
                                         dst_container_index: u16::MAX,
                                         dst_actor_id: ObjectId::default(),
                                         dst_stack: 0,
-                                        dst_catalog_id: 0,
+                                        dst_item_id: 0,
                                     },
                                 );
                                 connection.send_ipc_self(ipc).await;
@@ -3292,12 +3292,11 @@ async fn process_packet(
                                 continue;
                             };
 
-                            let catalog_id;
+                            let item_id;
                             {
                                 let mut gamedata = connection.gamedata.lock();
-                                let result =
-                                    gamedata.get_furniture_catalog_id(transfer_item.item_id);
-                                catalog_id = result.unwrap_or_default();
+                                let result = gamedata.get_furniture_item_id(transfer_item.item_id);
+                                item_id = result.unwrap_or_default();
                             }
 
                             let desired_pages = connection
@@ -3371,7 +3370,7 @@ async fn process_packet(
                                     connection.player_data.character.actor_id,
                                     result.container,
                                     result.slot,
-                                    catalog_id,
+                                    item_id,
                                     stain,
                                     *position,
                                     indoors,
@@ -4043,7 +4042,7 @@ async fn process_server_msg(
             FromServer::FurniturePlaced(
                 storage_id,
                 slot,
-                catalog_id,
+                item_id,
                 stain,
                 position,
                 indoors,
@@ -4056,7 +4055,7 @@ async fn process_server_msg(
                             ServerZoneIpcData::InteriorFurniturePlaced {
                                 storage_id,
                                 slot,
-                                catalog_id,
+                                item_id,
                                 unk1: 1,
                                 stain,
                                 unk2: [0; 3],
@@ -4073,7 +4072,7 @@ async fn process_server_msg(
                                 plot_index,
                                 slot: slot as u8,
                                 unk1: [0; 2],
-                                catalog_id,
+                                item_id,
                                 unk2: 0,
                                 stain,
                                 unk3: [0; 3],

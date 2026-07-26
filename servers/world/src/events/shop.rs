@@ -259,13 +259,13 @@ impl ShopEventHandler {
                     src_storage_id: ContainerType::Currency,
                     src_container_index: 0,
                     src_stack: connection.player_data.inventory.currency.gil.quantity,
-                    src_catalog_id: CurrencyKind::Gil as u32,
+                    src_item_id: CurrencyKind::Gil as u32,
                     dst_actor_id: Default::default(),
                     dummy_container: ContainerType::DiscardingItemSentinel,
                     dst_storage_id: ContainerType::DiscardingItemSentinel,
                     dst_container_index: u16::MAX,
                     dst_stack: 0,
-                    dst_catalog_id: 0,
+                    dst_item_id: 0,
                 });
                 connection.send_ipc_self(ipc).await;
 
@@ -286,13 +286,13 @@ impl ShopEventHandler {
                     src_storage_id: storage,
                     src_container_index: index as u16,
                     src_stack: quantity,
-                    src_catalog_id: item_info.id,
+                    src_item_id: item_info.id,
                     dst_actor_id: Default::default(),
                     dummy_container: ContainerType::DiscardingItemSentinel,
                     dst_storage_id: ContainerType::DiscardingItemSentinel,
                     dst_container_index: u16::MAX,
                     dst_stack: 0,
-                    dst_catalog_id: 0,
+                    dst_item_id: 0,
                 });
                 connection.send_ipc_self(ipc).await;
 

@@ -1395,7 +1395,7 @@ pub fn handle_zone_messages(
             from_actor_id,
             container,
             slot,
-            catalog_id,
+            item_id,
             stain,
             position,
             indoors,
@@ -1412,7 +1412,7 @@ pub fn handle_zone_messages(
             let msg = FromServer::FurniturePlaced(
                 *container,
                 *slot,
-                *catalog_id,
+                *item_id,
                 *stain,
                 *position,
                 *indoors,

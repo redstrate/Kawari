@@ -37,7 +37,7 @@ impl UserData for Item {
         fields.add_field_method_get("quantity", |_, this| Ok(this.quantity));
         fields.add_field_method_get("id", |_, this| Ok(this.item_id));
         fields.add_field_method_get("condition", |_, this| Ok(this.condition));
-        fields.add_field_method_get("glamour_catalog_id", |_, this| Ok(this.condition));
+        fields.add_field_method_get("glamour_item_id", |_, this| Ok(this.condition));
     }
 }
 

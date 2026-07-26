@@ -15,6 +15,6 @@ pub struct CurrencyInfo {
     pub quantity: u32,
     pub unk1: u32,
     /// Index into the Item Excel sheet.
-    pub catalog_id: u32,
+    pub item_id: u32,
     pub unk2: u32,
 }

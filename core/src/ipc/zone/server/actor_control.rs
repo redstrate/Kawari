@@ -502,7 +502,7 @@ pub enum ActorControlCategory {
     PlayerCurrency {
         unk1: u32,
         /// Index into the Item Excel sheet.
-        catalog_id: u32,
+        item_id: u32,
         /// Max number of held currency.
         max_count: u32,
     },

@@ -364,7 +364,7 @@ pub enum ServerZoneIpcData {
         src_container_index: u16,
         #[brw(pad_before = 2)]
         src_stack: u32,
-        src_catalog_id: u32,
+        src_item_id: u32,
 
         /// This section was observed to be static, across two captures and a bunch of discards these never changed.
         /// Always set to 0xE000_0000, also known as no/invalid actor.
@@ -378,7 +378,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_before = 2)]
         dst_stack: u32,
         /// Always set to zero.
-        dst_catalog_id: u32,
+        dst_item_id: u32,
     },
     InventoryTransactionFinish {
         /// Same sequence value as in InventoryTransaction.
@@ -1400,7 +1400,7 @@ pub enum ServerZoneIpcData {
         /// Which slot the furniture was placed into.
         slot: u16,
         /// The low 12 bits of the row number on the HousingFurniture sheet for this furniture. The row to that sheet can be obtained from the AdditionalData column on the Item Excel sheet. When the client receives this value, it then ORs it with 0x30000 to recreate the row number.
-        catalog_id: u16,
+        item_id: u16,
         unk1: u16, // Always 1? Changing it seems to have no visible effect so far.
         /// The furniture's dye/stain.
         stain: u8,
@@ -1418,7 +1418,7 @@ pub enum ServerZoneIpcData {
         slot: u8,
         unk1: [u8; 2], // Likely just padding
         /// The low 12 bits of the row number on the HousingYardObject sheet for this furniture. The row to that sheet can be obtained from the AdditionalData column on the Item Excel sheet. When the client receives this value, it then ORs it with 0x20000 to recreate the row number.
-        catalog_id: u16,
+        item_id: u16,
         unk2: u16, // Observed as zeroes
         /// The furniture's dye/stain.
         stain: u8,

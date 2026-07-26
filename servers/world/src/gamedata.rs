@@ -1594,7 +1594,7 @@ impl GameData {
     }
 
     /// Returns a piece of furniture's catalog id from its item id. In this context, "catalog id" means the low 12 bits of the furniture's row number on the HousingFurniture/HousingYardObject sheet, which is what we send to the client when placing furniture.
-    pub fn get_furniture_catalog_id(&mut self, item_id: u32) -> Option<u16> {
+    pub fn get_furniture_item_id(&mut self, item_id: u32) -> Option<u16> {
         // First, we need the item's AdditionalData column to point us to where we need to look on the HousingFurniture sheet.
         let row = self.item_sheet.row(item_id)?;
         let item_ui_category = row.ItemUICategory;

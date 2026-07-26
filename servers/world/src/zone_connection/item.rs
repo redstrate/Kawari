@@ -112,7 +112,7 @@ impl ZoneConnection {
                         sequence: self.player_data.item_sequence,
                         container: container_type,
                         quantity: item.quantity,
-                        catalog_id: item.item_id,
+                        item_id: item.item_id,
                         slot: slot_index as u16,
                         ..Default::default()
                     }),
@@ -326,13 +326,13 @@ impl ZoneConnection {
             src_storage_id: src_container,
             src_container_index: src_index,
             src_stack: src_item.quantity,
-            src_catalog_id: src_item.item_id,
+            src_item_id: src_item.item_id,
 
             dst_actor_id: self.player_data.character.actor_id,
             dst_storage_id: dst_container,
             dst_container_index: dst_index,
             dst_stack: dst_item.quantity,
-            dst_catalog_id: dst_item.item_id,
+            dst_item_id: dst_item.item_id,
 
             dummy_container: ContainerType::Equipped,
         });

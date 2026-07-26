@@ -14,7 +14,7 @@ pub struct ItemOperation {
     pub src_container_index: u16,
     #[brw(pad_before = 2)]
     pub src_stack: u32,
-    pub src_catalog_id: u32,
+    pub src_item_id: u32,
 
     pub dst_actor_id: ObjectId,
     #[brw(pad_size_to = 4)]
@@ -22,7 +22,7 @@ pub struct ItemOperation {
     pub dst_container_index: u16,
     #[brw(pad_before = 2)]
     pub dst_stack: u32,
-    pub dst_catalog_id: u32,
+    pub dst_item_id: u32,
 }
 
 #[cfg(test)]
@@ -50,11 +50,11 @@ mod tests {
         assert_eq!(modify_inventory.src_storage_id, ContainerType::Equipped);
         assert_eq!(modify_inventory.src_container_index, 3);
         assert_eq!(modify_inventory.src_stack, 1);
-        assert_eq!(modify_inventory.src_catalog_id, 0);
+        assert_eq!(modify_inventory.src_item_id, 0);
         assert_eq!(modify_inventory.dst_actor_id, ObjectId(0));
         assert_eq!(modify_inventory.dst_storage_id, ContainerType::ArmoryBody);
         assert_eq!(modify_inventory.dst_container_index, 0);
         assert_eq!(modify_inventory.dst_stack, 0);
-        assert_eq!(modify_inventory.dst_catalog_id, 0);
+        assert_eq!(modify_inventory.dst_item_id, 0);
     }
 }

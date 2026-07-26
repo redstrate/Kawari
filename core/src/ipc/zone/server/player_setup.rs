@@ -33,7 +33,7 @@ pub struct PlayerSetup {
     pub companion_current_exp: u32,
     pub unknown1c: u32,
     pub fish_caught: u32,
-    pub use_bait_catalog_id: u32,
+    pub use_bait_item_id: u32,
     pub num_spearfish_caught: u32,
     pub unknown_pvp2c: u32,
     pub total_frontline_matches: u32,
