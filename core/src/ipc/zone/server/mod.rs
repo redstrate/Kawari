@@ -175,6 +175,9 @@ pub use mail::{
     MAX_SYSTEM_LETTERS, PREVIEW_MSG_MAX_LENGTH,
 };
 
+mod aoe_effect;
+pub use aoe_effect::AoeEffect8;
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_bool_from, read_string,
     write_bool_as, write_string,
@@ -1000,36 +1003,16 @@ pub enum ServerZoneIpcData {
         sequence: u16,
     },
     EffectResultBasic {
-        unk1: u32,
-        unk2: u32,
+        /// How many actors are covered by this packet.
+        count: u32,
+        /// See ActionResult for more details.
+        global_sequence: u32,
         target_id: ObjectId,
         current_hp: u32,
         unk3: u32,
         unk4: u32,
     },
-    AoeEffect8 {
-        source_actor: ObjectId,
-        unk1: u32,
-        action_key: u32,
-        dir: u16,
-        duration: f32,
-        unk3: u32,
-        request_id: u16,
-        action_id: u16,
-        action_variant: u8,
-        action_kind: u8,
-        flag: u8,
-        unk10: [u8; 18],
-        target_count: u8,
-        #[br(count = 512)]
-        #[brw(pad_size_to = 512)]
-        effects: Vec<u8>,
-        target_ids: [ObjectTypeId; 8],
-        #[brw(pad_after = 6)] // empty
-        #[br(map = read_packed_position)]
-        #[bw(map = write_packed_position)]
-        position: Position,
-    },
+    AoeEffect8(AoeEffect8),
     ActorCast {
         /// Usually the same as `action_id`.
         spell_id: u16,

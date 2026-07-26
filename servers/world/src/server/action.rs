@@ -527,21 +527,21 @@ pub fn execute_action(
             }
 
             if num_self_entries > 0 {
+                let mut network = network.lock();
                 let ipc =
                     ServerZoneIpcSegment::new(ServerZoneIpcData::EffectResult(EffectResult {
-                        unk1: 1,
-                        unk2: 776386,
+                        count: 1,
+                        global_sequence: network.global_action_sequence,
                         target_id: request.target.object_id,
                         health_points: common_spawn.health_points,
                         max_health_points: common_spawn.max_health_points,
                         resource_points: common_spawn.resource_points,
-                        class_id: common_spawn.class_job,
+                        classjob_id: common_spawn.class_job,
                         entry_count: num_self_entries,
                         statuses: self_entries,
                         ..Default::default()
                     }));
                 let mut data = data.lock();
-                let mut network = network.lock();
                 let Some(instance) = data.find_actor_instance_mut(request.target.object_id) else {
                     return;
                 };
@@ -565,20 +565,20 @@ pub fn execute_action(
 
                 let common_spawn = actor.get_common_spawn();
 
+                let mut network = network.lock();
                 let ipc =
                     ServerZoneIpcSegment::new(ServerZoneIpcData::EffectResult(EffectResult {
-                        unk1: 1,
-                        unk2: 776386,
+                        count: 1,
+                        global_sequence: network.global_action_sequence,
                         target_id: from_actor_id, // TODO: unsure if this is correct?
                         health_points: common_spawn.health_points,
                         max_health_points: common_spawn.max_health_points,
                         resource_points: common_spawn.resource_points,
-                        class_id: common_spawn.class_job,
+                        classjob_id: common_spawn.class_job,
                         entry_count: num_target_entries,
                         statuses: target_entries,
                         ..Default::default()
                     }));
-                let mut network = network.lock();
                 let Some(instance) = data.find_actor_instance_mut(request.target.object_id) else {
                     return;
                 };

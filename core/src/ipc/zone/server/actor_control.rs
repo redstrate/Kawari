@@ -196,6 +196,14 @@ pub enum ActorControlCategory {
     #[brw(magic = 27u32)]
     Flee { speed: u16 },
 
+    #[brw(magic = 34u32)]
+    ShowLockonVfx {
+        /// Index into the Lockon Excel sheet.
+        id: u32,
+        /// Who to show the lockon VFX on.
+        target: ObjectId,
+    },
+
     #[brw(magic = 38u32)]
     ToggleInvisibility {
         #[br(map = read_bool_from::<u32>)]
@@ -847,6 +855,17 @@ pub enum ActorControlCategory {
     /// Calls into animation-related functions I think?
     #[brw(magic = 1529u32)]
     UnkAnimationRelated {},
+
+    /// Shows the flying text and some VFX on the target, but doesn't display in the log or change anything else.
+    #[brw(magic = 1541u32)]
+    DamageFlyingText {
+        unk1: u32,
+        /// Amount of damage to display.
+        amount: u32,
+        /// Who did the damage?
+        source_actor_id: ObjectId,
+        unk4: u32,
+    },
 
     #[brw(magic = 1545u32)]
     UnkCooldownsRelated {

@@ -22,8 +22,10 @@ pub struct EffectEntry {
 #[brw(little)]
 #[derive(Clone, Debug, Default)]
 pub struct EffectResult {
-    pub unk1: u32,
-    pub unk2: u32,
+    /// How many actors are covered by this packet.
+    pub count: u32,
+    /// See ActionResult for more details.
+    pub global_sequence: u32,
     pub target_id: ObjectId,
     /// Amount of health points.
     pub health_points: u32,
@@ -31,11 +33,11 @@ pub struct EffectResult {
     pub max_health_points: u32,
     /// Amount of resource points (MP/GP/CP etc.)
     pub resource_points: u16,
-    pub unk3: u8,
-    pub class_id: u8,
+    pub target_index: u8,
+    pub classjob_id: u8,
     pub shield: u8,
     pub entry_count: u8,
-    pub unk4: u16,
+    #[brw(pad_before = 2)] // not read
     #[brw(pad_after = 4)] // padding
     pub statuses: [EffectEntry; 4],
 }
@@ -59,8 +61,8 @@ mod tests {
         let mut buffer = Cursor::new(&buffer);
 
         let effect_result = EffectResult::read_le(&mut buffer).unwrap();
-        assert_eq!(effect_result.unk1, 1);
-        assert_eq!(effect_result.unk2, 776386);
+        assert_eq!(effect_result.count, 1);
+        assert_eq!(effect_result.global_sequence, 776386);
         assert_eq!(effect_result.target_id, ObjectId(277554542));
     }
 }
