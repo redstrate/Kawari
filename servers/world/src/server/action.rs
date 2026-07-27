@@ -21,9 +21,9 @@ use kawari::{
     common::{ANIMATION_LOCK_TIME, COMBO_TIMEOUT, CharacterMode, ObjectId, STRIKING_DUMMY_NAME_ID},
     config::get_config,
     ipc::zone::{
-        ActionEffect, ActionRequest, ActionResult, ActionType, ActorControlCategory,
-        BattleNpcSubKind, CommonSpawn, EffectEntry, EffectKind, EffectResult, ObjectKind,
-        ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc,
+        ActionEffect1, ActionRequest, ActionType, ActorControlCategory, BattleNpcSubKind,
+        CommonSpawn, EffectEntry, EffectResult, ObjectKind, ServerZoneIpcData,
+        ServerZoneIpcSegment, SpawnNpc, TargetEffect, TargetEffectKind,
     },
 };
 
@@ -235,10 +235,10 @@ pub fn execute_action(
                     effects_builder.effects = effects_builder
                         .effects
                         .iter()
-                        .map(|effect| match effect.kind {
-                            EffectKind::Damage { .. } => ActionEffect {
-                                kind: EffectKind::Invincible {},
-                            },
+                        .map(|effect| match effect.0 {
+                            TargetEffectKind::Damage { .. } => {
+                                TargetEffect(TargetEffectKind::Invincible {})
+                            }
                             _ => *effect,
                         })
                         .collect();
@@ -285,21 +285,21 @@ pub fn execute_action(
                     QueuedTaskData::ResetCombo,
                 );
 
-                effects_builder.effects.push(ActionEffect {
-                    kind: EffectKind::ExecuteCombo {
+                effects_builder
+                    .effects
+                    .push(TargetEffect(TargetEffectKind::ExecuteCombo {
                         sequence,
                         unk2: 0,
                         unk3: 0,
                         unk4: 0,
                         unk5: 128,
                         action_id: request.action_id as u16,
-                    },
-                });
+                    }));
             }
 
             for effect in &mut effects_builder.effects {
-                match &mut effect.kind {
-                    EffectKind::Damage {
+                match &mut effect.0 {
+                    TargetEffectKind::Damage {
                         amount,
                         damage_element,
                         ..
@@ -317,12 +317,12 @@ pub fn execute_action(
                         let mut game_data = game_data.lock();
                         *damage_element = game_data.get_action_damage_element(request.action_id);
                     }
-                    EffectKind::InterruptAction {} => {
+                    TargetEffectKind::InterruptAction {} => {
                         // TODO: this could cancel more than just casting, so we need to be more specific eventually
                         // TODO: also cancel the cast visually
                         instance.cancel_actor_tasks(request.target.object_id);
                     }
-                    EffectKind::SummonPet { .. } => {
+                    TargetEffectKind::SummonPet { .. } => {
                         let Some(actor) = instance.find_actor(from_actor_id) else {
                             return;
                         };
@@ -395,7 +395,7 @@ pub fn execute_action(
 
             // ActionResult
             {
-                let mut effects = [ActionEffect::default(); 8];
+                let mut effects = [TargetEffect::default(); 8];
                 effects[..effects_builder.effects.len()].copy_from_slice(&effects_builder.effects);
 
                 let action_animation_id;
@@ -416,7 +416,7 @@ pub fn execute_action(
                 }
 
                 let ipc =
-                    ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
+                    ServerZoneIpcSegment::new(ServerZoneIpcData::ActionEffect1(ActionEffect1 {
                         animation_target_id: request.target,
                         target_id_again: request.target,
                         action_id: request.action_id,
@@ -424,7 +424,7 @@ pub fn execute_action(
                         rotation: common_spawn.rotation,
                         spell_id: action_animation_id,
                         source_sequence: request.sequence,
-                        effect_count: effects_builder.effects.len() as u8,
+                        target_count: 1,
                         effects,
                         action_type: request.action_type,
                         global_sequence: network.global_action_sequence,
@@ -456,12 +456,12 @@ pub fn execute_action(
             let mut target_entries = [EffectEntry::default(); 4];
 
             for effect in &effects_builder.effects {
-                if let EffectKind::GainEffect {
+                if let TargetEffectKind::GainEffect {
                     effect_id,
                     duration,
                     param,
                     ..
-                } = effect.kind
+                } = effect.0
                 {
                     let index = gain_effect(
                         network.clone(),
@@ -486,12 +486,12 @@ pub fn execute_action(
                     num_target_entries += 1;
                 }
 
-                if let EffectKind::GainEffectSelf {
+                if let TargetEffectKind::GainEffectSelf {
                     effect_id,
                     duration,
                     param,
                     ..
-                } = effect.kind
+                } = effect.0
                 {
                     let index = gain_effect(
                         network.clone(),
@@ -517,7 +517,7 @@ pub fn execute_action(
                 }
 
                 // To lose effects, we just omit them from the list but increase the entry count!
-                if let EffectKind::LoseEffect { .. } = effect.kind {
+                if let TargetEffectKind::LoseEffect { .. } = effect.0 {
                     self_entries[num_self_entries as usize] = EffectEntry::default();
                     num_self_entries += 1;
 
@@ -755,16 +755,14 @@ pub fn execute_mount_action(
 
     let common_spawn = actor.get_common_spawn();
 
-    let mut effects = [ActionEffect::default(); 8];
-    effects[0] = ActionEffect {
-        kind: EffectKind::Mount {
-            unk1: 1,
-            unk2: 0,
-            id: request.action_id as u16,
-        },
-    };
+    let mut effects = [TargetEffect::default(); 8];
+    effects[0] = TargetEffect(TargetEffectKind::Mount {
+        unk1: 1,
+        unk2: 0,
+        id: request.action_id as u16,
+    });
 
-    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActionResult(ActionResult {
+    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActionEffect1(ActionEffect1 {
         animation_target_id: request.target,
         target_id_again: request.target,
         action_id: request.action_id,
@@ -772,7 +770,7 @@ pub fn execute_mount_action(
         rotation: common_spawn.rotation,
         spell_id: 4,
         source_sequence: request.sequence,
-        effect_count: 1,
+        target_count: 1,
         effects,
         action_type: request.action_type,
         global_sequence: network.global_action_sequence,

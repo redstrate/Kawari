@@ -131,7 +131,7 @@ ServerZoneIpcType:
   comment: Update an actor's HP & MP values.
   opcode: 342
   size: 8
-- name: ActionResult
+- name: ActionEffect1
   comment: Results of an action, in response to ActionRequest.
   opcode: 893
   size: 124

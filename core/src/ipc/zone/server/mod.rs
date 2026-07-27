@@ -59,9 +59,10 @@ pub use event_scene::{EventScene, SceneFlags};
 mod event_start;
 pub use event_start::{EventStart, EventType};
 
-mod action_result;
-pub use action_result::{
-    ActionEffect, ActionResult, ActionResultFlag, DamageElement, DamageKind, DamageType, EffectKind,
+mod action_effect;
+pub use action_effect::{
+    ActionEffect1, ActionEffectFlag, DamageElement, DamageKind, DamageType, TargetEffect,
+    TargetEffectKind,
 };
 
 mod actor_set_pos;
@@ -336,7 +337,7 @@ pub enum ServerZoneIpcData {
         // Unknown. It's filled with... something.
         unk: u16,
     },
-    ActionResult(ActionResult),
+    ActionEffect1(ActionEffect1),
     Equip(Equip),
     DeleteActor {
         /// The index into the client-side object pool.

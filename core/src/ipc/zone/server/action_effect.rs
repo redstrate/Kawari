@@ -43,7 +43,7 @@ impl mlua::FromLua for DamageKind {
 
 #[binrw]
 #[derive(Debug, PartialEq, Clone, Copy, Default)]
-pub enum EffectKind {
+pub enum TargetEffectKind {
     #[default]
     /// There's no effect entry.
     #[brw(magic = 0u8)]
@@ -143,7 +143,15 @@ pub enum EffectKind {
     #[brw(magic = 62u8)]
     SummonPet { unk: [u8; 7] },
     /// Unknown effect (that should be added!)
-    Unknown { magic: u8, unk: [u8; 7] },
+    Unknown {
+        magic: u8,
+        param0: u8,
+        param1: u8,
+        param2: u8,
+        param3: u8,
+        param4: u8,
+        value: u16,
+    },
 }
 
 #[repr(u8)]
@@ -221,22 +229,19 @@ impl mlua::FromLua for DamageElement {
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Copy, Default)]
-pub struct ActionEffect {
-    #[brw(pad_size_to = 8)]
-    pub kind: EffectKind,
-}
+pub struct TargetEffect(#[brw(pad_size_to = 8)] pub TargetEffectKind);
 
 #[binrw]
 #[derive(Clone, Copy, Eq, PartialEq, Default)]
-pub struct ActionResultFlag(u8);
+pub struct ActionEffectFlag(u8);
 
 bitflags! {
-    impl ActionResultFlag : u8 {
+    impl ActionEffectFlag : u8 {
         const FORCE_ANIMATION_LOCK = 0x1;
     }
 }
 
-impl std::fmt::Debug for ActionResultFlag {
+impl std::fmt::Debug for ActionEffectFlag {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         bitflags::parser::to_writer(self, f)
     }
@@ -245,7 +250,7 @@ impl std::fmt::Debug for ActionResultFlag {
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
-pub struct ActionResult {
+pub struct ActionEffect1 {
     pub animation_target_id: ObjectTypeId,
     /// Index into the Action Excel sheet.
     pub action_id: u32,
@@ -264,11 +269,10 @@ pub struct ActionResult {
     pub animation_variation: u8,
     /// The kind of action.
     pub action_type: ActionType,
-    pub flags: ActionResultFlag,
-    pub effect_count: u8,
-    pub unk4: u16,
-    pub unk5: [u8; 6], // might be not read by the client?
-    pub effects: [ActionEffect; 8],
+    pub flags: ActionEffectFlag,
+    pub target_count: u8,
+    #[brw(pad_before = 8)] // not read?
+    pub effects: [TargetEffect; 8],
     #[brw(pad_before = 6, pad_after = 4)]
     pub target_id_again: ObjectTypeId,
 }
@@ -293,7 +297,7 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let action_result = ActionResult::read_le(&mut buffer).unwrap();
+        let action_result = ActionEffect1::read_le(&mut buffer).unwrap();
         assert_eq!(
             action_result.animation_target_id.object_id,
             ObjectId(0x40070E42)
@@ -306,16 +310,14 @@ mod tests {
         assert_eq!(action_result.rotation, 1.207309);
         assert_eq!(action_result.spell_id, 31);
         assert_eq!(action_result.animation_variation, 0);
-        assert_eq!(action_result.flags, ActionResultFlag::empty());
+        assert_eq!(action_result.flags, ActionEffectFlag::empty());
         assert_eq!(action_result.action_type, ActionType::Action);
-        assert_eq!(action_result.effect_count, 1);
-        assert_eq!(action_result.unk4, 0);
-        assert_eq!(action_result.unk5, [0; 6]);
+        assert_eq!(action_result.target_count, 1);
 
         // effect 0: attack
         assert_eq!(
-            action_result.effects[0].kind,
-            EffectKind::Damage {
+            action_result.effects[0].0,
+            TargetEffectKind::Damage {
                 damage_kind: DamageKind::Normal,
                 damage_type: DamageType::Slashing,
                 damage_element: DamageElement::Unaspected,
@@ -328,8 +330,8 @@ mod tests {
 
         // effect 1: start action combo
         assert_eq!(
-            action_result.effects[1].kind,
-            EffectKind::ExecuteCombo {
+            action_result.effects[1].0,
+            TargetEffectKind::ExecuteCombo {
                 sequence: 0,
                 unk2: 0,
                 unk3: 0,
@@ -353,7 +355,7 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let action_result = ActionResult::read_le(&mut buffer).unwrap();
+        let action_result = ActionEffect1::read_le(&mut buffer).unwrap();
         assert_eq!(
             action_result.animation_target_id.object_id,
             ObjectId(277554542)
@@ -366,15 +368,13 @@ mod tests {
         assert_eq!(action_result.rotation, 2.6254003);
         assert_eq!(action_result.spell_id, 3);
         assert_eq!(action_result.animation_variation, 0);
-        assert_eq!(action_result.flags, ActionResultFlag::empty());
+        assert_eq!(action_result.flags, ActionEffectFlag::empty());
         assert_eq!(action_result.action_type, ActionType::Action);
-        assert_eq!(action_result.effect_count, 1);
-        assert_eq!(action_result.unk4, 0);
-        assert_eq!(action_result.unk5, [0; 6]);
+        assert_eq!(action_result.target_count, 1);
 
         assert_eq!(
-            action_result.effects[0].kind,
-            EffectKind::GainEffect {
+            action_result.effects[0].0,
+            TargetEffectKind::GainEffect {
                 unk1: 0,
                 unk2: 48,
                 unk3: 0,
@@ -395,7 +395,7 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let action_result = ActionResult::read_le(&mut buffer).unwrap();
+        let action_result = ActionEffect1::read_le(&mut buffer).unwrap();
         assert_eq!(
             action_result.animation_target_id.object_id,
             ObjectId(277114100)
@@ -408,15 +408,13 @@ mod tests {
         assert_eq!(action_result.rotation, -0.8154669);
         assert_eq!(action_result.spell_id, 4);
         assert_eq!(action_result.animation_variation, 0);
-        assert_eq!(action_result.flags, ActionResultFlag::empty());
+        assert_eq!(action_result.flags, ActionEffectFlag::empty());
         assert_eq!(action_result.action_type, ActionType::Mount);
-        assert_eq!(action_result.effect_count, 1);
-        assert_eq!(action_result.unk4, 0);
-        assert_eq!(action_result.unk5, [0; 6]);
+        assert_eq!(action_result.target_count, 1);
 
         assert_eq!(
-            action_result.effects[0].kind,
-            EffectKind::Mount {
+            action_result.effects[0].0,
+            TargetEffectKind::Mount {
                 unk1: 1,
                 unk2: 0,
                 id: 55,
@@ -434,7 +432,7 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let action_result = ActionResult::read_le(&mut buffer).unwrap();
+        let action_result = ActionEffect1::read_le(&mut buffer).unwrap();
         assert_eq!(
             action_result.animation_target_id.object_id,
             ObjectId(277114100)
@@ -447,15 +445,13 @@ mod tests {
         assert_eq!(action_result.rotation, -2.0225368);
         assert_eq!(action_result.spell_id, 13266);
         assert_eq!(action_result.animation_variation, 0);
-        assert_eq!(action_result.flags, ActionResultFlag::empty());
+        assert_eq!(action_result.flags, ActionEffectFlag::empty());
         assert_eq!(action_result.action_type, ActionType::Action);
-        assert_eq!(action_result.effect_count, 1);
-        assert_eq!(action_result.unk4, 0);
-        assert_eq!(action_result.unk5, [0; 6]);
+        assert_eq!(action_result.target_count, 1);
 
         assert_eq!(
-            action_result.effects[0].kind,
-            EffectKind::LoseEffect {
+            action_result.effects[0].0,
+            TargetEffectKind::LoseEffect {
                 param: 219,
                 unk: [0; 3],
                 effect_id: 565
