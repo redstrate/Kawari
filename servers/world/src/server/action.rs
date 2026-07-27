@@ -418,7 +418,7 @@ pub fn execute_action(
                 let ipc =
                     ServerZoneIpcSegment::new(ServerZoneIpcData::ActionEffect1(ActionEffect1 {
                         animation_target_id: request.target,
-                        target_id_again: request.target,
+                        target: request.target,
                         action_id: request.action_id,
                         animation_lock: ANIMATION_LOCK_TIME,
                         rotation: common_spawn.rotation,
@@ -764,7 +764,7 @@ pub fn execute_mount_action(
 
     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActionEffect1(ActionEffect1 {
         animation_target_id: request.target,
-        target_id_again: request.target,
+        target: request.target,
         action_id: request.action_id,
         animation_lock: ANIMATION_LOCK_TIME,
         rotation: common_spawn.rotation,

@@ -274,7 +274,7 @@ pub struct ActionEffect1 {
     #[brw(pad_before = 8)] // not read?
     pub effects: [TargetEffect; 8],
     #[brw(pad_before = 6, pad_after = 4)]
-    pub target_id_again: ObjectTypeId,
+    pub target: ObjectTypeId,
 }
 
 #[cfg(test)]
@@ -341,10 +341,7 @@ mod tests {
             }
         );
 
-        assert_eq!(
-            action_result.target_id_again.object_id,
-            ObjectId(0x40070E42)
-        );
+        assert_eq!(action_result.target.object_id, ObjectId(0x40070E42));
     }
 
     #[test]
@@ -384,7 +381,7 @@ mod tests {
             }
         );
 
-        assert_eq!(action_result.target_id_again.object_id, ObjectId(277554542));
+        assert_eq!(action_result.target.object_id, ObjectId(277554542));
     }
 
     #[test]
@@ -421,7 +418,7 @@ mod tests {
             }
         );
 
-        assert_eq!(action_result.target_id_again.object_id, ObjectId(277114100));
+        assert_eq!(action_result.target.object_id, ObjectId(277114100));
     }
 
     #[test]
@@ -458,6 +455,6 @@ mod tests {
             }
         );
 
-        assert_eq!(action_result.target_id_again.object_id, ObjectId(277114100));
+        assert_eq!(action_result.target.object_id, ObjectId(277114100));
     }
 }
