@@ -98,7 +98,9 @@ impl ShopEventHandler {
             })),
             ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryActionAck {
                 sequence: u32::MAX,
-                action_type: INVENTORY_ACTION_ACK_SHOP as u16,
+                action_type: INVENTORY_ACTION_ACK_SHOP,
+                unk1: 0,
+                equipped_items_inventory_type: ContainerType::Inventory0, // TODO: wrong!!!
             }),
             ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(
                 item_dst_info.clone(),
@@ -165,7 +167,7 @@ impl ShopEventHandler {
                         .await;
 
                         connection
-                            .send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP as u16)
+                            .send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP)
                             .await;
 
                         Self::send_gilshop_item_update(connection, add_result).await;

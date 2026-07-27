@@ -18,11 +18,11 @@ bitflags! {
         /// Enables the Playguide window, and also the Duty Recorder. Only sent for the first zone logged into.
         const INITIAL_LOGIN = 0x001;
 
-        // TODO: no idea, I didn't find this in the disassembly so it may be unused/no effect. Set while in an instanced duty (explorer mode.)
-        const UNK1 = 0x002;
+        /// Only seen when in instanced content, and is required for other flags to take effect.
+        const INSTANCED_CONTENT = 0x002;
 
-        // TODO: I think this is for resetting the content finder queue info? This is set when returning from a duty.
-        const UNK2 = 0x004;
+        /// Reset the client's ContentsFinderQueueInfo.
+        const RESET_CONTENTS_FINDER_QUEUE = 0x004;
 
         /// Hides the server information in the status bar and disables some social commands that only work in a World.
         const CROSS_WORLD = 0x008;
@@ -30,15 +30,20 @@ bitflags! {
         /// Allows flying on your mount. This only works if you completed A Realm Reborn.
         const ENABLE_FLYING = 0x010;
 
-        // TODO: 32 seems to control some UI state. Set while in an instanced duty (explorer mode.)
-        const UNK3 = 0x020;
+        /// Seems to control something obscure chara card, achievement and inventory related. Set while in an instanced duty.
+        const UNK5 = 0x020;
+
+        /// Enables the record ready check command in the main menu. Doesn't do anything if INSTANCED_CONTENT isn't also set. The command doesn't work unless you're actually in a duty.
+        const ENABLE_RECORD_READY_CHECK = 0x040;
 
         /// Informs the client that this is an instanced area. Also needs instance_id to be a non-zero value.
         const INSTANCED_AREA = 0x080;
 
-        // TODO: 256 seems to be something else UI related
+        /// Displays the "You successfully travel to <world name>" text on-screen, and probably does other things.
+        const WORLD_TRAVEL = 0x100;
 
-        // TODO: 512 seems to be something weather-related?
+        /// Unsure if it's purpose, but sets `IsCurrentWeathjerForced` and `IsNextWeatherForced` in the client.
+        const FORCE_WEATHER = 0x200;
     }
 }
 
@@ -60,19 +65,18 @@ pub struct ZoneInit {
     pub pop_range_id: u32,
     #[brw(pad_after = 1)] // empty
     /// Index into the Weather Excel sheet.
-    // NOTE: Currently it's read as a byte, however it's more than likely going to change into a u16 in the future.
     pub weather_id: u8,
     /// Various flags that can be set.
+    #[brw(pad_after = 1)]
+    // Contains data, but seems to be junk and not read by the client. Seems to always be 170 but 168 in instanced areas.
     pub flags: ZoneInitFlags,
-    /// Unknown purpose, seems to always be 170 for me. 168 in instanced areas.
-    pub unk1: u8,
-    /// Seems to only matter for content replay.
+    /// Seems to only matter for content replay. Possible flags (guessed): 1, 2 and 4.
     #[brw(pad_after = 2)] // empty in every ZoneInit I've seen, and not read by the client.
     pub input_timer_related: u8,
-    /// Unknown (assumed) float.
-    pub unk2: f32,
-    /// Unknown (assumed) float.
-    pub unk3: f32,
+    /// Unknown float (only seen 8.59375). May be read by the client, but unsure of its purpose.
+    #[brw(pad_after = 4)]
+    // This does contain a float (only seen 1.0) but it's never read by the client.
+    pub unk1: f32,
     /// Index into the WorldDCGroupType Excel sheet.
     pub ranked_crystalline_conflict_hosting_data_center_id: u32,
     #[br(map = read_bool_from::<u8>)]
@@ -126,10 +130,8 @@ mod tests {
                 pop_range_id: 0,
                 weather_id: 2,
                 flags: ZoneInitFlags::INITIAL_LOGIN,
-                unk1: 170,
                 input_timer_related: 0,
-                unk2: 8.59375,
-                unk3: 1.0,
+                unk1: 8.59375,
                 ranked_crystalline_conflict_hosting_data_center_id: 5,
                 is_limited_time_bonus_active: false,
                 game_festival_ids: [165, 0, 0, 0, 0, 0, 0, 0].map(|x| FestivalId(x)),

@@ -13,7 +13,7 @@ pub struct ActorSetPos {
     pub warp_type: WarpType,
     /// Argument based on `warp_type`.
     pub arg: u8,
-    /// Unknown purpose.
+    /// Uses the ambient sound from this row in the TerritoryIntendedUse Excel sheet. Isn't used for anything else I think.
     pub transition_territory_filter_key: u32,
     /// The position to warp the player to.
     #[brw(pad_after = 4)] // padding, not read by the client

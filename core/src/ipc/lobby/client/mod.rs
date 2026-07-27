@@ -26,6 +26,7 @@ pub enum ClientLobbyIpcData {
         unk1: u8,
         unk2: u16,
         unk3: u32,
+        /// Unique ID of the service account. Can be found in LoginReply.
         account_id: u64,
         unk4: [u8; 64],
     },

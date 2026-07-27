@@ -314,7 +314,7 @@ impl ZoneConnection {
             let game_data = self.gamedata.lock();
 
             ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
-                class_id: self.player_data.classjob.current_class as u8,
+                classjob_id: self.player_data.classjob.current_class as u8,
                 class_level: self.current_level(&game_data),
                 current_level: self.current_level(&game_data),
                 synced_level: self.synced_level.unwrap_or_default() as u16,

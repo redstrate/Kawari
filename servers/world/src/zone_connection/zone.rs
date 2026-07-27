@@ -220,7 +220,7 @@ impl ZoneConnection {
             let mut flags = if initial_login {
                 ZoneInitFlags::INITIAL_LOGIN
             } else if bound_by_duty {
-                ZoneInitFlags::UNK1 | ZoneInitFlags::UNK3
+                ZoneInitFlags::INSTANCED_CONTENT | ZoneInitFlags::UNK5
             } else {
                 ZoneInitFlags::default()
             };
@@ -229,6 +229,11 @@ impl ZoneConnection {
                 flags |= ZoneInitFlags::ENABLE_FLYING;
             } else {
                 self.offered_teleport = None; // Discard any previously offered teleports once we're in a duty.
+
+                let mut game_data = self.gamedata.lock();
+                if game_data.is_duty_recorder_allowed(content_finder_condition_id) {
+                    flags |= ZoneInitFlags::ENABLE_RECORD_READY_CHECK;
+                }
             }
 
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ZoneInit(ZoneInit {
@@ -239,6 +244,7 @@ impl ZoneConnection {
                 game_festival_ids,
                 game_festival_phases,
                 ui_festival_ids: config.world.active_festivals.map(FestivalId),
+                unk1: 8.59375,
                 ..Default::default()
             }));
             self.send_ipc_self(ipc).await;
@@ -564,7 +570,7 @@ impl ZoneConnection {
     pub async fn change_weather(&mut self, new_weather_id: u8) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::WeatherId(WeatherChange {
             weather_id: new_weather_id,
-            daytime_fade_length: 1.0,
+            fade_length: 1.0,
             ..Default::default()
         }));
         self.send_ipc_self(ipc).await;

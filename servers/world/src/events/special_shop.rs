@@ -78,7 +78,7 @@ impl SpecialShopEventHandler {
                     .await;
 
                     connection
-                        .send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP as u16)
+                        .send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP)
                         .await;
 
                     ShopEventHandler::send_gilshop_item_update(connection, add_result).await;

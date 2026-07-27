@@ -1066,6 +1066,16 @@ impl GameData {
         Some(content_finder_row.Content)
     }
 
+    /// Checks if the duty recorder is allowed for this content.
+    pub fn is_duty_recorder_allowed(&mut self, content_finder_row_id: u16) -> bool {
+        let content_finder_row = self
+            .content_finder_condition_sheet
+            .row(content_finder_row_id as u32)
+            .unwrap();
+
+        content_finder_row.DutyRecorderAllowed
+    }
+
     /// Returns the time limit in minutes for a given InstanceContent id.
     pub fn find_content_time_limit(&mut self, instance_content_id: u16) -> Option<u16> {
         let row = self

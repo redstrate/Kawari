@@ -1167,6 +1167,7 @@ impl std::fmt::Debug for HousingFlag {
     }
 }
 
+/// Helper newtype that can display the name of known festivals.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Default)]

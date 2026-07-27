@@ -114,7 +114,6 @@ impl ZoneConnection {
                         quantity: item.quantity,
                         item_id: item.item_id,
                         slot: slot_index as u16,
-                        ..Default::default()
                     }),
                 ),
                 _ => ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateItem(ItemInfo {
@@ -227,10 +226,12 @@ impl ZoneConnection {
         self.update_class_info().await;
     }
 
-    pub async fn send_inventory_ack(&mut self, sequence: u32, action_type: u16) {
+    pub async fn send_inventory_ack(&mut self, sequence: u32, action_type: u8) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryActionAck {
             sequence,
             action_type,
+            equipped_items_inventory_type: ContainerType::Inventory0, // TODO: wrong!!
+            unk1: 0,
         });
         self.send_ipc_self(ipc).await;
         self.player_data.item_sequence += 1;

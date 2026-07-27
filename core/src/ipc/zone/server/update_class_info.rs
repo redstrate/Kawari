@@ -4,9 +4,9 @@ use binrw::binrw;
 #[derive(Debug, Clone, Copy, Default)]
 pub struct UpdateClassInfo {
     /// Index into the ClassJob Excel sheet.
-    pub class_id: u8,
+    pub classjob_id: u8,
     /// The level of the current class.
-    #[brw(pad_before = 1)] // should be empty
+    #[brw(pad_before = 1)] // not read by the client
     pub current_level: u16,
     /// Seems to always be identical to `current_level`.
     pub class_level: u16,

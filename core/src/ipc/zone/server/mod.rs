@@ -362,9 +362,13 @@ pub enum ServerZoneIpcData {
     CurrencyCrystalInfo(CurrencyInfo),
     Config(Config),
     InventoryActionAck {
-        sequence: u32,
-        #[brw(pad_after = 10)]
-        action_type: u16,
+        sequence: u32, // TODO: FFXIVClientStructs thinks is this "context_id", what does that mean...?
+        action_type: u8,
+        #[brw(pad_after = 2)] // not read
+        unk1: u8,
+        /// Only used if `action_type` is 3??
+        #[brw(pad_after = 6)] // not read
+        equipped_items_inventory_type: ContainerType,
     },
     PingSyncReply {
         timestamp: u32,
