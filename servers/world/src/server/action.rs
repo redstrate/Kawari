@@ -108,8 +108,7 @@ pub fn execute_action(
         content_data: LuaContent::default(),
         base_parameters: BaseParameters::default(),
     };
-    // TODO: Isn't there a better way to do this without a bunch of borrow checking issues involving data, actor, and instance below?
-    // Regardless, we need to set the player's mount id in their common spawn so both pillion works and also letting players see this existing actor's mount when they spawn.
+    // We need to set the player's mount id in their common spawn so both pillion works and also letting players see this existing actor's mount when they spawn.
     if request.action_type == ActionType::Mount {
         let mut data = data.lock();
         let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
@@ -570,7 +569,7 @@ pub fn execute_action(
                     ServerZoneIpcSegment::new(ServerZoneIpcData::EffectResult(EffectResult {
                         count: 1,
                         global_sequence: network.global_action_sequence,
-                        target_id: from_actor_id, // TODO: unsure if this is correct?
+                        target_id: from_actor_id,
                         health_points: common_spawn.health_points,
                         max_health_points: common_spawn.max_health_points,
                         resource_points: common_spawn.resource_points,
@@ -768,7 +767,7 @@ pub fn execute_mount_action(
         action_id: request.action_id,
         animation_lock: ANIMATION_LOCK_TIME,
         rotation: common_spawn.rotation,
-        spell_id: 4,
+        spell_id: request.action_id as u16,
         source_sequence: request.sequence,
         target_count: 1,
         effects,

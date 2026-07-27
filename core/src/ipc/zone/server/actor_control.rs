@@ -11,6 +11,16 @@ use crate::{
 };
 
 #[binrw]
+#[brw(repr = u32)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum BaseStat {
+    Health = 1,
+    Mana = 3,
+    GatheringPoints = 7,
+    CraftingPoints = 8,
+}
+
+#[binrw]
 #[derive(Debug, PartialEq, Clone)]
 pub enum LiveEventType {
     /// "[Item] recorded in gathering log". Only prints the text, doesn't set the bitmask.
@@ -144,6 +154,10 @@ pub enum ActorControlCategory {
         unk3: u32,
     },
 
+    /// Does what it says!
+    #[brw(magic = 13u32)]
+    SetBaseStat { base_stat: BaseStat, amount: u32 },
+
     /// Kills this actor, including playing an animation and setting HP/MP to zero.
     /// Does *not* change the state of the actor.
     #[brw(magic = 14u32)]
@@ -187,6 +201,15 @@ pub enum ActorControlCategory {
         effect_id: u32,
         unk2: u32,
         source_actor_id: ObjectId,
+    },
+
+    #[brw(magic = 23u32)]
+    FloatingNumberVFX {
+        unk1: u32,
+        /// See TargetEffectKind.
+        kind: u32,
+        amount: u32,
+        object_id: ObjectId,
     },
 
     /// Updates the rested EXP bonus shown in the EXP bar.
@@ -855,6 +878,16 @@ pub enum ActorControlCategory {
     /// Calls into animation-related functions I think?
     #[brw(magic = 1529u32)]
     UnkAnimationRelated {},
+
+    /// That's the name of the function in FFXIVClientStructs: ProcessHotDot
+    #[brw(magic = 1540u32)]
+    HotDot {
+        unk1: u32,
+        /// Amount of damage to display.
+        amount: u32,
+        /// Who did the damage?
+        source_actor_id: ObjectId,
+    },
 
     /// Shows the flying text and some VFX on the target, but doesn't display in the log or change anything else.
     #[brw(magic = 1541u32)]
