@@ -887,7 +887,8 @@ pub enum ActorControlCategory {
     /// That's the name of the function in FFXIVClientStructs: ProcessHotDot
     #[brw(magic = 1540u32)]
     HotDot {
-        unk1: u32,
+        /// The source status of this HoT(?)
+        status_id: u32,
         /// Amount of damage to display.
         amount: u32,
         /// Who did the damage?

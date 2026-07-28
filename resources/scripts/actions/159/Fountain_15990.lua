@@ -11,7 +11,7 @@ function doAction(player, in_combo)
         potency = COMBO_POTENCY
     end
 
-    effects:damage(DAMAGE_KIND_NORMAL, DAMAGE_TYPE_SLASHING, player.parameters:calc_physical_damage(potency))
+    effects:damage(DAMAGE_TYPE_SLASHING, player.parameters:calc_physical_damage(potency))
 
     if in_combo then
         -- Silken Flow has a 50% chance

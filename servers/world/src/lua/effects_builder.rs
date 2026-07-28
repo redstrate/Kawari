@@ -11,9 +11,9 @@ impl UserData for EffectsBuilder {
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
         methods.add_method_mut(
             "damage",
-            |_, this, (damage_kind, damage_type, amount): (DamageKind, DamageType, u16)| {
+            |_, this, (damage_type, amount): (DamageType, u16)| {
                 this.effects.push(TargetEffect(TargetEffectKind::Damage {
-                    damage_kind,
+                    damage_kind: DamageKind::default(),
                     damage_type,
                     damage_element: DamageElement::Unaspected, // Will be filled in later
                     bonus_percent: 0,

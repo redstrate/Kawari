@@ -8,36 +8,20 @@ use crate::{
     ipc::zone::ActionType,
 };
 
-// TODO: this might be a flag?
 #[binrw]
-#[derive(
-    Debug, Eq, PartialEq, Clone, Copy, Default, Display, Deserialize, Serialize, EnumIter, FromRepr,
-)]
-#[repr(u8)]
-#[brw(repr = u8)]
-#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
-pub enum DamageKind {
-    // These are all "normal" attacks, not direct hits/criticals or anything special.
-    #[default]
-    Normal = 0x0,
-    Critical = 0x1,
-    DirectHit = 0x2,
-}
+#[derive(Eq, PartialEq, Clone, Copy, Default)]
+pub struct DamageKind(u8);
 
-#[cfg(feature = "server")]
-impl mlua::IntoLua for DamageKind {
-    fn into_lua(self, _: &mlua::Lua) -> mlua::Result<mlua::Value> {
-        Ok(mlua::Value::Integer(self as i64))
+bitflags! {
+    impl DamageKind: u8 {
+        const CRITICAL = 0x20;
+        const DIRECT_HIT = 0x40;
     }
 }
 
-#[cfg(feature = "server")]
-impl mlua::FromLua for DamageKind {
-    fn from_lua(value: mlua::Value, _: &mlua::Lua) -> mlua::Result<Self> {
-        match value {
-            mlua::Value::Integer(integer) => Ok(Self::from_repr(integer as u8).unwrap()),
-            _ => unreachable!(),
-        }
+impl std::fmt::Debug for DamageKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
     }
 }
 
@@ -318,7 +302,7 @@ mod tests {
         assert_eq!(
             action_result.effects[0].0,
             TargetEffectKind::Damage {
-                damage_kind: DamageKind::Normal,
+                damage_kind: DamageKind::default(),
                 damage_type: DamageType::Slashing,
                 damage_element: DamageElement::Unaspected,
                 bonus_percent: 0,
