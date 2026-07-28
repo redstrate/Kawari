@@ -305,8 +305,8 @@ impl Instance {
         self.queued_task.retain(|x| x != task);
 
         // Then actually do the work:
-        if let QueuedTaskData::CastAction { .. } = task.data {
-            cancel_action(network.clone(), task.from_id)
+        if let QueuedTaskData::CastAction { request, .. } = &task.data {
+            cancel_action(network.clone(), task.from_id, request.action_id)
         }
     }
 

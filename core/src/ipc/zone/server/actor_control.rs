@@ -167,7 +167,12 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 15u32)]
-    CancelCast {},
+    CancelCast {
+        unk1: u32,
+        unk2: u32,
+        /// Action ID of the cast being cancelled.
+        action_id: u32,
+    },
 
     /// Sets the current value of the cooldown timer.
     #[brw(magic = 16u32)]

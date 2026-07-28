@@ -630,8 +630,12 @@ pub fn execute_action(
     }
 }
 
-pub fn cancel_action(network: Arc<Mutex<NetworkState>>, from_id: ClientId) {
-    let msg = FromServer::ActorControlSelf(ActorControlCategory::CancelCast {});
+pub fn cancel_action(network: Arc<Mutex<NetworkState>>, from_id: ClientId, action_id: u32) {
+    let msg = FromServer::ActorControlSelf(ActorControlCategory::CancelCast {
+        unk1: 538,
+        unk2: 1,
+        action_id,
+    });
 
     let mut network = network.lock();
     network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
