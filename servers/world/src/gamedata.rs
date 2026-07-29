@@ -528,7 +528,14 @@ impl GameData {
             let row = sheet.row(aetheryte_id)?;
 
             // Pick a random pop range to stop people from spawning in the same position
-            let pop_range_id = fastrand::choice(row.Level).unwrap();
+            let locations: Vec<u32> = row
+                .Level
+                .to_vec()
+                .iter()
+                .filter(|x| **x != 0)
+                .copied()
+                .collect();
+            let pop_range_id = fastrand::choice(locations).unwrap();
             let zone_id = row.Territory;
 
             Some((pop_range_id, zone_id))
