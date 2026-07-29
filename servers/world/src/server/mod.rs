@@ -146,62 +146,62 @@ impl WorldServer {
         instance.content_finder_condition_id = content_finder_condition;
 
         // TODO: This duplicates a lot of code with ZoneConnection::handle_zone_change :-(
-        let intended_use = TerritoryIntendedUse::from_repr(instance.zone.intended_use).unwrap();
-        let Some(director_type) = HandlerType::from_intended_use(intended_use) else {
-            panic!("Unknown director for {intended_use}!");
-        };
-        let content_id = game_data
-            .find_content_for_content_finder_id(content_finder_condition)
-            .unwrap();
+        if let Some(intended_use) = TerritoryIntendedUse::from_repr(instance.zone.intended_use)
+            && let Some(director_type) = HandlerType::from_intended_use(intended_use)
+        {
+            let content_id = game_data
+                .find_content_for_content_finder_id(content_finder_condition)
+                .unwrap();
 
-        let id = HandlerId::new(director_type, content_id);
+            let id = HandlerId::new(director_type, content_id);
 
-        // Setup Lua state for our director
-        let lua = KawariLua::new();
+            // Setup Lua state for our director
+            let lua = KawariLua::new();
 
-        // Find the script for this content
-        let content_short_name = game_data
-            .get_content_short_name(content_finder_condition)
-            .unwrap();
-        let file_name = get_config()
-            .filesystem
-            .locate_script_file(&format!("content/{content_short_name}.lua"));
+            // Find the script for this content
+            let content_short_name = game_data
+                .get_content_short_name(content_finder_condition)
+                .unwrap();
+            let file_name = get_config()
+                .filesystem
+                .locate_script_file(&format!("content/{content_short_name}.lua"));
 
-        let mut director = DirectorData {
-            id,
-            ..Default::default()
-        };
+            let mut director = DirectorData {
+                id,
+                ..Default::default()
+            };
 
-        let result = std::fs::read(&file_name);
-        if let Err(err) = result {
-            tracing::warn!(
-                "Failed to load {}: {:?} instance content won't be scripted!",
-                file_name,
-                err
-            );
-        } else {
-            let file = result.unwrap();
-
-            if let Err(err) = lua
-                .0
-                .load(file)
-                .set_name("@".to_string() + &file_name)
-                .exec()
-            {
+            let result = std::fs::read(&file_name);
+            if let Err(err) = result {
                 tracing::warn!(
-                    "Syntax error in {}: {:?} instance content won't be scripted!",
+                    "Failed to load {}: {:?} instance content won't be scripted!",
                     file_name,
                     err
                 );
             } else {
-                director.lua = lua;
+                let file = result.unwrap();
 
-                // Call into the onSetup function before returning, as we need the flag to be initialized before any players change zones.
-                director.setup();
+                if let Err(err) = lua
+                    .0
+                    .load(file)
+                    .set_name("@".to_string() + &file_name)
+                    .exec()
+                {
+                    tracing::warn!(
+                        "Syntax error in {}: {:?} instance content won't be scripted!",
+                        file_name,
+                        err
+                    );
+                } else {
+                    director.lua = lua;
+
+                    // Call into the onSetup function before returning, as we need the flag to be initialized before any players change zones.
+                    director.setup();
+                }
             }
-        }
 
-        instance.director = Some(director);
+            instance.director = Some(director);
+        }
 
         // Ensure we have the entrance set correctly
         let entrance_id = game_data
