@@ -13,10 +13,28 @@
   Name: Burgeoning Dread (2014)
 - Id: 7
   Name: Breaking Brick Mountains (2014)
+- Id: 8
+  Name: Valentione's Day (2014)
+- Id: 9
+  Name: Little Ladies' Day (2014)
+- Id: 10
+  Name: Hatching-tide (2014)
+- Id: 11
+  Name: The Rising (2014)
 - Id: 14
   Name: All Saint's Wake (2014)
 - Id: 15
   Name: Starlight Celebration (2014)
+- Id: 16
+  Name: Heavensturn (2015)
+- Id: 19
+  Name: Valentione's Day (2015)
+- Id: 20
+  Name: Little Ladies' Day (2015)
+- Id: 21
+  Name: Hatching-tide (2015)
+- Id: 22
+  Name: The Rising (2015)
 - Id: 26
   Name: New Year Machinations (Music) (2015)
 - Id: 27
@@ -27,6 +45,20 @@
   Name: The Maiden's Rhapsody
 - Id: 31
   Name: Starlight Celebration (2015)
+- Id: 32
+  Name: Heavensturn (2016)
+- Id: 33
+  Name: Valentione's Day (2016)
+- Id: 34
+  Name: Little Ladies' Day (2016)
+- Id: 35
+  Name: Hatching-tide (2016)
+- Id: 36
+  Name: The Make It Rain Campaign (2016)
+- Id: 37
+  Name: Moonfire Faire (2016)
+- Id: 38
+  Name: The Rising (2016)
 - Id: 39
   Name: Yo-kai Watch
 - Id: 40
@@ -273,3 +305,11 @@
   Name: Moonfire Faire (2026)
 - Id: 175
   Name: The Rising (2026)
+- Id: 176
+  Name: All Saints' Wake (2026)
+- Id: 257
+  Name: FFVII Gold Saucer Event
+- Id: 258
+  Name: Starlight Celebration (2026)
+- Id: 259
+  Name: New Year (2027)
