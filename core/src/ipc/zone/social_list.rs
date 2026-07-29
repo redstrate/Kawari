@@ -137,7 +137,7 @@ impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sq
 // TODO: This seems to actually be entirely wrong, or at least reused for friend group icons in the context of the friend list, we need to rethink this eventully
 /// Flags to enable or disable various things in the Social Menu UI.
 #[binrw]
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Default, Eq, PartialEq)]
 pub struct SocialListUIFlags(u16);
 
 bitflags! {
@@ -149,6 +149,12 @@ bitflags! {
         const UNKNOWN_256 = 256;
         /// Enables the right-click context menu for this PlayerEntry.
         const ENABLE_CONTEXT_MENU = 4096;
+    }
+}
+
+impl std::fmt::Debug for SocialListUIFlags {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
     }
 }
 

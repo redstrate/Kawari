@@ -115,7 +115,7 @@ pub enum AvailabilityType {
 }
 
 #[binrw]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct HousingFlags(u8);
 
 bitflags! {
@@ -125,5 +125,11 @@ bitflags! {
         const HAS_SEARCH_COMMENT = 1 << 2;
         const HOUSE_BUILT = 1 << 3;
         const OWNED_BY_FC = 1 << 4;
+    }
+}
+
+impl std::fmt::Debug for HousingFlags {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        bitflags::parser::to_writer(self, f)
     }
 }
