@@ -633,7 +633,7 @@ impl ZoneConnection {
         let mut gamedata = self.gamedata.lock();
         gamedata
             .get_intended_use(self.player_data.volatile.zone_id as u32)
-            .unwrap_or(TerritoryIntendedUse::Jail)
+            .unwrap_or(TerritoryIntendedUse::Overworld)
     }
 
     /// Returns true if the intended use is for housing, false otherwise.
