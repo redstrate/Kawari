@@ -189,6 +189,10 @@ impl Zone {
                     .expect("Didn't find dropins directory?")
                     .flatten()
                 {
+                    if !entry.file_name().to_str().unwrap().ends_with(".json") {
+                        continue;
+                    }
+
                     if let Ok(contents) = std::fs::read_to_string(entry.path()) {
                         match serde_json::from_str::<DropIn>(&contents) {
                             Ok(mut dropin) => {
