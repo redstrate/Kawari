@@ -433,6 +433,17 @@ impl DirectorData {
     }
 
     pub fn on_gimmick_rect(&mut self, id: u32) {
+        // Skip if the fucntion isn't defined'
+        if !self
+            .lua
+            .0
+            .globals()
+            .contains_key("onGimmickRect")
+            .unwrap_or_default()
+        {
+            return;
+        }
+
         let mut run_script = || {
             let mut lua_director = self.create_lua_director();
             let err = self.lua.0.scope(|scope| {
