@@ -392,6 +392,7 @@ impl HandlerType {
             TerritoryIntendedUse::Raid2 => Some(Self::InstanceContent),
             TerritoryIntendedUse::ChaoticRaid => Some(Self::InstanceContent),
             TerritoryIntendedUse::CrystallineConflict => Some(Self::InstanceContent),
+            TerritoryIntendedUse::CrystallineConflictCustomMatch => Some(Self::InstanceContent),
             TerritoryIntendedUse::Frontline => Some(Self::InstanceContent),
             TerritoryIntendedUse::TripleTriadInvitationalParlor => Some(Self::InstanceContent),
             TerritoryIntendedUse::CriterionDungeon => Some(Self::InstanceContent),
