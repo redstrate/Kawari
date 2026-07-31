@@ -10,13 +10,16 @@ use crate::{
         AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE,
         BEAST_TRIBE_ARRAY_SIZE, BEGINNER_TRAINING_ARRAY_SIZE, BUDDY_EQUIP_BITMASK_SIZE,
         CAUGHT_FISH_BITMASK_SIZE, CAUGHT_SPEARFISH_BITMASK_SIZE, CHOCOBO_TAXI_STANDS_BITMASK_SIZE,
-        CLASSJOB_ARRAY_SIZE, CRYSTALLINE_CONFLICT_ARRAY_SIZE, CUTSCENE_SEEN_BITMASK_SIZE,
-        DUNGEON_ARRAY_SIZE, FRAMERS_KIT_BITMASK_SIZE, FRONTLINE_ARRAY_SIZE,
-        GLASSES_STYLES_BITMASK_SIZE, GUILDHEST_ARRAY_SIZE, MASKED_CARNIVALE_ARRAY_SIZE,
-        MINION_BITMASK_SIZE, MISC_CONTENT_ARRAY_SIZE, MOUNT_BITMASK_SIZE,
-        ORCHESTRION_ROLL_BITMASK_SIZE, ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE,
-        SPECIAL_CONTENT_ARRAY_SIZE, TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
-        UNLOCK_BITMASK_SIZE, UNLOCKED_FISHING_SPOTS_BITMASK_SIZE,
+        CLASSJOB_ARRAY_SIZE, CONTENTS_NOTE_COMPLETION_FLAGS_BITMASK_SIZE,
+        CRYSTALLINE_CONFLICT_ARRAY_SIZE, CUTSCENE_SEEN_BITMASK_SIZE,
+        DISCOVERY_MAPS_WITH_UP_TO_16_REGIONS_BITMASK_SIZE,
+        DISCOVERY_MAPS_WITH_UP_TO_32_REGIONS_BITMASK_SIZE, DUNGEON_ARRAY_SIZE,
+        FRAMERS_KIT_BITMASK_SIZE, FRONTLINE_ARRAY_SIZE, GLASSES_STYLES_BITMASK_SIZE,
+        GUILDHEST_ARRAY_SIZE, MASKED_CARNIVALE_ARRAY_SIZE, MINION_BITMASK_SIZE,
+        MISC_CONTENT_ARRAY_SIZE, MOUNT_BITMASK_SIZE, ORCHESTRION_ROLL_BITMASK_SIZE,
+        ORNAMENT_BITMASK_SIZE, RAID_ARRAY_SIZE, SASTISFACTION_SIZE, SPECIAL_CONTENT_ARRAY_SIZE,
+        TRIAL_ARRAY_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE, UNLOCK_BITMASK_SIZE,
+        UNLOCKED_FISHING_SPOTS_BITMASK_SIZE, UNLOCKED_SECRET_RECIPE_BOOKS_BITMASK_SIZE,
     },
 };
 
@@ -25,15 +28,15 @@ use crate::{
 pub struct PlayerSetup {
     /// The content ID of the player.
     pub content_id: u64,
-    /// This seems to be unused by the client.
+    /// Not exactly unused but unsure of the purpose.
     pub padding: [u64; 2],
     /// The actor ID of the player.
     pub actor_id: ObjectId,
     pub rested_exp: u32,
     pub companion_current_exp: u32,
     pub unknown1c: u32,
-    pub fish_caught: u32,
-    pub use_bait_item_id: u32,
+    pub num_fish_caught: u32,
+    pub fishing_bait: u32,
     pub num_spearfish_caught: u32,
     pub unknown_pvp2c: u32,
     pub total_frontline_matches: u32,
@@ -43,8 +46,10 @@ pub struct PlayerSetup {
     pub weekly_bingo_task_status: [u8; 4],
     pub weekly_bingo_flags: u32,
     pub companion_time_left: f32,
-    pub unknown44: [u8; 18],
-    pub pvp_series_exp: u16,
+    pub unk44a: u32,
+    pub unk_tofu_timestamp: u32,
+    pub unk44b: [u8; 10],
+    pub pvp_series_experience: u16,
     /// How many player commendations you received.
     pub player_commendations: i16,
     pub unknown64: [u16; 2],
@@ -73,19 +78,19 @@ pub struct PlayerSetup {
     pub unknown78: bool,
     pub race: u8,
     pub tribe: u8,
-    pub gender: u8,
+    pub sex: u8,
     /// Refers to an index in the ClassJob Excel sheet.
-    pub current_class: u8,
+    pub current_classjob_id: u8,
     /// I guess the first class of your character, but I'm unsure?
     pub first_class: u8,
     /// The character's chosen deity. Indexed into the GuardianDeity Excel sheet.
-    pub deity: u8,
-    pub nameday_month: u8,
-    pub nameday_day: u8,
+    pub guardian_deity: u8,
+    pub birth_month: u8,
+    pub birth_day: u8,
     /// The character's initial city-state.
-    pub city_state: u8,
+    pub start_town: u8,
     /// The Aetheryte used for the Return action. Indexed into the Aetheryte Excel sheet.
-    pub homepoint: u16,
+    pub home_aetheryte_id: u16,
     pub quest_special_flags: QuestSpecialFlags,
     pub pet_data: u8,
     pub companion_rank: u8,
@@ -95,14 +100,16 @@ pub struct PlayerSetup {
     pub companion_color: u8,
     pub companion_favorite_feed: u8,
     pub favourite_aetheryte_count: u8,
-    pub unknown98: u8,
+    pub daily_quest_seed: u8,
     pub unknown97: u8,
     pub weekly_lockout_info: u8,
     pub relic_id: u8,
     pub relic_note_id: u8,
-    pub sightseeing21_to_80_unlock: u8, // TODO: might be SightseeingLogUnlockState in ClientStructs?
-    pub sightseeing_heavensward_unlock: u8, // TODO: might be SightseeingLogUnlockStateEx in ClientStructs?
-    pub unknown9e: u8,
+    pub sightseeing_log_unlock_state: u8,
+    pub sightseeing_log_unlock_state_ex: u8,
+    #[br(map = read_bool_from::<u8>)]
+    #[bw(map = write_bool_as::<u8>)]
+    pub unknown9e: bool,
     pub unknown9e1: u8,
     pub meister_flag: u8,
     /// Controls whether or not you can challenge other players.
@@ -145,18 +152,23 @@ pub struct PlayerSetup {
     pub levels: Vec<u16>,
     pub ui_festival_ids: [FestivalId; 8],
     pub ui_festival_phases: [u16; 8],
-    #[br(count = 232)]
-    #[bw(pad_size_to = 232)]
+    #[br(count = 176)]
+    #[bw(pad_size_to = 176)]
     pub unknown194: Vec<u8>,
+    pub beast_reputation_value: [u16; BEAST_TRIBE_ARRAY_SIZE],
+    pub quest_unk0: u16,
+    pub quest_unk2: u16,
+    pub quest_unk4: u16,
+    pub quest_unk6: u16,
+    pub quest_unk8: u16,
+    pub unk8: [u8; 6],
     pub supply_satisfcation: [u16; 12],
     #[br(count = 21)]
     #[bw(pad_size_to = 21)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub companion_name: String,
-    pub companion_def_rank: u8,
-    pub companion_att_rank: u8,
-    pub companion_heal_rank: u8,
+    pub buddy_levels: [u8; 3],
     #[br(count = MOUNT_BITMASK_SIZE)]
     #[bw(pad_size_to = MOUNT_BITMASK_SIZE)]
     pub mounts: Vec<u8>,
@@ -166,12 +178,12 @@ pub struct PlayerSetup {
     #[br(count = GLASSES_STYLES_BITMASK_SIZE)]
     #[bw(pad_size_to = GLASSES_STYLES_BITMASK_SIZE)]
     pub glasses_styles_mask: Vec<u8>,
+    /// Probably unaccounted for glasses styles.
     pub padding_probably_after_glasses_styles: u8,
     #[br(count = FRAMERS_KIT_BITMASK_SIZE)]
     #[bw(pad_size_to = FRAMERS_KIT_BITMASK_SIZE)]
     pub framers_kits_mask: Vec<u8>,
-    pub padding_probably_after_framers_kit: [u8; 11],
-    // NOTE: It seems this name is bigger than normal, but bytes >=40 may contain the online ID...?
+    // NOTE: Only part of this is used for the name, but bytes >=40 may contain the online ID...? I don't have access to any PS4/PS5/Xbox/NS2 captures yet.
     #[br(count = 64)]
     #[bw(pad_size_to = 64)]
     #[br(map = read_string)]
@@ -188,14 +200,16 @@ pub struct PlayerSetup {
     pub aetherytes: Vec<u8>,
     pub favorite_aetheryte_ids: [u16; 4],
     pub free_aetheryte_id: u16,
-    pub ps_plus_free_aetheryte_id: u16,
-    pub padding_probably_after_ps_plus: [u8; 2],
-    #[br(count = 162)]
-    #[bw(pad_size_to = 162 * 2)]
-    pub discovery_related_unk1: Vec<u16>,
-    #[br(count = 48)]
-    #[bw(pad_size_to = 48 * 4)]
-    pub discovery_related_unk2: Vec<u32>,
+    /// Free Aetheryte for Playstation Plus members.
+    pub free_aetheryte_ps_plus: u16,
+    /// Free Aetheryte for Nintendo Switch Online members.
+    pub free_aetheryte_id_nso: u16,
+    #[br(count = DISCOVERY_MAPS_WITH_UP_TO_16_REGIONS_BITMASK_SIZE)]
+    #[bw(pad_size_to = DISCOVERY_MAPS_WITH_UP_TO_16_REGIONS_BITMASK_SIZE * 2)]
+    pub maps_with_up_to_16_regions: Vec<u16>,
+    #[br(count = DISCOVERY_MAPS_WITH_UP_TO_32_REGIONS_BITMASK_SIZE)]
+    #[bw(pad_size_to = DISCOVERY_MAPS_WITH_UP_TO_32_REGIONS_BITMASK_SIZE * 4)]
+    pub maps_with_up_to_32_regions: Vec<u32>,
     pub padding_probably_after_discovery_related_unk2: [u8; 4],
     /// Which Active Help guides the player has seen.
     #[br(count = ACTIVE_HELP_BITMASK_SIZE)]
@@ -211,17 +225,15 @@ pub struct PlayerSetup {
     #[br(count = CUTSCENE_SEEN_BITMASK_SIZE)]
     #[bw(pad_size_to = CUTSCENE_SEEN_BITMASK_SIZE)]
     pub cutscene_seen_mask: Vec<u8>,
-    pub unknown6ff: u16,
-    pub padding_probably_after_unknown6ff: [u8; 3],
+    pub unknown6ff: u8,
     #[br(count = BUDDY_EQUIP_BITMASK_SIZE)]
     #[bw(pad_size_to = BUDDY_EQUIP_BITMASK_SIZE)]
     pub buddy_equip_mask: Vec<u8>,
+    /// Most likely unaccounted for buddy equips.
     pub buddy_equip_mask_padding: u8,
-    pub companion_equipped_head: u8,
-    pub companion_equipped_body: u8,
-    pub companion_equipped_legs: u8,
-    #[br(count = 15)]
-    #[bw(pad_size_to = 15)]
+    pub buddy_equip_row_ids: [u8; 3],
+    #[br(count = 13)]
+    #[bw(pad_size_to = 13)]
     pub unknown_mask: Vec<u8>,
     #[br(count = CAUGHT_FISH_BITMASK_SIZE)]
     #[bw(pad_size_to = CAUGHT_FISH_BITMASK_SIZE)]
@@ -230,36 +242,36 @@ pub struct PlayerSetup {
     #[br(count = UNLOCKED_FISHING_SPOTS_BITMASK_SIZE)]
     #[bw(pad_size_to = UNLOCKED_FISHING_SPOTS_BITMASK_SIZE)]
     pub unlocked_fishing_spots: Vec<u8>,
+    /// Most likely unaccounted for fishing spots.
     pub fishing_spots_padding: u8,
     #[br(count = CAUGHT_SPEARFISH_BITMASK_SIZE)]
     #[bw(pad_size_to = CAUGHT_SPEARFISH_BITMASK_SIZE)]
     pub caught_spearfish_mask: Vec<u8>,
     pub unlocked_spearfishing_notebooks: [u8; 8],
+    /// Most likely unaccounted for spearfishing notebooks.
     pub padding_spearfishing: u8,
     pub rank_malestrom: u8,
     pub rank_twin_adder: u8,
     pub rank_immortal_flames: u8,
     pub beast_reputation_rank: [u8; BEAST_TRIBE_ARRAY_SIZE],
     pub content_roulette_completion: [u8; 10],
-    pub unknown_mask6f7: [u8; 9],
-    pub padding_after_unknown_mask6f7: u8,
+    pub unknown_mask6f7: [u8; 10],
     pub player_state_flags1: PlayerStateFlags1,
     pub player_state_flags2: PlayerStateFlags2,
     pub player_state_flags3: PlayerStateFlags3,
-    pub contents_note_completion_flags: [u8; 8],
-    pub padding_after_content: [u8; 5],
-    pub unlocked_secret_recipe_books: [u8; 14],
+    pub contents_note_completion_flags: [u8; CONTENTS_NOTE_COMPLETION_FLAGS_BITMASK_SIZE],
+    pub unlocked_secret_recipe_books: [u8; UNLOCKED_SECRET_RECIPE_BOOKS_BITMASK_SIZE],
     #[br(count = 28)]
     #[bw(pad_size_to = 28)]
     pub unknown879: Vec<u8>,
-    pub monster_progress: [u8; 10],
+    pub relic_monster_progress: [u8; 10],
     pub objective_progress: [u8; 2],
     #[br(count = ADVENTURE_BITMASK_SIZE)]
     #[bw(pad_size_to = ADVENTURE_BITMASK_SIZE)]
     pub adventure_mask: Vec<u8>,
     #[br(count = 124)]
     #[bw(pad_size_to = 124)]
-    pub hunting_mark_mask: Vec<u8>,
+    pub hunting_mark_data: Vec<u8>,
     #[br(count = TRIPLE_TRIAD_CARDS_BITMASK_SIZE)]
     #[bw(pad_size_to = TRIPLE_TRIAD_CARDS_BITMASK_SIZE)]
     pub triple_triad_cards: Vec<u8>,
@@ -281,14 +293,14 @@ pub struct PlayerSetup {
     pub orchestrion_roll_mask: Vec<u8>,
     #[br(count = BEGINNER_TRAINING_ARRAY_SIZE)]
     #[bw(pad_size_to = BEGINNER_TRAINING_ARRAY_SIZE)]
-    pub completed_beginner_training: Vec<u8>, // TODO: not confirmed because I can't access this menu right now
-    pub unk_completion2: [u8; 9],
+    pub completed_beginner_training: Vec<u8>,
+    pub unk_completion2: [u8; 11],
 
     pub weekly_bingo_order_data: [u8; 16],
     pub weekly_bingo_reward_data: [u8; 4],
 
-    pub supply_satisfaction_ranks: [u8; 12],
-    pub used_supply_allowances: [u8; 12],
+    pub supply_satisfaction_ranks: [u8; SASTISFACTION_SIZE],
+    pub used_supply_allowances: [u8; SASTISFACTION_SIZE],
 
     #[br(count = SPECIAL_CONTENT_ARRAY_SIZE)]
     #[bw(pad_size_to = SPECIAL_CONTENT_ARRAY_SIZE)]
@@ -354,9 +366,11 @@ pub struct PlayerSetup {
     #[bw(pad_size_to = MISC_CONTENT_ARRAY_SIZE)]
     pub unlocked_misc_content: Vec<u8>,
 
+    pub unk_after_misc_content: u8,
+
     #[br(count = MISC_CONTENT_ARRAY_SIZE)]
     #[bw(pad_size_to = MISC_CONTENT_ARRAY_SIZE)]
     pub cleared_misc_content: Vec<u8>,
 
-    pub unknown949: [u8; 5],
+    pub unknown949: [u8; 2],
 }

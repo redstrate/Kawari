@@ -671,13 +671,16 @@ async fn process_packet(
                                         name: connection.player_data.character.name.clone(),
                                         actor_id: connection.player_data.character.actor_id,
                                         race: chara_make.customize.race as u8,
-                                        gender: chara_make.customize.gender as u8,
+                                        sex: chara_make.customize.gender as u8,
                                         tribe: chara_make.customize.tribe as u8,
-                                        city_state,
-                                        nameday_month: chara_make.birth_month as u8,
-                                        nameday_day: chara_make.birth_day as u8,
-                                        deity: chara_make.guardian as u8,
-                                        current_class: connection.player_data.classjob.current_class
+                                        start_town: city_state,
+                                        birth_month: chara_make.birth_month as u8,
+                                        birth_day: chara_make.birth_day as u8,
+                                        guardian_deity: chara_make.guardian as u8,
+                                        current_classjob_id: connection
+                                            .player_data
+                                            .classjob
+                                            .current_class
                                             as u8,
                                         first_class: connection.player_data.classjob.first_class
                                             as u8,
@@ -691,7 +694,10 @@ async fn process_packet(
                                             .clone(),
                                         minions: connection.player_data.unlock.minions.data.clone(),
                                         mounts: connection.player_data.unlock.mounts.data.clone(),
-                                        homepoint: connection.player_data.aetheryte.homepoint
+                                        home_aetheryte_id: connection
+                                            .player_data
+                                            .aetheryte
+                                            .homepoint
                                             as u16,
                                         favourite_aetheryte_count: 1,
                                         favorite_aetheryte_ids: [8, 0, 0, 0],

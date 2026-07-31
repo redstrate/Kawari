@@ -14,7 +14,7 @@ ServerZoneIpcType:
 - name: PlayerSetup
   comment: Lots of useful and persistent information like which dungeons are unlocked.
   opcode: 935
-  size: 2954
+  size: 2952
 - name: UpdateClassInfo
   comment: Updates class-specific information, like your currently synced level.
   opcode: 262
