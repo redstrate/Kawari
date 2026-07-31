@@ -29,7 +29,7 @@ Please ensure your commits are atomic, and has short and concise messaging. This
 
 ## Updating to new patches
 
-Updating Kawari can be quite involved, and so we developed a tool to automate the process. You can find said tool [here](https://codeberg.org/redstrate/KawariUpdater).
+See our dedicated [updating guide](updating.md).
 
 ## Testing local Physis
 

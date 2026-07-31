@@ -10,8 +10,9 @@
   - [Profiling](profiling.md)
 - [Contributing](contributing.md)
   - [Lua style guide](scripting/style_guide.md)
-  - [New Patch in-game Checklist](update_ingame_checklist.md)
-
+- [Updating](updating.md)
+  - [In-Game Checklist](update_ingame_checklist.md)
+  
 # Usage
 - [GM Commands](gm_commands.md)
 - [Debug Commands](debug_commands.md)

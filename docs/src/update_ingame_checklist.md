@@ -1,4 +1,4 @@
-# In-game Testing Checklist
+# In-Game Testing Checklist
 When a new patch is released and you're testing in-game, it's easy to forget all the features Kawari supports, so one should ensure the following items function as expected. For all these, ensure that the console is not reporting unknown opcodes, or an unexpected/wrong opcode (e.g. a party member kick opcode when you're trying to invite someone to a party).
 
 ## Login/logout
