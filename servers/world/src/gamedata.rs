@@ -1055,10 +1055,7 @@ impl GameData {
     pub fn get_eobj_extra_data(&mut self, eobj_id: u32) -> (u8, bool) {
         let row = self.eobj_sheet.row(eobj_id).unwrap();
 
-        (
-            row.PopType,
-            row.EyeCollision, // TODO: Will be renamed to Targetable in the future
-        )
+        (row.PopType, row.Targetable)
     }
 
     /// Returns the InstanceContent for a given ContentFinderCondition id.
