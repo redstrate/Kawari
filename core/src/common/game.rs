@@ -1300,6 +1300,27 @@ pub enum WarpType {
     Unk30 = 30,
 }
 
+/// Corresponds to the PublicContentType Excel sheet.
+#[binrw]
+#[repr(u8)]
+#[brw(repr = u8)]
+#[derive(Debug, Clone, Copy, Default, FromRepr, PartialEq)]
+pub enum PublicContentType {
+    #[default]
+    Invalid = 0,
+    WeddingCeremony = 1,
+    TripleTriadBattleHall = 2,
+    Eureka = 3,
+    TheCalamityRetold = 4,
+    LeapOfFaith = 5,
+    Diadem = 6,
+    Bozja = 7,
+    DelebrumReginae = 8,
+    IslandSanctuary = 9,
+    Blunderville = 10,
+    OccultCrescent = 11,
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;

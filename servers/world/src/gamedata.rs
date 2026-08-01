@@ -59,7 +59,9 @@ use physis::resource::{Resource, ResourceResolver, SqPackResource, UnpackedResou
 use physis::savedata::chardat::CustomizeData;
 use physis::{Language, TerritoryIntendedUse};
 
-use kawari::common::{InstanceContentType, get_aether_current_comp_flg_set_to_screenimage};
+use kawari::common::{
+    InstanceContentType, PublicContentType, get_aether_current_comp_flg_set_to_screenimage,
+};
 use kawari::common::{LegacyEquipmentModelId, WeaponModelId, timestamp_secs};
 use kawari::config::get_config;
 use strum::FromRepr;
@@ -1667,6 +1669,11 @@ impl GameData {
     /// Returns the pop range ID for this public content, if one is defined.
     pub fn find_public_content_pop_range(&mut self, id: u32) -> Option<u32> {
         Some(self.public_content_sheet.row(id)?.LGBPopRange).filter(|x| *x != 0)
+    }
+
+    /// Returns the type of PublicContent this is.
+    pub fn find_public_content_type(&mut self, id: u32) -> Option<PublicContentType> {
+        PublicContentType::from_repr(self.public_content_sheet.row(id)?.Type)
     }
 }
 

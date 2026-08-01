@@ -1572,6 +1572,9 @@ pub enum ServerZoneIpcData {
     RecruitingPartyCount {
         unk1: [u8; 968], // not exactly sure what this is yet...
     },
+    OccultCrescentSetup {
+        unk1: [u8; 160],
+    },
 }
 
 #[cfg(test)]

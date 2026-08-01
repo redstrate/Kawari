@@ -767,6 +767,10 @@ ServerZoneIpcType:
   comment: Sent to update the recruiting party count (somehow) in the Duty Finder window.
   opcode: 545
   size: 968
+- name: OccultCrescentSetup
+  comment: Pops open the custom UI for Occult Crescent among other things. Unsure if used for other public content.
+  opcode: 690
+  size: 160
 ClientZoneIpcType:
 - name: InitRequest
   comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)

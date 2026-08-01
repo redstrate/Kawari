@@ -880,6 +880,25 @@ pub enum ActorControlCategory {
     #[brw(magic = 1506u32)]
     StartDuelCountdown { opponent_id: ObjectId },
 
+    /// Needed for EnableDutyActions/SetDutyActions to function.
+    #[brw(magic = 1512u32)]
+    UnkDutyActions { unk1: u32 },
+
+    /// Sets up duty-specific actions like the ones seen in Occult Crescent.
+    #[brw(magic = 1514u32)]
+    SetDutyActions {
+        /// Index into the Action Excel sheet.
+        action_ids: [u32; 5],
+    },
+
+    /// Unsure, but needed for SetDutyActions to work?
+    #[brw(magic = 1515u32)]
+    EnableDutyActions {
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        enabled: bool,
+    },
+
     /// Calls into animation-related functions I think?
     #[brw(magic = 1529u32)]
     UnkAnimationRelated {},

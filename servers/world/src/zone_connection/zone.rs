@@ -9,7 +9,7 @@ use crate::{
 use kawari::{
     common::{
         FestivalId, HandlerId, HandlerType, HouseId, HouseUnit, HousingFlag, LandData, Position,
-        WarpType, timestamp_secs,
+        PublicContentType, WarpType, timestamp_secs,
     },
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
@@ -710,5 +710,44 @@ impl ZoneConnection {
             ],
         }))
         .await;
+
+        // Set up for certain public content
+        if self.content_handler_id.handler_type() == HandlerType::PublicContent {
+            let content_type;
+            {
+                let mut game_data = self.gamedata.lock();
+                content_type = game_data
+                    .find_public_content_type(self.content_handler_id.event_id())
+                    .unwrap_or_default();
+            }
+
+            if content_type == PublicContentType::OccultCrescent {
+                // Setup the panel
+                self.send_ipc_self(ServerZoneIpcSegment::new(
+                    ServerZoneIpcData::OccultCrescentSetup {
+                        unk1: [
+                            243, 152, 1, 0, 136, 182, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 48, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                            137, 21, 36, 0, 0, 0, 0, 0, 0, 0, 2, 5, 0, 1, 0, 0, 4, 0, 0, 0, 0, 1,
+                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 223, 63, 0, 0, 0, 0, 0, 0, 0, 0,
+                        ],
+                    },
+                ))
+                .await;
+
+                // Setup duty actions
+                self.actor_control_self(ActorControlCategory::UnkDutyActions { unk1: 24 })
+                    .await;
+                self.actor_control_self(ActorControlCategory::EnableDutyActions { enabled: true })
+                    .await;
+                self.actor_control_self(ActorControlCategory::SetDutyActions {
+                    action_ids: [41588, 41589, 41590, 0, 0],
+                })
+                .await;
+            }
+        }
     }
 }
