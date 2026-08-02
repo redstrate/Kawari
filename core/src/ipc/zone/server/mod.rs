@@ -1575,6 +1575,11 @@ pub enum ServerZoneIpcData {
     OccultCrescentSetup {
         unk1: [u8; 160],
     },
+    SpectatorList {
+        object_ids: [ObjectId; 8],
+        #[brw(pad_after = 3)] // padding
+        unk1: u8,
+    },
 }
 
 #[cfg(test)]
