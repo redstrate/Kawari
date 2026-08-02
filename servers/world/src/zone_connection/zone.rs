@@ -8,8 +8,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        FestivalId, HandlerId, HandlerType, HouseId, HouseUnit, HousingFlag, LandData, Position,
-        PublicContentType, WarpType, timestamp_secs,
+        FestivalId, HandlerId, HandlerType, HouseId, HouseUnit, HousingFlag, LandData, ObjectId,
+        Position, PublicContentType, WarpType, timestamp_secs,
     },
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
@@ -749,5 +749,23 @@ impl ZoneConnection {
                 .await;
             }
         }
+
+        // TODO: temporary, don't send in all instances
+        self.send_ipc_self(ServerZoneIpcSegment::new(
+            ServerZoneIpcData::SpectatorList {
+                object_ids: [
+                    self.player_data.character.actor_id,
+                    ObjectId::default(),
+                    ObjectId::default(),
+                    ObjectId::default(),
+                    ObjectId::default(),
+                    ObjectId::default(),
+                    ObjectId::default(),
+                    ObjectId::default(),
+                ],
+                unk1: 1,
+            },
+        ))
+        .await;
     }
 }

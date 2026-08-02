@@ -771,6 +771,10 @@ ServerZoneIpcType:
   comment: Pops open the custom UI for Occult Crescent among other things. Unsure if used for other public content.
   opcode: 690
   size: 160
+- name: SpectatorList
+  comment: When sent, populates the spectator list for Crystalline Conflict matches. This is visible in the Duty Menu and the Spectator UI.
+  opcode: 944
+  size: 36
 ClientZoneIpcType:
 - name: InitRequest
   comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)

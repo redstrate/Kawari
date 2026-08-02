@@ -933,6 +933,15 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
+    // TODO: There's a lot more spectator-related ACs
+    /// Initializes the SpectatorManager on the client.
+    #[brw(magic = 1600u32)]
+    InitializeSpectatorManager { row_id: u32, unk2: u32, unk3: u32 },
+
+    /// This actually shows the Spectator UI.
+    #[brw(magic = 1607u32)]
+    ShowSpectatorUI {},
+
     /// Calls some method in PvPProfile, unsure what it does yet.
     #[brw(magic = 1610u32)]
     UnkPvPProfileRelated {
