@@ -20,6 +20,9 @@ function onReturn(scene, results, player)
 
         -- Just like in retail, "seamlessly" transition them to the real zone:
         player:change_territory(TERRITORYTYPE0, { x = old_position.x, y = old_position.y, z = old_position.z }, old_rotation)
+
+        -- Send a message to remind the player that the rest of the quest won't function
+        player:send_message("You reached the end of this quest! Interacting with the quest giver will not advance it any further.")
     end
 
     player:finish_event()
