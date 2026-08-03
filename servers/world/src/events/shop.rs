@@ -167,7 +167,7 @@ impl ShopEventHandler {
                         .await;
 
                         connection
-                            .send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP)
+                            .send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP, 0)
                             .await;
 
                         Self::send_gilshop_item_update(connection, add_result).await;
@@ -299,7 +299,7 @@ impl ShopEventHandler {
                 connection.send_ipc_self(ipc).await;
 
                 connection
-                    .send_inventory_transaction_finish(0x100, 0x300)
+                    .send_inventory_transaction_finish(ItemOperationKind::UnkTrading2, 0x300)
                     .await;
 
                 Self::send_gilshop_ack(

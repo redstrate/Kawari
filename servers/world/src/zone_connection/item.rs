@@ -226,22 +226,26 @@ impl ZoneConnection {
         self.update_class_info().await;
     }
 
-    pub async fn send_inventory_ack(&mut self, sequence: u32, action_type: u8) {
+    pub async fn send_inventory_ack(&mut self, sequence: u32, action_type: u8, unk1: u8) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryActionAck {
             sequence,
             action_type,
             equipped_items_inventory_type: ContainerType::Inventory0, // TODO: wrong!!
-            unk1: 0,
+            unk1,
         });
         self.send_ipc_self(ipc).await;
         self.player_data.item_sequence += 1;
     }
 
-    pub async fn send_inventory_transaction_finish(&mut self, unk1: u32, unk2: u32) {
+    pub async fn send_inventory_transaction_finish(
+        &mut self,
+        operation_type: ItemOperationKind,
+        unk2: u32,
+    ) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InventoryTransactionFinish {
             sequence: self.player_data.item_sequence,
             sequence_repeat: self.player_data.item_sequence,
-            unk1,
+            operation_type,
             unk2,
         });
         self.send_ipc_self(ipc).await;

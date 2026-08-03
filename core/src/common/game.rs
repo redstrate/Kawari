@@ -664,6 +664,14 @@ pub enum ItemOperationKind {
     CombineStack = BASE_INVENTORY_ACTION + 11,
     /// The operation opcode/type when the server wants the client to equip the mannequin (character sheet/try on preview model?). Seen during login and probably elsewhere.
     EquipMannequin = BASE_INVENTORY_ACTION + 18,
+    /// Seen while discarding.
+    UnkDiscard = 0x90,
+    /// Seen during trading (256 in 7.55)
+    UnkTrading1 = 244,
+    /// Seen during trading (256 in 7.55)
+    UnkTrading2 = 256,
+    /// Seen while equipping gearsets.
+    UnkGearSetEquipped = 567,
 }
 
 /// Useful pre-defined log messages. Feel free to add any ones we need. Index into the LogMessage Excel sheet.

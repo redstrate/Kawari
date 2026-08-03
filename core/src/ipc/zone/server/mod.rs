@@ -424,7 +424,7 @@ pub enum ServerZoneIpcData {
         /// Repeated unk1 value. No, it's not a copy-paste error.
         sequence_repeat: u32,
         /// Unknown, seems to always be 0x00000090.
-        unk1: u32,
+        operation_type: ItemOperationKind,
         /// Unknown, seems to always be 0x00000200.
         unk2: u32,
     },

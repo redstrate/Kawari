@@ -1951,7 +1951,11 @@ async fn process_packet(
                         ClientZoneIpcData::ItemOperation(action) => {
                             tracing::info!("Client is modifying inventory! {action:#?}");
                             connection
-                                .send_inventory_ack(action.context_id, INVENTORY_ACTION_ACK_GENERAL)
+                                .send_inventory_ack(
+                                    action.context_id,
+                                    INVENTORY_ACTION_ACK_GENERAL,
+                                    0,
+                                )
                                 .await;
 
                             connection.player_data.inventory.process_action(action);
@@ -1978,7 +1982,10 @@ async fn process_packet(
                                 );
                                 connection.send_ipc_self(ipc).await;
                                 connection
-                                    .send_inventory_transaction_finish(0x90, 0x200)
+                                    .send_inventory_transaction_finish(
+                                        ItemOperationKind::UnkDiscard,
+                                        0x200,
+                                    )
                                     .await;
                             }
 
@@ -2358,7 +2365,10 @@ async fn process_packet(
 
                             // And that we're done modifying the inventory.
                             connection
-                                .send_inventory_transaction_finish(567, 3584)
+                                .send_inventory_transaction_finish(
+                                    ItemOperationKind::UnkGearSetEquipped,
+                                    3584,
+                                )
                                 .await;
 
                             // Retail also re-sends the equipped container
@@ -2741,26 +2751,20 @@ async fn process_packet(
                                 event.0.on_enter_territory(&event.1, lua_player).await;
                             }
                         }
-                        ClientZoneIpcData::Trade { .. } => {
-                            // TODO: Restore, I broke this while the fixing inventory ack packet
+                        ClientZoneIpcData::Trade { sequence, .. } => {
                             // TODO: This needs a lot more research, but it's good enough for now to act as a stub to prevent client softlocks
                             // When trading, the client sends the trade opcode twice for unknown (at this time) reasons, so we need to keep track of where we're at in the sequence
-                            // let action_type;
-                            // if !connection.is_trading {
-                            //     tracing::info!("Trading is unimplemented");
-                            //     action_type = 0x1607; // Some ack to let the client proceed with the trade sequence
-                            //     connection.is_trading = true;
-                            // } else {
-                            //     action_type = 0x207; // Some ack to tell the client that the target can't trade at this time
-                            //     connection.is_trading = false;
-                            // }
-                            //
-                            // connection
-                            //     .send_inventory_ack(
-                            //         ((*unk1 as u32) << 16) | *sequence as u32,
-                            //         action_type,
-                            //     )
-                            //     .await;
+                            let unk1;
+                            if !connection.is_trading {
+                                tracing::info!("Trading is unimplemented");
+                                unk1 = 22; // Some ack to let the client proceed with the trade sequence
+                                connection.is_trading = true;
+                            } else {
+                                unk1 = 2; // Some ack to tell the client that the target can't trade at this time
+                                connection.is_trading = false;
+                            }
+
+                            connection.send_inventory_ack(*sequence, 7, unk1).await;
                         }
                         ClientZoneIpcData::ShareStrategyBoard {
                             content_id,

@@ -227,7 +227,7 @@ impl ZoneConnection {
 
         if need_to_send_inventory {
             self.send_inventory().await;
-            self.send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP)
+            self.send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP, 0)
                 .await;
         }
 
@@ -382,7 +382,7 @@ impl ZoneConnection {
 
         // Taking attachments can put items literally anywhere, so a full inventory sync is needed.
         self.send_inventory().await;
-        self.send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP)
+        self.send_inventory_ack(u32::MAX, INVENTORY_ACTION_ACK_SHOP, 0)
             .await;
 
         // If only some of the items could be taken, notify the client and then send the letter update.
