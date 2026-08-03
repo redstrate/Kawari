@@ -3214,7 +3214,7 @@ async fn process_packet(
                                     Some(*target_position),
                                     Some(*rotation),
                                     WarpType::Dive,
-                                    218,
+                                    474,
                                 )
                                 .await;
                         }
