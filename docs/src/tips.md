@@ -38,3 +38,8 @@ This is currently only possible by manually editing the database.
 The game regularly rotates various festivals or events throughout the year. Their content is normally unavailable after they finished on retail, however parts of them can still be seen in Kawari. You can set festivals temporarily using the `!festival` [debug command](debug_commands.md), or permanently change the active festivals on [the Admin Panel](https://admin.ffxiv.localhost).
 
 Patch updates may retroactively change or remove older festival content due to the nature of the format.
+
+## Recommended client-side plugins
+
+* cl_showpos for the ease-of-access to position and certain zone information.
+* Chronofoil for passively recording packet captures.
