@@ -13,8 +13,7 @@ use physis::{
     layer::{Layer, LayerEntryData, ModelCollisionType, TriggerBoxShape},
     lgb::Lgb,
     lvb::Lvb,
-    pcb::{Pcb, Polygon, ResourceNode},
-    pcblist::{PcbList, PcbListEntry},
+    pcb::{ListEntry, Node, Pcb, Polygon},
     resource::{ResourceResolver, SqPackResource},
     sgb::Sgb,
 };
@@ -36,7 +35,9 @@ fn main() {
 
     let config = get_config();
 
-    tracing::info!("Generating navmesh for zone {zone_id}, writing to {destination_path}!");
+    tracing::info!(
+        "Generating navmesh for zone {zone_id}, writing to {destination_path}, this will take a while!"
+    );
 
     let mut resolver = ResourceResolver::new();
     resolver.add_source(SqPackResource::from_existing(&config.filesystem.game_path));
@@ -79,12 +80,15 @@ fn main() {
 
     let scene = &lvb.sections[0];
 
-    let pcblist = resolver
-        .parsed::<PcbList>(&format!(
+    let Pcb::List(pcblist) = resolver
+        .parsed::<Pcb>(&format!(
             "{}/collision/list.pcb",
             scene.general.bg_path.value
         ))
-        .unwrap();
+        .unwrap()
+    else {
+        panic!("list.pcb isn't a list?!");
+    };
     min_x = min_x.min(pcblist.bounds.min[0]);
     min_z = min_z.min(pcblist.bounds.min[2]);
 
@@ -390,7 +394,7 @@ struct Tile {
 
 /// Walk each node, add it's collision model to the scene.
 fn walk_node(
-    node: &ResourceNode,
+    node: &Node,
     transform: &Affine3A,
     context: *mut rcContext,
     tiles: &[Tile],
@@ -453,7 +457,7 @@ fn walk_node(
 }
 
 fn add_plate(
-    entry: &PcbListEntry,
+    entry: &ListEntry,
     tera_path: &str,
     sqpack_resource: &mut ResourceResolver,
     context: *mut rcContext,
@@ -462,16 +466,15 @@ fn add_plate(
     walkable_climb: i32,
 ) {
     let pcb_path = format!("{}/collision/tr{:04}.pcb", tera_path, entry.mesh_id,);
-    let mdl = sqpack_resource.parsed::<Pcb>(&pcb_path).unwrap();
+    let Ok(file) = sqpack_resource.parsed::<Pcb>(&pcb_path) else {
+        tracing::warn!("Failed to find {pcb_path}?! This may be a bug.");
+        return;
+    };
+    let Pcb::Mesh(mdl) = file else {
+        panic!("Mesh pcb isn't a mesh?!");
+    };
     let transform = Affine3A::default();
-    walk_node(
-        &mdl.root_node,
-        &transform,
-        context,
-        tiles,
-        max_slope,
-        walkable_climb,
-    );
+    walk_node(&mdl, &transform, context, tiles, max_slope, walkable_climb);
 }
 
 /// Walk each layer, add it's collision model to the scene.
@@ -492,12 +495,15 @@ fn walk_layer(
                 if !bg_part.collision_asset_path.value.is_empty()
                     && bg_part.collision_type == ModelCollisionType::Replace
                 {
-                    let pcb = resolver
+                    let Pcb::Mesh(pcb) = resolver
                         .parsed::<Pcb>(&bg_part.collision_asset_path.value)
-                        .unwrap();
+                        .unwrap()
+                    else {
+                        panic!("Mesh pcb isn't a mesh?!");
+                    };
 
                     walk_node(
-                        &pcb.root_node,
+                        &pcb,
                         &child_transform,
                         context,
                         tiles,
@@ -512,12 +518,15 @@ fn walk_layer(
                 }
 
                 if !collision_box.collision_asset_path.value.is_empty() {
-                    let pcb = resolver
+                    let Pcb::Mesh(pcb) = resolver
                         .parsed::<Pcb>(&collision_box.collision_asset_path.value)
-                        .unwrap();
+                        .unwrap()
+                    else {
+                        panic!("Mesh pcb isn't a mesh?!");
+                    };
 
                     walk_node(
-                        &pcb.root_node,
+                        &pcb,
                         &child_transform,
                         context,
                         tiles,
@@ -529,7 +538,7 @@ fn walk_layer(
                         TriggerBoxShape::None => unreachable!(),
                         TriggerBoxShape::Box => {
                             // TODO: It might be nice to have this as a helper somewhere?
-                            let pcb = Pcb::new_from_vertices(
+                            let Pcb::Mesh(mesh) = Pcb::new_from_vertices(
                                 &[
                                     [-1.0, -1.0, 1.0],
                                     [1.0, -1.0, 1.0],
@@ -590,10 +599,12 @@ fn walk_layer(
                                         material: 0,
                                     },
                                 ],
-                            );
+                            ) else {
+                                panic!("This can never happen!!");
+                            };
 
                             walk_node(
-                                &pcb.root_node,
+                                &mesh,
                                 &child_transform,
                                 context,
                                 tiles,
