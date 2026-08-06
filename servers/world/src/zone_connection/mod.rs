@@ -197,6 +197,8 @@ pub struct ZoneConnection {
     pub director_vars: Option<ServerZoneIpcSegment>,
     /// Current dye action information.
     pub dyeing_information: Option<DyeInformation>,
+    /// Temporary data for marketboard requests.
+    pub marketboard_request_item_id: u32,
 }
 
 impl ZoneConnection {

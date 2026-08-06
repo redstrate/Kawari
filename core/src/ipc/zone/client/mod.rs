@@ -654,6 +654,15 @@ pub enum ClientZoneIpcData {
     RequestRecruitingPartyCount {
         unk1: [u8; 8], // empty, as far as i've seen
     },
+    UnkMarketBoardRequest1 {
+        /// Corresponds to an item on the marketboard. Index into the Item Excel sheet.
+        item_id: u32,
+        unk2: u32,
+    },
+    UnkMarketBoardRequest2 {
+        unk1: u32,
+        request_id: u32, // TODO: technically a byte
+    },
 }
 
 #[cfg(test)]

@@ -156,7 +156,7 @@ mod map_effects;
 pub use map_effects::MapEffects;
 
 mod marketboard;
-pub use marketboard::MarketBoardItem;
+pub use marketboard::{MarketBoardHistory, MarketBoardHistoryEntry, MarketBoardItem};
 
 mod linkshell;
 pub use linkshell::*;
@@ -1579,6 +1579,23 @@ pub enum ServerZoneIpcData {
         object_ids: [ObjectId; 8],
         #[brw(pad_after = 3)] // padding
         unk1: u8,
+    },
+    MarketBoardHistory(MarketBoardHistory),
+    MarketBoardOfferings {
+        unk1: [u8; 44],
+        item_id: u32,
+        #[br(count = 1392)]
+        #[bw(pad_size_to = 1392)]
+        unk2: Vec<u8>,
+        unk3: u8, // TODO: bool,
+        unk4: u8, // TODO: bool
+        #[brw(pad_after = 5)] // not used, padding
+        request_id: u8,
+    },
+    MarketBoardHits {
+        unk1: u32,
+        /// Sets the "N hits" label in the "Search Results" window for the marketboard.
+        hits: u32,
     },
 }
 

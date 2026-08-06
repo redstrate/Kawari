@@ -775,6 +775,18 @@ ServerZoneIpcType:
   comment: When sent, populates the spectator list for Crystalline Conflict matches. This is visible in the Duty Menu and the Spectator UI.
   opcode: 944
   size: 36
+- name: MarketBoardHistory
+  comment: Sent to populate the offerings list for a marketboard item.`
+  opcode: 319
+  size: 968
+- name: MarketBoardOfferings
+  comment: Sent to populate the offerings list for a marketboard item.
+  opcode: 348
+  size: 1448
+- name: MarketBoardHits
+  comment: Sent to populate the hits label in the marketboard.
+  opcode: 230
+  size: 8
 ClientZoneIpcType:
 - name: InitRequest
   comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -1163,6 +1175,14 @@ ClientZoneIpcType:
 - name: RequestRecruitingPartyCount
   comment: Sent when opening up the Duty Finder.
   opcode: 545
+  size: 8
+- name: UnkMarketBoardRequest1
+  comment: Sent when requesting an item's offers I think?
+  opcode: 370
+  size: 8
+- name: UnkMarketBoardRequest2
+  comment: Sent when requesting an item's offers too I think?
+  opcode: 617
   size: 8
 ServerLobbyIpcType:
 - name: NackReply

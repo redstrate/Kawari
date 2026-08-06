@@ -18,8 +18,9 @@ use kawari::ipc::chat::ClientChatIpcData;
 use kawari::ipc::zone::{
     ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
     CrossRealmListings, EventType, FurnitureTranslatedForObserver, ItemInfo,
-    LinkshellInviteResponse, MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup,
-    SceneFlags, SearchInfo, SocialListRequestType, TrustContent, TrustInformation,
+    LinkshellInviteResponse, MarketBoardHistory, MarketBoardHistoryEntry, MarketBoardItem,
+    OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType,
+    TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -187,6 +188,7 @@ async fn initial_setup(
                     is_trading: false,
                     director_vars: None,
                     dyeing_information: None,
+                    marketboard_request_item_id: 0,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -2895,35 +2897,35 @@ async fn process_packet(
                                     items: vec![
                                         MarketBoardItem {
                                             item_id: 1659,
-                                            count: 3,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1649,
-                                            count: 0,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1621,
-                                            count: 0,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 31542,
-                                            count: 3,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1657,
-                                            count: 3,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1642,
-                                            count: 0,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1613,
-                                            count: 0,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1650,
-                                            count: 2,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1648,
@@ -2931,15 +2933,15 @@ async fn process_packet(
                                         },
                                         MarketBoardItem {
                                             item_id: 1643,
-                                            count: 0,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1616,
-                                            count: 0,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1639,
-                                            count: 0,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1635,
@@ -2947,11 +2949,11 @@ async fn process_packet(
                                         },
                                         MarketBoardItem {
                                             item_id: 1606,
-                                            count: 0,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1637,
-                                            count: 0,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1633,
@@ -2959,15 +2961,15 @@ async fn process_packet(
                                         },
                                         MarketBoardItem {
                                             item_id: 1627,
-                                            count: 2,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1625,
-                                            count: 0,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1622,
-                                            count: 0,
+                                            count: 1,
                                         },
                                         MarketBoardItem {
                                             item_id: 1614,
@@ -2975,7 +2977,7 @@ async fn process_packet(
                                         },
                                         MarketBoardItem {
                                             item_id: 92,
-                                            count: 0,
+                                            count: 1,
                                         },
                                     ],
                                 });
@@ -3549,6 +3551,50 @@ async fn process_packet(
                             // Send an empty packet so it's at least says zero!
                             let ipc = ServerZoneIpcSegment::new(
                                 ServerZoneIpcData::RecruitingPartyCount { unk1: [0; 968] },
+                            );
+                            connection.send_ipc_self(ipc).await;
+                        }
+                        ClientZoneIpcData::UnkMarketBoardRequest1 { item_id, .. } => {
+                            connection.marketboard_request_item_id = *item_id;
+
+                            // Send hits information
+                            let ipc =
+                                ServerZoneIpcSegment::new(ServerZoneIpcData::MarketBoardHits {
+                                    unk1: 0,
+                                    hits: 1,
+                                });
+                            connection.send_ipc_self(ipc).await;
+
+                            // Send dummy information so the list is populated and Dalamud self-tests work
+                            let ipc = ServerZoneIpcSegment::new(
+                                ServerZoneIpcData::MarketBoardHistory(MarketBoardHistory {
+                                    item_id: *item_id as u16,
+                                    entries: vec![
+                                        MarketBoardHistoryEntry {
+                                            unk1: 0,
+                                            price: 1,
+                                            timestamp: 0,
+                                            quantity: 1,
+                                            unk3: 0,
+                                            name: "Test Retainer".to_string()
+                                        };
+                                        20
+                                    ],
+                                }),
+                            );
+                            connection.send_ipc_self(ipc).await;
+                        }
+                        ClientZoneIpcData::UnkMarketBoardRequest2 { unk1, request_id } => {
+                            tracing::info!("{unk1} {request_id}");
+                            let ipc = ServerZoneIpcSegment::new(
+                                ServerZoneIpcData::MarketBoardOfferings {
+                                    unk1: [0; 44],
+                                    item_id: connection.marketboard_request_item_id,
+                                    unk2: Vec::default(),
+                                    request_id: *request_id as u8,
+                                    unk3: 0,
+                                    unk4: 0,
+                                },
                             );
                             connection.send_ipc_self(ipc).await;
                         }
