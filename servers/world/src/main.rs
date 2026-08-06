@@ -189,6 +189,7 @@ async fn initial_setup(
                     director_vars: None,
                     dyeing_information: None,
                     marketboard_request_item_id: 0,
+                    hide_spectator_ui: false,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -540,6 +541,13 @@ async fn process_packet(
             return false;
         }
     } else {
+        if connection.hide_spectator_ui {
+            connection
+                .actor_control_self(ActorControlCategory::HideSpectatorUI {})
+                .await;
+            connection.hide_spectator_ui = false;
+        }
+
         connection.last_keep_alive = Instant::now();
 
         let segments = connection.parse_packet(&buf[..n]);

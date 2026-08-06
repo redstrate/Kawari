@@ -432,6 +432,17 @@ impl ZoneConnection {
 
                 true
             }
+            "!spectator" => {
+                self.actor_control_self(ActorControlCategory::InitializeSpectatorManager {
+                    row_id: 0,
+                    unk2: 0,
+                    unk3: 0,
+                })
+                .await;
+                // This ACS has to be delayed, otherwise it doesn't take effect.
+                self.hide_spectator_ui = true;
+                true
+            }
             _ => false,
         }
     }

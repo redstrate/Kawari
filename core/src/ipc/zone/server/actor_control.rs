@@ -938,6 +938,10 @@ pub enum ActorControlCategory {
     #[brw(magic = 1600u32)]
     InitializeSpectatorManager { row_id: u32, unk2: u32, unk3: u32 },
 
+    /// This hides the spectator UI (including the uninitialized one.)
+    #[brw(magic = 1601u32)]
+    HideSpectatorUI {},
+
     /// This actually shows the Spectator UI.
     #[brw(magic = 1607u32)]
     ShowSpectatorUI {},

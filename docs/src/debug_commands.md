@@ -31,6 +31,7 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!shortcut <id>` | Teleports to a content shortcut defined in the Lua script. |
 | `!skipintro` | Teleports you to Limsa, unlocks all features and completes all quests. |
 | `!spawnmonster <id>` | Spawn a monster for debugging. |
+| `!spectator` | Switches you to the specator camera, which can fly everywhere but still responds to collision. There's currently no way to toggle it back off. |
 | `!strikingdummy` | Summons a striking dummy at your location. |
 | `!togglemount <id>` | Toggles the unlock status of the specified mount ID. |
 | `!toggleglassesstyle <id>` | Toggles the unlock status of the specified GlassesStyle ID. |

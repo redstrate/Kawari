@@ -199,6 +199,8 @@ pub struct ZoneConnection {
     pub dyeing_information: Option<DyeInformation>,
     /// Temporary data for marketboard requests.
     pub marketboard_request_item_id: u32,
+    /// Temporary data for the spectator debug command.
+    pub hide_spectator_ui: bool,
 }
 
 impl ZoneConnection {
