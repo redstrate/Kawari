@@ -794,7 +794,7 @@ ClientZoneIpcType:
   size: 120
 - name: FinishLoading
   comment: Sent by the client when they're done loading and they need to be spawned in.
-  opcode: 442
+  opcode: 376
   size: 72
 - name: ClientTrigger
   comment: Sent for a variety of actions from the client, e.g. sheathing a weapon.
@@ -818,7 +818,7 @@ ClientZoneIpcType:
   size: 8
 - name: SendChatMessage
   comment: Sent by the client when they send a chat message.
-  opcode: 913
+  opcode: 973
   size: 1056
 - name: GMCommand
   comment: Sent by the client when they send a GM command. This can only be sent by the client if they are sent a GM rank.
@@ -886,11 +886,11 @@ ClientZoneIpcType:
   size: 8
 - name: QueueDuties
   comment: Queue for the selected duties.
-  opcode: 199
+  opcode: 358
   size: 40
 - name: ContentFinderAction
   comment: Unknown purpose.
-  opcode: 340
+  opcode: 881
   size: 8
 - name: EquipGearset
   comment: Unknown purpose.
@@ -930,7 +930,7 @@ ClientZoneIpcType:
   size: 8
 - name: SearchFellowships
   comment: Seems to happen when opening the Fellowship Finder.
-  opcode: 175
+  opcode: 375
   size: 112
 - name: StartCountdown
   comment: Happens when starting a countdown through the Countdown window.
@@ -938,7 +938,7 @@ ClientZoneIpcType:
   size: 40
 - name: RequestPlaytime
   comment: Happens when the client requests the playtime using the /playtime command.
-  opcode: 379
+  opcode: 853
   size: 8
 - name: SetFreeCompanyGreeting
   comment: Happens when the client sets their free company's message of the day. May have additional uses?
@@ -954,7 +954,7 @@ ClientZoneIpcType:
   size: 80
 - name: PartyLeave
   comment: Happens when the client leaves their party.
-  opcode: 930
+  opcode: 693
   size: 8
 - name: PartyDisband
   comment: Happens when the client disbands their party.
@@ -970,11 +970,11 @@ ClientZoneIpcType:
   size: 16
 - name: InviteReply2
   comment: Happens when the client responds to another player's friend invitation.
-  opcode: 790
+  opcode: 472
   size: 48
 - name: PartyMemberKick
   comment: Sent by the client to remove another player from their party.
-  opcode: 687
+  opcode: 868
   size: 48
 - name: PartyChangeLeader
   comment: Sent by the client to relinquish leadership to another player in their party.
@@ -994,7 +994,7 @@ ClientZoneIpcType:
   size: 176
 - name: EditSearchInfo
   comment: Happens when the client wants to update the search info of the player.
-  opcode: 643
+  opcode: 238
   size: 216
 - name: RequestOwnSearchInfo
   comment: Seems to happen when the client wants to know its own search info.
@@ -1022,11 +1022,11 @@ ClientZoneIpcType:
   size: 16
 - name: StrategyBoardUpdate
   comment: The client updates their strategy board during real-time sharing.
-  opcode: 240
+  opcode: 533
   size: 64
 - name: RealtimeStrategyBoardFinished
   comment: The client finishes their real-time sharing session.
-  opcode: 846
+  opcode: 857
   size: 8
 - name: ApplyFieldMarkerPreset
   comment: The client wants to apply a waymarker preset for their party.
@@ -1038,7 +1038,7 @@ ClientZoneIpcType:
   size: 16
 - name: QueueRoulette
   comment: The client queues into a roulette.
-  opcode: 486
+  opcode: 843
   size: 24
 - name: InitiateReadyCheck
   comment: The client initiates a ready check for their party.
@@ -1062,7 +1062,7 @@ ClientZoneIpcType:
   size: 40
 - name: CrossworldLinkshellMemberListRequest
   comment: The client requests the member list for this cross-world linkshell.
-  opcode: 256
+  opcode: 338
   size: 16
 - name: OpenTreasure
   comment: Unknown purpose.
@@ -1086,7 +1086,7 @@ ClientZoneIpcType:
   size: 40
 - name: CreateNewCrossworldLinkshell
   comment: The client requests for the server to commence with creating the new cross-world linkshell after confirming its name's availability.
-  opcode: 488
+  opcode: 174
   size: 32
 - name: DisbandCrossworldLinkshell
   comment: The client requests the deletion of a cross-world linkshell.
@@ -1098,11 +1098,11 @@ ClientZoneIpcType:
   size: 8
 - name: RenameCrossworldLinkshell
   comment: The client requests to rename a cross-world linkshell. Only Masters can do this.
-  opcode: 706
+  opcode: 755
   size: 40
 - name: SetCWLSMemberRank
   comment: The client promotes a member in their linkshell to a higher rank. Only Masters can do this if the target is another player, and only Leaders can target themselves to resign. Masters resign when they leave the linkshell.
-  opcode: 337
+  opcode: 930
   size: 24
 - name: RemoveCWLSMember
   comment: The client kicks a member from one of their cross-world Linkshells. Only Leaders and Masters can do this.
@@ -1114,7 +1114,7 @@ ClientZoneIpcType:
   size: 24
 - name: LinkshellInviteReply
   comment: The client replies to a cross-world linkshell invite.
-  opcode: 304
+  opcode: 402
   size: 16
 - name: RequestMailbox
   comment: The client requests the contents of their mailbox from the server.
@@ -1174,7 +1174,7 @@ ClientZoneIpcType:
   size: 24
 - name: RequestRecruitingPartyCount
   comment: Sent when opening up the Duty Finder.
-  opcode: 913
+  opcode: 216
   size: 8
 - name: UnkMarketBoardRequest1
   comment: Sent when requesting an item's offers I think?
@@ -1373,3 +1373,4 @@ CustomIpcType:
   comment: Response to requesting the full character list.
   opcode: 17
   size: 1024
+
