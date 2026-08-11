@@ -18,6 +18,7 @@ use icarus::ENpcBase::ENpcBaseSheet;
 use icarus::EObj::EObjSheet;
 use icarus::Emote::EmoteSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
+use icarus::Fate::FateSheet;
 use icarus::FateShop::FateShopSheet;
 use icarus::FittingShopCategoryItem::FittingShopCategoryItemSheet;
 use icarus::GatheringItem::GatheringItemSheet;
@@ -103,6 +104,7 @@ pub struct GameData {
     pub gathering_item_sheet: GatheringItemSheet,
     pub gathering_item_level_convert_table_sheet: GatheringItemLevelConvertTableSheet,
     pub public_content_sheet: PublicContentSheet,
+    pub fate_sheet: FateSheet,
 }
 
 impl Default for GameData {
@@ -368,6 +370,9 @@ impl GameData {
         let public_content_sheet =
             PublicContentSheet::read_from(&mut resource_resolver, config.world.language()).unwrap();
 
+        let fate_sheet =
+            FateSheet::read_from(&mut resource_resolver, config.world.language()).unwrap();
+
         Self {
             resource: resource_resolver,
             item_sheet,
@@ -401,6 +406,7 @@ impl GameData {
             gathering_item_sheet,
             gathering_item_level_convert_table_sheet,
             public_content_sheet,
+            fate_sheet,
         }
     }
 
@@ -1674,6 +1680,12 @@ impl GameData {
     /// Returns the type of PublicContent this is.
     pub fn find_public_content_type(&mut self, id: u32) -> Option<PublicContentType> {
         PublicContentType::from_repr(self.public_content_sheet.row(id)?.Type)
+    }
+
+    /// Returns the max level for a FATE
+    pub fn get_fate_max_level(&mut self, id: u32) -> Option<u8> {
+        let row = self.fate_sheet.row(id)?;
+        Some(row.ClassJobLevelMax)
     }
 }
 

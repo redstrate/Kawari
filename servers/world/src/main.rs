@@ -1672,6 +1672,21 @@ async fn process_packet(
                                         ))
                                         .await;
                                 }
+                                ClientTriggerCommand::FateLevelSync { fate_id, unk1, .. } => {
+                                    tracing::info!("Syncing level for fate {fate_id} {unk1}");
+
+                                    // Toggles the syncing on and off
+                                    if connection.synced_level.is_none() {
+                                        let mut game_data = connection.gamedata.lock();
+                                        connection.synced_level =
+                                            game_data.get_fate_max_level(fate_id);
+                                    } else {
+                                        connection.synced_level = None;
+                                    }
+
+                                    connection.send_stats().await;
+                                    connection.update_class_info().await;
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection
