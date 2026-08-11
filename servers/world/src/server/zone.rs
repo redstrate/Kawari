@@ -1299,41 +1299,8 @@ pub fn handle_zone_messages(
                     .remove(DisplayFlag::INVISIBLE);
 
                 // Send them the current list of FATEs
-                // TODO: Currently not the ideal place, because this only sends them when first spawning in (not when FATEs are dynamically switched on and off)
                 for fate in &instance.fates {
-                    network.send_to_by_actor_id(
-                        *from_actor_id,
-                        FromServer::ActorControlSelf(ActorControlCategory::CreateFateContext {
-                            fate_id: fate.fate_id,
-                            is_bonus: 0,
-                        }),
-                        DestinationNetwork::ZoneClients,
-                    );
-
-                    network.send_to_by_actor_id(
-                        *from_actor_id,
-                        FromServer::PacketSegment(
-                            ServerZoneIpcSegment::new(ServerZoneIpcData::UnkFate {
-                                fate_id: fate.fate_id,
-                                unk1: 0,
-                                start_timestamp: fate.start_timestamp,
-                                unk3: 0,
-                                time_limit: FATE_TIME_LIMIT.as_secs() as u32,
-                                unk5: 0,
-                            }),
-                            *from_actor_id,
-                        ),
-                        DestinationNetwork::ZoneClients,
-                    );
-
-                    network.send_to_by_actor_id(
-                        *from_actor_id,
-                        FromServer::ActorControlSelf(ActorControlCategory::FateInit {
-                            fate_id: fate.fate_id,
-                            fate_state: FateState::Running,
-                        }),
-                        DestinationNetwork::ZoneClients,
-                    );
+                    Instance::inform_fate_spawn(&mut network, *from_actor_id, fate);
                 }
             }
 

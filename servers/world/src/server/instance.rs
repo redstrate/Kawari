@@ -6,24 +6,25 @@ use std::{
 };
 
 use crate::{
-    ClientId, GameData, Navmesh, StatusEffects,
+    ClientId, FromServer, GameData, Navmesh, StatusEffects,
     server::{
         action::cancel_action,
         actor::{NetworkedActor, NpcState},
         director::DirectorData,
-        network::NetworkState,
+        network::{DestinationNetwork, NetworkState},
         zone::Zone,
     },
     zone_connection::{BaseParameters, TeleportQuery},
 };
 use kawari::{
     common::{
-        DistanceRange, ENTRANCE_CIRCLE_IDS, MAXIMUM_FATES, ObjectId, Position, timestamp_secs,
+        DistanceRange, ENTRANCE_CIRCLE_IDS, FATE_TIME_LIMIT, FateState, MAXIMUM_FATES, ObjectId,
+        Position, timestamp_secs,
     },
     config::{Config, get_config},
     ipc::zone::{
-        ActionRequest, Conditions, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer,
-        SpawnTreasure,
+        ActionRequest, ActorControlCategory, Conditions, ServerZoneIpcData, ServerZoneIpcSegment,
+        SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure,
     },
 };
 use parking_lot::Mutex;
@@ -429,5 +430,52 @@ impl Instance {
         }
 
         None
+    }
+
+    pub fn inform_fate_spawn(
+        network: &mut NetworkState,
+        from_actor_id: ObjectId,
+        fate: &FateInstance,
+    ) {
+        network.send_to_by_actor_id(
+            from_actor_id,
+            FromServer::ActorControlSelf(ActorControlCategory::CreateFateContext {
+                fate_id: fate.fate_id,
+                is_bonus: 0,
+            }),
+            DestinationNetwork::ZoneClients,
+        );
+
+        network.send_to_by_actor_id(
+            from_actor_id,
+            FromServer::PacketSegment(
+                ServerZoneIpcSegment::new(ServerZoneIpcData::UnkFate {
+                    fate_id: fate.fate_id,
+                    unk1: 0,
+                    start_timestamp: fate.start_timestamp,
+                    unk3: 0,
+                    time_limit: FATE_TIME_LIMIT.as_secs() as u32,
+                    unk5: 0,
+                }),
+                from_actor_id,
+            ),
+            DestinationNetwork::ZoneClients,
+        );
+
+        network.send_to_by_actor_id(
+            from_actor_id,
+            FromServer::ActorControlSelf(ActorControlCategory::FateInit {
+                fate_id: fate.fate_id,
+                fate_state: FateState::Running,
+            }),
+            DestinationNetwork::ZoneClients,
+        );
+    }
+
+    // TODO: should be moved to NetworkState along with above function?? maybe??
+    pub fn inform_fate_spawn_globally(&self, network: &mut NetworkState, fate: &FateInstance) {
+        for (actor, _) in &self.actors {
+            Self::inform_fate_spawn(network, *actor, fate);
+        }
     }
 }

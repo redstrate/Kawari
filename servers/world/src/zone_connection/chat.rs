@@ -274,43 +274,6 @@ impl ZoneConnection {
 
                 true
             }
-            "!fate" => {
-                if let Some((_, fate_id)) = chat_message.split_once(' ') {
-                    let fate_id = fate_id.parse().unwrap();
-
-                    self.actor_control_self(ActorControlCategory::CreateFateContext {
-                        fate_id,
-                        is_bonus: 0,
-                    })
-                    .await;
-
-                    self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkFate {
-                        fate_id,
-                        unk1: 0,
-                        start_timestamp: timestamp_secs(),
-                        unk3: 0,
-                        time_limit: 900,
-                        unk5: 0,
-                    }))
-                    .await;
-
-                    self.actor_control_self(ActorControlCategory::FateInit {
-                        fate_id,
-                        fate_state: FateState::Running,
-                    })
-                    .await;
-                    self.actor_control_self(ActorControlCategory::UnkFate12 { fate_id })
-                        .await;
-                    self.actor_control_self(ActorControlCategory::FateUpdate {
-                        fate_id,
-                        progress: 0,
-                        param: 0,
-                    })
-                    .await;
-                }
-
-                true
-            }
             "!yell" => {
                 if let Some((_, npc_yell_id)) = chat_message.split_once(' ') {
                     let npc_yell_id = npc_yell_id.parse().unwrap();

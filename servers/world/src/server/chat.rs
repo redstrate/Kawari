@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use bstr::BString;
 use kawari::{
-    common::{DEBUG_COMMAND_TRIGGER, ObjectId, WarpType},
+    common::{DEBUG_COMMAND_TRIGGER, ObjectId, WarpType, timestamp_secs},
     ipc::zone::{
         ActionRequest, ActionType, ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment,
     },
@@ -16,6 +16,7 @@ use crate::{
         WorldServer,
         action::execute_action,
         actor::spawn_custom_bnpc,
+        instance::FateInstance,
         network::{DestinationNetwork, NetworkState},
         zone::change_zone_warp_to_pop_range,
     },
@@ -256,6 +257,24 @@ fn process_debug_commands(
             let mut data = data.lock();
             let mut game_data = game_data.lock();
             spawn_custom_bnpc(&mut data, &mut game_data, from_actor_id, 11744, 541);
+
+            true
+        }
+        "!fate" => {
+            let mut data = data.lock();
+            if let Some((_, id)) = chat_message.split_once(' ') {
+                if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+                    // TODO: remove oldest fate as to avoid the maximum limit
+
+                    instance.fates.push(FateInstance {
+                        fate_id: id.parse().unwrap_or_default(),
+                        start_timestamp: timestamp_secs(),
+                    });
+                    let mut network = network.lock();
+                    instance
+                        .inform_fate_spawn_globally(&mut network, instance.fates.last().unwrap());
+                }
+            }
 
             true
         }
