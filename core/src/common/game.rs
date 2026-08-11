@@ -84,6 +84,9 @@ pub const COMBO_TIMEOUT: Duration = Duration::from_secs(30);
 /// In seconds. This controls the animation lock time for *all actions* for now.
 pub const ANIMATION_LOCK_TIME: f32 = 0.6;
 
+/// How long all FATEs should last.
+pub const FATE_TIME_LIMIT: Duration = Duration::from_mins(15);
+
 #[binrw]
 #[brw(repr(u32))]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

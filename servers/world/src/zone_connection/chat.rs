@@ -289,7 +289,7 @@ impl ZoneConnection {
                         unk1: 0,
                         start_timestamp: timestamp_secs(),
                         unk3: 0,
-                        unk4: 900,
+                        time_limit: 900,
                         unk5: 0,
                     }))
                     .await;

@@ -1160,7 +1160,8 @@ pub enum ServerZoneIpcData {
         /// When the FATE was spawned. The game uses this to determine how much time is left in the FATE.
         start_timestamp: u32,
         unk3: u32,
-        unk4: u32,
+        /// In seconds.
+        time_limit: u32,
         unk5: u32,
     },
     CrossRealmListings(CrossRealmListings),

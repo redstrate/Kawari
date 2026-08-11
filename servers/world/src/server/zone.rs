@@ -26,9 +26,9 @@ use crate::{
 use kawari::{
     common::{
         DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_EXIT,
-        EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, EventState, FateState,
-        HandlerType, ObjectId, Position, WARP_DELAY, WarpType, euler_to_direction,
-        internal_housing_row,
+        EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, EventState,
+        FATE_TIME_LIMIT, FateState, HandlerType, ObjectId, Position, WARP_DELAY, WarpType,
+        euler_to_direction, internal_housing_row,
     },
     config::get_config,
     ipc::zone::{
@@ -1318,7 +1318,7 @@ pub fn handle_zone_messages(
                                 unk1: 0,
                                 start_timestamp: fate.start_timestamp,
                                 unk3: 0,
-                                unk4: 900,
+                                time_limit: FATE_TIME_LIMIT.as_secs() as u32,
                                 unk5: 0,
                             }),
                             *from_actor_id,
