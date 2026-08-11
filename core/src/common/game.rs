@@ -1064,11 +1064,17 @@ impl std::fmt::Debug for DeepDungeonRoomFlag {
 #[brw(repr = u32)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FateState {
+    Unk0 = 0,
+    Unk1 = 1,
+    Unk2 = 2,
     Preparing = 3,
     Running = 4,
     Ending = 5,
+    Unk6 = 6,
     Ended = 7,
     Failed = 8,
+    Unk9 = 9,
+    Unk10 = 10,
 }
 
 /// This is basically a bitflag of what timelines should be playing.
