@@ -87,6 +87,9 @@ pub const ANIMATION_LOCK_TIME: f32 = 0.6;
 /// How long all FATEs should last.
 pub const FATE_TIME_LIMIT: Duration = Duration::from_mins(15);
 
+/// How many FATEs can be active at once in a instance of a zone.
+pub const MAXIMUM_FATES: usize = 6;
+
 #[binrw]
 #[brw(repr(u32))]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

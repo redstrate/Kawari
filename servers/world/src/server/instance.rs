@@ -17,7 +17,9 @@ use crate::{
     zone_connection::{BaseParameters, TeleportQuery},
 };
 use kawari::{
-    common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, Position, timestamp_secs},
+    common::{
+        DistanceRange, ENTRANCE_CIRCLE_IDS, MAXIMUM_FATES, ObjectId, Position, timestamp_secs,
+    },
     config::{Config, get_config},
     ipc::zone::{
         ActionRequest, Conditions, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer,
@@ -156,8 +158,9 @@ impl Instance {
             instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
         }
 
-        // Load all FATEs for now to make it easier to debug
-        for fate_id in instance.zone.map_ranges.iter().filter_map(|x| x.fate) {
+        // Determine the starting set of FATEs
+        let available_fates = instance.zone.map_ranges.iter().filter_map(|x| x.fate);
+        for fate_id in fastrand::choose_multiple(available_fates, MAXIMUM_FATES) {
             instance.fates.push(FateInstance {
                 fate_id,
                 start_timestamp: timestamp_secs(),
