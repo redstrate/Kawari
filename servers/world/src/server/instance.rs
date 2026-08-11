@@ -17,7 +17,7 @@ use crate::{
     zone_connection::{BaseParameters, TeleportQuery},
 };
 use kawari::{
-    common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, Position},
+    common::{DistanceRange, ENTRANCE_CIRCLE_IDS, ObjectId, Position, timestamp_secs},
     config::{Config, get_config},
     ipc::zone::{
         ActionRequest, Conditions, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer,
@@ -83,6 +83,14 @@ impl PartialEq for QueuedTask {
     }
 }
 
+#[derive(Debug)]
+pub struct FateInstance {
+    /// Index into the Fate Excel sheet.
+    pub fate_id: u32,
+    /// When this FATE was started.
+    pub start_timestamp: u32,
+}
+
 #[derive(Default, Debug)]
 pub struct Instance {
     pub actors: HashMap<ObjectId, NetworkedActor>,
@@ -97,6 +105,7 @@ pub struct Instance {
     /// Director for this instance.
     pub director: Option<DirectorData>,
     pub enemy_ai_disabled: bool,
+    pub fates: Vec<FateInstance>,
 }
 
 impl Instance {
@@ -145,6 +154,14 @@ impl Instance {
         let config = get_config();
         for npc in instance.zone.get_npcs(game_data) {
             instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
+        }
+
+        // Load all FATEs for now to make it easier to debug
+        for fate_id in instance.zone.map_ranges.iter().filter_map(|x| x.fate) {
+            instance.fates.push(FateInstance {
+                fate_id,
+                start_timestamp: timestamp_secs(),
+            });
         }
 
         instance

@@ -1682,10 +1682,19 @@ impl GameData {
         PublicContentType::from_repr(self.public_content_sheet.row(id)?.Type)
     }
 
-    /// Returns the max level for a FATE
+    /// Returns the max level for a FATE.
     pub fn get_fate_max_level(&mut self, id: u32) -> Option<u8> {
         let row = self.fate_sheet.row(id)?;
         Some(row.ClassJobLevelMax)
+    }
+
+    /// Returns the max level for a FATE
+    pub fn find_fate_by_event_range(&mut self, id: u32) -> Option<u32> {
+        self.fate_sheet
+            .into_iter()
+            .flatten_subrows()
+            .find(|x| x.1.Location == id)
+            .map(|x| x.0)
     }
 }
 

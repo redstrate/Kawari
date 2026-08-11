@@ -26,8 +26,9 @@ use crate::{
 use kawari::{
     common::{
         DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_EXIT,
-        EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, EventState, HandlerType,
-        ObjectId, Position, WARP_DELAY, WarpType, euler_to_direction, internal_housing_row,
+        EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, EventState, FateState,
+        HandlerType, ObjectId, Position, WARP_DELAY, WarpType, euler_to_direction,
+        internal_housing_row,
     },
     config::get_config,
     ipc::zone::{
@@ -78,6 +79,8 @@ pub struct MapRange {
     pub discovery_id: Option<u8>,
     /// Whether this map range represents an instance exit.
     pub entrance: bool,
+    /// What FATE this MapRange is associated with, if any.
+    pub fate: Option<u32>,
 }
 
 #[derive(Debug)]
@@ -253,6 +256,7 @@ impl Zone {
                                 scale,
                                 duel: object.instance_id == 6445254, // From the LVD_duel_01 layer in Wolves Den Pier
                                 instance_id: object.instance_id,
+                                fate: game_data.find_fate_by_event_range(object.instance_id),
                                 ..Default::default()
                             });
                         }
@@ -1293,6 +1297,44 @@ pub fn handle_zone_messages(
                     .get_common_spawn_mut()
                     .display_flags
                     .remove(DisplayFlag::INVISIBLE);
+
+                // Send them the current list of FATEs
+                // TODO: Currently not the ideal place, because this only sends them when first spawning in (not when FATEs are dynamically switched on and off)
+                for fate in &instance.fates {
+                    network.send_to_by_actor_id(
+                        *from_actor_id,
+                        FromServer::ActorControlSelf(ActorControlCategory::CreateFateContext {
+                            fate_id: fate.fate_id,
+                            is_bonus: 0,
+                        }),
+                        DestinationNetwork::ZoneClients,
+                    );
+
+                    network.send_to_by_actor_id(
+                        *from_actor_id,
+                        FromServer::PacketSegment(
+                            ServerZoneIpcSegment::new(ServerZoneIpcData::UnkFate {
+                                fate_id: fate.fate_id,
+                                unk1: 0,
+                                start_timestamp: fate.start_timestamp,
+                                unk3: 0,
+                                unk4: 900,
+                                unk5: 0,
+                            }),
+                            *from_actor_id,
+                        ),
+                        DestinationNetwork::ZoneClients,
+                    );
+
+                    network.send_to_by_actor_id(
+                        *from_actor_id,
+                        FromServer::ActorControlSelf(ActorControlCategory::FateInit {
+                            fate_id: fate.fate_id,
+                            fate_state: FateState::Running,
+                        }),
+                        DestinationNetwork::ZoneClients,
+                    );
+                }
             }
 
             true
