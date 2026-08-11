@@ -14,6 +14,7 @@ use crate::{
 use kawari::{
     common::{
         DirectorEvent, ERR_INVENTORY_ADD_FAILED, FateState, HandlerId, HandlerType, ObjectTypeId,
+        timestamp_secs,
     },
     config::get_config,
     ipc::zone::{
@@ -286,7 +287,7 @@ impl ZoneConnection {
                     self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::UnkFate {
                         fate_id,
                         unk1: 0,
-                        unk2: 1774393044,
+                        start_timestamp: timestamp_secs(),
                         unk3: 0,
                         unk4: 900,
                         unk5: 0,
@@ -300,6 +301,12 @@ impl ZoneConnection {
                     .await;
                     self.actor_control_self(ActorControlCategory::UnkFate12 { fate_id })
                         .await;
+                    self.actor_control_self(ActorControlCategory::FateUpdate {
+                        fate_id,
+                        progress: 0,
+                        param: 0,
+                    })
+                    .await;
                 }
 
                 true

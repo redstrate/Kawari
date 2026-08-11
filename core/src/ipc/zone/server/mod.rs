@@ -1157,7 +1157,8 @@ pub enum ServerZoneIpcData {
         /// Index into the FATE Excel sheet.
         fate_id: u32,
         unk1: u32,
-        unk2: u32,
+        /// When the FATE was spawned. The game uses this to determine how much time is left in the FATE.
+        start_timestamp: u32,
         unk3: u32,
         unk4: u32,
         unk5: u32,
