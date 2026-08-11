@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, sync::Arc};
+use std::{collections::VecDeque, sync::Arc, time::Instant};
 
 use crate::{
     ClientId, FromServer, GameData, StatusEffects,
@@ -50,6 +50,12 @@ impl NpcState {
 }
 
 #[derive(Debug, Clone)]
+pub enum NpcTarget {
+    Actor(ObjectId),
+    Position(Vec3),
+}
+
+#[derive(Debug, Clone)]
 pub enum NetworkedActor {
     Player {
         spawn: SpawnPlayer,
@@ -76,7 +82,7 @@ pub enum NetworkedActor {
         state: NpcState,
         navmesh_path: VecDeque<Vec3>,
         navmesh_path_lerp: f32,
-        navmesh_target: Option<ObjectId>,
+        navmesh_target: Option<NpcTarget>,
         last_position: Option<Vec3>,
         spawn: SpawnNpc,
         timeline: Timeline,
@@ -88,6 +94,8 @@ pub enum NetworkedActor {
         currently_invulnerable: bool,
         /// This actor's status effects.
         status_effects: StatusEffects,
+        /// The last time the mob wandered.
+        last_wander_timestamp: Instant,
     },
     Object {
         object: SpawnObject,

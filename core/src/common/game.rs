@@ -93,6 +93,9 @@ pub const MAXIMUM_FATES: usize = 6;
 /// How long until a normal mob respawns.
 pub const MOB_RESPAWN_TIME: Duration = Duration::from_mins(2);
 
+/// How long until a normal mob decides to move to a new location.
+pub const MOB_WANDER_TIME: Duration = Duration::from_secs(60);
+
 /// Whether normal mobs should respawn for this zone.
 pub fn should_respawn_mobs(intended_use: TerritoryIntendedUse) -> bool {
     matches!(

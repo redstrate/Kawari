@@ -5,8 +5,8 @@ use glam::Vec3;
 use recastnavigation_sys::{
     DT_SUCCESS, dtAllocNavMesh, dtAllocNavMeshQuery, dtNavMesh, dtNavMesh_addTile, dtNavMesh_init,
     dtNavMeshParams, dtNavMeshQuery, dtNavMeshQuery_findNearestPoly, dtNavMeshQuery_findPath,
-    dtNavMeshQuery_findStraightPath, dtNavMeshQuery_init, dtPolyRef, dtQueryFilter,
-    dtQueryFilter_dtQueryFilter,
+    dtNavMeshQuery_findRandomPointAroundCircle, dtNavMeshQuery_findStraightPath,
+    dtNavMeshQuery_init, dtPolyRef, dtQueryFilter, dtQueryFilter_dtQueryFilter,
 };
 
 #[binrw]
@@ -59,6 +59,10 @@ pub struct Navmesh {
 // To send the pointers between threads.
 unsafe impl Send for Navmesh {}
 unsafe impl Sync for Navmesh {}
+
+unsafe extern "C" fn frand() -> f32 {
+    fastrand::f32()
+}
 
 impl Navmesh {
     /// Creates a new Navmesh.
@@ -212,6 +216,40 @@ impl Navmesh {
             );
 
             (nearest_ref, Vec3::from_array(nearest_pt))
+        }
+    }
+
+    pub fn find_wander_position(&mut self, position: Vec3) -> Vec3 {
+        unsafe {
+            let mut filter = dtQueryFilter {
+                m_areaCost: [0.0; 64],
+                m_includeFlags: 0xffff,
+                m_excludeFlags: 0,
+            };
+            dtQueryFilter_dtQueryFilter(&mut filter);
+
+            let (start_poly, _) =
+                Self::get_polygon_at_location(self.navmesh_query, position, &filter);
+
+            let max_radius = 5.0; // TODO: hardcoded
+
+            let mut random_ref = 0;
+            let mut random_pt = [0.0; 3];
+
+            assert!(
+                dtNavMeshQuery_findRandomPointAroundCircle(
+                    self.navmesh_query,
+                    start_poly,
+                    &position.x,
+                    max_radius,
+                    &filter,
+                    Some(frand),
+                    &mut random_ref,
+                    random_pt.as_mut_ptr()
+                ) == DT_SUCCESS
+            );
+
+            Vec3::from_array(random_pt)
         }
     }
 

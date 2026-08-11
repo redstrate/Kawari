@@ -18,8 +18,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        DistanceRange, ENTRANCE_CIRCLE_IDS, FATE_TIME_LIMIT, FateState, MAXIMUM_FATES, ObjectId,
-        Position, timestamp_secs,
+        DistanceRange, ENTRANCE_CIRCLE_IDS, FATE_TIME_LIMIT, FateState, MAXIMUM_FATES,
+        MOB_WANDER_TIME, ObjectId, Position, timestamp_secs,
     },
     config::{Config, get_config},
     ipc::zone::{
@@ -242,6 +242,8 @@ impl Instance {
                 newly_hated_actor: None,
                 currently_invulnerable: false,
                 status_effects: StatusEffects::default(),
+                last_wander_timestamp: Instant::now()
+                    + Duration::from_secs(fastrand::u64(0..MOB_WANDER_TIME.as_secs())), // randomize start time so they don't suddenly overwhelm the server all at once
             },
         );
     }

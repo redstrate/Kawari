@@ -2,14 +2,15 @@ use std::{
     collections::{HashMap, VecDeque},
     f32::consts::PI,
     sync::Arc,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use glam::Vec3;
 use kawari::{
     common::{
-        ENEMY_AUTO_ATTACK_RATE, JumpState, MINIMUM_PATHFINDING_DISTANCE, MoveAnimationState,
-        MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position, TimepointData,
+        ENEMY_AUTO_ATTACK_RATE, JumpState, MINIMUM_PATHFINDING_DISTANCE, MOB_WANDER_TIME,
+        MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        TimepointData,
     },
     ipc::zone::{
         ActionRequest, ActionType, ActorControlCategory, CharacterDataFlag, ServerZoneIpcData,
@@ -21,7 +22,7 @@ use parking_lot::Mutex;
 use crate::{
     ClientId, FromServer, GameData,
     server::{
-        actor::{NetworkedActor, NpcState, set_shared_group_timeline_state},
+        actor::{NetworkedActor, NpcState, NpcTarget, set_shared_group_timeline_state},
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
@@ -60,14 +61,19 @@ pub fn npc_behavior(
                 && *state != NpcState::Dead
                 && spawn.common.health_points > 0
             {
-                let current_target = current_target.unwrap();
+                let current_target = current_target.as_ref().unwrap();
 
                 let target_pos;
-                if let Some(target_actor) = instance.find_actor(current_target) {
-                    target_pos = target_actor.get_common_spawn().position.0;
-                } else {
-                    // If we can't find the target actor for some reason (despawn, disconnect, left zone), fall back on a sane-ish destination
-                    target_pos = last_position.unwrap_or(spawn.common.position.0);
+                match current_target {
+                    NpcTarget::Actor(actor) => {
+                        if let Some(target_actor) = instance.find_actor(*actor) {
+                            target_pos = target_actor.get_common_spawn().position.0;
+                        } else {
+                            // If we can't find the target actor for some reason (despawn, disconnect, left zone), fall back on a sane-ish destination
+                            target_pos = last_position.unwrap_or(spawn.common.position.0);
+                        }
+                    }
+                    NpcTarget::Position(position) => target_pos = *position,
                 }
 
                 let distance = Vec3::distance(spawn.common.position.0, target_pos);
@@ -100,7 +106,9 @@ pub fn npc_behavior(
                     rotation = None;
                 }
 
-                target_actor_pos.insert(current_target, target_pos);
+                if let NpcTarget::Actor(actor) = current_target {
+                    target_actor_pos.insert(*actor, target_pos);
+                }
 
                 if let Some(position) = position
                     && let Some(rotation) = rotation
@@ -134,6 +142,7 @@ pub fn npc_behavior(
                 timeline,
                 newly_hated_actor,
                 currently_invulnerable,
+                last_wander_timestamp,
                 ..
             } = actor
                 && *state != NpcState::Dead
@@ -155,7 +164,7 @@ pub fn npc_behavior(
                 // Pick up any newly hated actors first.
                 if let Some(actor) = newly_hated_actor.take() {
                     *state = NpcState::Hate;
-                    *current_target = Some(actor);
+                    *current_target = Some(NpcTarget::Actor(actor));
 
                     spawn.common.target_id.object_id = actor;
                     newly_acquired_targets.push(*id);
@@ -180,7 +189,7 @@ pub fn npc_behavior(
                             // TODO: hardcoded sensing range
                             if Vec3::distance(position.0, spawn.common.position.0) < 15.0 {
                                 *state = NpcState::Hate;
-                                *current_target = Some(*target_id);
+                                *current_target = Some(NpcTarget::Actor(*target_id));
 
                                 spawn.common.target_id.object_id = *target_id;
                                 newly_acquired_targets.push(*id);
@@ -188,7 +197,21 @@ pub fn npc_behavior(
                         }
                     } else if *state == NpcState::Follow {
                         // Current target always follows its owner
-                        *current_target = Some(spawn.common.owner_id);
+                        *current_target = Some(NpcTarget::Actor(spawn.common.owner_id));
+                    }
+
+                    // If we failed to acquire a target but we still want to wander, lets do so
+                    if *state == NpcState::Wander && current_target.is_none() {
+                        // If it's time to wander...
+                        if Instant::now().duration_since(*last_wander_timestamp) > MOB_WANDER_TIME {
+                            // TODO: don't wander too far off
+                            *current_target = Some(NpcTarget::Position(
+                                instance
+                                    .navmesh
+                                    .find_wander_position(spawn.common.position.0),
+                            ));
+                            *last_wander_timestamp = Instant::now();
+                        }
                     }
                 } else if !current_path.is_empty() {
                     let next_position = current_path[0];
@@ -202,11 +225,23 @@ pub fn npc_behavior(
                 let mut reset_target = false;
                 let can_take_action; // FIXME: this is kind of stupid because enemies can do ranged attacks, etc.
                 if let Some(current_target) = current_target {
-                    // Check if the enemy is still valid
-                    reset_target = !enemies.iter().any(|(id, _, _)| *id == *current_target);
+                    let target_pos;
+                    match &current_target {
+                        NpcTarget::Actor(actor) => {
+                            // Check if the enemy is still valid
+                            reset_target = !enemies.iter().any(|(id, _, _)| *id == *actor);
+                            if target_actor_pos.contains_key(actor) {
+                                target_pos = Some(target_actor_pos[actor]);
+                            } else {
+                                target_pos = None;
+                            }
+                        }
+                        NpcTarget::Position(position) => {
+                            target_pos = Some(*position);
+                        }
+                    }
 
-                    if !reset_target && target_actor_pos.contains_key(current_target) {
-                        let target_pos = target_actor_pos[current_target];
+                    if !reset_target && let Some(target_pos) = target_pos {
                         let distance = Vec3::distance(spawn.common.position.0, target_pos);
                         let needs_repath =
                             current_path.is_empty() && distance > MINIMUM_PATHFINDING_DISTANCE;
@@ -397,12 +432,14 @@ pub fn npc_behavior(
                     continue;
                 }
 
-                if let Some(current_target) = current_target {
+                if let Some(current_target) = current_target
+                    && let NpcTarget::Actor(actor) = current_target
+                {
                     if newly_acquired_targets.contains(id) {
                         // Send an ACT for a visual indicator, and stuff.
                         let mut network = network.lock();
                         let target = ObjectTypeId {
-                            object_id: *current_target,
+                            object_id: *actor,
                             object_type: ObjectTypeKind::None,
                         };
                         network.send_in_range_instance(
@@ -428,8 +465,8 @@ pub fn npc_behavior(
                         }
                     }
 
-                    haters.entry(*current_target).or_default();
-                    haters.get_mut(current_target).unwrap().push(*id);
+                    haters.entry(*actor).or_default();
+                    haters.get_mut(actor).unwrap().push(*id);
                 }
             }
         }
