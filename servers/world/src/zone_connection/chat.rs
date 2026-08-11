@@ -12,10 +12,7 @@ use crate::{
     lua::{KawariLuaState, LuaPlayer},
 };
 use kawari::{
-    common::{
-        DirectorEvent, ERR_INVENTORY_ADD_FAILED, FateState, HandlerId, HandlerType, ObjectTypeId,
-        timestamp_secs,
-    },
+    common::{DirectorEvent, ERR_INVENTORY_ADD_FAILED, HandlerId, HandlerType, ObjectTypeId},
     config::get_config,
     ipc::zone::{
         ActorControlCategory, ChatMessage, Condition, Conditions, GameMasterRank,

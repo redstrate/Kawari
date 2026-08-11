@@ -41,9 +41,9 @@ use crate::{
 use kawari::{
     common::{
         CharacterMode, DEAD_DESPAWN_TIME, DirectorEvent, DirectorTrigger, EventState, HandlerId,
-        HandlerType, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, ObjectId, ObjectTypeId,
-        ObjectTypeKind, Position, WarpType, determine_initial_pop_range, euler_to_direction,
-        is_private_area,
+        HandlerType, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MOB_RESPAWN_TIME, ObjectId,
+        ObjectTypeId, ObjectTypeKind, Position, WarpType, determine_initial_pop_range,
+        euler_to_direction, is_private_area,
     },
     config::get_config,
     ipc::zone::{
@@ -783,7 +783,10 @@ pub async fn server_main_loop(
                                     *effect_source_actor_id,
                                 );
                             }
-                            QueuedTaskData::DeadFadeOut { actor_id } => {
+                            QueuedTaskData::DeadFadeOut {
+                                actor_id,
+                                respawn_layout_id,
+                            } => {
                                 let mut network = network.lock();
 
                                 let mut data = data.lock();
@@ -800,16 +803,31 @@ pub async fn server_main_loop(
                                         DEAD_DESPAWN_TIME,
                                         QueuedTaskData::DeadDespawn {
                                             actor_id: *actor_id,
+                                            respawn_layout_id: *respawn_layout_id,
                                         },
                                     );
                                 }
                             }
-                            QueuedTaskData::DeadDespawn { actor_id } => {
+                            QueuedTaskData::DeadDespawn {
+                                actor_id,
+                                respawn_layout_id,
+                            } => {
                                 // despawn
                                 let mut data = data.lock();
                                 if let Some(instance) = data.find_actor_instance_mut(*actor_id) {
                                     let mut network = network.lock();
                                     network.remove_actor(instance, *actor_id);
+
+                                    if let Some(layout_id) = respawn_layout_id {
+                                        instance.insert_task(
+                                            ClientId::default(),
+                                            ObjectId::default(),
+                                            MOB_RESPAWN_TIME,
+                                            QueuedTaskData::RespawnMob {
+                                                layout_id: *layout_id,
+                                            },
+                                        );
+                                    }
                                 }
                             }
                             QueuedTaskData::CastEventAction { target } => {
@@ -877,6 +895,16 @@ pub async fn server_main_loop(
                                 {
                                     *last_combo_action = 0;
                                     *combo_sequence = 0;
+                                }
+                            }
+                            QueuedTaskData::RespawnMob { layout_id } => {
+                                let mut data = data.lock();
+                                if let Some(instance) = data.instances.get_mut(*instance_index)
+                                    && let Some(npc) = instance.zone.get_battle_npc(*layout_id)
+                                {
+                                    let actor_id = ObjectId(fastrand::u32(..));
+                                    let config = get_config();
+                                    instance.insert_npc(actor_id, npc, &config);
                                 }
                             }
                         }

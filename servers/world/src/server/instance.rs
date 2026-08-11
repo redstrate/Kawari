@@ -53,9 +53,15 @@ pub enum QueuedTaskData {
         effect_source_actor_id: ObjectId,
     },
     /// Fade out a dead actor.
-    DeadFadeOut { actor_id: ObjectId },
+    DeadFadeOut {
+        actor_id: ObjectId,
+        respawn_layout_id: Option<u32>,
+    },
     /// Despawn a dead actor.
-    DeadDespawn { actor_id: ObjectId },
+    DeadDespawn {
+        actor_id: ObjectId,
+        respawn_layout_id: Option<u32>,
+    },
     /// Complete an EventAction
     CastEventAction { target: ObjectId },
     /// Make a fish bite.
@@ -68,6 +74,8 @@ pub enum QueuedTaskData {
     WarpToPopRange { id: u32 },
     /// Reset a player's action combo status.
     ResetCombo,
+    /// Respawn a new mob.
+    RespawnMob { layout_id: u32 },
 }
 
 #[derive(Debug, Clone)]
@@ -474,7 +482,7 @@ impl Instance {
 
     // TODO: should be moved to NetworkState along with above function?? maybe??
     pub fn inform_fate_spawn_globally(&self, network: &mut NetworkState, fate: &FateInstance) {
-        for (actor, _) in &self.actors {
+        for actor in self.actors.keys() {
             Self::inform_fate_spawn(network, *actor, fate);
         }
     }

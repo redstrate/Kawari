@@ -262,18 +262,17 @@ fn process_debug_commands(
         }
         "!fate" => {
             let mut data = data.lock();
-            if let Some((_, id)) = chat_message.split_once(' ') {
-                if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
-                    // TODO: remove oldest fate as to avoid the maximum limit
+            if let Some((_, id)) = chat_message.split_once(' ')
+                && let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+            {
+                // TODO: remove oldest fate as to avoid the maximum limit
 
-                    instance.fates.push(FateInstance {
-                        fate_id: id.parse().unwrap_or_default(),
-                        start_timestamp: timestamp_secs(),
-                    });
-                    let mut network = network.lock();
-                    instance
-                        .inform_fate_spawn_globally(&mut network, instance.fates.last().unwrap());
-                }
+                instance.fates.push(FateInstance {
+                    fate_id: id.parse().unwrap_or_default(),
+                    start_timestamp: timestamp_secs(),
+                });
+                let mut network = network.lock();
+                instance.inform_fate_spawn_globally(&mut network, instance.fates.last().unwrap());
             }
 
             true

@@ -13,7 +13,7 @@ use glam::Vec3;
 use kawari::{
     common::{
         CharacterMode, DEAD_FADE_OUT_TIME, DistanceRange, ObjectId, Position,
-        SharedGroupTimelineState, Timeline, TimepointData,
+        SharedGroupTimelineState, Timeline, TimepointData, should_respawn_mobs,
     },
     config::get_config,
     ipc::zone::{
@@ -22,6 +22,7 @@ use kawari::{
     },
 };
 use parking_lot::Mutex;
+use physis::TerritoryIntendedUse;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum NpcState {
@@ -357,6 +358,7 @@ pub fn kill_actor(
 
     // Cancel existing tasks
     instance.cancel_actor_tasks(from_actor_id);
+    let intended_use = instance.zone.intended_use;
 
     // Queue up despawn if this is an NPC
     if let Some(actor) = instance.find_actor_mut(from_actor_id)
@@ -379,6 +381,15 @@ pub fn kill_actor(
             }
         }
 
+        let respawn_layout_id = if actor.get_common_spawn().layout_id != 0
+            && should_respawn_mobs(
+                TerritoryIntendedUse::from_repr(intended_use).unwrap_or(TerritoryIntendedUse::Town),
+            ) {
+            Some(actor.get_common_spawn().layout_id)
+        } else {
+            None
+        };
+
         for (gimmick_id, states) in new_timeline_states {
             let actor_id;
             {
@@ -395,6 +406,7 @@ pub fn kill_actor(
             DEAD_FADE_OUT_TIME,
             QueuedTaskData::DeadFadeOut {
                 actor_id: from_actor_id,
+                respawn_layout_id,
             },
         );
     }

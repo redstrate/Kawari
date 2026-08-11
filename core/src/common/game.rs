@@ -90,6 +90,17 @@ pub const FATE_TIME_LIMIT: Duration = Duration::from_mins(15);
 /// How many FATEs can be active at once in a instance of a zone.
 pub const MAXIMUM_FATES: usize = 6;
 
+/// How long until a normal mob respawns.
+pub const MOB_RESPAWN_TIME: Duration = Duration::from_mins(2);
+
+/// Whether normal mobs should respawn for this zone.
+pub fn should_respawn_mobs(intended_use: TerritoryIntendedUse) -> bool {
+    matches!(
+        intended_use,
+        TerritoryIntendedUse::Overworld | TerritoryIntendedUse::OccultCrescent
+    )
+}
+
 #[binrw]
 #[brw(repr(u32))]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

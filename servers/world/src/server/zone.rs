@@ -26,9 +26,8 @@ use crate::{
 use kawari::{
     common::{
         DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_EXIT,
-        EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, EventState,
-        FATE_TIME_LIMIT, FateState, HandlerType, ObjectId, Position, WARP_DELAY, WarpType,
-        euler_to_direction, internal_housing_row,
+        EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, EventState, HandlerType,
+        ObjectId, Position, WARP_DELAY, WarpType, euler_to_direction, internal_housing_row,
     },
     config::get_config,
     ipc::zone::{
