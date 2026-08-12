@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use glam::{Affine3A, EulerRot, Vec3};
+use glam::{Affine3A, EulerRot, Vec3A};
 use parking_lot::Mutex;
 use physis::{
     TerritoryIntendedUse,
@@ -44,7 +44,7 @@ pub enum MapGimmick {
     /// Jump pads like the ones in Gold Saucer.
     Jump {
         /// The position to land on.
-        to_position: Vec3,
+        to_position: Vec3A,
         /// The GimmickJump type.
         gimmick_jump_type: u32,
         /// The animation ID to play for the EObj.
@@ -63,9 +63,9 @@ pub struct MapRange {
     /// Trigger box shape.
     pub trigger_box_shape: TriggerBoxShape,
     /// Position of this range in the world.
-    pub position: Vec3,
+    pub position: Vec3A,
     /// Relative scale of this range.
-    pub scale: Vec3,
+    pub scale: Vec3A,
     /// Whether this map range represents a sanctuary.
     pub sanctuary: bool,
     /// Whether this map range represents a PvP duel area.
@@ -84,7 +84,7 @@ pub struct MapRange {
 
 #[derive(Debug)]
 struct HousingPlot {
-    entrance_position: Vec3,
+    entrance_position: Vec3A,
 }
 
 /// Represents a loaded zone
@@ -236,8 +236,8 @@ impl Zone {
                         if let LayerEntryData::MapRange(map_range) = &object.data {
                             zone.map_ranges.push(MapRange {
                                 trigger_box_shape: map_range.parent_data.trigger_box_shape,
-                                position: translation,
-                                scale,
+                                position: translation.into(),
+                                scale: scale.into(),
                                 sanctuary: map_range.rest_bonus_enabled,
                                 instance_id: object.instance_id,
                                 discovery_id: if map_range.discovery_enabled {
@@ -251,8 +251,8 @@ impl Zone {
                         if let LayerEntryData::EventRange(event_range) = &object.data {
                             zone.map_ranges.push(MapRange {
                                 trigger_box_shape: event_range.parent_data.trigger_box_shape,
-                                position: translation,
-                                scale,
+                                position: translation.into(),
+                                scale: scale.into(),
                                 duel: object.instance_id == 6445254, // From the LVD_duel_01 layer in Wolves Den Pier
                                 instance_id: object.instance_id,
                                 fate: game_data.find_fate_by_event_range(object.instance_id),
@@ -290,7 +290,7 @@ impl Zone {
                                                 .to_scale_rotation_translation();
 
                                         let map_gimmick = MapGimmick::Jump {
-                                            to_position: translation,
+                                            to_position: translation.into(),
                                             gimmick_jump_type,
                                             sgb_animation_id,
                                             eobj_instance_id: object.instance_id,
@@ -553,7 +553,7 @@ impl Zone {
                             bind_layout_id: eobj.bound_instance_id,
                             radius: object.transform.scale[0],
                             rotation: euler_to_direction(rotation.to_euler(EulerRot::XYZ)),
-                            position: Position(translation),
+                            position: Position(translation.into()),
                             ..Default::default()
                         };
                         self.cached_objects.insert(eobj.parent_data.base_id, spawn);
@@ -574,7 +574,7 @@ impl Zone {
                                 entity_id: ObjectId(fastrand::u32(..)),
                                 layout_id: object.instance_id,
                                 rotation: euler_to_direction(rotation.to_euler(EulerRot::XYZ)),
-                                position: Position(translation),
+                                position: Position(translation.into()),
                                 ..Default::default()
                             },
                         );
@@ -714,7 +714,7 @@ impl Zone {
     }
 
     /// Returns a list of MapRanges that overlap this position.
-    pub fn get_overlapping_map_ranges(&self, position: Vec3) -> Vec<&MapRange> {
+    pub fn get_overlapping_map_ranges(&self, position: Vec3A) -> Vec<&MapRange> {
         let mut overlapping = Vec::new();
 
         for map_range in &self.map_ranges {
@@ -745,16 +745,16 @@ impl Zone {
                     let length = map_range.scale[1] * 2.0;
                     let length_sq = f32::powi(length, 2);
 
-                    let pt1 = Vec3 {
-                        x: map_range.position.x,
-                        y: map_range.position.y - map_range.scale[1],
-                        z: map_range.position.z,
-                    };
-                    let pt2 = Vec3 {
-                        x: map_range.position.x,
-                        y: map_range.position.y + map_range.scale[1],
-                        z: map_range.position.z,
-                    };
+                    let pt1 = Vec3A::from_array([
+                        map_range.position.x,
+                        map_range.position.y - map_range.scale[1],
+                        map_range.position.z,
+                    ]);
+                    let pt2 = Vec3A::from_array([
+                        map_range.position.x,
+                        map_range.position.y + map_range.scale[1],
+                        map_range.position.z,
+                    ]);
 
                     let radius = map_range.scale[0]; // TODO: support individual radii (if that's even a thing, assert please)
                     let radius_sq = f32::powi(radius, 2);
@@ -771,7 +771,13 @@ impl Zone {
     }
 
     // From https://www.flipcode.com/archives/Fast_Point-In-Cylinder_Test.shtml
-    fn cylinder_test(pt1: Vec3, pt2: Vec3, length_sq: f32, radius_sq: f32, test_pt: Vec3) -> f32 {
+    fn cylinder_test(
+        pt1: Vec3A,
+        pt2: Vec3A,
+        length_sq: f32,
+        radius_sq: f32,
+        test_pt: Vec3A,
+    ) -> f32 {
         let dx = pt2.x - pt1.x;
         let dy = pt2.y - pt1.y;
         let dz = pt2.z - pt1.z;
@@ -862,14 +868,14 @@ fn begin_change_zone<'a>(
 /// Finds a random position from the pop range. Most have several positions available to stop people from spawning in the same place.
 fn pick_point_in_pop_range(object: &InstanceObject) -> Position {
     let LayerEntryData::PopRange(pop_range) = &object.data else {
-        return Position(glam::Vec3::from_array(object.transform.translation));
+        return Position(glam::Vec3A::from_array(object.transform.translation));
     };
 
     let Some(rand) = fastrand::choice(&pop_range.positions) else {
-        return Position(glam::Vec3::from_array(object.transform.translation));
+        return Position(glam::Vec3A::from_array(object.transform.translation));
     };
 
-    Position(glam::Vec3::from_array(object.transform.translation) + glam::Vec3::from_slice(rand))
+    Position(glam::Vec3A::from_array(object.transform.translation) + glam::Vec3A::from_slice(rand))
 }
 
 /// Sends the needed information to ZoneConnection for a zone change.

@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 use icarus::Action::ActionSheet;
@@ -105,6 +105,9 @@ pub struct GameData {
     pub gathering_item_level_convert_table_sheet: GatheringItemLevelConvertTableSheet,
     pub public_content_sheet: PublicContentSheet,
     pub fate_sheet: FateSheet,
+
+    pub gimmick_rect_lookup: HashMap<u32, u32>,
+    pub fate_event_range_lookup: HashMap<u32, u32>,
 }
 
 impl Default for GameData {
@@ -241,7 +244,7 @@ impl GameData {
     pub fn new() -> Self {
         let config = get_config();
 
-        let mut sqpack_resource = SqPackResourceSpy::from(
+        let sqpack_resource = SqPackResourceSpy::from(
             SqPackResource::from_existing(&config.filesystem.game_path),
             &config.filesystem.unpack_path,
         );
@@ -252,11 +255,6 @@ impl GameData {
                 config.filesystem.game_path
             );
         }
-
-        // We preload all index files, because the cost for not doing this can be high.
-        // For example: someone travels to a new zone (that wasn't previously loaded), so the server has to basically halt to read a bunch of index files from disk.
-        // Index files are small and will take up very little memory, so this is a no-brainer optimization.
-        sqpack_resource.sqpack_resource.preload_index_files();
 
         let mut resource_resolver = ResourceResolver::new();
         for path in config.filesystem.additional_search_paths {
@@ -373,6 +371,16 @@ impl GameData {
         let fate_sheet =
             FateSheet::read_from(&mut resource_resolver, config.world.language()).unwrap();
 
+        let mut gimmick_rect_lookup = HashMap::new();
+        for (id, row) in gimmick_rect_sheet.into_iter().flatten_subrows() {
+            gimmick_rect_lookup.insert(row.LayoutID, id);
+        }
+
+        let mut fate_event_range_lookup = HashMap::new();
+        for (id, row) in fate_sheet.into_iter().flatten_subrows() {
+            fate_event_range_lookup.insert(row.Location, id);
+        }
+
         Self {
             resource: resource_resolver,
             item_sheet,
@@ -407,6 +415,8 @@ impl GameData {
             gathering_item_level_convert_table_sheet,
             public_content_sheet,
             fate_sheet,
+            gimmick_rect_lookup,
+            fate_event_range_lookup,
         }
     }
 
@@ -1102,14 +1112,10 @@ impl GameData {
         self.gimmick_rect_sheet.row(gimmick_rect_id)
     }
 
-    // TODO: this can be quite expensive, any way we can speed it up?
     /// Returns information about a specific GimmickRect based on the layout id.
     pub fn lookup_gimmick_rect(&mut self, layout_id: u32) -> Option<GimmickRectRow> {
         self.gimmick_rect_sheet
-            .into_iter()
-            .flatten_subrows()
-            .map(|(_, row)| row)
-            .find(|row| row.LayoutID == layout_id)
+            .row(*self.gimmick_rect_lookup.get(&layout_id)?)
     }
 
     /// Returns the data associated with this EObj.
@@ -1690,11 +1696,7 @@ impl GameData {
 
     /// Returns the max level for a FATE
     pub fn find_fate_by_event_range(&mut self, id: u32) -> Option<u32> {
-        self.fate_sheet
-            .into_iter()
-            .flatten_subrows()
-            .find(|x| x.1.Location == id)
-            .map(|x| x.0)
+        self.fate_event_range_lookup.get(&id).copied()
     }
 }
 

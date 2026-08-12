@@ -5,7 +5,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use glam::Vec3;
+use glam::Vec3A;
 use kawari::{
     common::{
         ENEMY_AUTO_ATTACK_RATE, JumpState, MINIMUM_PATHFINDING_DISTANCE, MOB_WANDER_TIME,
@@ -35,439 +35,430 @@ pub fn npc_behavior(
     instance: &mut Instance,
     haters: &mut HashMap<ObjectId, Vec<ObjectId>>,
 ) {
-    if instance.enemy_ai_disabled {
+    if instance.enemy_ai_disabled || !instance.navmesh.is_available() {
         return;
     }
 
-    // Only pathfind if there's navmesh data available.
-    if instance.navmesh.is_available() {
-        let mut actor_moves = Vec::new();
-        let enemies = instance.find_possible_enemies();
+    let mut actor_moves = Vec::new();
+    let mut target_actor_pos = HashMap::new();
+    let enemies = instance.find_possible_enemies();
 
-        let mut target_actor_pos = HashMap::new();
-
-        // const pass
-        for (id, actor) in &instance.actors {
-            if let NetworkedActor::Npc {
-                navmesh_path: current_path,
-                navmesh_path_lerp: current_path_lerp,
-                navmesh_target: current_target,
-                spawn,
-                last_position,
-                state,
-                ..
-            } = actor
-                && current_target.is_some()
-                && *state != NpcState::Dead
-                && spawn.common.health_points > 0
-            {
-                let current_target = current_target.as_ref().unwrap();
-
-                let target_pos;
-                match current_target {
-                    NpcTarget::Actor(actor) => {
-                        if let Some(target_actor) = instance.find_actor(*actor) {
-                            target_pos = target_actor.get_common_spawn().position.0;
-                        } else {
-                            // If we can't find the target actor for some reason (despawn, disconnect, left zone), fall back on a sane-ish destination
-                            target_pos = last_position.unwrap_or(spawn.common.position.0);
-                        }
+    // const pass
+    for (id, actor) in &instance.actors {
+        if let NetworkedActor::Npc {
+            navmesh_path: current_path,
+            navmesh_path_lerp: current_path_lerp,
+            navmesh_target: current_target,
+            spawn,
+            last_position,
+            state,
+            ..
+        } = actor
+            && let Some(current_target) = current_target
+            && *state != NpcState::Dead
+            && spawn.common.health_points > 0
+        {
+            let target_pos;
+            match current_target {
+                NpcTarget::Actor(actor) => {
+                    if let Some(target_actor) = instance.find_actor(*actor) {
+                        target_pos = target_actor.get_common_spawn().position.0;
+                    } else {
+                        // If we can't find the target actor for some reason (despawn, disconnect, left zone), fall back on a sane-ish destination
+                        target_pos = last_position.unwrap_or(spawn.common.position.0);
                     }
-                    NpcTarget::Position(position) => target_pos = *position,
                 }
+                NpcTarget::Position(position) => target_pos = *position,
+            }
 
-                let distance = Vec3::distance(spawn.common.position.0, target_pos);
+            let distance = Vec3A::distance(spawn.common.position.0, target_pos);
 
-                let rotate = |from_pos: Vec3, to_pos: Vec3| {
-                    let rotation = f32::atan2(to_pos.x - from_pos.x, to_pos.z - from_pos.z);
-                    if rotation >= PI { -PI } else { rotation }
-                };
+            let rotate = |from_pos: Vec3A, to_pos: Vec3A| {
+                let rotation = f32::atan2(to_pos.x - from_pos.x, to_pos.z - from_pos.z);
+                if rotation >= PI { -PI } else { rotation }
+            };
 
-                let position;
-                let rotation;
-                // If we are in distance, rotate towards target
-                if distance <= MINIMUM_PATHFINDING_DISTANCE {
-                    position = Some(spawn.common.position);
-                    rotation = Some(rotate(spawn.common.position.0, target_pos));
-                } else if !current_path.is_empty() {
-                    // otherwise, Follow current path
-                    let next_position = current_path[0];
+            let position;
+            let rotation;
+            // If we are in distance, rotate towards target
+            if distance <= MINIMUM_PATHFINDING_DISTANCE {
+                position = Some(spawn.common.position);
+                rotation = Some(rotate(spawn.common.position.0, target_pos));
+            } else if !current_path.is_empty() {
+                // otherwise, Follow current path
+                let next_position = current_path[0];
 
-                    let current_position = last_position.unwrap_or(spawn.common.position.0);
+                let current_position = last_position.unwrap_or(spawn.common.position.0);
 
-                    position = Some(Position(Vec3::lerp(
-                        current_position,
-                        next_position,
-                        *current_path_lerp,
-                    )));
-                    rotation = Some(rotate(current_position, next_position));
-                } else {
-                    position = None;
-                    rotation = None;
-                }
+                position = Some(Position(Vec3A::lerp(
+                    current_position,
+                    next_position,
+                    *current_path_lerp,
+                )));
+                rotation = Some(rotate(current_position, next_position));
+            } else {
+                position = None;
+                rotation = None;
+            }
 
-                if let NpcTarget::Actor(actor) = current_target {
-                    target_actor_pos.insert(*actor, target_pos);
-                }
+            if let NpcTarget::Actor(actor) = current_target {
+                target_actor_pos.insert(*actor, target_pos);
+            }
 
-                if let Some(position) = position
-                    && let Some(rotation) = rotation
-                {
-                    actor_moves.push(FromServer::ActorMove(
+            if let Some(position) = position
+                && let Some(rotation) = rotation
+            {
+                actor_moves.push((
+                    *id,
+                    FromServer::ActorMove(
                         *id,
                         position,
                         rotation,
                         MoveAnimationType::empty(),
                         MoveAnimationState::None,
                         JumpState::NoneOrFalling,
-                    ));
-                }
+                    ),
+                ));
             }
         }
+    }
 
-        let mut newly_acquired_targets = Vec::new();
-        let mut new_action_requests = Vec::new();
-        let mut new_timeline_states = Vec::new();
+    let mut newly_acquired_targets = Vec::new();
+    let mut new_action_requests = Vec::new();
+    let mut new_timeline_states = Vec::new();
 
-        // mut pass
-        for (id, actor) in &mut instance.actors {
-            if let NetworkedActor::Npc {
-                state,
-                navmesh_path: current_path,
-                navmesh_path_lerp: current_path_lerp,
-                navmesh_target: current_target,
-                spawn,
-                last_position,
-                timeline_position,
-                timeline,
-                newly_hated_actor,
-                currently_invulnerable,
-                last_wander_timestamp,
-                ..
-            } = actor
-                && *state != NpcState::Dead
-                && spawn.common.health_points > 0
-            {
-                // NOTE: this is *intentional* as I believe in retail the timing of actions are dependent on when the actor spawned
-                // This doesn't have an effect if you re-aggro them or whatever.
-                *timeline_position += 1; // NOTE: change if the length of a server tick changes
+    // mut pass
+    for (id, actor) in &mut instance.actors {
+        if let NetworkedActor::Npc {
+            state,
+            navmesh_path: current_path,
+            navmesh_path_lerp: current_path_lerp,
+            navmesh_target: current_target,
+            spawn,
+            last_position,
+            timeline_position,
+            timeline,
+            newly_hated_actor,
+            currently_invulnerable,
+            last_wander_timestamp,
+            ..
+        } = actor
+            && *state != NpcState::Dead
+            && spawn.common.health_points > 0
+        {
+            // NOTE: this is *intentional* as I believe in retail the timing of actions are dependent on when the actor spawned
+            // This doesn't have an effect if you re-aggro them or whatever.
+            *timeline_position += 1; // NOTE: change if the length of a server tick changes
 
-                // switch to the next node if we passed this one
-                if *current_path_lerp >= 1.0 {
-                    *current_path_lerp = 0.0;
-                    if !current_path.is_empty() {
-                        *last_position = Some(current_path[0]);
-                        current_path.pop_front();
+            // switch to the next node if we passed this one
+            if *current_path_lerp >= 1.0 {
+                *current_path_lerp = 0.0;
+                if !current_path.is_empty() {
+                    *last_position = current_path.pop_front();
+                }
+            }
+
+            // Pick up any newly hated actors first.
+            if let Some(actor) = newly_hated_actor.take() {
+                *state = NpcState::Hate;
+                *current_target = Some(NpcTarget::Actor(actor));
+
+                spawn.common.target_id.object_id = actor;
+                newly_acquired_targets.push(*id);
+            }
+
+            if current_target.is_none() {
+                if *state == NpcState::Wander
+                    && spawn
+                        .character_data_flags
+                        .contains(CharacterDataFlag::HOSTILE)
+                {
+                    let mut game_data = gamedata.lock();
+                    let possible_enemies =
+                        game_data.get_battalion_enemies(spawn.common.battalion as u32);
+
+                    // find a player if in range
+                    for (target_id, position, battalion) in &enemies {
+                        if !possible_enemies[*battalion as usize] {
+                            continue;
+                        }
+
+                        // TODO: hardcoded sensing range
+                        if Vec3A::distance(position.0, spawn.common.position.0) < 15.0 {
+                            *state = NpcState::Hate;
+                            *current_target = Some(NpcTarget::Actor(*target_id));
+
+                            spawn.common.target_id.object_id = *target_id;
+                            newly_acquired_targets.push(*id);
+                        }
+                    }
+                } else if *state == NpcState::Follow {
+                    *current_target = Some(NpcTarget::Actor(spawn.common.owner_id));
+                }
+
+                if *state == NpcState::Wander
+                    && current_target.is_none()
+                    && Instant::now().duration_since(*last_wander_timestamp) > MOB_WANDER_TIME
+                {
+                    // TODO: don't wander too far off
+                    *current_target = Some(NpcTarget::Position(
+                        instance
+                            .navmesh
+                            .find_wander_position(spawn.common.position.0),
+                    ));
+                    *last_wander_timestamp = Instant::now();
+                }
+            } else if !current_path.is_empty() {
+                let next_position = current_path[0];
+                let current_position = last_position.unwrap_or(spawn.common.position.0);
+                let distance = Vec3A::distance(current_position, next_position);
+
+                *current_path_lerp = f32::clamp(*current_path_lerp + (2.0 / distance), 0.0, 1.0);
+            }
+
+            let mut reset_target = false;
+            let can_take_action; // FIXME: this is kind of stupid because enemies can do ranged attacks, etc.
+            if let Some(current_target) = current_target {
+                let target_pos;
+                match &current_target {
+                    NpcTarget::Actor(actor) => {
+                        // Check if the enemy is still valid
+                        reset_target = !enemies.iter().any(|(id, _, _)| *id == *actor);
+                        if target_actor_pos.contains_key(actor) {
+                            target_pos = Some(target_actor_pos[actor]);
+                        } else {
+                            target_pos = None;
+                        }
+                    }
+                    NpcTarget::Position(position) => {
+                        target_pos = Some(*position);
                     }
                 }
 
-                // Pick up any newly hated actors first.
-                if let Some(actor) = newly_hated_actor.take() {
-                    *state = NpcState::Hate;
-                    *current_target = Some(NpcTarget::Actor(actor));
-
-                    spawn.common.target_id.object_id = actor;
-                    newly_acquired_targets.push(*id);
-                }
-
-                if current_target.is_none() {
-                    if *state == NpcState::Wander
-                        && spawn
-                            .character_data_flags
-                            .contains(CharacterDataFlag::HOSTILE)
-                    {
-                        let mut game_data = gamedata.lock();
-                        let possible_enemies =
-                            game_data.get_battalion_enemies(spawn.common.battalion as u32);
-
-                        // find a player if in range
-                        for (target_id, position, battalion) in &enemies {
-                            if !possible_enemies[*battalion as usize] {
-                                continue;
-                            }
-
-                            // TODO: hardcoded sensing range
-                            if Vec3::distance(position.0, spawn.common.position.0) < 15.0 {
-                                *state = NpcState::Hate;
-                                *current_target = Some(NpcTarget::Actor(*target_id));
-
-                                spawn.common.target_id.object_id = *target_id;
-                                newly_acquired_targets.push(*id);
-                            }
+                if !reset_target && let Some(target_pos) = target_pos {
+                    let distance = Vec3A::distance(spawn.common.position.0, target_pos);
+                    let needs_repath = match current_target {
+                        NpcTarget::Actor(_) => {
+                            current_path.is_empty() && distance > MINIMUM_PATHFINDING_DISTANCE
                         }
-                    } else if *state == NpcState::Follow {
-                        // Current target always follows its owner
-                        *current_target = Some(NpcTarget::Actor(spawn.common.owner_id));
-                    }
+                        NpcTarget::Position(_) => current_path.is_empty(),
+                    };
+                    can_take_action = distance <= MINIMUM_PATHFINDING_DISTANCE;
 
-                    // If we failed to acquire a target but we still want to wander, lets do so
-                    if *state == NpcState::Wander && current_target.is_none() {
-                        // If it's time to wander...
-                        if Instant::now().duration_since(*last_wander_timestamp) > MOB_WANDER_TIME {
-                            // TODO: don't wander too far off
-                            *current_target = Some(NpcTarget::Position(
-                                instance
-                                    .navmesh
-                                    .find_wander_position(spawn.common.position.0),
-                            ));
-                            *last_wander_timestamp = Instant::now();
-                        }
-                    }
-                } else if !current_path.is_empty() {
-                    let next_position = current_path[0];
-                    let current_position = last_position.unwrap_or(spawn.common.position.0);
-                    let distance = Vec3::distance(current_position, next_position);
-
-                    *current_path_lerp =
-                        f32::clamp(*current_path_lerp + (2.0 / distance), 0.0, 1.0);
-                }
-
-                let mut reset_target = false;
-                let can_take_action; // FIXME: this is kind of stupid because enemies can do ranged attacks, etc.
-                if let Some(current_target) = current_target {
-                    let target_pos;
-                    match &current_target {
-                        NpcTarget::Actor(actor) => {
-                            // Check if the enemy is still valid
-                            reset_target = !enemies.iter().any(|(id, _, _)| *id == *actor);
-                            if target_actor_pos.contains_key(actor) {
-                                target_pos = Some(target_actor_pos[actor]);
-                            } else {
-                                target_pos = None;
-                            }
-                        }
-                        NpcTarget::Position(position) => {
-                            target_pos = Some(*position);
-                        }
-                    }
-
-                    if !reset_target && let Some(target_pos) = target_pos {
-                        let distance = Vec3::distance(spawn.common.position.0, target_pos);
-                        let needs_repath =
-                            current_path.is_empty() && distance > MINIMUM_PATHFINDING_DISTANCE;
-                        can_take_action = distance <= MINIMUM_PATHFINDING_DISTANCE;
-
-                        let current_pos = spawn.common.position.0;
-                        let path: VecDeque<Vec3> = instance
+                    let current_pos = spawn.common.position.0;
+                    if needs_repath {
+                        let path: VecDeque<Vec3A> = instance
                             .navmesh
                             .calculate_path(current_pos, target_pos)
                             .into();
 
-                        if needs_repath {
-                            *current_path = path.clone();
-                        }
+                        *current_path = path.clone();
 
                         // Drop the current target if we can't path to them too
                         if path.is_empty() {
                             reset_target = true;
                         }
-                    } else {
-                        can_take_action = false;
                     }
                 } else {
                     can_take_action = false;
                 }
-
-                // Only update the timeline on exact second marks
-                if (*timeline_position % 2) == 0 {
-                    // TODO: something worth thinking about is whether to simplify timeline_always_play, and have it always play anyway but skip Action points?
-
-                    // NOTE: the "+ 0.5" is a hack to ensure the last timepoint is always counted
-                    let timeline_position_seconds = *timeline_position / 2;
-                    let real_timeline_position =
-                        timeline_position_seconds as f32 % (timeline.duration() as f32 + 0.5);
-                    for timepoint in timeline.points_at(real_timeline_position as i32) {
-                        match &timepoint.data {
-                            TimepointData::Action { action_id, .. } => {
-                                if spawn.common.target_id.object_id.is_valid() && can_take_action {
-                                    let cast_time;
-                                    {
-                                        let mut game_data = gamedata.lock();
-                                        cast_time = game_data.get_casttime(*action_id).unwrap(); // TODO: take into account the haste stat like the client does
-                                    }
-                                    let cast_time_seconds = (cast_time as f32 * 100.0) / 1000.0; // TODO: just change how the Duration is interpreted instead of this nonsense
-                                    let request = ActionRequest {
-                                        action_id: *action_id,
-                                        action_type: ActionType::Action,
-                                        rotation1: spawn.common.rotation,
-                                        target: spawn.common.target_id,
-                                        ..Default::default()
-                                    };
-                                    new_action_requests.push((*id, request, cast_time_seconds));
-                                }
-                            }
-                            TimepointData::TimelineState { states } => {
-                                // Find the event object bound to our gimmick.
-                                let gimmick_id = spawn.gimmick_id;
-                                new_timeline_states.push((gimmick_id, states.clone()));
-                            }
-                            TimepointData::Invulnerability { invulnerable } => {
-                                *currently_invulnerable = *invulnerable;
-                            }
-                        }
-                    }
-
-                    if spawn.common.target_id.object_id.is_valid()
-                        && timeline.autoattack_action_id != 0
-                        && can_take_action
-                    {
-                        // Schedule any pending auto-attacks:
-                        let should_auto_attack = (timeline_position_seconds
-                            % (ENEMY_AUTO_ATTACK_RATE + 1))
-                            == ENEMY_AUTO_ATTACK_RATE;
-                        if should_auto_attack {
-                            let request = ActionRequest {
-                                action_id: timeline.autoattack_action_id,
-                                action_type: ActionType::Action,
-                                rotation1: spawn.common.rotation,
-                                target: spawn.common.target_id,
-                                ..Default::default()
-                            };
-                            new_action_requests.push((*id, request, 0.0));
-                        }
-                    }
-                }
-
-                if reset_target {
-                    *current_target = None;
-                    *state = NpcState::natural_state_of(spawn);
-                    spawn.common.target_id = ObjectTypeId::default();
-                }
-
-                // update common spawn
-                for msg in &actor_moves {
-                    if let FromServer::ActorMove(msg_id, pos, rotation, ..) = msg
-                        && *id == *msg_id
-                    {
-                        spawn.common.position = *pos;
-                        spawn.common.rotation = *rotation;
-                    }
-                }
-            }
-        }
-
-        // inform clients of the NPCs new positions
-        for msg in actor_moves {
-            let mut network = network.lock();
-            for (handle, _) in network.clients.values_mut() {
-                if handle.send(msg.clone()).is_err() {
-                    //to_remove.push(id);
-                }
-            }
-        }
-
-        for (id, request, cast_time) in new_action_requests {
-            if cast_time == 0.0 {
-                instance.insert_task(
-                    ClientId::default(),
-                    id,
-                    Duration::from_secs_f32(0.0),
-                    QueuedTaskData::CastAction {
-                        request: request.clone(),
-                        interruptible: false,
-                    },
-                );
             } else {
-                let position;
-                {
-                    let actor = instance.find_actor(id).unwrap();
-                    position = actor.position();
-                }
-
-                // inform players that this enemy is casting
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorCast {
-                    spell_id: request.action_id as u16,
-                    action_type: request.action_type,
-                    omen_delay: 0,
-                    action_id: request.action_id,
-                    cast_time,
-                    target: request.target.object_id,
-                    rotation: request.rotation1,
-                    interruptible: false,
-                    ballista_entity_id: ObjectId::default(),
-                    position,
-                });
-
-                let mut network = network.lock();
-                network.send_in_range_instance(
-                    id,
-                    instance,
-                    FromServer::PacketSegment(ipc, id),
-                    DestinationNetwork::ZoneClients,
-                );
-
-                instance.insert_task(
-                    ClientId::default(),
-                    id,
-                    Duration::from_secs_f32(cast_time),
-                    QueuedTaskData::CastAction {
-                        request: request.clone(),
-                        interruptible: true, // TODO: not always true?
-                    },
-                );
+                can_take_action = false;
             }
-        }
 
-        for (gimmick_id, states) in new_timeline_states {
-            let actor_id;
-            {
-                actor_id = instance.find_object_by_bind_layout_id(gimmick_id);
-            }
-            if let Some(actor_id) = actor_id {
-                let mut network = network.lock();
-                set_shared_group_timeline_state(instance, &mut network, actor_id, &states);
-            }
-        }
+            // Only update the timeline on exact second marks
+            if can_take_action && (*timeline_position % 2) == 0 {
+                // TODO: something worth thinking about is whether to simplify timeline_always_play, and have it always play anyway but skip Action points?
 
-        // create hate list
-        for (id, actor) in &instance.actors {
-            if let NetworkedActor::Npc {
-                state,
-                navmesh_target: current_target,
-                spawn,
-                ..
-            } = actor
-            {
-                if *state == NpcState::Dead {
-                    continue;
-                }
-
-                if let Some(current_target) = current_target
-                    && let NpcTarget::Actor(actor) = current_target
-                {
-                    if newly_acquired_targets.contains(id) {
-                        // Send an ACT for a visual indicator, and stuff.
-                        let mut network = network.lock();
-                        let target = ObjectTypeId {
-                            object_id: *actor,
-                            object_type: ObjectTypeKind::None,
-                        };
-                        network.send_in_range_instance(
-                            *id,
-                            instance,
-                            FromServer::ActorControlTarget(
-                                *id,
-                                target,
-                                ActorControlCategory::SetTarget {},
-                            ),
-                            DestinationNetwork::ZoneClients,
-                        );
-
-                        // TODO: does this need to be set somewhere in CommonSpawn too?
-                        network.send_ac_in_range_instance(
-                            instance,
-                            *id,
-                            ActorControlCategory::SetBattle { battle: true },
-                        );
-
-                        if let Some(director) = &mut instance.director {
-                            director.on_actor_aggro(spawn.common.layout_id);
+                // NOTE: the "+ 0.5" is a hack to ensure the last timepoint is always counted
+                let timeline_position_seconds = *timeline_position / 2;
+                let real_timeline_position =
+                    timeline_position_seconds as f32 % (timeline.duration() as f32 + 0.5);
+                for timepoint in timeline.points_at(real_timeline_position as i32) {
+                    match &timepoint.data {
+                        TimepointData::Action { action_id, .. } => {
+                            if spawn.common.target_id.object_id.is_valid() && can_take_action {
+                                let cast_time;
+                                {
+                                    let mut game_data = gamedata.lock();
+                                    cast_time = game_data.get_casttime(*action_id).unwrap(); // TODO: take into account the haste stat like the client does
+                                }
+                                let cast_time_seconds = (cast_time as f32 * 100.0) / 1000.0; // TODO: just change how the Duration is interpreted instead of this nonsense
+                                let request = ActionRequest {
+                                    action_id: *action_id,
+                                    action_type: ActionType::Action,
+                                    rotation1: spawn.common.rotation,
+                                    target: spawn.common.target_id,
+                                    ..Default::default()
+                                };
+                                new_action_requests.push((*id, request, cast_time_seconds));
+                            }
+                        }
+                        TimepointData::TimelineState { states } => {
+                            // Find the event object bound to our gimmick.
+                            let gimmick_id = spawn.gimmick_id;
+                            new_timeline_states.push((gimmick_id, states.clone()));
+                        }
+                        TimepointData::Invulnerability { invulnerable } => {
+                            *currently_invulnerable = *invulnerable;
                         }
                     }
-
-                    haters.entry(*actor).or_default();
-                    haters.get_mut(actor).unwrap().push(*id);
                 }
+
+                if spawn.common.target_id.object_id.is_valid() && timeline.autoattack_action_id != 0
+                {
+                    // Schedule any pending auto-attacks:
+                    let should_auto_attack = (timeline_position_seconds
+                        % (ENEMY_AUTO_ATTACK_RATE + 1))
+                        == ENEMY_AUTO_ATTACK_RATE;
+                    if should_auto_attack {
+                        let request = ActionRequest {
+                            action_id: timeline.autoattack_action_id,
+                            action_type: ActionType::Action,
+                            rotation1: spawn.common.rotation,
+                            target: spawn.common.target_id,
+                            ..Default::default()
+                        };
+                        new_action_requests.push((*id, request, 0.0));
+                    }
+                }
+            }
+
+            if reset_target {
+                *current_target = None;
+                *state = NpcState::natural_state_of(spawn);
+                spawn.common.target_id = ObjectTypeId::default();
+            }
+
+            // update common spawn
+            for msg in &actor_moves {
+                if let (_, FromServer::ActorMove(msg_id, pos, rotation, ..)) = msg
+                    && *id == *msg_id
+                {
+                    spawn.common.position = *pos;
+                    spawn.common.rotation = *rotation;
+                }
+            }
+        }
+    }
+
+    // inform clients of the NPCs new positions
+    for (id, msg) in actor_moves {
+        let mut network = network.lock();
+        network.send_in_range_instance(id, instance, msg, DestinationNetwork::ZoneClients);
+    }
+
+    for (id, request, cast_time) in new_action_requests {
+        if cast_time == 0.0 {
+            instance.insert_task(
+                ClientId::default(),
+                id,
+                Duration::from_secs_f32(0.0),
+                QueuedTaskData::CastAction {
+                    request: request.clone(),
+                    interruptible: false,
+                },
+            );
+        } else {
+            let position;
+            {
+                let actor = instance.find_actor(id).unwrap();
+                position = actor.position();
+            }
+
+            // inform players that this enemy is casting
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorCast {
+                spell_id: request.action_id as u16,
+                action_type: request.action_type,
+                omen_delay: 0,
+                action_id: request.action_id,
+                cast_time,
+                target: request.target.object_id,
+                rotation: request.rotation1,
+                interruptible: false,
+                ballista_entity_id: ObjectId::default(),
+                position,
+            });
+
+            let mut network = network.lock();
+            network.send_in_range_instance(
+                id,
+                instance,
+                FromServer::PacketSegment(ipc, id),
+                DestinationNetwork::ZoneClients,
+            );
+
+            instance.insert_task(
+                ClientId::default(),
+                id,
+                Duration::from_secs_f32(cast_time),
+                QueuedTaskData::CastAction {
+                    request: request.clone(),
+                    interruptible: true, // TODO: not always true?
+                },
+            );
+        }
+    }
+
+    for (gimmick_id, states) in new_timeline_states {
+        let actor_id;
+        {
+            actor_id = instance.find_object_by_bind_layout_id(gimmick_id);
+        }
+        if let Some(actor_id) = actor_id {
+            let mut network = network.lock();
+            set_shared_group_timeline_state(instance, &mut network, actor_id, &states);
+        }
+    }
+
+    // create hate list
+    for (id, actor) in &instance.actors {
+        if let NetworkedActor::Npc {
+            state,
+            navmesh_target: current_target,
+            spawn,
+            ..
+        } = actor
+        {
+            if *state == NpcState::Dead {
+                continue;
+            }
+
+            if let Some(current_target) = current_target
+                && let NpcTarget::Actor(actor) = current_target
+            {
+                if newly_acquired_targets.contains(id) {
+                    // Send an ACT for a visual indicator, and stuff.
+                    let mut network = network.lock();
+                    let target = ObjectTypeId {
+                        object_id: *actor,
+                        object_type: ObjectTypeKind::None,
+                    };
+                    network.send_in_range_instance(
+                        *id,
+                        instance,
+                        FromServer::ActorControlTarget(
+                            *id,
+                            target,
+                            ActorControlCategory::SetTarget {},
+                        ),
+                        DestinationNetwork::ZoneClients,
+                    );
+
+                    // TODO: does this need to be set somewhere in CommonSpawn too?
+                    network.send_ac_in_range_instance(
+                        instance,
+                        *id,
+                        ActorControlCategory::SetBattle { battle: true },
+                    );
+
+                    if let Some(director) = &mut instance.director {
+                        director.on_actor_aggro(spawn.common.layout_id);
+                    }
+                }
+
+                haters.entry(*actor).or_default();
+                haters.get_mut(actor).unwrap().push(*id);
             }
         }
     }

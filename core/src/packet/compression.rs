@@ -97,9 +97,9 @@ pub(crate) fn compress<T: ReadWriteIpcSegment>(
     use super::{IPC_HEADER_SIZE, scramble_packet};
     use binrw::BinWrite;
 
-    let mut segments_buffer = Vec::new();
+    let mut segments_buffer = Vec::with_capacity(segments.len());
     for segment in segments {
-        let mut buffer = Vec::new();
+        let mut buffer = Vec::with_capacity(segment.calc_size() as usize);
 
         // write to buffer
         {

@@ -1,7 +1,7 @@
 use std::{io::Cursor, ptr::null_mut};
 
 use binrw::{BinRead, BinWrite, binrw};
-use glam::Vec3;
+use glam::Vec3A;
 use recastnavigation_sys::{
     DT_SUCCESS, dtAllocNavMesh, dtAllocNavMeshQuery, dtNavMesh, dtNavMesh_addTile, dtNavMesh_init,
     dtNavMeshParams, dtNavMeshQuery, dtNavMeshQuery_findNearestPoly, dtNavMeshQuery_findPath,
@@ -134,7 +134,7 @@ impl Navmesh {
     }
 
     /// Calculates a path from `start_pos` to `end_pos`.
-    pub fn calculate_path(&self, start_pos: Vec3, end_pos: Vec3) -> Vec<Vec3> {
+    pub fn calculate_path(&self, start_pos: Vec3A, end_pos: Vec3A) -> Vec<Vec3A> {
         unsafe {
             let mut filter = dtQueryFilter {
                 m_areaCost: [1.0; 64],
@@ -187,7 +187,7 @@ impl Navmesh {
 
             let mut path = Vec::new();
             for pos in straight_path[..straight_path_count as usize * 3].chunks(3) {
-                path.push(Vec3::from_slice(pos));
+                path.push(Vec3A::from_slice(pos));
             }
 
             path
@@ -196,9 +196,9 @@ impl Navmesh {
 
     fn get_polygon_at_location(
         query: *const dtNavMeshQuery,
-        position: Vec3,
+        position: Vec3A,
         filter: &dtQueryFilter,
-    ) -> (dtPolyRef, Vec3) {
+    ) -> (dtPolyRef, Vec3A) {
         let extents = [2.0, 4.0, 2.0];
 
         unsafe {
@@ -215,11 +215,11 @@ impl Navmesh {
                 ) == DT_SUCCESS
             );
 
-            (nearest_ref, Vec3::from_array(nearest_pt))
+            (nearest_ref, Vec3A::from_array(nearest_pt))
         }
     }
 
-    pub fn find_wander_position(&mut self, position: Vec3) -> Vec3 {
+    pub fn find_wander_position(&mut self, position: Vec3A) -> Vec3A {
         unsafe {
             let mut filter = dtQueryFilter {
                 m_areaCost: [0.0; 64],
@@ -249,7 +249,7 @@ impl Navmesh {
                 ) == DT_SUCCESS
             );
 
-            Vec3::from_array(random_pt)
+            Vec3A::from_array(random_pt)
         }
     }
 

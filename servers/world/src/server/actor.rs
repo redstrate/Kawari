@@ -9,7 +9,7 @@ use crate::{
     },
     zone_connection::{BaseParameters, TeleportQuery},
 };
-use glam::Vec3;
+use glam::Vec3A;
 use kawari::{
     common::{
         CharacterMode, DEAD_FADE_OUT_TIME, DistanceRange, ObjectId, Position,
@@ -52,7 +52,7 @@ impl NpcState {
 #[derive(Debug, Clone)]
 pub enum NpcTarget {
     Actor(ObjectId),
-    Position(Vec3),
+    Position(Vec3A),
 }
 
 #[derive(Debug, Clone)]
@@ -80,10 +80,10 @@ pub enum NetworkedActor {
     },
     Npc {
         state: NpcState,
-        navmesh_path: VecDeque<Vec3>,
+        navmesh_path: VecDeque<Vec3A>,
         navmesh_path_lerp: f32,
         navmesh_target: Option<NpcTarget>,
-        last_position: Option<Vec3>,
+        last_position: Option<Vec3A>,
         spawn: SpawnNpc,
         timeline: Timeline,
         /// In half-seconds (the current server logic tick.)
@@ -166,7 +166,7 @@ impl NetworkedActor {
             let mut other_pos = other.position().0;
             other_pos.y = 0.0;
 
-            let distance = Vec3::distance(self_pos, other_pos);
+            let distance = Vec3A::distance(self_pos, other_pos);
             distance < distance_range.distance()
         } else {
             false

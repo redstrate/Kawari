@@ -1,10 +1,10 @@
 use binrw::binrw;
-use glam::Vec3;
+use glam::Vec3A;
 use serde::{Deserialize, Serialize};
 
 /// Represents a point in space.
 ///
-/// This is a newtype around glam's Vec3 in cases where we need to:
+/// This is a newtype around glam's Vec3A in cases where we need to:
 /// 1. Exposing this into Lua.
 /// 2. Serializing in SQL or JSON.
 /// 3. Read/write from bytes using binrw.
@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 pub struct Position(
     #[br(map = read_position)]
     #[bw(map = write_position)]
-    pub Vec3,
+    pub Vec3A,
 );
 
 // NOTE: To keep compatibility with Lua, drop-ins etc but should we keep it long-term?
@@ -32,11 +32,7 @@ struct PositionHelper {
 
 impl From<PositionHelper> for Position {
     fn from(value: PositionHelper) -> Self {
-        Self(Vec3 {
-            x: value.x,
-            y: value.y,
-            z: value.z,
-        })
+        Self(Vec3A::from_array([value.x, value.y, value.z]))
     }
 }
 
@@ -50,11 +46,11 @@ impl From<Position> for PositionHelper {
     }
 }
 
-fn read_position(packed: [f32; 3]) -> Vec3 {
-    Vec3::from_array(packed)
+fn read_position(packed: [f32; 3]) -> Vec3A {
+    Vec3A::from_array(packed)
 }
 
-fn write_position(pos: &Vec3) -> [f32; 3] {
+fn write_position(pos: &Vec3A) -> [f32; 3] {
     [pos.x, pos.y, pos.z]
 }
 

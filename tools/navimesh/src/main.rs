@@ -3,7 +3,7 @@ use std::{
     ptr::{null, null_mut},
 };
 
-use glam::{Affine3A, Vec3};
+use glam::{Affine3A, Vec3A};
 use icarus::RecastNavimesh::RecastNavimeshSheet;
 use icarus::TerritoryType::TerritoryTypeSheet;
 use kawari::config::get_config;
@@ -420,7 +420,7 @@ fn walk_node(
         // transform the vertices on the CPU
         let mut tile_vertices: Vec<[f32; 3]> = Vec::new();
         for vertex in &node.vertices {
-            let transformed = transform.transform_point3(Vec3::from_slice(vertex));
+            let transformed = transform.transform_point3(Vec3A::from_slice(vertex).into());
             tile_vertices.push([transformed.x, transformed.y, transformed.z]);
         }
 

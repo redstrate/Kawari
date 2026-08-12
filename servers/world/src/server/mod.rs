@@ -1,4 +1,4 @@
-use glam::{Affine3A, EulerRot, Vec3};
+use glam::{Affine3A, EulerRot, Vec3A};
 use parking_lot::Mutex;
 use physis::TerritoryIntendedUse;
 use std::{
@@ -465,8 +465,8 @@ fn server_logic_tick(
                     let a_position = a.1.position();
                     let b_position = b.1.position();
 
-                    let a_distance = Vec3::distance(actor.position().0, a_position.0);
-                    let b_distance = Vec3::distance(actor.position().0, b_position.0);
+                    let a_distance = Vec3A::distance(actor.position().0, a_position.0);
+                    let b_distance = Vec3A::distance(actor.position().0, b_position.0);
 
                     a_distance.total_cmp(&b_distance)
                 });
@@ -1031,7 +1031,7 @@ pub async fn server_main_loop(
                         {
                             let (_, rotation, translation) =
                                 Affine3A::from(object.transform).to_scale_rotation_translation();
-                            exit_position = Position(translation);
+                            exit_position = Position(translation.into());
                             exit_rotation = euler_to_direction(rotation.to_euler(EulerRot::XYZ));
                         } else {
                             exit_position = position;

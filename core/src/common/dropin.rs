@@ -73,7 +73,7 @@ pub enum DropInObjectData {
 
 #[cfg(test)]
 mod tests {
-    use glam::Vec3;
+    use glam::Vec3A;
 
     use super::*;
 
@@ -90,11 +90,7 @@ mod tests {
                     name: "CRF_MINING_LV20".to_string(),
                     objects: vec![DropInObject {
                         layout_id: 4001271,
-                        position: Position(Vec3 {
-                            x: -266.0561,
-                            y: 29.50931,
-                            z: -562.5141
-                        }),
+                        position: Position(Vec3A::from_array([-266.0561, 29.50931, -562.5141])),
                         rotation: 0.0,
                         data: DropInObjectData::GatheringPoint { base_id: 30001 }
                     }]

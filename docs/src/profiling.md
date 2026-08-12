@@ -7,7 +7,7 @@ Here's a jumble of random tips to help you profile Kawari.
 Install a better `addr2line` that doesn't take forever to load and works better:
 
 ```shell
-cargo install  addr2line --features="bin"
+cargo install addr2line --features="bin"
 ```
 
 Depending on your system you need to force frame pointers otherwise the callgraphs are wrong:
