@@ -79,6 +79,7 @@ pub enum ActorControlCategory {
         shown: bool,
         /// This seems to always be set to 1. If set to another value, the animation glitches for other clients.
         unk_flag: u32,
+        unk2: u32,
     },
 
     /// Sets auto-attack mode of this entity.
@@ -153,6 +154,9 @@ pub enum ActorControlCategory {
         unk2: u32,
         unk3: u32,
     },
+
+    #[brw(magic = 11u32)]
+    Unk11 { unk1: ObjectId, unk2: u32 },
 
     /// Does what it says!
     #[brw(magic = 13u32)]
@@ -255,7 +259,11 @@ pub enum ActorControlCategory {
 
     /// Sets the EXP, but doesn't display anything visually.
     #[brw(magic = 43u32)]
-    SetEXP { classjob_id: u32, amount: u32 },
+    SetEXP {
+        classjob_id: u32,
+        amount: u32,
+        rested_exp: u32,
+    },
 
     #[brw(magic = 50u32)]
     SetTarget {},
@@ -452,6 +460,10 @@ pub enum ActorControlCategory {
     CompanionUnlock {
         unk1: u32,
         unk2: u32, // unlocked?
+        unk3: u32,
+        unk4: u32,
+        unk5: u32,
+        unk6: u32,
     },
 
     #[brw(magic = 254u32)]
@@ -606,6 +618,9 @@ pub enum ActorControlCategory {
         /// The actor id of the player who marked the target.
         from_actor_id: ObjectId,
     },
+
+    #[brw(magic = 503u32)]
+    Unk503 { unk1: u32, unk2: ObjectId },
 
     #[brw(magic = 504u32)]
     SetStatusIcon { icon: OnlineStatus },
@@ -1027,8 +1042,11 @@ pub enum ActorControlCategory {
         position_z: u32,
     },
 
+    #[brw(magic = 2362u32)]
+    UnkFate6 { fate_id: u32 },
+
     #[brw(magic = 2363u32)]
-    UnkFate6 {
+    UnkFate7 {
         unk1: u32,
         unk2: u32,
         unk3: u32,

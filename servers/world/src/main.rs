@@ -1066,6 +1066,10 @@ async fn process_packet(
                                         .actor_control_self(ActorControlCategory::CompanionUnlock {
                                             unk1: 0,
                                             unk2: 0,
+                                            unk3: 0,
+                                            unk4: 0,
+                                            unk5: 0,
+                                            unk6: 0,
                                         })
                                         .await;
 
@@ -2421,6 +2425,7 @@ async fn process_packet(
                                     ActorControlCategory::ToggleWeapon {
                                         shown: false,
                                         unk_flag: 1,
+                                        unk2: 1,
                                     },
                                 )
                                 .await;
@@ -2462,6 +2467,7 @@ async fn process_packet(
                                     ActorControlCategory::ToggleWeapon {
                                         shown: false,
                                         unk_flag: 1,
+                                        unk2: 1,
                                     },
                                 )
                                 .await;

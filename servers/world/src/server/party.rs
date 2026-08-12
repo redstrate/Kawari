@@ -1182,6 +1182,7 @@ pub fn handle_party_messages(
                 ActorControlCategory::ToggleWeapon {
                     shown: false,
                     unk_flag: 1,
+                    unk2: 1,
                 },
             );
 

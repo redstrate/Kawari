@@ -1315,6 +1315,7 @@ pub async fn server_main_loop(
                                 ActorControlCategory::ToggleWeapon {
                                     shown: *shown,
                                     unk_flag: *unk_flag,
+                                    unk2: 1,
                                 },
                             );
 
