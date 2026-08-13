@@ -7,10 +7,12 @@ use std::{
 
 use crate::{
     ClientId, FromServer, GameData, Navmesh, StatusEffects,
+    lua::KawariLua,
     server::{
         action::cancel_action,
         actor::{NetworkedActor, NpcState},
         director::DirectorData,
+        fate::FateData,
         network::{DestinationNetwork, NetworkState},
         zone::Zone,
     },
@@ -18,13 +20,13 @@ use crate::{
 };
 use kawari::{
     common::{
-        DistanceRange, ENTRANCE_CIRCLE_IDS, FATE_TIME_LIMIT, FateState, MAXIMUM_FATES, ObjectId,
-        Position, timestamp_secs,
+        DistanceRange, ENTRANCE_CIRCLE_IDS, FATE_TIME_LIMIT, FateRule, FateState, MAXIMUM_FATES,
+        ObjectId, Position, timestamp_secs,
     },
     config::{Config, get_config},
     ipc::zone::{
-        ActionRequest, ActorControlCategory, Conditions, ServerZoneIpcData, ServerZoneIpcSegment,
-        SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure,
+        ActionRequest, ActorControlCategory, Conditions, ServerZoneIpcData,
+        ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure,
     },
 };
 use parking_lot::Mutex;
@@ -94,12 +96,77 @@ impl PartialEq for QueuedTask {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FateInstance {
     /// Index into the Fate Excel sheet.
     pub fate_id: u32,
     /// When this FATE was started.
     pub start_timestamp: u32,
+    /// The current state of the FATE.
+    pub fate_state: FateState,
+    pub data: FateData,
+    /// The start NPC for this FATE, if applicable.
+    pub motivation_npc: Option<(ObjectId, Position)>,
+}
+
+impl FateInstance {
+    pub fn new(fate_id: u32, game_data: &mut GameData) -> Self {
+        let fate_rule = game_data.get_fate_rule(fate_id).unwrap_or_default();
+        let fate_state = match fate_rule {
+            FateRule::Gathering => FateState::Preparing,
+            _ => FateState::Running,
+        };
+
+        // Setup Lua state
+        let lua = KawariLua::new();
+
+        // Find the script for this FATE
+        let file_name = get_config()
+            .filesystem
+            .locate_script_file("content/test_fate_soul.lua");
+
+        let mut data = FateData::default();
+
+        // HACK: hardcoded to this FATE for now
+        if fate_id == 603 {
+            let result = std::fs::read(&file_name);
+            if let Err(err) = result {
+                tracing::warn!(
+                    "Failed to load {}: {:?} instance content won't be scripted!",
+                    file_name,
+                    err
+                );
+            } else {
+                let file = result.unwrap();
+
+                if let Err(err) = lua
+                    .0
+                    .load(file)
+                    .set_name("@".to_string() + &file_name)
+                    .exec()
+                {
+                    tracing::warn!(
+                        "Syntax error in {}: {:?} instance content won't be scripted!",
+                        file_name,
+                        err
+                    );
+                } else {
+                    data.lua = lua;
+
+                    // Call into the onSetup function before returning, as we need the flag to be initialized before any players change zones.
+                    data.setup();
+                }
+            }
+        }
+
+        Self {
+            fate_id,
+            start_timestamp: timestamp_secs(),
+            fate_state,
+            data,
+            motivation_npc: None,
+        }
+    }
 }
 
 #[derive(Default, Debug)]
@@ -170,10 +237,7 @@ impl Instance {
         // Determine the starting set of FATEs
         let available_fates = instance.zone.map_ranges.iter().filter_map(|x| x.fate);
         for fate_id in fastrand::choose_multiple(available_fates, MAXIMUM_FATES) {
-            instance.fates.push(FateInstance {
-                fate_id,
-                start_timestamp: timestamp_secs(),
-            });
+            instance.fates.push(FateInstance::new(fate_id, game_data));
         }
 
         instance
@@ -365,6 +429,19 @@ impl Instance {
         None
     }
 
+    /// Returns the actor ID (if any) of the spawned BNpc by it's instance ID in the layout.
+    pub fn find_npc(&self, layout_id: u32) -> Option<(ObjectId, Position)> {
+        for (id, actor) in &self.actors {
+            if let NetworkedActor::Npc { spawn, .. } = actor
+                && spawn.common.layout_id == layout_id
+            {
+                return Some((*id, spawn.common.position));
+            }
+        }
+
+        None
+    }
+
     /// Returns the actor ID (if any) of the spawned EObj by it's EObj ID.
     pub fn find_object_by_eobj_id(&self, eobj_id: u32) -> Option<ObjectId> {
         for (id, actor) in &self.actors {
@@ -446,6 +523,35 @@ impl Instance {
         from_actor_id: ObjectId,
         fate: &FateInstance,
     ) {
+        let send_motivation_npc = |network: &mut NetworkState| {
+            if let Some((object_id, position)) = fate.motivation_npc {
+                network.send_to_by_actor_id(
+                    from_actor_id,
+                    FromServer::ActorControlSelf(ActorControlCategory::SetupMotivationNpc {
+                        fate_id: fate.fate_id,
+                        motivation_npc: object_id,
+                        unk1: 2175,
+                        position_x: (position.0.x * 1000.0) as i32,
+                        position_y: (position.0.y * 1000.0) as i32,
+                        position_z: (position.0.z * 1000.0) as i32,
+                    }),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
+        };
+
+        // TODO: maybe only for newly spawned fates?
+        network.send_to_by_actor_id(
+            from_actor_id,
+            FromServer::ActorControlSelf(ActorControlCategory::FateInit {
+                fate_id: fate.fate_id,
+                fate_state: FateState::Unk1,
+            }),
+            DestinationNetwork::ZoneClients,
+        );
+
+        send_motivation_npc(network);
+
         network.send_to_by_actor_id(
             from_actor_id,
             FromServer::ActorControlSelf(ActorControlCategory::CreateFateContext {
@@ -455,27 +561,41 @@ impl Instance {
             DestinationNetwork::ZoneClients,
         );
 
-        network.send_to_by_actor_id(
-            from_actor_id,
-            FromServer::PacketSegment(
-                ServerZoneIpcSegment::new(ServerZoneIpcData::UnkFate {
-                    fate_id: fate.fate_id,
-                    unk1: 0,
-                    start_timestamp: fate.start_timestamp,
-                    unk3: 0,
-                    time_limit: FATE_TIME_LIMIT.as_secs() as u32,
-                    unk5: 0,
-                }),
+        // TODO: We need to send this when the fate *begins* running too
+        if fate.fate_state == FateState::Running {
+            network.send_to_by_actor_id(
                 from_actor_id,
-            ),
-            DestinationNetwork::ZoneClients,
-        );
+                FromServer::PacketSegment(
+                    ServerZoneIpcSegment::new(ServerZoneIpcData::UnkFate {
+                        fate_id: fate.fate_id,
+                        unk1: 0,
+                        start_timestamp: fate.start_timestamp,
+                        unk3: 0,
+                        time_limit: FATE_TIME_LIMIT.as_secs() as u32,
+                        unk5: 0,
+                    }),
+                    from_actor_id,
+                ),
+                DestinationNetwork::ZoneClients,
+            );
+        }
 
         network.send_to_by_actor_id(
             from_actor_id,
             FromServer::ActorControlSelf(ActorControlCategory::FateInit {
                 fate_id: fate.fate_id,
-                fate_state: FateState::Running,
+                fate_state: fate.fate_state,
+            }),
+            DestinationNetwork::ZoneClients,
+        );
+
+        // Yes, retail does send it twice.
+        send_motivation_npc(network);
+
+        network.send_to_by_actor_id(
+            from_actor_id,
+            FromServer::ActorControlSelf(ActorControlCategory::FateUpdateTargetableStatus {
+                fate_id: fate.fate_id,
             }),
             DestinationNetwork::ZoneClients,
         );

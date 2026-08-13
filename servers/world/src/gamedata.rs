@@ -61,7 +61,8 @@ use physis::savedata::chardat::CustomizeData;
 use physis::{Language, TerritoryIntendedUse};
 
 use kawari::common::{
-    InstanceContentType, PublicContentType, get_aether_current_comp_flg_set_to_screenimage,
+    FateRule, InstanceContentType, PublicContentType,
+    get_aether_current_comp_flg_set_to_screenimage,
 };
 use kawari::common::{LegacyEquipmentModelId, WeaponModelId, timestamp_secs};
 use kawari::config::get_config;
@@ -1697,6 +1698,12 @@ impl GameData {
     /// Returns the max level for a FATE
     pub fn find_fate_by_event_range(&mut self, id: u32) -> Option<u32> {
         self.fate_event_range_lookup.get(&id).copied()
+    }
+
+    /// Returns the FateRule for a FATE.
+    pub fn get_fate_rule(&mut self, id: u32) -> Option<FateRule> {
+        let row = self.fate_sheet.row(id)?;
+        FateRule::from_repr(row.Rule)
     }
 }
 

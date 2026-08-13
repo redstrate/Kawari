@@ -22,6 +22,7 @@ use crate::{
         chat::handle_chat_messages,
         director::{DirectorData, director_tick, handle_director_messages},
         effect::{handle_effect_messages, remove_effect, send_effects_list},
+        fate::fate_tick,
         instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
         linkshell::handle_linkshell_messages,
         network::{DestinationNetwork, NetworkState},
@@ -64,6 +65,7 @@ mod linkshell;
 mod network;
 mod party;
 pub use party::{Party, PartyMember};
+mod fate;
 mod npc_behavior;
 mod social;
 mod spawn_allocator;
@@ -660,6 +662,7 @@ fn server_logic_tick(
 
             // Process any director tasks for this instance.
             director_tick(network.clone(), instance);
+            fate_tick(network.clone(), instance);
         }
         // Ensure the rested EXP counter only happens every 10 seconds.
         data.rested_exp_counter += 1;

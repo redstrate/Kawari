@@ -16624,6 +16624,28 @@
                         "z": -107.06944274902344
                     },
                     "rotation": 0.35382747650146484
+                },
+                {
+                    "data": {
+                        "base_id": 1221,
+                        "gimmick_id": 0,
+                        "hostile": false,
+                        "hp": null,
+                        "level": 1,
+                        "link_family": 0,
+                        "link_range": 20,
+                        "max_links": 4,
+                        "name_id": 2175,
+                        "nonpop": true,
+                        "type": "battle_npc"
+                    },
+                    "layout_id": 4309315,
+                    "position": {
+                        "x": -448.1868896484375,
+                        "y": 63.22359848022461,
+                        "z": -249.4674072265625
+                    },
+                    "rotation": -0.00004792213439941406
                 }
             ]
         }

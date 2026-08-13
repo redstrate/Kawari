@@ -1087,7 +1087,9 @@ pub enum FateState {
     Unk0 = 0,
     Unk1 = 1,
     Unk2 = 2,
+    /// Used for FATEs that need you to talk to a motivation NPC to begin.
     Preparing = 3,
+    /// The FATE is running - has a circle and stuff.
     Running = 4,
     Ending = 5,
     Unk6 = 6,
@@ -1095,6 +1097,27 @@ pub enum FateState {
     Failed = 8,
     Unk9 = 9,
     Unk10 = 10,
+}
+
+/// Names for the Rule column in the FATE sheet.
+#[binrw]
+#[brw(little)]
+#[repr(u8)]
+#[brw(repr = u8)]
+#[derive(Debug, Clone, Copy, PartialEq, FromRepr, Default)]
+pub enum FateRule {
+    #[default]
+    Unk0 = 0,
+    Unk1 = 1,
+    /// Gathering items to bring back to the motivation NPC.
+    Gathering = 2,
+    Unk3 = 3,
+    Unk4 = 4,
+    Unk5 = 5,
+    Unk6 = 6,
+    Unk7 = 7,
+    Unk8 = 8,
+    Unk9 = 9,
 }
 
 /// This is basically a bitflag of what timelines should be playing.

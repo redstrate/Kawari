@@ -983,13 +983,9 @@ pub enum ActorControlCategory {
         unlocked: bool,
     },
 
+    /// Adds this to the FateStartNPCs list and sets the type to what's specified in `ObjectTypeId`.
     #[brw(magic = 2351u32)]
-    FateNpc {
-        actor_id: ObjectId,
-        unk2: u32,
-        unk3: u32,
-        unk4: u32,
-    },
+    FateStartNpc { actor_id: ObjectTypeId },
 
     #[brw(magic = 2352u32)]
     UnkFate2 {
@@ -1031,15 +1027,18 @@ pub enum ActorControlCategory {
         is_bonus: u32,
     },
 
+    /// Associates an NPC with a preparing FATE. You need to talk to this NPC to begin, and also to return items to (if applicable?)
     #[brw(magic = 2359u32)]
     SetupMotivationNpc {
         /// Index into the FATE Excel sheet.
         fate_id: u32,
+        /// The NPC to be used.
         motivation_npc: ObjectId,
-        /// Divided by 1000.0 for map coordinates.
-        position_x: u32,
-        position_y: u32,
-        position_z: u32,
+        unk1: u32,
+        /// Divided by 1000.0 for map coordinates. Only used if the BNpc is not spawned yet.
+        position_x: i32,
+        position_y: i32,
+        position_z: i32,
     },
 
     #[brw(magic = 2362u32)]
@@ -1096,7 +1095,7 @@ pub enum ActorControlCategory {
 
     /// Sets something for all objects bound to this FATE...
     #[brw(magic = 2370u32)]
-    UnkFate12 {
+    FateUpdateTargetableStatus {
         /// Index into the FATE Excel sheet.
         fate_id: u32,
     },

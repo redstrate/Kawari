@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use bstr::BString;
 use kawari::{
-    common::{DEBUG_COMMAND_TRIGGER, ObjectId, WarpType, timestamp_secs},
+    common::{DEBUG_COMMAND_TRIGGER, ObjectId, WarpType},
     ipc::zone::{
         ActionRequest, ActionType, ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment,
     },
@@ -267,10 +267,10 @@ fn process_debug_commands(
             {
                 // TODO: remove oldest fate as to avoid the maximum limit
 
-                instance.fates.push(FateInstance {
-                    fate_id: id.parse().unwrap_or_default(),
-                    start_timestamp: timestamp_secs(),
-                });
+                let mut game_data = game_data.lock();
+                instance
+                    .fates
+                    .push(FateInstance::new(id.parse().unwrap(), &mut game_data));
                 let mut network = network.lock();
                 instance.inform_fate_spawn_globally(&mut network, instance.fates.last().unwrap());
             }

@@ -168,6 +168,8 @@ impl From<EquipDisplayFlag> for DisplayFlag {
 bitflags! {
     impl DisplayFlag : u32 {
         const ACTIVE_STANCE = 0x001;
+        /// Used to mark FATE start NPCs at least.
+        const FATE_START_NPC = 0x004;
         const UNK2 = 0x008;
         const INVISIBLE = 0x020;
         const HIDE_HEAD = 0x040;

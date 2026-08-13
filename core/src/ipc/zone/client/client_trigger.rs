@@ -305,6 +305,13 @@ pub enum ClientTriggerCommand {
         trigger: DirectorTrigger,
     },
 
+    /// The client is requesting to update the type for this actor. Responds with AC FateStartNpc.
+    #[brw(magic = 814u32)]
+    RequestFateNpc {
+        /// The actor in question.
+        actor_id: ObjectId,
+    },
+
     /// When a player requests an NPC (or player?) to a Triple Triad match.
     #[brw(magic = 815u32)]
     TripleTriadChallenge {

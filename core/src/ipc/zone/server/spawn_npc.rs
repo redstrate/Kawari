@@ -81,7 +81,7 @@ mod tests {
     use binrw::BinRead;
 
     use crate::{
-        common::{CharacterMode, HandlerId},
+        common::{CharacterMode, HandlerId, HandlerType, ObjectId, ObjectTypeId, ObjectTypeKind},
         ipc::zone::{BattleNpcSubKind, DisplayFlag, ObjectKind},
         server_zone_tests_dir,
     };
@@ -128,6 +128,13 @@ mod tests {
         assert_eq!(npc_spawn.common.layout_id, 0);
         assert_eq!(npc_spawn.character_data_icon, 0);
         assert_eq!(npc_spawn.common.name, "カーバンクル");
+        assert_eq!(
+            npc_spawn.common.combat_tagger_id,
+            ObjectTypeId {
+                object_id: ObjectId(0),
+                object_type: ObjectTypeKind::None
+            }
+        );
     }
 
     #[test]
@@ -161,6 +168,13 @@ mod tests {
         assert!(!npc_spawn.common.owner_id.is_valid());
         assert_eq!(npc_spawn.common.handler_id, HandlerId(0));
         assert!(!npc_spawn.common.tether_target_id.is_valid());
+        assert_eq!(
+            npc_spawn.common.combat_tagger_id,
+            ObjectTypeId {
+                object_id: ObjectId(0),
+                object_type: ObjectTypeKind::None
+            }
+        );
         assert_eq!(npc_spawn.common.layout_id, 3929856);
         assert_eq!(
             npc_spawn.character_data_flags,
@@ -168,5 +182,56 @@ mod tests {
         );
         assert_eq!(npc_spawn.character_data_icon, 0);
         assert_eq!(npc_spawn.common.name, "タイニー・マンドラゴ");
+    }
+
+    // Previously incorrect combat_tagger_id parsing tripped this.
+    #[test]
+    fn read_revenant() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push(server_zone_tests_dir!("revenant_spawn.bin"));
+
+        let buffer = read(d).unwrap();
+        let mut buffer = Cursor::new(&buffer);
+
+        let npc_spawn = SpawnNpc::read_le(&mut buffer).unwrap();
+        assert_eq!(npc_spawn.common.max_health_points, 792);
+        assert_eq!(npc_spawn.common.health_points, 688);
+        assert_eq!(npc_spawn.common.resource_points, 2160);
+        assert_eq!(npc_spawn.common.max_resource_points, 2160);
+        assert_eq!(
+            npc_spawn.common.display_flags,
+            DisplayFlag::ACTIVE_STANCE | DisplayFlag::from_bits_retain(0x2)
+        );
+        assert_eq!(npc_spawn.common.position.0.x, -459.70813);
+        assert_eq!(npc_spawn.common.position.0.y, 49.47874);
+        assert_eq!(npc_spawn.common.position.0.z, -60.57174);
+        assert_eq!(npc_spawn.common.model_chara, 265);
+        assert_eq!(npc_spawn.common.base_id, 305);
+        assert_eq!(npc_spawn.common.name_id, 236);
+        assert_eq!(npc_spawn.common.spawn_index, 61);
+        assert_eq!(npc_spawn.common.mode, CharacterMode::Normal);
+        assert_eq!(npc_spawn.common.mode_arg, 0);
+        assert_eq!(
+            npc_spawn.common.object_kind,
+            ObjectKind::BattleNpc(BattleNpcSubKind::Enemy)
+        );
+        assert_eq!(npc_spawn.common.battalion, 4);
+        assert!(!npc_spawn.common.owner_id.is_valid());
+        assert_eq!(
+            npc_spawn.common.handler_id,
+            HandlerId::new(HandlerType::Fate, 65535)
+        );
+        assert!(!npc_spawn.common.tether_target_id.is_valid());
+        assert_eq!(
+            npc_spawn.common.combat_tagger_id,
+            ObjectTypeId {
+                object_id: ObjectId(10763),
+                object_type: ObjectTypeKind::None
+            }
+        );
+        assert_eq!(npc_spawn.common.layout_id, 4309239);
+        assert_eq!(npc_spawn.character_data_flags, CharacterDataFlag::HOSTILE);
+        assert_eq!(npc_spawn.character_data_icon, 0);
+        assert_eq!(npc_spawn.common.name, "レブナント");
     }
 }

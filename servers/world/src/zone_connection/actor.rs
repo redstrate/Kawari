@@ -4,7 +4,7 @@ use crate::{ToServer, ZoneConnection, common::SpawnKind};
 use kawari::{
     common::{
         CharacterMode, EquipDisplayFlag, JumpState, MoveAnimationState, MoveAnimationType,
-        ObjectId, ObjectTypeId, Position,
+        ObjectId, ObjectTypeId, ObjectTypeKind, Position,
     },
     config::get_config,
     ipc::zone::{
@@ -72,13 +72,37 @@ impl ZoneConnection {
         // There is no reason for us to spawn our own player again. It's probably a bug!
         assert!(actor_id != self.player_data.character.actor_id);
 
-        let ipc = match spawn {
+        let ipc = match &spawn {
             SpawnKind::Player(spawn) => {
-                ServerZoneIpcSegment::new(ServerZoneIpcData::SpawnPlayer(spawn))
+                ServerZoneIpcSegment::new(ServerZoneIpcData::SpawnPlayer(spawn.clone()))
             }
-            SpawnKind::Npc(spawn) => ServerZoneIpcSegment::new(ServerZoneIpcData::SpawnNpc(spawn)),
+            SpawnKind::Npc(spawn) => {
+                ServerZoneIpcSegment::new(ServerZoneIpcData::SpawnNpc(spawn.clone()))
+            }
         };
         self.send_ipc_from(actor_id, ipc).await;
+
+        // TODO: I don't really love that this is here, is there a better place we can put it?
+        // TODO: this doesn't work for spawning into a zone with an existing fate too
+        if let SpawnKind::Npc(spawn) = spawn
+            && spawn.common.fate_id != 0
+            && spawn
+                .common
+                .display_flags
+                .contains(DisplayFlag::FATE_START_NPC)
+        {
+            let ipc =
+                ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                    category: ActorControlCategory::FateStartNpc {
+                        actor_id: ObjectTypeId {
+                            object_id: actor_id,
+                            object_type: ObjectTypeKind::EObjOrNpc,
+                        },
+                    },
+                }));
+
+            self.send_ipc_self(ipc).await;
+        }
     }
 
     pub async fn delete_actor(&mut self, actor_id: ObjectId, spawn_index: u8) {

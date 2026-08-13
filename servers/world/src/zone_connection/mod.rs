@@ -217,7 +217,11 @@ impl ZoneConnection {
     /// Sends an IPC segment to the player, where the source actor can be specified.
     pub async fn send_ipc_from(&mut self, source_actor: ObjectId, ipc: ServerZoneIpcSegment) {
         let segment = PacketSegment {
-            source_actor,
+            source_actor: if source_actor == ObjectId::default() {
+                self.player_data.character.actor_id
+            } else {
+                source_actor
+            },
             target_actor: self.player_data.character.actor_id,
             segment_type: SegmentType::Ipc,
             data: SegmentData::Ipc(ipc),
