@@ -353,10 +353,10 @@ impl ZoneConnection {
 
             // Finally, populate the exterior furniture.
             // TODO: Actually send some real furniture, once we can do that!
-            for index in 0..8 {
+            for index in 0..15 {
                 self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::FurnitureList(
                     FurnitureList {
-                        count: 8,
+                        count: 15,
                         index,
                         ..Default::default()
                     },
@@ -373,27 +373,30 @@ impl ZoneConnection {
             ))
             .await;
 
-            // The LandId is currently set so that plugins like HousingPos/Buildingway can plop stuff down
-            self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::FurnitureList(
-                FurnitureList {
-                    id: HouseId {
-                        unit: HouseUnit {
-                            apartment_division_plot_index: 0,
-                            apartment_flag: true,
+            // TODO: Limit this by interior size once we have furniture persistence
+            for index in 0..6 {
+                // The LandId is currently set so that plugins like HousingPos/Buildingway can plop stuff down
+                self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::FurnitureList(
+                    FurnitureList {
+                        id: HouseId {
+                            unit: HouseUnit {
+                                apartment_division_plot_index: 0,
+                                apartment_flag: true,
+                            },
+                            unk1: 0,
+                            room_number: 1,
+                            ward_index: 0,
+                            territory_type_id: 340,
+                            world_id: config.world.world_id,
                         },
-                        unk1: 0,
-                        room_number: 1,
-                        ward_index: 0,
-                        territory_type_id: 340,
-                        world_id: config.world.world_id,
+                        count: 1,
+                        index,
+                        unk2: 100, // Indoors
+                        ..Default::default()
                     },
-                    count: 1,
-                    index: 0,
-                    unk2: 100, // Indoors
-                    ..Default::default()
-                },
-            )))
-            .await;
+                )))
+                .await;
+            }
         }
 
         self.conditions
