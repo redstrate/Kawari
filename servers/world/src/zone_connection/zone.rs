@@ -389,7 +389,7 @@ impl ZoneConnection {
                             territory_type_id: 340,
                             world_id: config.world.world_id,
                         },
-                        count: 1,
+                        count: 6,
                         index,
                         unk2: 100, // Indoors
                         ..Default::default()
