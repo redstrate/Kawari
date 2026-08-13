@@ -25,8 +25,8 @@ use kawari::{
     },
     config::{Config, get_config},
     ipc::zone::{
-        ActionRequest, ActorControlCategory, Conditions, ServerZoneIpcData,
-        ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure,
+        ActionRequest, ActorControlCategory, Conditions, ServerZoneIpcData, ServerZoneIpcSegment,
+        SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure,
     },
 };
 use parking_lot::Mutex;
@@ -531,9 +531,9 @@ impl Instance {
                         fate_id: fate.fate_id,
                         motivation_npc: object_id,
                         unk1: 2175,
-                        position_x: (position.0.x * 1000.0) as i32,
-                        position_y: (position.0.y * 1000.0) as i32,
-                        position_z: (position.0.z * 1000.0) as i32,
+                        x: position.0.x,
+                        y: position.0.y,
+                        z: position.0.z,
                     }),
                     DestinationNetwork::ZoneClients,
                 );

@@ -1035,10 +1035,16 @@ pub enum ActorControlCategory {
         /// The NPC to be used.
         motivation_npc: ObjectId,
         unk1: u32,
-        /// Divided by 1000.0 for map coordinates. Only used if the BNpc is not spawned yet.
-        position_x: i32,
-        position_y: i32,
-        position_z: i32,
+        /// Only used if the BNpc is not spawned yet.
+        #[bw(map = |x: &f32| (*x * 1000.0) as i32)]
+        #[br(map = |x: i32| (x as f32) / 1000.0)]
+        x: f32,
+        #[bw(map = |x: &f32| (*x * 1000.0) as i32)]
+        #[br(map = |x: i32| (x as f32) / 1000.0)]
+        y: f32,
+        #[bw(map = |x: &f32| (*x * 1000.0) as i32)]
+        #[br(map = |x: i32| (x as f32) / 1000.0)]
+        z: f32,
     },
 
     #[brw(magic = 2362u32)]
