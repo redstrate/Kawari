@@ -144,7 +144,6 @@ impl Zone {
                 }
 
                 let lgb = game_data.resource.parsed::<Lgb>(path);
-
                 if let Err(e) = &lgb {
                     tracing::warn!(
                         "Failed to parse {path}: {e}, this is most likely a bug in Physis and should be reported somewhere!"
@@ -1304,8 +1303,13 @@ pub fn handle_zone_messages(
                     .remove(DisplayFlag::INVISIBLE);
 
                 // Send them the current list of FATEs
-                for fate in &instance.fates {
-                    Instance::inform_fate_spawn(&mut network, *from_actor_id, fate);
+                // TODO: This needs to be handled in the opposite way: only create a FATE director if there are FATEs to spawn. This way FATEs in towns (like the Ul'dah festivals) makes more sense.
+                if let Some(director) = &instance.director
+                    && director.id.handler_type() == HandlerType::Fate
+                {
+                    for fate in &instance.fates {
+                        Instance::inform_fate_spawn(&mut network, *from_actor_id, fate);
+                    }
                 }
             }
 
