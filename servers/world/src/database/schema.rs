@@ -235,6 +235,20 @@ diesel::table! {
 
 diesel::joinable!(grand_company -> character (content_id));
 
+diesel::table! {
+    buddy (content_id) {
+        content_id -> BigInt,
+        name -> Text,
+        rank -> Integer,
+        stars -> Integer,
+        levels -> Text,
+        exp -> Integer,
+        color -> Integer,
+    }
+}
+
+diesel::joinable!(buddy -> character (content_id));
+
 diesel::allow_tables_to_appear_in_same_query!(
     character,
     classjob,
@@ -250,4 +264,5 @@ diesel::allow_tables_to_appear_in_same_query!(
     mentor,
     search_info,
     grand_company,
+    buddy,
 );

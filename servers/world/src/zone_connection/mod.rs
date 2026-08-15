@@ -10,8 +10,8 @@ use tokio::net::TcpStream;
 use crate::{
     Content, GameData, Recipe, Unlock,
     database::{
-        AetherCurrent, Aetheryte, Character, ClassJob, Companion, Friends, GrandCompany, Mentor,
-        Quest, SearchInfo, Volatile,
+        AetherCurrent, Aetheryte, Buddy, Character, ClassJob, Companion, Friends, GrandCompany,
+        Mentor, Quest, SearchInfo, Volatile,
     },
     lua::{KawariLua, LuaTask},
 };
@@ -108,6 +108,7 @@ pub struct PlayerData {
     pub grand_company: GrandCompany,
     // TODO: These inventories need to be made persistent and also vary per property, this is just for initial support
     pub house_inventory: HousingInventory,
+    pub buddy: Buddy,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.

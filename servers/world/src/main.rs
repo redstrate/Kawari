@@ -870,6 +870,20 @@ async fn process_packet(
                                             .active_festivals
                                             .map(FestivalId),
                                         quest_special_flags,
+                                        companion_name: connection.player_data.buddy.name.clone(),
+                                        buddy_levels: connection
+                                            .player_data
+                                            .buddy
+                                            .levels
+                                            .0
+                                            .clone()
+                                            .try_into()
+                                            .unwrap(),
+                                        companion_current_exp: connection.player_data.buddy.exp
+                                            as u32,
+                                        companion_rank: connection.player_data.buddy.rank as u8,
+                                        companion_stars: connection.player_data.buddy.stars as u8,
+                                        companion_color: connection.player_data.buddy.color as u8,
                                         ..Default::default()
                                     }),
                                 );

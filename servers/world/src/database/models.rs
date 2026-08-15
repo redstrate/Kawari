@@ -19,8 +19,8 @@ use kawari::{
 };
 
 use crate::{
-    ActiveQuests, Bitmask, CharaMake, ClassExperience, ClassLevels, FavoriteAetherytes,
-    GrandCompanyRanks, PartyMembers, QuestBitmask,
+    ActiveQuests, Bitmask, BuddyLevels, CharaMake, ClassExperience, ClassLevels,
+    FavoriteAetherytes, GrandCompanyRanks, PartyMembers, QuestBitmask,
 };
 
 #[derive(Insertable, Identifiable, Queryable, Selectable, AsChangeset, Debug, Default, Clone)]
@@ -416,4 +416,29 @@ pub struct GrandCompany {
     pub content_id: i64,
     pub active_company: kawari::ipc::zone::GrandCompany,
     pub company_ranks: GrandCompanyRanks,
+}
+
+#[derive(
+    Insertable,
+    Identifiable,
+    Queryable,
+    Selectable,
+    Associations,
+    AsChangeset,
+    Debug,
+    Default,
+    Clone,
+)]
+#[diesel(table_name = super::schema::buddy)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[diesel(belongs_to(Character, foreign_key = content_id))]
+#[diesel(primary_key(content_id))]
+pub struct Buddy {
+    pub content_id: i64,
+    pub name: String,
+    pub rank: i32,
+    pub stars: i32,
+    pub levels: BuddyLevels,
+    pub exp: i32,
+    pub color: i32,
 }

@@ -139,6 +139,10 @@ impl WorldDatabase {
                 .select(GrandCompany::as_select())
                 .first(&mut self.connection)
                 .unwrap();
+            let buddy = Buddy::belonging_to(&found_character)
+                .select(Buddy::as_select())
+                .first(&mut self.connection)
+                .unwrap();
 
             player_data = PlayerData {
                 character: found_character,
@@ -156,6 +160,7 @@ impl WorldDatabase {
                 mentor,
                 search_info,
                 grand_company,
+                buddy,
                 ..Default::default()
             };
         }
@@ -240,6 +245,9 @@ impl WorldDatabase {
         self.commit_search_info(data);
         data.grand_company
             .save_changes::<GrandCompany>(&mut self.connection)
+            .unwrap();
+        data.buddy
+            .save_changes::<Buddy>(&mut self.connection)
             .unwrap();
     }
 

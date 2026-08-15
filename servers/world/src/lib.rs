@@ -129,3 +129,4 @@ define_sql_array!(ActiveQuests, PersistentQuest);
 define_sql_array!(FavoriteAetherytes, u16);
 define_sql_array!(PartyMembers, i64, 8);
 define_sql_array!(GrandCompanyRanks, u8, 3);
+define_sql_array!(BuddyLevels, u8, 3);
