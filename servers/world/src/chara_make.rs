@@ -6,9 +6,10 @@ use diesel::{
     sql_types::Text,
     sqlite::Sqlite,
 };
-use kawari::common::{customize_data_from_json, customize_data_to_json};
 use physis::savedata::chardat::CustomizeData;
 use serde_json::{Value, json};
+
+use crate::{customize_data_from_json, customize_data_to_json};
 
 #[derive(Debug, Clone, AsExpression, FromSqlRow, Default)]
 #[diesel(sql_type = Text)]
