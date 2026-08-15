@@ -19,7 +19,6 @@ pub fn opcode_data(_metadata: TokenStream, input: TokenStream) -> TokenStream {
     let mut variant_idents = Vec::new();
     let mut default_pat_structs = Vec::new();
 
-    // TODO: add doc comments
     for variant in &mut input.variants {
         let variant_name = variant.ident.clone();
         let variant_tokens = variant.to_token_stream();

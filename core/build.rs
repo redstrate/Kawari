@@ -14,7 +14,7 @@ fn format_value(value: &Value) -> String {
 
             format!("[{}]", values_str.join(", "))
         }
-        _ => todo!(),
+        _ => unimplemented!(),
     }
 }
 

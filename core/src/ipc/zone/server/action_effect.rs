@@ -88,8 +88,7 @@ pub enum TargetEffectKind {
         /// Index into the Status Excel sheet.
         effect_id: u16,
 
-        // NOTE: the following is for our internal usage, this is not an actual part of the packet
-        // TODO: this shouldn't be here, instead we should maybe create a lua-specific struct for all of this information
+        // HACK: this shouldn't be here, instead we should maybe create a lua-specific struct for all of this information
         #[brw(ignore)]
         duration: f32,
     },
@@ -105,8 +104,7 @@ pub enum TargetEffectKind {
         /// Index into the Status Excel sheet.
         effect_id: u16,
 
-        // NOTE: the following is for our internal usage, this is not an actual part of the packet
-        // TODO: this shouldn't be here, instead we should maybe create a lua-specific struct for all of this information
+        // HACK: this shouldn't be here, instead we should maybe create a lua-specific struct for all of this information
         #[brw(ignore)]
         duration: f32,
     },

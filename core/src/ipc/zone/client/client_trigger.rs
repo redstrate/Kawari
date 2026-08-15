@@ -540,7 +540,7 @@ pub struct ClientTrigger {
     })]
     target_id: u64,
 
-    // TODO: double check in a couple of months to see if the double-fallibility here is a stupid idea
+    // TODO: replace with an enum
     #[br(calc = ObjectTypeId::try_from(target_id).ok())]
     #[bw(ignore)]
     pub target: Option<ObjectTypeId>,

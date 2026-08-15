@@ -1252,7 +1252,6 @@ pub struct WeaponModelId {
 
 impl From<u64> for WeaponModelId {
     fn from(value: u64) -> Self {
-        // TODO: unsure if there's a beter way to do this, maybe if im not lazy to write bitwise ops
         let mut cursor = Cursor::new(value.to_le_bytes());
         cursor.read_le().unwrap_or_default()
     }
@@ -1277,7 +1276,6 @@ pub struct LegacyEquipmentModelId {
 
 impl From<u32> for LegacyEquipmentModelId {
     fn from(value: u32) -> Self {
-        // TODO: unsure if there's a beter way to do this, maybe if im not lazy to write bitwise ops
         let mut cursor = Cursor::new(value.to_le_bytes());
         cursor.read_le().unwrap_or_default()
     }
