@@ -2,7 +2,7 @@ use diesel::prelude::*;
 
 use super::{Character, WorldDatabase, models, schema};
 use crate::{
-    CharaMake, ClassLevels, ClientSelectData, GameData, GrandCompanyRanks, PlayerData, RemakeMode,
+    CharaMake, ClassLevels, ClientSelectData, GameData, PlayerData, RemakeMode,
     inventory::Inventory,
 };
 use kawari::{
@@ -14,8 +14,8 @@ use kawari::{
     ipc::{
         lobby::{CharacterDetails, CharacterFlag},
         zone::{
-            GameMasterRank, GrandCompany as IpcGrandCompany, OnlineStatus, ServerZoneIpcData,
-            ServerZoneIpcSegment, SocialListUILanguages,
+            GameMasterRank, OnlineStatus, ServerZoneIpcData, ServerZoneIpcSegment,
+            SocialListUILanguages,
         },
     },
 };
@@ -507,11 +507,18 @@ impl WorldDatabase {
             .unwrap();
         let grand_company = GrandCompany {
             content_id: content_id as i64,
-            active_company: IpcGrandCompany::None,
-            company_ranks: GrandCompanyRanks::default(),
+            ..Default::default()
         };
         diesel::insert_into(schema::grand_company::table)
             .values(grand_company)
+            .execute(&mut self.connection)
+            .unwrap();
+        let buddy = Buddy {
+            content_id: content_id as i64,
+            ..Default::default()
+        };
+        diesel::insert_into(schema::buddy::table)
+            .values(buddy)
             .execute(&mut self.connection)
             .unwrap();
 
@@ -632,6 +639,13 @@ impl WorldDatabase {
         {
             use schema::grand_company::dsl::*;
             diesel::delete(grand_company.filter(content_id.eq(for_content_id as i64)))
+                .execute(&mut self.connection)
+                .unwrap();
+        }
+
+        {
+            use schema::buddy::dsl::*;
+            diesel::delete(buddy.filter(content_id.eq(for_content_id as i64)))
                 .execute(&mut self.connection)
                 .unwrap();
         }
