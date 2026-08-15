@@ -1,8 +1,9 @@
 //! Quests!
 
-use crate::{ZoneConnection, inventory::Storage, zone_connection::PersistentQuest};
+use crate::{
+    ZoneConnection, common::adjust_quest_id, inventory::Storage, zone_connection::PersistentQuest,
+};
 use kawari::{
-    common::adjust_quest_id,
     constants::COMPLETED_QUEST_BITMASK_SIZE,
     ipc::zone::{
         ActiveQuest, QuestActiveList, QuestTracker, ServerZoneIpcData, ServerZoneIpcSegment,

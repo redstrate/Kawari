@@ -5,11 +5,12 @@ use parking_lot::Mutex;
 
 use crate::{
     GameData, PlayerData, RemakeMode, StatusEffects,
+    common::adjust_quest_id,
     inventory::{CrystalKind, CurrencyKind},
     zone_connection::BaseParameters,
 };
 use kawari::{
-    common::{HandlerId, ObjectTypeId, ObjectTypeKind, Position, adjust_quest_id},
+    common::{HandlerId, ObjectTypeId, ObjectTypeKind, Position},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, ActorSetPos, EventType, GrandCompany, OnlineStatus,
         SceneFlags, ServerNoticeFlags, ServerNoticeMessage, ServerZoneIpcData,

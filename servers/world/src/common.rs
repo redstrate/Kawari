@@ -6,6 +6,7 @@ use std::{
     },
 };
 
+use icarus::Quest::QuestSheet;
 use tokio::sync::mpsc::Sender;
 
 use crate::{
@@ -501,4 +502,9 @@ impl ServerHandle {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         ClientId(id)
     }
+}
+
+/// Turns a Quest row ID into a "normal" one. For example: 65537 to 1.
+pub fn adjust_quest_id(quest_id: u32) -> u32 {
+    quest_id.saturating_sub(QuestSheet::STARTING_ROW)
 }

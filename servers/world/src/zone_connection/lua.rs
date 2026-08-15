@@ -6,6 +6,7 @@ use crate::{
     inventory::{CrystalsStorage, CurrencyStorage, Item},
     lua::{LuaPlayer, LuaTask},
 };
+use icarus::AetherCurrent::AetherCurrentSheet;
 use kawari::{
     common::{
         ContainerType, DirectorEvent, ERR_INVENTORY_ADD_FAILED, HandlerId, InstanceContentType,
@@ -520,7 +521,9 @@ impl ZoneConnection {
                 LuaTask::ToggleAetherCurrentAll {} => {
                     let max_aether_current_id = AETHER_CURRENT_BITMASK_SIZE as u32 * 8;
 
-                    for i in 2818048..(2818048 + max_aether_current_id) {
+                    for i in AetherCurrentSheet::STARTING_ROW
+                        ..(AetherCurrentSheet::STARTING_ROW + max_aether_current_id)
+                    {
                         self.toggle_aether_current(i).await;
                     }
                 }
