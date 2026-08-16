@@ -65,7 +65,6 @@ async fn verify_session(
 
         let body_parts: Vec<&str> = body.split('\n').collect();
 
-        let _hashes = body_parts[0];
         let expansion_versions = &body_parts[1..body_parts.len() - 1]; // last part is empty
 
         let game_version = Version(&game_version);
@@ -190,7 +189,7 @@ async fn verify_session(
             let patch_list = PatchList {
                 id: BOUNDARY_ID.to_string(),
                 requested_version: game_version.to_string().clone(),
-                content_location: format!("ffxivpatch/{GAME_ID}/metainfo/{}.http", game_version.0), // FIXME: i think this is actually supposed to be the target version
+                content_location: format!("ffxivpatch/{GAME_ID}/metainfo/{}.http", game_version.0),
                 patch_length,
                 patches: send_patches,
             };
@@ -303,7 +302,7 @@ async fn verify_boot(
             let patch_list = PatchList {
                 id: BOUNDARY_ID.to_string(),
                 requested_version: boot_version.to_string().clone(),
-                content_location: format!("ffxivpatch/{BOOT_ID}/metainfo/{}.http", boot_version.0), // FIXME: i think this is actually supposed to be the target version
+                content_location: format!("ffxivpatch/{BOOT_ID}/metainfo/{}.http", boot_version.0),
                 patch_length,
                 patches: send_patches,
             };
