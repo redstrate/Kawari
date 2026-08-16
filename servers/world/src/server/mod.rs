@@ -809,6 +809,10 @@ pub async fn server_main_loop(
                                             respawn_layout_id: *respawn_layout_id,
                                         },
                                     );
+                                } else {
+                                    tracing::warn!(
+                                        "Could not find instance to dead fade out {actor_id}?!"
+                                    );
                                 }
                             }
                             QueuedTaskData::DeadDespawn {

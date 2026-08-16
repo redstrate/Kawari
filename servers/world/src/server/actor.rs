@@ -318,40 +318,30 @@ pub fn set_shared_group_timeline_state(
 }
 
 // Sends the ActorControls to inform the actor that they're dead.
-pub fn kill_actor(
-    network: Arc<Mutex<NetworkState>>,
-    instance: &mut Instance,
-    from_actor_id: ObjectId,
-) {
+pub fn kill_actor(network: Arc<Mutex<NetworkState>>, instance: &mut Instance, actor_id: ObjectId) {
     let mut network = network.lock();
 
     // First, set their state (otherwise they can still walk)
-    set_character_mode(
-        instance,
-        &mut network,
-        from_actor_id,
-        CharacterMode::Dead,
-        0,
-    );
+    set_character_mode(instance, &mut network, actor_id, CharacterMode::Dead, 0);
 
     // Then, play the death animation.
     {
         let ac = ActorControlCategory::Kill { animation_id: 0 };
 
-        network.send_ac_in_range_inclusive_instance(instance, from_actor_id, ac);
+        network.send_ac_in_range_inclusive_instance(instance, actor_id, ac);
     }
 
     // Inform the director that their actor died
     let mut npc_id = None;
     let mut position = None;
-    if let Some(actor) = instance.find_actor(from_actor_id)
+    if let Some(actor) = instance.find_actor(actor_id)
         && let Some(npc) = actor.get_npc_spawn()
     {
         npc_id = Some(npc.common.layout_id);
     }
 
     // Transistion into the dead state so they stop moving.
-    if let Some(actor) = instance.find_actor_mut(from_actor_id)
+    if let Some(actor) = instance.find_actor_mut(actor_id)
         && let NetworkedActor::Npc { state, spawn, .. } = actor
     {
         *state = NpcState::Dead;
@@ -365,11 +355,11 @@ pub fn kill_actor(
     }
 
     // Cancel existing tasks
-    instance.cancel_actor_tasks(from_actor_id);
+    instance.cancel_actor_tasks(actor_id);
     let intended_use = instance.zone.intended_use;
 
     // Queue up despawn if this is an NPC
-    if let Some(actor) = instance.find_actor_mut(from_actor_id)
+    if let Some(actor) = instance.find_actor_mut(actor_id)
         && let NetworkedActor::Npc {
             spawn, timeline, ..
         } = actor
@@ -410,10 +400,10 @@ pub fn kill_actor(
 
         instance.insert_task(
             ClientId::default(),
-            from_actor_id,
+            actor_id,
             DEAD_FADE_OUT_TIME,
             QueuedTaskData::DeadFadeOut {
-                actor_id: from_actor_id,
+                actor_id,
                 respawn_layout_id,
             },
         );
