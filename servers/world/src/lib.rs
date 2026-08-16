@@ -130,3 +130,4 @@ define_sql_array!(FavoriteAetherytes, u16);
 define_sql_array!(PartyMembers, i64, 8);
 define_sql_array!(GrandCompanyRanks, u8, 3);
 define_sql_array!(BuddyLevels, u8, 3);
+define_sql_array!(GlassesIds, u16, 2);

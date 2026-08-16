@@ -258,6 +258,7 @@ impl ZoneConnection {
             } else {
                 CharacterMode::default()
             },
+            glasses_ids: self.player_data.equipped_glasses_ids,
             ..Default::default()
         }
     }

@@ -484,6 +484,8 @@ pub enum ToServer {
     TranslateFurniture(ObjectId, (bool, u8), u16, Position, f32, bool),
     /// The client offers a teleport to nearby party members.
     OfferTeleportToParty(Option<u64>, ObjectId, u16, TeleportQuery),
+    /// The client equips new glasses.
+    EquipGlasses(ObjectId, u32, u32),
 }
 
 #[derive(Clone, Debug)]

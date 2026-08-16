@@ -2,7 +2,7 @@ use diesel::prelude::*;
 
 use super::{Character, WorldDatabase, models, schema};
 use crate::{
-    CharaMake, ClassLevels, ClientSelectData, GameData, PlayerData, RemakeMode,
+    CharaMake, ClassLevels, ClientSelectData, GameData, GlassesIds, PlayerData, RemakeMode,
     inventory::Inventory,
 };
 use kawari::{
@@ -160,6 +160,7 @@ impl WorldDatabase {
                 search_info,
                 grand_company,
                 buddy,
+                equipped_glasses_ids: inventory.equipped_glasses_ids.0.try_into().unwrap(),
                 ..Default::default()
             };
         }
@@ -181,6 +182,7 @@ impl WorldDatabase {
         let inventory = Inventory {
             content_id: data.character.content_id,
             contents: data.inventory.clone(),
+            equipped_glasses_ids: GlassesIds(data.equipped_glasses_ids.to_vec()),
         };
         inventory
             .save_changes::<Inventory>(&mut self.connection)
@@ -314,8 +316,17 @@ impl WorldDatabase {
                     .legacy_model_ids(game_data)
                     .map(|x| x.into())
                     .to_vec(),
-                equip_stain: [0; 10].to_vec(),
-                glasses: [0; 2].to_vec(),
+                equip_stain: inventory
+                    .contents
+                    .second_model_stain_ids()
+                    .map(|x| x.into())
+                    .to_vec(),
+                glasses: inventory
+                    .equipped_glasses_ids
+                    .0
+                    .iter()
+                    .map(|x| (*x).into())
+                    .collect(),
                 remake_mode: RemakeMode::from_repr(customize.remake_mode).unwrap(),
                 remake_minutes_remaining: 0,
                 voice_id: customize.chara_make.voice_id,
@@ -442,6 +453,7 @@ impl WorldDatabase {
         let inventory = Inventory {
             content_id: content_id as i64,
             contents: inventory,
+            ..Default::default()
         };
         diesel::insert_into(schema::inventory::table)
             .values(inventory)
@@ -892,7 +904,7 @@ impl WorldDatabase {
             banner_frame: 2,
             title: volatile.title as u16,
             decorations: [78, 18, 8, 28, 339],
-            glasses_ids: [0, 0],
+            glasses_ids: inventory.equipped_glasses_ids.0.try_into().unwrap(),
             unk16: 0,
             unk18: 0,
             item_ids: [

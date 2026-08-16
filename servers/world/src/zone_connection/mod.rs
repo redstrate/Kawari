@@ -109,6 +109,7 @@ pub struct PlayerData {
     // TODO: These inventories need to be made persistent and also vary per property, this is just for initial support
     pub house_inventory: HousingInventory,
     pub buddy: Buddy,
+    pub equipped_glasses_ids: [u16; 2],
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.

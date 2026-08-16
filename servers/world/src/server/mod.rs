@@ -2462,6 +2462,31 @@ pub async fn server_main_loop(
                         );
                     }
                 }
+                ToServer::EquipGlasses(from_actor_id, slot, id) => {
+                    let mut data = data.lock();
+
+                    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+                        continue;
+                    };
+
+                    let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+                        continue;
+                    };
+
+                    let NetworkedActor::Player { spawn, .. } = actor else {
+                        continue;
+                    };
+
+                    // update their stored state so it's correctly sent on new spawns
+                    spawn.common.glasses_ids[slot as usize] = id as u16;
+
+                    let mut network = network.lock();
+                    network.send_ac_in_range_inclusive_instance(
+                        instance,
+                        from_actor_id,
+                        ActorControlCategory::SetGlasses { index: slot, id },
+                    );
+                }
                 ToServer::FatalError(err) => return Err(err),
                 _ => {
                     tracing::error!("Received a ToServer message we don't handle yet: {msg:#?}");

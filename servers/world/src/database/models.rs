@@ -20,7 +20,7 @@ use kawari::{
 
 use crate::{
     ActiveQuests, Bitmask, BuddyLevels, CharaMake, ClassExperience, ClassLevels,
-    FavoriteAetherytes, GrandCompanyRanks, PartyMembers, QuestBitmask,
+    FavoriteAetherytes, GlassesIds, GrandCompanyRanks, PartyMembers, QuestBitmask,
 };
 
 #[derive(Insertable, Identifiable, Queryable, Selectable, AsChangeset, Debug, Default, Clone)]
@@ -176,6 +176,8 @@ pub struct Volatile {
 pub struct Inventory {
     pub content_id: i64,
     pub contents: crate::inventory::Inventory,
+    // Not technically part of the "Inventory"-inventory
+    pub equipped_glasses_ids: GlassesIds,
 }
 
 #[derive(

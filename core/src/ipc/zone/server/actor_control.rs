@@ -817,9 +817,18 @@ pub enum ActorControlCategory {
         unlocked: bool,
     },
 
+    #[brw(magic = 944u32)]
+    SetGlasses {
+        // Guessed
+        index: u32,
+        /// Index into the Glasses Excel sheet.
+        id: u32,
+    },
+
     #[brw(magic = 945u32)]
     ToggleGlassesStyleUnlock {
-        id: u32, // Index to GlassesStyle sheet
+        /// Index to GlassesStyle Excel sheet.
+        id: u32,
         #[br(map = read_bool_from::<u32>)]
         #[bw(map = write_bool_as::<u32>)]
         unlocked: bool,

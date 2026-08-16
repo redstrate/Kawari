@@ -1705,6 +1705,19 @@ async fn process_packet(
                                     connection.send_stats().await;
                                     connection.update_class_info().await;
                                 }
+                                ClientTriggerCommand::EquipGlasses { slot, id } => {
+                                    connection.player_data.equipped_glasses_ids[slot as usize] =
+                                        id as u16;
+
+                                    connection
+                                        .handle
+                                        .send(ToServer::EquipGlasses(
+                                            connection.player_data.character.actor_id,
+                                            slot,
+                                            id,
+                                        ))
+                                        .await;
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection

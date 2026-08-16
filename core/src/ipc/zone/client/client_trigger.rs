@@ -213,11 +213,9 @@ pub enum ClientTriggerCommand {
     /// When equipping using the Facewear window.
     #[brw(magic = 455u32)]
     EquipGlasses {
-        unk1: u32,
+        // Guessed!
+        slot: u32,
         id: u32,
-        unk2: u32,
-        unk3: u32,
-        unk4: u32,
     },
 
     /// The player begins an emote.

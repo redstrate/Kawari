@@ -80,6 +80,7 @@ diesel::table! {
     inventory (content_id) {
         content_id -> BigInt,
         contents -> Text,
+        equipped_glasses_ids -> Text,
     }
 }
 
