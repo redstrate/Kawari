@@ -32,8 +32,8 @@ use kawari::{
     config::get_config,
     ipc::zone::{
         ActorControlCategory, ActorSetPos, CharacterDataFlag, CommonSpawn, Conditions, DisplayFlag,
-        ObjectKind, PrepareZoningFlag, ServerZoneIpcData, ServerZoneIpcSegment, SpawnNpc,
-        SpawnObject, SpawnTreasure,
+        ObjectKind, PrepareZoning, PrepareZoningFlag, ServerZoneIpcData, ServerZoneIpcSegment,
+        SpawnNpc, SpawnObject, SpawnTreasure,
     },
 };
 
@@ -807,8 +807,7 @@ fn begin_change_zone<'a>(
 ) -> (&'a mut Instance, bool) {
     if let Some(destination_zone_id) = destination_zone_id {
         let mut needs_init_zone = false;
-
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning(PrepareZoning {
             territory_type_id: destination_zone_id,
             warp_type,
             log_message: 0,
@@ -817,7 +816,7 @@ fn begin_change_zone<'a>(
             hide_character: 0,
             fade_out_delay: 1,
             flags: PrepareZoningFlag::default(),
-        });
+        }));
 
         network.send_to_by_actor_id(
             actor_id,
@@ -842,8 +841,7 @@ fn begin_change_zone<'a>(
         (instance, needs_init_zone)
     } else {
         let instance = data.find_actor_instance_mut(actor_id).unwrap();
-
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::PrepareZoning(PrepareZoning {
             territory_type_id: instance.zone.id,
             warp_type,
             log_message: 0,
@@ -852,7 +850,7 @@ fn begin_change_zone<'a>(
             hide_character: 0,
             fade_out_delay: 1,
             flags: PrepareZoningFlag::default(),
-        });
+        }));
 
         network.send_to_by_actor_id(
             actor_id,
