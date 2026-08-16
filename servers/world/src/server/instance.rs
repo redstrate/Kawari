@@ -20,13 +20,13 @@ use crate::{
 };
 use kawari::{
     common::{
-        DistanceRange, ENTRANCE_CIRCLE_IDS, FATE_TIME_LIMIT, FateRule, FateState, MAXIMUM_FATES,
-        ObjectId, Position, timestamp_secs,
+        DistanceRange, ENTRANCE_CIRCLE_IDS, FATE_TIME_LIMIT, FateRule, FateState, HandlerId,
+        HandlerType, MAXIMUM_FATES, ObjectId, Position, timestamp_secs,
     },
     config::{Config, get_config},
     ipc::zone::{
-        ActionRequest, ActorControlCategory, Conditions, ServerZoneIpcData, ServerZoneIpcSegment,
-        SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure,
+        ActionRequest, ActorControlCategory, Conditions, DutyFinderSetting, ServerZoneIpcData,
+        ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure,
     },
 };
 use parking_lot::Mutex;
@@ -169,21 +169,38 @@ impl FateInstance {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug, Default)]
 pub struct Instance {
+    /// List of spawned actors.
     pub actors: HashMap<ObjectId, NetworkedActor>,
+    /// The navmesh data.
     pub navmesh: Navmesh,
+    /// The zone data.
     pub zone: Zone,
+    /// The zone's current weather.
     pub weather_id: u16,
+    /// The content finder condition associated with this instance.
     pub content_finder_condition_id: u16,
+    /// The content ID for the content finder condition, if applicable.
+    pub content_id: u16,
     /// If Some, then this is the path of the navmesh we need to generate.
     pub generate_navmesh: NavmeshGenerationStep,
     /// List of tasks that has to be executed an arbitrary point in the future.
     pub queued_task: Vec<QueuedTask>,
-    /// Director for this instance.
-    pub director: Option<DirectorData>,
+    /// Current directors of this instance.
+    pub directors: Vec<DirectorData>,
+    /// Whether enemy AI is currently disabled.
     pub enemy_ai_disabled: bool,
+    /// List of running/preparing FATEs.
     pub fates: Vec<FateInstance>,
+    /// List of FATEs that are able to spawn.
+    pub candiate_fates: Vec<u32>,
+    /// The duty finder settings applied to this instance, if applicable.
+    pub content_settings: Option<DutyFinderSetting>,
+    /// The maximum synced level for this content, if applicable.
+    pub synced_level: Option<u8>,
+    /// How long this content lasts for, if applicable.
+    pub duration: Option<Duration>,
 }
 
 impl Instance {
@@ -235,9 +252,23 @@ impl Instance {
         }
 
         // Determine the starting set of FATEs
-        let available_fates = instance.zone.map_ranges.iter().filter_map(|x| x.fate);
+        // TODO: filter by if they're special event FATEs
+        let available_fates: Vec<u32> = instance
+            .zone
+            .map_ranges
+            .iter()
+            .filter_map(|x| x.fate)
+            .collect();
+        instance.candiate_fates = available_fates.clone();
         for fate_id in fastrand::choose_multiple(available_fates, MAXIMUM_FATES) {
             instance.fates.push(FateInstance::new(fate_id, game_data));
+        }
+
+        if !instance.candiate_fates.is_empty() {
+            instance.directors.push(DirectorData {
+                id: HandlerId::new(HandlerType::Fate, 0xFFFF),
+                ..Default::default()
+            });
         }
 
         instance

@@ -451,7 +451,7 @@ pub fn npc_behavior(
                         ActorControlCategory::SetBattle { battle: true },
                     );
 
-                    if let Some(director) = &mut instance.director {
+                    if let Some(director) = &mut instance.directors.first_mut() {
                         director.on_actor_aggro(spawn.common.layout_id);
                     }
                 }

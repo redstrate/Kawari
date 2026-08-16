@@ -401,7 +401,6 @@ impl HandlerType {
     /// Determine the correct handler for use in this zone.
     pub fn from_intended_use(intended_use: TerritoryIntendedUse) -> Option<Self> {
         match intended_use {
-            TerritoryIntendedUse::Overworld => Some(Self::Fate),
             TerritoryIntendedUse::Dungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::VariantDungeon => Some(Self::InstanceContent),
             TerritoryIntendedUse::DeepDungeon => Some(Self::InstanceContent),
@@ -422,7 +421,7 @@ impl HandlerType {
             TerritoryIntendedUse::LeapOfFaith => Some(Self::PublicContent),
             TerritoryIntendedUse::GoldSaucer => Some(Self::GoldSaucer),
             TerritoryIntendedUse::OceanFishing => Some(Self::InstanceContent),
-            TerritoryIntendedUse::OccultCrescent => Some(Self::PublicContent), // TODO: Also initializes a FATE director but we can't do that currently!
+            TerritoryIntendedUse::OccultCrescent => Some(Self::PublicContent),
             TerritoryIntendedUse::Blunderville => Some(Self::PublicContent),
             TerritoryIntendedUse::TripleTriadBattleHall => Some(Self::PublicContent),
             _ => None,

@@ -353,7 +353,7 @@ pub fn kill_actor(network: Arc<Mutex<NetworkState>>, instance: &mut Instance, ac
     }
 
     if let Some(npc_id) = npc_id
-        && let Some(director) = &mut instance.director
+        && let Some(director) = &mut instance.directors.first_mut()
     {
         director.on_actor_death(npc_id, position.unwrap());
     }

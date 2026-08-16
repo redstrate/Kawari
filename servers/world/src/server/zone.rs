@@ -936,7 +936,7 @@ pub fn change_zone_warp_to_entrance(
 ) {
     let mut destiation_object = None;
 
-    if let Some(director) = &target_instance.director {
+    if let Some(director) = &target_instance.directors.first() {
         // Some PublicContent has the pop range defined in the Excel sheet, we can use that if available.
         if director.id.handler_type() == HandlerType::PublicContent
             && let Some(pop_range_id) =
@@ -1037,11 +1037,6 @@ fn do_change_zone(
         state.actor_allocator.clear();
         state.object_allocator.clear();
 
-        let director_vars = target_instance
-            .director
-            .as_ref()
-            .map(|director| director.build_var_segment());
-
         // now that we have all of the data needed, inform the connection of where they need to be
         let msg = FromServer::ChangeZone(
             target_instance.zone.id,
@@ -1050,8 +1045,6 @@ fn do_change_zone(
             exit_position.unwrap_or_default(),
             exit_rotation.unwrap_or_default(),
             target_instance.zone.to_lua_zone(target_instance.weather_id),
-            false,
-            director_vars,
         );
         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
     } else {
@@ -1304,7 +1297,7 @@ pub fn handle_zone_messages(
 
                 // Send them the current list of FATEs
                 // TODO: This needs to be handled in the opposite way: only create a FATE director if there are FATEs to spawn. This way FATEs in towns (like the Ul'dah festivals) makes more sense.
-                if let Some(director) = &instance.director
+                if let Some(director) = &instance.directors.first()
                     && director.id.handler_type() == HandlerType::Fate
                 {
                     for fate in &instance.fates {

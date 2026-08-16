@@ -42,15 +42,15 @@ use crate::{
 use kawari::{
     common::{
         AUTO_ATTACK_RATE, CharacterMode, DEAD_DESPAWN_TIME, DirectorEvent, DirectorTrigger,
-        EventState, HandlerId, HandlerType, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS,
-        MOB_RESPAWN_TIME, ObjectId, ObjectTypeId, ObjectTypeKind, Position, WarpType,
-        determine_initial_pop_range, euler_to_direction, is_private_area,
+        HandlerId, HandlerType, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MOB_RESPAWN_TIME,
+        ObjectId, ObjectTypeId, ObjectTypeKind, Position, WarpType, determine_initial_pop_range,
+        euler_to_direction, is_private_area,
     },
     config::get_config,
     ipc::zone::{
         ActionRequest, ActionType, ActorControlCategory, ClientTriggerCommand, Condition,
-        Conditions, EnmityList, Hater, HaterList, PlayerEnmity, ServerZoneIpcData,
-        ServerZoneIpcSegment, WaymarkPreset,
+        Conditions, DutyFinderSetting, EnmityList, Hater, HaterList, PlayerEnmity,
+        ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPreset,
     },
 };
 
@@ -143,20 +143,25 @@ impl WorldServer {
         &mut self,
         zone_id: u16,
         content_finder_condition: u16,
+        content_settings: DutyFinderSetting,
         game_data: &mut GameData,
     ) -> Option<&mut Instance> {
         let mut instance = Instance::new(zone_id, game_data);
         instance.content_finder_condition_id = content_finder_condition;
 
-        // TODO: This duplicates a lot of code with ZoneConnection::handle_zone_change :-(
         if let Some(intended_use) = TerritoryIntendedUse::from_repr(instance.zone.intended_use)
             && let Some(director_type) = HandlerType::from_intended_use(intended_use)
         {
-            let content_id = game_data
-                .find_content_for_content_finder_id(content_finder_condition)
+            instance.content_id = game_data
+                .find_content_for_content_finder_id(instance.content_finder_condition_id)
                 .unwrap();
+            instance.duration = Some(Duration::from_mins(
+                game_data
+                    .find_content_time_limit(instance.content_id)
+                    .unwrap_or_default() as u64,
+            ));
 
-            let id = HandlerId::new(director_type, content_id);
+            let id = HandlerId::new(director_type, instance.content_id);
 
             // Setup Lua state for our director
             let lua = KawariLua::new();
@@ -203,7 +208,7 @@ impl WorldServer {
                 }
             }
 
-            instance.director = Some(director);
+            instance.directors.push(director);
         }
 
         // Ensure we have the entrance set correctly
@@ -215,6 +220,21 @@ impl WorldServer {
                 range.entrance = true;
                 break;
             }
+        }
+
+        instance.content_settings = Some(content_settings);
+
+        // Set up level sync
+        let needs_sync = {
+            if content_settings.contains(DutyFinderSetting::UNRESTRICTED_PARTY) {
+                content_settings.contains(DutyFinderSetting::LEVEL_SYNC)
+            } else {
+                !content_settings.contains(DutyFinderSetting::EXPLORER_MODE)
+            }
+        };
+        if needs_sync {
+            instance.synced_level =
+                game_data.find_content_synced_level(instance.content_finder_condition_id);
         }
 
         self.instances.push(instance);
@@ -376,7 +396,7 @@ fn server_logic_tick(
                         if let Some(gimmick) = &range.gimmick {
                             match gimmick {
                                 MapGimmick::Generic => {
-                                    if let Some(director) = &mut instance.director {
+                                    if let Some(director) = &mut instance.directors.first_mut() {
                                         director.on_gimmick_rect(range.instance_id);
                                     }
                                 }
@@ -896,7 +916,7 @@ pub async fn server_main_loop(
                                 let mut data = data.lock();
                                 if let Some(instance) =
                                     data.find_actor_instance_mut(task.from_actor_id)
-                                    && let Some(director) = &mut instance.director
+                                    && let Some(director) = &mut instance.directors.first_mut()
                                 {
                                     director.event_action_cast(task.from_actor_id, *target);
                                 }
@@ -913,7 +933,7 @@ pub async fn server_main_loop(
                                 let mut data = data.lock();
                                 if let Some(instance) =
                                     data.find_actor_instance_mut(task.from_actor_id)
-                                    && let Some(director) = &mut instance.director
+                                    && let Some(director) = &mut instance.directors.first_mut()
                                 {
                                     director.seal_boss_wall(*id, *place_name);
                                 }
@@ -990,7 +1010,7 @@ pub async fn server_main_loop(
         handled |= handle_zone_messages(data.clone(), network.clone(), game_data.clone(), &msg);
         handled |= handle_action_messages(data.clone(), game_data.clone(), network.clone(), &msg);
         handled |= handle_effect_messages(data.clone(), network.clone(), lua.clone(), &msg);
-        handled |= handle_director_messages(data.clone(), &msg);
+        handled |= handle_director_messages(data.clone(), network.clone(), game_data.clone(), &msg);
         handled |= handle_party_messages(data.clone(), network.clone(), &msg);
         handled |= handle_linkshell_messages(network.clone(), &msg);
 
@@ -1075,12 +1095,6 @@ pub async fn server_main_loop(
 
                     instance.insert_empty_actor(from_actor_id);
 
-                    // TODO: de-duplicate with other ChangeZone call-sites
-                    let director_vars = instance
-                        .director
-                        .as_ref()
-                        .map(|director| director.build_var_segment());
-
                     let exit_position;
                     let exit_rotation;
                     if let Some(city_state) = city_state_opening {
@@ -1112,8 +1126,6 @@ pub async fn server_main_loop(
                         exit_position,
                         exit_rotation,
                         instance.zone.to_lua_zone(instance.weather_id),
-                        true, // since this is initial login
-                        director_vars,
                     );
 
                     network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
@@ -2007,7 +2019,7 @@ pub async fn server_main_loop(
                                         continue;
                                     };
 
-                                    let Some(director) = &instance.director else {
+                                    let Some(director) = &instance.directors.first() else {
                                         continue;
                                     };
 
@@ -2036,7 +2048,7 @@ pub async fn server_main_loop(
                                         continue;
                                     };
 
-                                    if let Some(director) = &mut instance.director {
+                                    if let Some(director) = &mut instance.directors.first_mut() {
                                         director.variant_vote(*route);
                                     } else {
                                         tracing::warn!(
@@ -2190,7 +2202,7 @@ pub async fn server_main_loop(
                     let mut network = network.lock();
                     network.to_remove_chat.push(from_id);
                 }
-                ToServer::JoinContent(from_id, from_actor_id, content_id) => {
+                ToServer::JoinContent(from_id, from_actor_id, content_id, settings) => {
                     // For now, just send them to do the zone if they do anything
                     let zone_id;
                     {
@@ -2226,10 +2238,14 @@ pub async fn server_main_loop(
                         }
 
                         // then find or create a new instance with the zone id and content finder condition
+                        // TODO: DUTY FINDER SETTING AAA
                         let mut game_data = game_data.lock();
-                        if let Some(target_instance) =
-                            data.create_instance_for_content(zone_id, content_id, &mut game_data)
-                        {
+                        if let Some(target_instance) = data.create_instance_for_content(
+                            zone_id,
+                            content_id,
+                            settings,
+                            &mut game_data,
+                        ) {
                             for (client_id, actor_id) in &actor_ids {
                                 target_instance.insert_empty_actor(*actor_id);
 
@@ -2272,11 +2288,6 @@ pub async fn server_main_loop(
 
                     instance.insert_empty_actor(from_actor_id);
 
-                    let director_vars = instance
-                        .director
-                        .as_ref()
-                        .map(|director| director.build_var_segment());
-
                     // tell the client to load into the zone
                     let msg = FromServer::ChangeZone(
                         old_zone_id,
@@ -2285,8 +2296,6 @@ pub async fn server_main_loop(
                         old_position,
                         old_rotation,
                         instance.zone.to_lua_zone(instance.weather_id),
-                        false,
-                        director_vars,
                     );
                     network.send_to(from_client_id, msg, DestinationNetwork::ZoneClients);
                 }
@@ -2307,46 +2316,6 @@ pub async fn server_main_loop(
                     };
 
                     *conditions = new_conditions;
-                }
-                ToServer::CommenceDuty(from_actor_id) => {
-                    let mut data = data.lock();
-                    let entrance_actor_id;
-                    let state = EventState::OFF | EventState::UNK2 | EventState::UNK3;
-
-                    {
-                        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
-                            continue;
-                        };
-
-                        // Find the spawned entrance circle
-                        let Some(actor_id) = instance.find_entrance_circle() else {
-                            tracing::warn!("Failed to find entrance circle, it won't despawn!");
-                            continue;
-                        };
-                        entrance_actor_id = actor_id;
-
-                        // Update invisibility flags for next spawn
-                        if let Some(NetworkedActor::Object { object, .. }) =
-                            instance.find_actor_mut(entrance_actor_id)
-                        {
-                            object.event_state = state;
-                            object.not_targetable = true;
-                        }
-                    }
-
-                    // Make the entrance circle invisible.
-                    let msg = FromServer::ActorControl(
-                        entrance_actor_id,
-                        ActorControlCategory::SetEventState { state },
-                    );
-
-                    let mut network = network.lock();
-                    network.send_in_range(
-                        entrance_actor_id,
-                        &data,
-                        msg,
-                        DestinationNetwork::ZoneClients,
-                    );
                 }
                 ToServer::Kill(_from_id, from_actor_id) => {
                     let mut data = data.lock();

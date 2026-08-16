@@ -176,9 +176,6 @@ pub enum LuaTask {
     RegisterForContent {
         content_id: u16,
     },
-    CommenceDuty {
-        director_id: u32,
-    },
     QuestSequence {
         id: u32,
         sequence: u8,

@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use bstr::BString;
 use kawari::{
-    common::{DEBUG_COMMAND_TRIGGER, ObjectId, WarpType},
+    common::{DEBUG_COMMAND_TRIGGER, DirectorEvent, ObjectId, WarpType},
     ipc::zone::{
-        ActionRequest, ActionType, ServerNoticeMessage, ServerZoneIpcData, ServerZoneIpcSegment,
+        ActionRequest, ActionType, ActorControlCategory, ServerNoticeMessage, ServerZoneIpcData,
+        ServerZoneIpcSegment,
     },
 };
 use parking_lot::Mutex;
@@ -227,7 +228,7 @@ fn process_debug_commands(
                         return true;
                     };
 
-                    let Some(director) = &instance.director else {
+                    let Some(director) = &instance.directors.first() else {
                         return true;
                     };
 
@@ -273,6 +274,74 @@ fn process_debug_commands(
                     .push(FateInstance::new(id.parse().unwrap(), &mut game_data));
                 let mut network = network.lock();
                 instance.inform_fate_spawn_globally(&mut network, instance.fates.last().unwrap());
+            }
+
+            true
+        }
+        "!mapeffect" => {
+            let parts: Vec<&str> = chat_message.split(' ').collect();
+
+            let mut data = data.lock();
+            if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorMapEffect {
+                    handler_id: instance.directors.first().unwrap().id,
+                    state: parts.get(1).cloned().unwrap_or_default().parse().unwrap(),
+                    timeline_id: parts.get(2).cloned().unwrap_or_default().parse().unwrap(),
+                    index: parts.get(3).cloned().unwrap_or_default().parse().unwrap(),
+                });
+                let mut network = network.lock();
+                network.send_to(
+                    from_id,
+                    FromServer::PacketSegment(ipc, from_actor_id),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
+
+            true
+        }
+        "!ofbg" => {
+            let parts: Vec<&str> = chat_message.split(' ').collect();
+
+            let mut data = data.lock();
+            let mut network = network.lock();
+            if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+                // TODO: Should we reject doing this if it's attempted from other types of content?
+                // Ocean fishing uses "festival" ids of 101 & 102, set when entering the zone, but it's more convenient to set it in this command for the time being
+                network.send_to(
+                    from_id,
+                    FromServer::ActorControlSelf(ActorControlCategory::SetFestival {
+                        festival1: 101,
+                        festival2: 102,
+                        festival3: 0,
+                        festival4: 0,
+                    }),
+                    DestinationNetwork::ZoneClients,
+                );
+                // The director sends this with a background arg and a "phase" arg when the scenery needs to change. See the IKDSpot sheet for arg1 values (the row number should be increased by 1, so Kugane Coast would be 10, not 9).
+                network.send_to(
+                    from_id,
+                    FromServer::ActorControlSelf(ActorControlCategory::DirectorEvent {
+                        handler_id: instance.directors.first().unwrap().id,
+                        event: DirectorEvent::Unknown {
+                            id: 2,
+                            arg1: parts
+                                .get(1)
+                                .cloned()
+                                .unwrap_or_default()
+                                .parse()
+                                .unwrap_or_default(),
+                            arg2: parts
+                                .get(2)
+                                .cloned()
+                                .unwrap_or_default()
+                                .parse()
+                                .unwrap_or_default(),
+                            arg3: 0,
+                            arg4: 0,
+                        },
+                    }),
+                    DestinationNetwork::ZoneClients,
+                );
             }
 
             true

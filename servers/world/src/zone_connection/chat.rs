@@ -330,42 +330,6 @@ impl ZoneConnection {
 
                 true
             }
-            "!ofbg" => {
-                let parts: Vec<&str> = chat_message.split(' ').collect();
-
-                // TODO: Should we reject doing this if it's attempted from other types of content?
-                // Ocean fishing uses "festival" ids of 101 & 102, set when entering the zone, but it's more convenient to set it in this command for the time being
-                self.actor_control_self(ActorControlCategory::SetFestival {
-                    festival1: 101,
-                    festival2: 102,
-                    festival3: 0,
-                    festival4: 0,
-                })
-                .await;
-                // The director sends this with a background arg and a "phase" arg when the scenery needs to change. See the IKDSpot sheet for arg1 values (the row number should be increased by 1, so Kugane Coast would be 10, not 9).
-                self.actor_control_self(ActorControlCategory::DirectorEvent {
-                    handler_id: self.content_handler_id,
-                    event: DirectorEvent::Unknown {
-                        id: 2,
-                        arg1: parts
-                            .get(1)
-                            .cloned()
-                            .unwrap_or_default()
-                            .parse()
-                            .unwrap_or_default(),
-                        arg2: parts
-                            .get(2)
-                            .cloned()
-                            .unwrap_or_default()
-                            .parse()
-                            .unwrap_or_default(),
-                        arg3: 0,
-                        arg4: 0,
-                    },
-                })
-                .await;
-                true
-            }
             "!settime" => {
                 // TODO: Figure out how UTC is converted to Eorzean time and make this friendly by allowing for strings such as "6:30PM" or "18:30"
                 // TODO: Write the GM command equivalent which would just set the time offset directly as an i64/u64 (whichever this actually is)
@@ -383,19 +347,6 @@ impl ZoneConnection {
                     vec![0; parts.get(2).unwrap().parse().unwrap()],
                 )
                 .await;
-
-                true
-            }
-            "!mapeffect" => {
-                let parts: Vec<&str> = chat_message.split(' ').collect();
-
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::DirectorMapEffect {
-                    handler_id: self.content_handler_id,
-                    state: parts.get(1).cloned().unwrap_or_default().parse().unwrap(),
-                    timeline_id: parts.get(2).cloned().unwrap_or_default().parse().unwrap(),
-                    index: parts.get(3).cloned().unwrap_or_default().parse().unwrap(),
-                });
-                self.send_ipc_self(ipc).await;
 
                 true
             }

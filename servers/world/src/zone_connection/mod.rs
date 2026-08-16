@@ -155,8 +155,7 @@ pub struct ZoneConnection {
 
     // TODO: support more than one content in the queue
     pub queued_content: Option<u16>,
-    pub content_settings: Option<DutyFinderSetting>,
-    pub current_instance_id: Option<u16>,
+    pub duty_settings: Option<DutyFinderSetting>,
 
     pub conditions: Conditions,
 
@@ -169,8 +168,7 @@ pub struct ZoneConnection {
     pub old_rotation: f32,
 
     /// Information about the current content.
-    pub content_handler_id: HandlerId,
-    pub event_handler_id: Option<HandlerId>,
+    pub event_handler_id: Option<HandlerId>, // TODO: replace with a helper function
     pub recipe: Option<Recipe>,
     pub synced_level: Option<u8>,
     /// Player Search results.
@@ -195,8 +193,6 @@ pub struct ZoneConnection {
     pub offered_teleport: Option<TeleportQuery>,
     /// Whether the player is trading with another player or not.
     pub is_trading: bool,
-    /// For the crappy setup_director() function right now.
-    pub director_vars: Option<ServerZoneIpcSegment>,
     /// Current dye action information.
     pub dyeing_information: Option<DyeInformation>,
     /// Temporary data for marketboard requests.
@@ -350,8 +346,13 @@ impl ZoneConnection {
         .await;
     }
 
-    pub async fn register_for_content(&mut self, content_ids: [u16; 5]) {
+    pub async fn register_for_content(
+        &mut self,
+        content_ids: [u16; 5],
+        settings: DutyFinderSetting,
+    ) {
         self.queued_content = Some(content_ids[0]);
+        self.duty_settings = Some(settings);
 
         // update
         {

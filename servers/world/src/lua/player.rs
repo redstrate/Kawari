@@ -21,29 +21,12 @@ use kawari::{
 
 use super::{LuaTask, LuaZone, QueueSegments, create_ipc_self};
 
-#[derive(Default, Clone, Copy)]
-pub struct LuaContent {
-    /// Duration in seconds.
-    pub duration: u16,
-    /// Duty finder settings. See ContentRegistrationFlags.
-    pub settings: u32,
-}
-
-impl UserData for LuaContent {
-    fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-        fields.add_field_method_get("duration", |_, this| Ok(this.duration));
-
-        fields.add_field_method_get("settings", |_, this| Ok(this.settings));
-    }
-}
-
 #[derive(Default)]
 pub struct LuaPlayer {
     pub player_data: PlayerData,
     pub queued_tasks: Vec<LuaTask>,
     pub zone_data: LuaZone,
     pub status_effects: StatusEffects,
-    pub content_data: LuaContent,
     // TODO: move this into PlayerData
     pub base_parameters: BaseParameters,
 }
@@ -437,11 +420,6 @@ impl LuaPlayer {
 
     fn finish_quest(&mut self, id: u32) {
         self.queued_tasks.push(LuaTask::FinishQuest { id });
-    }
-
-    pub fn commence_duty(&mut self, director_id: u32) {
-        self.queued_tasks
-            .push(LuaTask::CommenceDuty { director_id });
     }
 
     /// Returns the target DefaultTalk event for a given SwitchTalk event.
@@ -952,10 +930,6 @@ impl UserData for LuaPlayer {
         methods.add_method_mut("has_seen_cutscene", |_, this, cutscene_id: u32| {
             Ok(this.player_data.unlock.cutscene_seen.contains(cutscene_id))
         });
-        methods.add_method_mut("commence_duty", |_, this, director_id: u32| {
-            this.commence_duty(director_id);
-            Ok(())
-        });
         methods.add_method_mut(
             "get_switch_talk_target",
             |lua, this, switch_talk_target: u32| {
@@ -1091,7 +1065,6 @@ impl UserData for LuaPlayer {
         fields.add_field_method_get("saw_inn_wakeup", |_, this| {
             Ok(this.player_data.saw_inn_wakeup)
         });
-        fields.add_field_method_get("content", |_, this| Ok(this.content_data));
         fields.add_field_method_get("parameters", |_, this| Ok(this.base_parameters.clone()));
         fields.add_field_method_get("rested_exp", |_, this| {
             Ok(this.player_data.classjob.rested_exp)

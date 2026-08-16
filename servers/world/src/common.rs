@@ -17,7 +17,7 @@ use crate::{
 };
 use kawari::{
     common::{
-        CharacterMode, ContainerType, JumpState, LegacyEquipmentModelId, LogMessageType,
+        CharacterMode, ContainerType, HandlerId, JumpState, LegacyEquipmentModelId, LogMessageType,
         MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId, Position, WarpType,
         WeaponModelId,
     },
@@ -25,10 +25,10 @@ use kawari::{
         chat::{CWLinkshellMessage, ChatChannelType, PartyMessage, TellMessage},
         zone::{
             ActionRequest, ActorControlCategory, CWLSLeaveReason, CWLSPermissionRank,
-            ClientTrigger, Conditions, Config, CrossworldLinkshellInvite, InviteReply, InviteType,
-            OnlineStatus, PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus,
-            ReadyCheckReply, ServerZoneIpcSegment, SpawnNpc, SpawnObject, SpawnPlayer,
-            SpawnTreasure, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
+            ClientTrigger, Conditions, Config, CrossworldLinkshellInvite, DutyFinderSetting,
+            InviteReply, InviteType, OnlineStatus, PartyMemberEntry, PartyMemberPositions,
+            PartyUpdateStatus, ReadyCheckReply, ServerZoneIpcSegment, SpawnNpc, SpawnObject,
+            SpawnPlayer, SpawnTreasure, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
             WaymarkPosition, WaymarkPreset,
         },
     },
@@ -130,16 +130,7 @@ pub enum FromServer {
     // TODO: temporary
     Conditions(Conditions),
     /// To inform the connection of the zone they're loading into.
-    ChangeZone(
-        u16,
-        u16,
-        u16,
-        Position,
-        f32,
-        LuaZone,
-        bool,
-        Option<ServerZoneIpcSegment>,
-    ),
+    ChangeZone(u16, u16, u16, Position, f32, LuaZone),
     /// We need to inform the recipent about the direct message they're receiving.
     TellMessageReceived(ObjectId, TellMessage),
     /// We need to tell our chat connection that our zone connection has disconnected.
@@ -233,13 +224,17 @@ pub enum FromServer {
     /// Inform the client that a new letter has arrived in their mailbox.
     NewLetterArrived(),
     /// Plays a cutscene from the instance director.
-    PlayDirectorCutscene(u32),
+    PlayDirectorCutscene(u32, HandlerId),
     /// Inform the client that another player has placed a piece of furniture.
     FurniturePlaced(ContainerType, u16, u16, u8, Position, bool, f32, u8),
     /// Inform the client that another player has moved or rotated a piece of furniture.
     FurnitureTranslated((bool, u8), u16, Position, f32, bool),
     /// Inform the client that another player in their party has offered them a teleport.
     TeleportOffered(u32, TeleportQuery),
+    /// Sync to this new max level.
+    SyncMaxLevel(u8),
+    /// Play the initial cutscene for instanced content.
+    PlayInitialCutscene(u32, u32),
 }
 
 #[derive(Debug, Clone)]
@@ -389,13 +384,11 @@ pub enum ToServer {
     /// The client returned online and we need to inform other party members.
     PartyMemberReturned(ObjectId, i32, u64),
     /// The client is requesting to join the following content.
-    JoinContent(ClientId, ObjectId, u16),
+    JoinContent(ClientId, ObjectId, u16, DutyFinderSetting),
     /// The c lient is requesting to leave their current content, the connection is in charge of keeping track of the old position.
     LeaveContent(ClientId, ObjectId, u16, Position, f32),
     /// Update the global server state of the client's conditions.
     UpdateConditions(ObjectId, Conditions),
-    /// (Temporary) Signal to the server to commence the duty.
-    CommenceDuty(ObjectId),
     /// (Temporary) Signal to the server to kill this actor.
     Kill(ClientId, ObjectId),
     /// Inform the server to update our HP to this value.
@@ -484,6 +477,12 @@ pub enum ToServer {
     OfferTeleportToParty(Option<u64>, ObjectId, u16, TeleportQuery),
     /// The client equips new glasses.
     EquipGlasses(ObjectId, u32, u32),
+    /// The client is ready to initialize its directors.
+    ReadyDirectorData(ObjectId),
+    /// The client is ready to initialize map effects and other director data.
+    EnterTerritoryEvent(ObjectId),
+    /// This player is now ready for the instanced content to begin.
+    ReadyToCommence(ObjectId),
 }
 
 #[derive(Clone, Debug)]

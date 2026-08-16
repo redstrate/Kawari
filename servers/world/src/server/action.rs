@@ -7,7 +7,7 @@ use parking_lot::Mutex;
 
 use crate::{
     ClientId, FromServer, GameData, PlayerData, StatusEffects, ToServer,
-    lua::{EffectsBuilder, KawariLua, KawariLuaState, LuaContent, LuaPlayer, LuaZone},
+    lua::{EffectsBuilder, KawariLua, KawariLuaState, LuaPlayer, LuaZone},
     server::{
         WorldServer,
         actor::{NetworkedActor, create_npc_common_spawn, update_actor_hp_mp},
@@ -105,7 +105,6 @@ pub fn execute_action(
         status_effects: StatusEffects::default(),
         queued_tasks: Vec::new(),
         zone_data: LuaZone::default(),
-        content_data: LuaContent::default(),
         base_parameters: BaseParameters::default(),
     };
     // TODO: maybe move these misc effects to their own dedicated functions or something? I had some trouble remembering where this was

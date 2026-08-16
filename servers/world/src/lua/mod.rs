@@ -5,7 +5,7 @@ mod inventory;
 
 mod player;
 use mlua::{UserData, UserDataFields};
-pub use player::{LuaContent, LuaPlayer};
+pub use player::LuaPlayer;
 
 mod state;
 pub use state::{KawariLua, KawariLuaState};

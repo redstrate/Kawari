@@ -9,8 +9,8 @@ use crate::{
 use icarus::AetherCurrent::AetherCurrentSheet;
 use kawari::{
     common::{
-        ContainerType, DirectorEvent, ERR_INVENTORY_ADD_FAILED, HandlerId, InstanceContentType,
-        ObjectTypeId, ObjectTypeKind, WarpType,
+        ContainerType, ERR_INVENTORY_ADD_FAILED, HandlerId, InstanceContentType, ObjectTypeId,
+        ObjectTypeKind, WarpType,
     },
     constants::{
         ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
@@ -20,7 +20,7 @@ use kawari::{
         ORNAMENT_BITMASK_SIZE, TRIPLE_TRIAD_CARDS_BITMASK_SIZE,
     },
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, ClientTriggerCommand, ItemInfo, ServerZoneIpcData,
+        ActorControlCategory, ClientTriggerCommand, DutyFinderSetting, ItemInfo, ServerZoneIpcData,
         ServerZoneIpcSegment,
     },
 };
@@ -620,45 +620,11 @@ impl ZoneConnection {
                     self.gain_effect(*effect_id, *effect_param, *duration).await;
                 }
                 LuaTask::RegisterForContent { content_id } => {
-                    self.register_for_content([*content_id, 0, 0, 0, 0]).await;
-                }
-                LuaTask::CommenceDuty { director_id } => {
-                    // Have the director commence the duty
-                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(
-                        ActorControlSelf {
-                            category: ActorControlCategory::DirectorEvent {
-                                handler_id: HandlerId(*director_id),
-                                event: DirectorEvent::DutyCommence {
-                                    arg1: player.content_data.duration as u32,
-                                    arg2: 0,
-                                    arg3: 0,
-                                    arg4: 0,
-                                },
-                            },
-                        },
-                    ));
-                    self.send_ipc_self(ipc).await;
-
-                    // Signal to the global server to commence the duty as well, since they need to update the entrance circle.
-                    self.handle
-                        .send(ToServer::CommenceDuty(self.player_data.character.actor_id))
-                        .await;
-
-                    // shit
-                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(
-                        ActorControlSelf {
-                            category: ActorControlCategory::DirectorEvent {
-                                handler_id: HandlerId(*director_id),
-                                event: DirectorEvent::SetDutyTimeRemaining {
-                                    arg1: (player.content_data.duration - 1) as u32, // TODO: lol
-                                    arg2: 0,
-                                    arg3: 0,
-                                    arg4: 0,
-                                },
-                            },
-                        },
-                    ));
-                    self.send_ipc_self(ipc).await;
+                    self.register_for_content(
+                        [*content_id, 0, 0, 0, 0],
+                        DutyFinderSetting::default(),
+                    )
+                    .await;
                 }
                 LuaTask::QuestSequence { id, sequence } => {
                     self.set_quest_sequence(*id, *sequence).await;
@@ -706,7 +672,8 @@ impl ZoneConnection {
                         .await;
                 }
                 LuaTask::JoinContent { id } => {
-                    self.join_content(*id as u16).await;
+                    self.join_content(*id as u16, DutyFinderSetting::default())
+                        .await;
                 }
                 LuaTask::FinishCastingGlamour => {
                     // NOTE: Needs a replay from retail, I guessed here because TBH who manually casts glamours anymore

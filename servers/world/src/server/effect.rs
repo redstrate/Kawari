@@ -7,7 +7,7 @@ use parking_lot::Mutex;
 
 use crate::{
     ClientId, FromServer, PlayerData, StatusEffects, ToServer,
-    lua::{KawariLua, KawariLuaState, LuaContent, LuaPlayer, LuaZone},
+    lua::{KawariLua, KawariLuaState, LuaPlayer, LuaZone},
     server::{
         WorldServer,
         instance::{Instance, QueuedTaskData},
@@ -304,7 +304,6 @@ pub fn remove_effect(
             status_effects: StatusEffects::default(),
             queued_tasks: Vec::new(),
             zone_data: LuaZone::default(),
-            content_data: LuaContent::default(),
             base_parameters: BaseParameters::default(),
         };
 

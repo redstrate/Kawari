@@ -4,9 +4,9 @@ use std::time::{Instant, SystemTime};
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    ContainerType, DEBUG_COMMAND_TRIGGER, DutyOption, FestivalId, HandlerId, HandlerType,
-    ItemOperationKind, LogMessageType, MaxEx, ObjectId, ObjectTypeId, ObjectTypeKind,
-    PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position, QuestSpecialFlags, WarpType,
+    ContainerType, DEBUG_COMMAND_TRIGGER, FestivalId, HandlerId, HandlerType, ItemOperationKind,
+    LogMessageType, MaxEx, ObjectId, ObjectTypeId, ObjectTypeKind, PlayerStateFlags1,
+    PlayerStateFlags2, PlayerStateFlags3, Position, QuestSpecialFlags, WarpType,
     calculate_max_level,
 };
 use kawari::config::get_config;
@@ -17,7 +17,7 @@ use kawari::ipc::chat::ClientChatIpcData;
 
 use kawari::ipc::zone::{
     ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
-    CrossRealmListings, EventType, FurnitureTranslatedForObserver, ItemInfo,
+    CrossRealmListings, DutyFinderSetting, EventType, FurnitureTranslatedForObserver, ItemInfo,
     LinkshellInviteResponse, MarketBoardHistory, MarketBoardHistoryEntry, MarketBoardItem,
     OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType,
     TrustContent, TrustInformation,
@@ -157,19 +157,17 @@ async fn initial_setup(
                     gracefully_logged_out: false,
                     obsfucation_data: ObsfucationData::default(),
                     queued_content: None,
+                    duty_settings: None,
                     conditions: Conditions::default(),
                     queued_tasks: Vec::new(),
                     old_zone_id: 0,
                     old_position: Position::default(),
                     old_rotation: 0.0,
-                    content_handler_id: HandlerId::default(),
                     teleport_reason: TeleportReason::NotSpecified,
                     active_minion: 0,
                     party_id: 0,
                     rejoining_party: false,
                     login_time: None,
-                    content_settings: None,
-                    current_instance_id: None,
                     glamour_information: None,
                     event_handler_id: None,
                     recipe: None,
@@ -186,7 +184,6 @@ async fn initial_setup(
                     spawned_in: false,
                     offered_teleport: None,
                     is_trading: false,
-                    director_vars: None,
                     dyeing_information: None,
                     marketboard_request_item_id: 0,
                     hide_spectator_ui: false,
@@ -2278,11 +2275,11 @@ async fn process_packet(
                             connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::QueueDuties(queue_duties) => {
-                            connection.content_settings = Some(queue_duties.settings);
-                            lua_player.content_data.settings =
-                                DutyOption::from_content_flags(queue_duties.settings).bits(); // TODO: is this the best place to update this?
                             connection
-                                .register_for_content(queue_duties.content_ids)
+                                .register_for_content(
+                                    queue_duties.content_ids,
+                                    queue_duties.settings,
+                                )
                                 .await;
                         }
                         ClientZoneIpcData::QueueRoulette { roulette_id, .. } => {
@@ -2298,7 +2295,12 @@ async fn process_packet(
                                 duty_id = game_data.pick_roulette_duty(roulette) as u16;
                             }
 
-                            connection.register_for_content([duty_id, 0, 0, 0, 0]).await;
+                            connection
+                                .register_for_content(
+                                    [duty_id, 0, 0, 0, 0],
+                                    DutyFinderSetting::default(),
+                                )
+                                .await;
                         }
                         ClientZoneIpcData::ContentFinderAction { action, .. } => {
                             if *action == ContentFinderUserAction::Accepted {
@@ -2316,7 +2318,10 @@ async fn process_packet(
                                 }
 
                                 connection
-                                    .join_content(connection.queued_content.unwrap())
+                                    .join_content(
+                                        connection.queued_content.unwrap(),
+                                        connection.duty_settings.unwrap(),
+                                    )
                                     .await;
                             }
 
@@ -2788,7 +2793,12 @@ async fn process_packet(
                             connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::EnterTerritoryEvent { handler_id } => {
-                            connection.setup_director().await;
+                            connection
+                                .handle
+                                .send(ToServer::EnterTerritoryEvent(
+                                    connection.player_data.character.actor_id,
+                                ))
+                                .await;
 
                             connection
                                 .start_event(
@@ -3782,8 +3792,6 @@ async fn process_server_msg(
                 position,
                 rotation,
                 lua_zone,
-                initial_login,
-                director_vars,
             ) => {
                 connection
                     .handle_zone_change(
@@ -3792,10 +3800,7 @@ async fn process_server_msg(
                         weather_id,
                         position,
                         rotation,
-                        initial_login,
-                        director_vars,
                         &lua_zone,
-                        &mut lua_player.content_data,
                     )
                     .await;
                 lua_player.zone_data = lua_zone;
@@ -4120,14 +4125,14 @@ async fn process_server_msg(
             FromServer::NewLetterArrived() => {
                 connection.send_mailbox_status().await;
             }
-            FromServer::PlayDirectorCutscene(cutscene_id) => {
+            FromServer::PlayDirectorCutscene(cutscene_id, content_handler_id) => {
                 connection
                     .start_event(
                         ObjectTypeId {
                             object_id: connection.player_data.character.actor_id,
                             object_type: ObjectTypeKind::None,
                         },
-                        connection.content_handler_id,
+                        content_handler_id,
                         EventType::GameProgress,
                         1,
                         events,
@@ -4211,6 +4216,38 @@ async fn process_server_msg(
                         ),
                     ))
                     .await;
+            }
+            FromServer::SyncMaxLevel(synced_level) => {
+                let current_level;
+                {
+                    let game_data = connection.gamedata.lock();
+                    current_level = connection.current_level(&game_data);
+                }
+
+                if current_level > synced_level as u16 {
+                    connection.synced_level = Some(synced_level);
+                    connection.update_class_info().await;
+                    connection.send_stats().await;
+                }
+            }
+            FromServer::PlayInitialCutscene(duration, settings) => {
+                lua_player.play_scene(
+                    1,
+                    SceneFlags::NO_DEFAULT_CAMERA
+                        | SceneFlags::CONDITION_CUTSCENE
+                        | SceneFlags::HIDE_HOTBAR
+                        | SceneFlags::SILENT_ENTER_TERRI_ENV
+                        | SceneFlags::SILENT_ENTER_TERRI_BGM
+                        | SceneFlags::SILENT_ENTER_TERRI_SE
+                        | SceneFlags::DISABLE_STEALTH
+                        | SceneFlags::DISABLE_CANCEL_EMOTE
+                        | SceneFlags::INVIS_AOE
+                        | SceneFlags::UNK1,
+                    vec![
+                        0, // BGM, according to sapphire?
+                        0, 0, 5, 14400, 0, 0, 0, 0, 0, duration, settings,
+                    ],
+                )
             }
             _ => {
                 tracing::error!(
