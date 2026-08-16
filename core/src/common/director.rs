@@ -137,7 +137,7 @@ pub enum DirectorEvent {
     QTEActivate { arg1: u32 },
     /// Deactivates the current QTE event.
     #[brw(magic = 0x80000009u32)]
-    QTEDeactivate {},
+    QTEDeactivate,
     /// Does something related to QTEs.
     #[brw(magic = 0x8000000Au32)]
     UnkQTEA {
@@ -219,7 +219,7 @@ pub enum DirectorEvent {
     },
     /// Sets a field.
     #[brw(magic = 0x80000019u32)]
-    UnknownDirector19 {},
+    UnknownDirector19,
     /// Plays a SGB timeline?
     #[brw(magic = 0x80000020u32)]
     UnknownDirector20 { arg1: u32, arg2: u32 },
@@ -260,10 +260,10 @@ pub enum DirectorEvent {
     UnknownDirectorFocusTarget { arg1: u32, arg2: u32 },
     /// Calls into ContentsReplayManager.
     #[brw(magic = 0x8000002Bu32)]
-    UnknownDirectorContentsReplayManager {},
+    UnknownDirectorContentsReplayManager,
     /// Executes a command (ClientTrigger.)
     #[brw(magic = 0x8000002Cu32)]
-    UnknownDirectorExecuteCommand {},
+    UnknownDirectorExecuteCommand,
     Unknown {
         id: u32,
         arg1: u32,

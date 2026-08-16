@@ -93,7 +93,7 @@ pub enum LuaDirectorTask {
     UseShortcut {
         actor_id: ObjectId,
     },
-    CompleteDuty {},
+    CompleteDuty,
     MapEffect {
         index: u32,
         timeline_id: u32,
@@ -816,7 +816,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     },
                 );
             }
-            LuaDirectorTask::CompleteDuty {} => {
+            LuaDirectorTask::CompleteDuty => {
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(
                     ActorControlSelf {
                         category: ActorControlCategory::DirectorEvent {

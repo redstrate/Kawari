@@ -9,7 +9,7 @@ use kawari::{
     config::get_config,
     ipc::zone::{
         ActorControl, ActorControlCategory, ActorControlSelf, ActorControlTarget, ActorMove,
-        CommonSpawn, Config, DisplayFlag, ObjectKind, PlayerSubKind, ServerZoneIpcData,
+        CommonSpawn, DisplayFlag, ObjectKind, PlayerSubKind, ServerZoneIpcData,
         ServerZoneIpcSegment, SpawnObject, SpawnPlayer, SpawnTreasure,
     },
 };
@@ -198,12 +198,6 @@ impl ZoneConnection {
         self.spawned_in = true;
 
         spawn
-    }
-
-    pub async fn update_config(&mut self, actor_id: ObjectId, config: Config) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Config(config));
-
-        self.send_ipc_from(actor_id, ipc).await;
     }
 
     fn get_player_common_spawn(&self, start_invisible: bool) -> CommonSpawn {

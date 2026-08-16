@@ -375,7 +375,7 @@ fn server_logic_tick(
                     for range in &overlapping_ranges {
                         if let Some(gimmick) = &range.gimmick {
                             match gimmick {
-                                MapGimmick::Generic {} => {
+                                MapGimmick::Generic => {
                                     if let Some(director) = &mut instance.director {
                                         director.on_gimmick_rect(range.instance_id);
                                     }
@@ -852,7 +852,7 @@ pub async fn server_main_loop(
                                     network.send_ac_in_range_instance(
                                         instance,
                                         *actor_id,
-                                        ActorControlCategory::DeadFadeOut {},
+                                        ActorControlCategory::DeadFadeOut,
                                     );
 
                                     instance.insert_task(
@@ -1219,7 +1219,7 @@ pub async fn server_main_loop(
                             let mut network = network.lock();
                             network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                         }
-                        ClientTriggerCommand::DespawnMinion { .. } => {
+                        ClientTriggerCommand::DespawnMinion => {
                             let msg = FromServer::ActorDespawnsMinion();
 
                             let mut network = network.lock();
@@ -1249,7 +1249,7 @@ pub async fn server_main_loop(
                                     object_id: *actor_id,
                                     object_type: actor_type,
                                 },
-                                ActorControlCategory::SetTarget {},
+                                ActorControlCategory::SetTarget,
                             );
 
                             let mut network = network.lock();
@@ -1261,11 +1261,11 @@ pub async fn server_main_loop(
                                 DestinationNetwork::ZoneClients,
                             );
                         }
-                        ClientTriggerCommand::SetSoftTarget {} => {
+                        ClientTriggerCommand::SetSoftTarget => {
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
                                 trigger.target.unwrap_or_default(),
-                                ActorControlCategory::SetSoftTarget {},
+                                ActorControlCategory::SetSoftTarget,
                             );
 
                             let mut network = network.lock();
@@ -1506,7 +1506,7 @@ pub async fn server_main_loop(
 
                             update_party_waymark(&mut network, &data, from_actor_id, *id, None);
                         }
-                        ClientTriggerCommand::ClearAllWaymarks {} => {
+                        ClientTriggerCommand::ClearAllWaymarks => {
                             let mut network = network.lock();
                             let data = data.lock();
 
@@ -1878,16 +1878,16 @@ pub async fn server_main_loop(
                                 ActorControlCategory::SetBattle { battle: false },
                             );
                         }
-                        ClientTriggerCommand::EmoteInterrupted {} => {
+                        ClientTriggerCommand::EmoteInterrupted => {
                             let data = data.lock();
                             let mut network = network.lock();
                             network.send_ac_in_range_inclusive(
                                 &data,
                                 from_actor_id,
-                                ActorControlCategory::InterruptEmote {},
+                                ActorControlCategory::InterruptEmote,
                             );
                         }
-                        ClientTriggerCommand::LoopingEmoteInterrupted {} => {
+                        ClientTriggerCommand::LoopingEmoteInterrupted => {
                             let mut data = data.lock();
                             let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
                                 continue;
@@ -2099,7 +2099,10 @@ pub async fn server_main_loop(
                     spawn.common.display_flags = config.display_flag.into();
 
                     let mut network = network.lock();
-                    let msg = FromServer::UpdateConfig(from_actor_id, config.clone());
+                    let msg = FromServer::PacketSegment(
+                        ServerZoneIpcSegment::new(ServerZoneIpcData::Config(config.clone())),
+                        from_actor_id,
+                    );
 
                     network.send_in_range_inclusive_instance(
                         from_actor_id,
@@ -2415,7 +2418,7 @@ pub async fn server_main_loop(
                         from_client_id,
                         from_actor_id,
                         Duration::from_secs(2),
-                        QueuedTaskData::FishBite {},
+                        QueuedTaskData::FishBite,
                     );
                 }
                 ToServer::ReloadScripts => {

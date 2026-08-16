@@ -108,7 +108,7 @@ impl EventHandler for CraftingEventHandler {
 
             connection
                 .broadcast_actor_control(ActorControlCategory::LiveEvent {
-                    event: LiveEventType::EndCraft {},
+                    event: LiveEventType::EndCraft,
                 })
                 .await;
 

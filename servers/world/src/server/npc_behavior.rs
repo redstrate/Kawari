@@ -439,7 +439,7 @@ pub fn npc_behavior(
                         FromServer::ActorControlTarget(
                             *id,
                             target,
-                            ActorControlCategory::SetTarget {},
+                            ActorControlCategory::SetTarget,
                         ),
                         DestinationNetwork::ZoneClients,
                     );

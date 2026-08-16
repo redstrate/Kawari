@@ -41,7 +41,7 @@ pub enum ClientTriggerCommand {
 
     /// The player looks or stops looking at an actor using the soft targetting system.
     #[brw(magic = 4u32)]
-    SetSoftTarget {},
+    SetSoftTarget,
 
     /// The client is trying to dismount their current mount.
     #[brw(magic = 101u32)]
@@ -53,7 +53,7 @@ pub enum ClientTriggerCommand {
 
     /// The client requests a minion to be despawned.
     #[brw(magic = 103u32)]
-    DespawnMinion {},
+    DespawnMinion,
 
     /// When the player right-clicks their status effect to remove it.
     #[brw(magic = 104u32)]
@@ -82,7 +82,7 @@ pub enum ClientTriggerCommand {
 
     /// The client is finished zoning.
     #[brw(magic = 201u32)]
-    FinishZoning {},
+    FinishZoning,
 
     /// The player selects a teleport destination.
     #[brw(magic = 202u32)]
@@ -123,11 +123,11 @@ pub enum ClientTriggerCommand {
 
     /// The client requests the player's unlocked titles.
     #[brw(magic = 303u32)]
-    RequestTitleList {},
+    RequestTitleList,
 
     /// Requests the name of a player by their content ID. Seen used for crafted items.
     #[brw(magic = 305u32)]
-    RequestPlayerName {},
+    RequestPlayerName,
 
     /// The client shows an Active Help pop-up. This is triggered *when* it's shown, not when closed.
     #[brw(magic = 306u32)]
@@ -139,7 +139,7 @@ pub enum ClientTriggerCommand {
 
     /// The client clears all waymarks.
     #[brw(magic = 313u32)]
-    ClearAllWaymarks {},
+    ClearAllWaymarks,
 
     /// The client begins using the Idle Camera or Group Pose feature.
     #[brw(magic = 314u32)]
@@ -147,7 +147,7 @@ pub enum ClientTriggerCommand {
 
     /// The client opens the World Visit menu.
     #[brw(magic = 316u32)]
-    OpenWorldVisit {},
+    OpenWorldVisit,
 
     /// The client places a waymark.
     #[brw(magic = 317u32)]
@@ -177,7 +177,7 @@ pub enum ClientTriggerCommand {
     RequestMateriaMeld { actor_id: ObjectId },
 
     #[brw(magic = 444u32)]
-    OpenChocoboSaddlebag {},
+    OpenChocoboSaddlebag,
 
     /// The player is preparing to remove materia.
     #[brw(magic = 437u32)]
@@ -232,11 +232,11 @@ pub enum ClientTriggerCommand {
 
     /// The player interrupts their normal emote.
     #[brw(magic = 502u32)]
-    EmoteInterrupted {},
+    EmoteInterrupted,
 
     /// The player interrupts their looping emote.
     #[brw(magic = 503u32)]
-    LoopingEmoteInterrupted {},
+    LoopingEmoteInterrupted,
 
     /// The player explicitly changed their pose.
     #[brw(magic = 505u32)]
@@ -257,11 +257,11 @@ pub enum ClientTriggerCommand {
 
     /// When the player begins swimming. Seems to have no parameters.
     #[brw(magic = 608u32)]
-    BeginSwimming {},
+    BeginSwimming,
 
     /// When the player stops swimming (by going back on land, mounting, etc.). Seems to have no parameters.
     #[brw(magic = 609u32)]
-    EndSwimming {},
+    EndSwimming,
 
     /// When the player enters an area where mounting is prohibited in a zone that otherwise permits zoning. Commonly seen during Moonfire Faire festivals, and does not seem to have an exit counterpart.
     #[brw(magic = 612u32)]
@@ -269,7 +269,7 @@ pub enum ClientTriggerCommand {
 
     /// When the player starts flying on their mount.
     #[brw(magic = 616u32)]
-    StartFlying {},
+    StartFlying,
 
     /// When the player starts crafting.
     #[brw(magic = 700u32)]
@@ -375,7 +375,7 @@ pub enum ClientTriggerCommand {
 
     /// The client requests to warp to the housing interior's front door.
     #[brw(magic = 1122u32)]
-    HousingMoveToFrontDoor {},
+    HousingMoveToFrontDoor,
 
     /// The client has requested an apartment building's residents list from either an apartment building entrance or an apartment's front door.
     #[brw(magic = 1125u32)]
@@ -424,17 +424,17 @@ pub enum ClientTriggerCommand {
 
     /// The client opens the General tab in the Gold Saucer window.
     #[brw(magic = 1850u32)]
-    OpenGoldSaucerGeneralTab {},
+    OpenGoldSaucerGeneralTab,
 
     /// The client challengers another player to a normal match.
     #[brw(magic = 1950u32)]
     ChallengeNormalMatch { unk1: u32, unk2: u32 },
 
     #[brw(magic = 1980u32)]
-    BeginContentsReplay {},
+    BeginContentsReplay,
 
     #[brw(magic = 1981u32)]
-    EndContentsReplay {},
+    EndContentsReplay,
 
     /// Sent whenever the client tries to begin a Hall of the Novice exercise.
     #[brw(magic = 2050u32)]
@@ -444,11 +444,11 @@ pub enum ClientTriggerCommand {
 
     /// Sent whenever the client uses the /nastatus command.
     #[brw(magic = 2100u32)]
-    ToggleNoviceStatus {},
+    ToggleNoviceStatus,
 
     /// Sent when the "Join Novice Network" button is pressed in the chat window.
     #[brw(magic = 2102u32)]
-    JoinNoviceNetwork {},
+    JoinNoviceNetwork,
 
     /// Sent whenever the client requests to duel another player.
     #[brw(magic = 2200u32)]
@@ -483,23 +483,23 @@ pub enum ClientTriggerCommand {
 
     /// The client opens the Mahjong tab in the Gold Saucer window.
     #[brw(magic = 2550u32)]
-    OpenGoldSaucerMahjongTab {},
+    OpenGoldSaucerMahjongTab,
 
     /// The client opens the Trust window.
     #[brw(magic = 2651u32)]
-    OpenTrustWindow {},
+    OpenTrustWindow,
 
     /// The client opens the Duty Support window.
     #[brw(magic = 2653u32)]
-    OpenDutySupportWindow {},
+    OpenDutySupportWindow,
 
     /// The client opens the Portrait window.
     #[brw(magic = 3200u32)]
-    OpenPortraitsWindow {},
+    OpenPortraitsWindow,
 
     /// The client is ready to begin loading a zone.
     #[brw(magic = 3201u32)]
-    BeginLoading {},
+    BeginLoading,
 
     /// The client opens the Mogpendium or interacts with the Retainer Bell.
     #[brw(magic = 9003u32)]

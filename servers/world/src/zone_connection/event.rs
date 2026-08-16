@@ -25,7 +25,7 @@ impl ZoneConnection {
     ) {
         let config = get_config();
         if config.tweaks.always_allow_skipping {
-            scene_flags.set(SceneFlags::DISABLE_SKIP, false);
+            scene_flags.remove(SceneFlags::DISABLE_SKIP);
         }
 
         let scene = EventScene {

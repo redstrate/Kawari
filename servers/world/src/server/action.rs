@@ -336,7 +336,7 @@ pub fn execute_action(
                         let mut game_data = game_data.lock();
                         *damage_element = game_data.get_action_damage_element(request.action_id);
                     }
-                    TargetEffectKind::InterruptAction {} => {
+                    TargetEffectKind::InterruptAction => {
                         // TODO: this could cancel more than just casting, so we need to be more specific eventually
                         // TODO: also cancel the cast visually
                         instance.cancel_actor_tasks(request.target.object_id);

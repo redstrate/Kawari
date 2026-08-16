@@ -253,10 +253,9 @@ pub enum JumpState {
 #[derive(Debug, Clone, Copy, PartialEq, Display, EnumIter, FromRepr)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum HandlerType {
-    // Isn't a valid ID, it's just for our purposes.
+    /// This isn't a valid ID, it's just for our purposes.
     Invalid = 0,
 
-    // Regular events
     /// See Quest Excel sheet.
     Quest = 1,
     /// See Warp Excel sheet.
@@ -378,7 +377,6 @@ pub enum HandlerType {
     /// See EventMountGimmickPathMove Excel sheet.
     EventMountGimmickPathMove = 65,
 
-    // Directors
     BattleLeve = 0x8001,
     GatheringLeve = 0x8002,
     /// Used for dungeons, including Deep Dungeons.
@@ -858,7 +856,6 @@ pub enum CharacterMode {
 #[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct PlayerStateFlags1(u8);
 
-// TODO: upstream the flags that FFXIVClientStructs doesn't have
 bitflags! {
     impl PlayerStateFlags1: u8 {
         /// If this player isn't a novice. If not set, considered a New Adventurer.

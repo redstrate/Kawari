@@ -246,7 +246,7 @@ impl CustomIpcConnection {
                 let mut database = self.database.lock();
                 database.delete_characters(*service_account_id);
             }
-            CustomIpcData::RequestFullCharacterList {} => {
+            CustomIpcData::RequestFullCharacterList => {
                 let json;
                 {
                     let mut database = self.database.lock();

@@ -50,7 +50,7 @@ pub enum LiveEventType {
 
     /// Ends the current crafting session.
     #[brw(magic = 15u32)]
-    EndCraft {},
+    EndCraft,
 
     /// Sets the main hand weapon model.
     #[brw(magic = 38u32)]
@@ -245,7 +245,7 @@ pub enum ActorControlCategory {
 
     /// Seen while dead actors fade away.
     #[brw(magic = 39u32)]
-    DeadFadeOut {},
+    DeadFadeOut,
 
     #[brw(magic = 41u32)]
     ToggleUnlock {
@@ -266,14 +266,14 @@ pub enum ActorControlCategory {
     },
 
     #[brw(magic = 50u32)]
-    SetTarget {},
+    SetTarget,
 
     #[brw(magic = 58u32)]
-    SetSoftTarget {},
+    SetSoftTarget,
 
     /// Plays this character's idle animation, I guess?
     #[brw(magic = 60u32)]
-    PlayIdleAnimation {},
+    PlayIdleAnimation,
 
     // Sets the player's HP and seems to deal unique damage(?) Seen while falling off an Eden arena.
     #[brw(magic = 80u32)]
@@ -531,7 +531,7 @@ pub enum ActorControlCategory {
 
     /// Interrupts the currently playing emote.
     #[brw(magic = 291u32)]
-    InterruptEmote {},
+    InterruptEmote,
 
     /// Generic catch-all for crafting/gathering actions.
     #[brw(magic = 300u32)]
@@ -664,7 +664,7 @@ pub enum ActorControlCategory {
     MapMarkerUpdateBegin { flags: u32 },
 
     #[brw(magic = 512u32)]
-    MapMarkerUpdateEnd {},
+    MapMarkerUpdateEnd,
 
     #[brw(magic = 516u32)]
     ToggleCutsceneSeen {
@@ -860,7 +860,7 @@ pub enum ActorControlCategory {
 
     /// The server displays the Interior Furnishings menu for the client.
     #[brw(magic = 1015u32)]
-    FurnitureMenu(),
+    FurnitureMenu,
 
     /// The server acknowledges the client's request to translate (move or rotate) an item. The purpose of sending the item's container is unclear.
     #[brw(magic = 1017u32)]
@@ -902,9 +902,7 @@ pub enum ActorControlCategory {
 
     /// Called during dueling.
     #[brw(magic = 1504u32)]
-    SetPvPState {
-        state: u32, // TODO: turn into enum
-    },
+    SetPvPState { state: u32 },
 
     /// Called during dueling.
     #[brw(magic = 1506u32)]
@@ -931,7 +929,7 @@ pub enum ActorControlCategory {
 
     /// Calls into animation-related functions I think?
     #[brw(magic = 1529u32)]
-    UnkAnimationRelated {},
+    UnkAnimationRelated,
 
     /// That's the name of the function in FFXIVClientStructs: ProcessHotDot
     #[brw(magic = 1540u32)]
@@ -963,18 +961,17 @@ pub enum ActorControlCategory {
         unk4: u32,
     },
 
-    // TODO: There's a lot more spectator-related ACs
     /// Initializes the SpectatorManager on the client.
     #[brw(magic = 1600u32)]
     InitializeSpectatorManager { row_id: u32, unk2: u32, unk3: u32 },
 
     /// This hides the spectator UI (including the uninitialized one.)
     #[brw(magic = 1601u32)]
-    HideSpectatorUI {},
+    HideSpectatorUI,
 
     /// This actually shows the Spectator UI.
     #[brw(magic = 1607u32)]
-    ShowSpectatorUI {},
+    ShowSpectatorUI,
 
     /// Calls some method in PvPProfile, unsure what it does yet.
     #[brw(magic = 1610u32)]

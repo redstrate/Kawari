@@ -1,9 +1,9 @@
 // ! The Moogle Mail Delivery system.
 use bstr::BString;
 
-use super::social::fetch_entries;
 use crate::{
     ItemInfoQuery, ToServer, ZoneConnection,
+    common::fetch_entries,
     inventory::{CrystalKind, CurrencyKind, Item},
 };
 use kawari::{

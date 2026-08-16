@@ -1,6 +1,6 @@
 // ! The linkshell systems. Currently, only cross-world shells are supported.
-use super::social::fetch_entries;
-use crate::{ToServer, ZoneConnection};
+
+use crate::{ToServer, ZoneConnection, common::fetch_entries};
 use kawari::{
     common::{LogMessageType, ObjectId},
     ipc::chat::{ChatChannel, ChatChannelType},

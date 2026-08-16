@@ -113,8 +113,6 @@ pub enum FromServer {
     ActorControlTarget(ObjectId, ObjectTypeId, ActorControlCategory),
     /// We need to update the player actor
     ActorControlSelf(ActorControlCategory),
-    /// Update an actor's equip display flags.
-    UpdateConfig(ObjectId, Config),
     /// Update an actor's model IDs.
     ActorEquip(
         ObjectId,
@@ -509,4 +507,32 @@ impl ServerHandle {
 /// Turns a Quest row ID into a "normal" one. For example: 65537 to 1.
 pub fn adjust_quest_id(quest_id: u32) -> u32 {
     quest_id.saturating_sub(QuestSheet::STARTING_ROW)
+}
+
+pub fn fetch_entries<T>(
+    next_index: &mut u16,
+    data: &mut Vec<T>,
+    increment_by: usize,
+    state: &mut usize,
+) -> Vec<T>
+where
+    T: Clone + std::default::Default,
+{
+    let mut ret: Vec<T>;
+    if data.len() > increment_by {
+        *next_index += increment_by as u16;
+        ret = data.drain(0..increment_by).collect();
+    } else {
+        *next_index = 0;
+        ret = std::mem::take(data);
+        ret.resize(increment_by, T::default());
+    }
+
+    if !data.is_empty() {
+        *state += increment_by;
+    } else {
+        *state = 0;
+    }
+
+    ret
 }

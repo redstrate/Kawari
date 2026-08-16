@@ -63,9 +63,9 @@ impl diesel::deserialize::FromSql<diesel::sql_types::BigInt, diesel::sqlite::Sql
     }
 }
 
-// This is unrelated to the ObjectKind struct as named by ClientStructs; it's used for ACT::SetTarget, ACT::Emote, and probably more.
-// Instead it correlates to the Type field in the GameObjectId client struct.
-// See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Object/GameObject.cs#L230
+/// This is unrelated to the ObjectKind struct as named by ClientStructs; it's used for ACT::SetTarget, ACT::Emote, and probably more.
+/// Instead it correlates to the Type field in the GameObjectId client struct.
+/// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Object/GameObject.cs#L230>
 #[binrw]
 #[repr(u8)]
 #[brw(repr = u8)]
@@ -77,7 +77,6 @@ pub enum ObjectTypeKind {
     /// Orchestrions, static NPCs in towns, etc., and possibly more.
     EObjOrNpc = 1,
     /// Unclear when this is used, more research is needed.
-    /// ClientStructs describes it as "if (BaseId == 0 || (ObjectIndex >= 200 && ObjectIndex < 244)) ObjectId = ObjectIndex, Type = 2"
     Unknown = 2,
     /// Maybe FATE related?
     Unknown2 = 3,
@@ -149,8 +148,6 @@ const INVALID_OBJECT_ID: ObjectId = ObjectId(0xE0000000);
 #[cfg(test)]
 mod tests {
     use crate::common::{ObjectId, ObjectTypeId, ObjectTypeKind};
-
-    // NOTE: `impl TryFrom<u64> for ObjectTypeId` is exercised in core/src/ipc/zone/client/client_trigger.rs unit tests.
 
     #[test]
     fn test_objecttypeid_into_u64() {

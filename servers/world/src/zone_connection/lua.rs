@@ -74,7 +74,7 @@ impl ZoneConnection {
                     self.warp(*warp_id).await;
                 }
                 LuaTask::BeginLogOut => self.begin_log_out().await,
-                LuaTask::FinishEvent {} => {
+                LuaTask::FinishEvent => {
                     self.event_finish(events).await;
                     run_finish_event = true;
                 }
@@ -143,7 +143,7 @@ impl ZoneConnection {
                     })
                     .await;
                 }
-                LuaTask::UnlockAll {} => {
+                LuaTask::UnlockAll => {
                     self.player_data.unlock.unlocks.set_all();
                 }
                 LuaTask::UnlockAetheryte { id, on } => {
@@ -322,7 +322,7 @@ impl ZoneConnection {
                     })
                     .await;
                 }
-                LuaTask::UnlockAllContent {} => {
+                LuaTask::UnlockAllContent => {
                     self.player_data.content.unlocked_special_content.set_all();
                     self.player_data.content.unlocked_raids.set_all();
                     self.player_data.content.unlocked_dungeons.set_all();
@@ -414,7 +414,7 @@ impl ZoneConnection {
                 LuaTask::ToggleGlassesStyle { id } => {
                     self.toggle_glasses_style(*id).await;
                 }
-                LuaTask::ToggleGlassesStyleAll {} => {
+                LuaTask::ToggleGlassesStyleAll => {
                     let max_glasses_style_id = GLASSES_STYLES_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_glasses_style_id {
@@ -424,7 +424,7 @@ impl ZoneConnection {
                 LuaTask::ToggleOrnament { id } => {
                     self.toggle_ornament(*id).await;
                 }
-                LuaTask::ToggleOrnamentAll {} => {
+                LuaTask::ToggleOrnamentAll => {
                     let max_ornament_id = ORNAMENT_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_ornament_id {
@@ -434,7 +434,7 @@ impl ZoneConnection {
                 LuaTask::UnlockBuddyEquip { id } => {
                     self.unlock_buddy_equip(*id).await;
                 }
-                LuaTask::UnlockBuddyEquipAll {} => {
+                LuaTask::UnlockBuddyEquipAll => {
                     let max_buddy_equip_id = BUDDY_EQUIP_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_buddy_equip_id {
@@ -444,7 +444,7 @@ impl ZoneConnection {
                 LuaTask::ToggleChocoboTaxiStand { id } => {
                     self.toggle_chocobo_taxi_stand(*id).await;
                 }
-                LuaTask::ToggleChocoboTaxiStandAll {} => {
+                LuaTask::ToggleChocoboTaxiStandAll => {
                     let max_chocobo_taxi_stand_id = CHOCOBO_TAXI_STANDS_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_chocobo_taxi_stand_id {
@@ -454,7 +454,7 @@ impl ZoneConnection {
                 LuaTask::ToggleCaughtFish { id } => {
                     self.toggle_caught_fish(*id).await;
                 }
-                LuaTask::ToggleCaughtFishAll {} => {
+                LuaTask::ToggleCaughtFishAll => {
                     let max_caught_fish_id = CAUGHT_FISH_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_caught_fish_id {
@@ -464,7 +464,7 @@ impl ZoneConnection {
                 LuaTask::ToggleCaughtSpearfish { id } => {
                     self.toggle_caught_spearfish(*id).await;
                 }
-                LuaTask::ToggleCaughtSpearfishAll {} => {
+                LuaTask::ToggleCaughtSpearfishAll => {
                     let max_caught_spearfish_id = CAUGHT_SPEARFISH_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_caught_spearfish_id {
@@ -474,7 +474,7 @@ impl ZoneConnection {
                 LuaTask::ToggleTripleTriadCard { id } => {
                     self.toggle_triple_triad_card(*id).await;
                 }
-                LuaTask::ToggleTripleTriadCardAll {} => {
+                LuaTask::ToggleTripleTriadCardAll => {
                     let max_triple_triad_card_id = TRIPLE_TRIAD_CARDS_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_triple_triad_card_id {
@@ -484,7 +484,7 @@ impl ZoneConnection {
                 LuaTask::ToggleAdventure { id } => {
                     self.toggle_adventure(*id, false).await;
                 }
-                LuaTask::ToggleAdventureAll {} => {
+                LuaTask::ToggleAdventureAll => {
                     let max_adventure_id = ADVENTURE_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_adventure_id {
@@ -498,7 +498,7 @@ impl ZoneConnection {
                 LuaTask::ToggleCutsceneSeen { id, value } => {
                     self.toggle_cutscene_seen(*id, *value).await;
                 }
-                LuaTask::ToggleCutsceneSeenAll {} => {
+                LuaTask::ToggleCutsceneSeenAll => {
                     let max_cutscene_seen_id = CUTSCENE_SEEN_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_cutscene_seen_id {
@@ -508,7 +508,7 @@ impl ZoneConnection {
                 LuaTask::ToggleMinion { id } => {
                     self.toggle_minion(*id).await;
                 }
-                LuaTask::ToggleMinionAll {} => {
+                LuaTask::ToggleMinionAll => {
                     let max_minion_id = MINION_BITMASK_SIZE as u32 * 8;
 
                     for i in 0..max_minion_id {
@@ -518,7 +518,7 @@ impl ZoneConnection {
                 LuaTask::ToggleAetherCurrent { id } => {
                     self.toggle_aether_current(*id).await;
                 }
-                LuaTask::ToggleAetherCurrentAll {} => {
+                LuaTask::ToggleAetherCurrentAll => {
                     let max_aether_current_id = AETHER_CURRENT_BITMASK_SIZE as u32 * 8;
 
                     for i in AetherCurrentSheet::STARTING_ROW
@@ -530,7 +530,7 @@ impl ZoneConnection {
                 LuaTask::ToggleAetherCurrentCompFlgSet { id } => {
                     self.toggle_aether_current_comp_flg_set(*id).await;
                 }
-                LuaTask::ToggleAetherCurrentCompFlgSetAll {} => {
+                LuaTask::ToggleAetherCurrentCompFlgSetAll => {
                     let max_aether_current_comp_flg_set_id =
                         AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE as u32 * 8;
 
@@ -584,7 +584,7 @@ impl ZoneConnection {
                 LuaTask::SendSegment { segment } => {
                     self.send_segment(segment.clone()).await;
                 }
-                LuaTask::StartTalkEvent {} => {
+                LuaTask::StartTalkEvent => {
                     if let Some(event) = events.last_mut() {
                         event
                             .0
@@ -674,13 +674,13 @@ impl ZoneConnection {
                         self.incomplete_quest(*id).await;
                     }
                 }
-                LuaTask::Kill {} => {
+                LuaTask::Kill => {
                     // Signal to the global server to kill us.
                     self.handle
                         .send(ToServer::Kill(self.id, self.player_data.character.actor_id))
                         .await;
                 }
-                LuaTask::AbandonContent {} => {
+                LuaTask::AbandonContent => {
                     // Signal to the global server to leave this content.
                     self.handle
                         .send(ToServer::LeaveContent(
@@ -701,14 +701,14 @@ impl ZoneConnection {
                     })
                     .await;
                 }
-                LuaTask::ReturnToHomepoint {} => {
+                LuaTask::ReturnToHomepoint => {
                     self.warp_aetheryte(self.player_data.aetheryte.homepoint as u32, false, false)
                         .await;
                 }
                 LuaTask::JoinContent { id } => {
                     self.join_content(*id as u16).await;
                 }
-                LuaTask::FinishCastingGlamour {} => {
+                LuaTask::FinishCastingGlamour => {
                     // NOTE: Needs a replay from retail, I guessed here because TBH who manually casts glamours anymore
 
                     if let Some(ClientTriggerCommand::PrepareCastGlamour {
@@ -805,7 +805,7 @@ impl ZoneConnection {
                         ))
                         .await;
                 }
-                LuaTask::RemoveCooldowns {} => {
+                LuaTask::RemoveCooldowns => {
                     self.handle
                         .send(ToServer::RemoveCooldowns(
                             self.player_data.character.actor_id,
@@ -819,7 +819,7 @@ impl ZoneConnection {
                         self.player_data.unlock.seen_active_help.set(*id);
                     }
                 }
-                LuaTask::SendMailboxStatus {} => {
+                LuaTask::SendMailboxStatus => {
                     self.send_mailbox_status().await;
                 }
                 LuaTask::SetGrandCompany { company } => {
@@ -843,7 +843,7 @@ impl ZoneConnection {
                         ))
                         .await;
                 }
-                LuaTask::FinishDyeing {} => {
+                LuaTask::FinishDyeing => {
                     if let Some(dye_information) = &self.dyeing_information {
                         // TODO: consume the dye
 

@@ -989,7 +989,7 @@ async fn process_packet(
                         }
                         ClientZoneIpcData::ClientTrigger(trigger) => {
                             match trigger.trigger {
-                                ClientTriggerCommand::RequestTitleList {} => {
+                                ClientTriggerCommand::RequestTitleList => {
                                     let ipc =
                                         ServerZoneIpcSegment::new(ServerZoneIpcData::TitleList {
                                             unlock_bitmask: connection
@@ -1001,7 +1001,7 @@ async fn process_packet(
                                         });
                                     connection.send_ipc_self(ipc).await;
                                 }
-                                ClientTriggerCommand::FinishZoning {} => {
+                                ClientTriggerCommand::FinishZoning => {
                                     connection
                                         .handle
                                         .send(ToServer::ZoneIn(
@@ -1014,14 +1014,14 @@ async fn process_packet(
                                     // Reset so it doesn't get stuck to Aetheryte:
                                     connection.teleport_reason = TeleportReason::NotSpecified;
                                 }
-                                ClientTriggerCommand::BeginContentsReplay {} => {
+                                ClientTriggerCommand::BeginContentsReplay => {
                                     connection
                                         .actor_control_self(
                                             ActorControlCategory::BeginContentsReplay { unk1: 1 },
                                         )
                                         .await;
                                 }
-                                ClientTriggerCommand::EndContentsReplay {} => {
+                                ClientTriggerCommand::EndContentsReplay => {
                                     connection
                                         .actor_control_self(
                                             ActorControlCategory::EndContentsReplay { unk1: 1 },
@@ -1119,13 +1119,13 @@ async fn process_packet(
                                 ClientTriggerCommand::SeenCutscene { id } => {
                                     connection.player_data.unlock.cutscene_seen.set(id);
                                 }
-                                ClientTriggerCommand::OpenGoldSaucerGeneralTab {} => {
+                                ClientTriggerCommand::OpenGoldSaucerGeneralTab => {
                                     let ipc = ServerZoneIpcSegment::new(
                                         ServerZoneIpcData::GoldSaucerInformation { unk: [0; 40] },
                                     );
                                     connection.send_ipc_self(ipc).await;
                                 }
-                                ClientTriggerCommand::OpenTrustWindow {} => {
+                                ClientTriggerCommand::OpenTrustWindow => {
                                     // We have to send at least one valid trust to the client, otherwise the window never shows.
                                     let ipc = ServerZoneIpcSegment::new(
                                         ServerZoneIpcData::TrustInformation(TrustInformation {
@@ -1139,7 +1139,7 @@ async fn process_packet(
                                     );
                                     connection.send_ipc_self(ipc).await;
                                 }
-                                ClientTriggerCommand::OpenDutySupportWindow {} => {
+                                ClientTriggerCommand::OpenDutySupportWindow => {
                                     // We have to send at least one available duty to the client, otherwise it crashes.
                                     let ipc = ServerZoneIpcSegment::new(
                                         ServerZoneIpcData::DutySupportInformation {
@@ -1148,7 +1148,7 @@ async fn process_packet(
                                     );
                                     connection.send_ipc_self(ipc).await;
                                 }
-                                ClientTriggerCommand::OpenPortraitsWindow {} => {
+                                ClientTriggerCommand::OpenPortraitsWindow => {
                                     let ipc = ServerZoneIpcSegment::new(
                                         ServerZoneIpcData::PortraitsInformation { unk: [0; 56] },
                                     );
@@ -1357,7 +1357,7 @@ async fn process_packet(
                                     );
                                     connection.send_ipc_self(ipc).await;
                                 }
-                                ClientTriggerCommand::ToggleNoviceStatus { .. } => {
+                                ClientTriggerCommand::ToggleNoviceStatus => {
                                     if connection.player_data.search_info.online_status
                                         != OnlineStatus::NewAdventurer
                                     {
@@ -1452,9 +1452,7 @@ async fn process_packet(
                                         );
 
                                         connection
-                                            .actor_control_self(
-                                                ActorControlCategory::FurnitureMenu {},
-                                            )
+                                            .actor_control_self(ActorControlCategory::FurnitureMenu)
                                             .await;
                                     } else {
                                         connection.conditions.remove_condition(
@@ -1655,7 +1653,7 @@ async fn process_packet(
                                             .await;
                                     }
                                 }
-                                ClientTriggerCommand::RequestPlayerName {} => {
+                                ClientTriggerCommand::RequestPlayerName => {
                                     connection
                                         .send_ipc_self(ServerZoneIpcSegment::new(
                                             ServerZoneIpcData::PlayerName {
@@ -3647,7 +3645,7 @@ async fn process_packet(
                                     unk1: [0; 44],
                                     item_id: connection.marketboard_request_item_id,
                                     unk2: Vec::default(),
-                                    request_id: *request_id as u8,
+                                    request_id: *request_id,
                                     unk3: 0,
                                     unk4: 0,
                                 },
@@ -3750,9 +3748,6 @@ async fn process_server_msg(
                     ))
                     .await;
                 connection.active_minion = 0;
-            }
-            FromServer::UpdateConfig(actor_id, config) => {
-                connection.update_config(actor_id, config).await
             }
             FromServer::ActorEquip(
                 actor_id,

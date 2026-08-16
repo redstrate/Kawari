@@ -482,7 +482,7 @@ pub enum ClientZoneIpcData {
         #[br(map = read_string)]
         #[bw(map = write_string)]
         name: String,
-        unk2: [u8; 7], // Unknown data, likely garbage since several other client opcodes have been discovered to leave garbage behind around name strings*/
+        unk2: [u8; 7], // Unknown data, likely garbage since several other client opcodes have been discovered to leave garbage behind around name strings
     },
     CreateNewCrossworldLinkshell {
         /// The name of the cross-world linkshell.
@@ -661,7 +661,8 @@ pub enum ClientZoneIpcData {
     },
     UnkMarketBoardRequest2 {
         unk1: u32,
-        request_id: u32, // TODO: technically a byte
+        #[brw(pad_after = 3)] // unused
+        request_id: u8,
     },
 }
 
