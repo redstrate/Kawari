@@ -41,15 +41,16 @@ use crate::{
 };
 use kawari::{
     common::{
-        CharacterMode, DEAD_DESPAWN_TIME, DirectorEvent, DirectorTrigger, EventState, HandlerId,
-        HandlerType, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MOB_RESPAWN_TIME, ObjectId,
-        ObjectTypeId, ObjectTypeKind, Position, WarpType, determine_initial_pop_range,
-        euler_to_direction, is_private_area,
+        AUTO_ATTACK_RATE, CharacterMode, DEAD_DESPAWN_TIME, DirectorEvent, DirectorTrigger,
+        EventState, HandlerId, HandlerType, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS,
+        MOB_RESPAWN_TIME, ObjectId, ObjectTypeId, ObjectTypeKind, Position, WarpType,
+        determine_initial_pop_range, euler_to_direction, is_private_area,
     },
     config::get_config,
     ipc::zone::{
-        ActorControlCategory, ClientTriggerCommand, Condition, Conditions, EnmityList, Hater,
-        HaterList, PlayerEnmity, ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPreset,
+        ActionRequest, ActionType, ActorControlCategory, ClientTriggerCommand, Condition,
+        Conditions, EnmityList, Hater, HaterList, PlayerEnmity, ServerZoneIpcData,
+        ServerZoneIpcSegment, WaymarkPreset,
     },
 };
 
@@ -275,6 +276,7 @@ fn server_logic_tick(
             let mut actors_now_gimmick_jumping = Vec::new();
             let mut actors_now_inside_instance_exits = Vec::new();
             let mut actors_now_outside_instance_entrances = Vec::new();
+            let mut actors_autoattacking = Vec::new();
 
             // Player area stuffs
             for (id, actor) in &instance.actors {
@@ -283,6 +285,8 @@ fn server_logic_tick(
                     conditions,
                     executing_gimmick_jump,
                     inside_instance_exit: inside_instance_entrance,
+                    autoattack_target,
+                    autoattack_timing,
                     ..
                 } = actor
                 else {
@@ -338,6 +342,16 @@ fn server_logic_tick(
                 let Some((handle, state)) = network.get_by_actor_mut(*id) else {
                     continue;
                 };
+
+                // TODO: find a better place for this
+                if autoattack_target.is_some() {
+                    // Schedule any pending auto-attacks:
+                    let should_auto_attack =
+                        (*autoattack_timing % (AUTO_ATTACK_RATE + 1)) == AUTO_ATTACK_RATE;
+                    if should_auto_attack {
+                        actors_autoattacking.push(*id);
+                    }
+                }
 
                 // Check for overlapping map ranges
                 let overlapping_ranges =
@@ -537,6 +551,39 @@ fn server_logic_tick(
                 }
             }
 
+            // Process any auto-attacks
+            for actor in &actors_autoattacking {
+                let Some(NetworkedActor::Player {
+                    autoattack_target,
+                    spawn,
+                    ..
+                }) = instance.find_actor_mut(*actor)
+                else {
+                    continue;
+                };
+
+                let request = ActionRequest {
+                    action_id: 7, // TODO: Unsure if this is actually the correct player auto-attack
+                    action_type: ActionType::Action,
+                    rotation1: spawn.common.rotation,
+                    target: ObjectTypeId {
+                        object_id: autoattack_target.unwrap(),
+                        object_type: ObjectTypeKind::EObjOrNpc,
+                    },
+                    ..Default::default()
+                };
+
+                instance.insert_task(
+                    ClientId::default(),
+                    *actor,
+                    Duration::from_secs_f32(0.0),
+                    QueuedTaskData::CastAction {
+                        request: request.clone(),
+                        interruptible: false,
+                    },
+                );
+            }
+
             // Set players as gimmick jumping, as the client does *not* send position updates during it.
             for actor in &actors_now_gimmick_jumping {
                 let Some(NetworkedActor::Player {
@@ -577,9 +624,17 @@ fn server_logic_tick(
 
             // NOTE: I know this isn't retail accurate
             for (id, actor) in &mut instance.actors {
-                if let NetworkedActor::Player { spawn, .. } = actor {
+                if let NetworkedActor::Player {
+                    spawn,
+                    autoattack_timing,
+                    ..
+                } = actor
+                {
                     let in_combat = haters.contains_key(id);
                     let is_dead = spawn.common.health_points == 0;
+
+                    // TODO: find a better place for this
+                    *autoattack_timing += 1;
 
                     // Don't heal people who are in combat or dead, please.
                     if in_combat || is_dead {
@@ -2001,6 +2056,25 @@ pub async fn server_main_loop(
                                     );
                                 }
                                 _ => tracing::info!("DirectorTrigger: {handler_id} {trigger:?}"),
+                            }
+                        }
+                        ClientTriggerCommand::ToggleAutoAttack { on, target, .. } => {
+                            let mut data = data.lock();
+                            if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                                && let Some(actor) = instance.find_actor_mut(from_actor_id)
+                            {
+                                match actor {
+                                    NetworkedActor::Player {
+                                        autoattack_target, ..
+                                    } => {
+                                        if *on {
+                                            *autoattack_target = Some(*target);
+                                        } else {
+                                            *autoattack_target = None;
+                                        }
+                                    }
+                                    _ => unreachable!(),
+                                }
                             }
                         }
                         _ => tracing::warn!("Unknown client trigger {:#?}", trigger),

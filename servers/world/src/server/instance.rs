@@ -355,6 +355,8 @@ impl Instance {
                 remove_cooldowns: false,
                 last_combo_action: 0,
                 combo_sequence: 0,
+                autoattack_target: None,
+                autoattack_timing: 0,
             },
         );
     }

@@ -8,7 +8,7 @@ use std::{
 use glam::Vec3A;
 use kawari::{
     common::{
-        ENEMY_AUTO_ATTACK_RATE, JumpState, MINIMUM_PATHFINDING_DISTANCE, MOB_WANDER_TIME,
+        AUTO_ATTACK_RATE, JumpState, MINIMUM_PATHFINDING_DISTANCE, MOB_WANDER_TIME,
         MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
         TimepointData,
     },
@@ -308,9 +308,8 @@ pub fn npc_behavior(
                 if spawn.common.target_id.object_id.is_valid() && timeline.autoattack_action_id != 0
                 {
                     // Schedule any pending auto-attacks:
-                    let should_auto_attack = (timeline_position_seconds
-                        % (ENEMY_AUTO_ATTACK_RATE + 1))
-                        == ENEMY_AUTO_ATTACK_RATE;
+                    let should_auto_attack =
+                        (timeline_position_seconds % (AUTO_ATTACK_RATE + 1)) == AUTO_ATTACK_RATE;
                     if should_auto_attack {
                         let request = ActionRequest {
                             action_id: timeline.autoattack_action_id,

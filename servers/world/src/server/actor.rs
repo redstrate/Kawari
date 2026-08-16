@@ -77,6 +77,10 @@ pub enum NetworkedActor {
         last_combo_action: u16,
         /// Sequence into the current combo.
         combo_sequence: u8,
+        /// Their current auto-attack target, if any.
+        autoattack_target: Option<ObjectId>,
+        /// In half-seconds (the current server logic tick.)
+        autoattack_timing: i64,
     },
     Npc {
         state: NpcState,

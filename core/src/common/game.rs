@@ -65,8 +65,8 @@ pub const DEAD_DESPAWN_TIME: Duration = Duration::from_secs(2);
 /// Maximum number of seconds until rested EXP is full. This is 7 days.
 pub const MAXIMUM_RESTED_EXP: i32 = 604800;
 
-/// Number of seconds between an enemy's auto attacks. No idea how close this is to retail.
-pub const ENEMY_AUTO_ATTACK_RATE: i64 = 3;
+/// Number of seconds betwee auto attacks. No idea how close this is to retail.
+pub const AUTO_ATTACK_RATE: i64 = 3;
 
 /// Used to check whether the striking dummy NPC should be invincible.
 pub const STRIKING_DUMMY_NAME_ID: u32 = 541;

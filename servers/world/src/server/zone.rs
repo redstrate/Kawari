@@ -1104,6 +1104,8 @@ pub fn handle_zone_messages(
                 remove_cooldowns: false,
                 last_combo_action: 0,
                 combo_sequence: 0,
+                autoattack_target: None,
+                autoattack_timing: 0,
             };
 
             true
