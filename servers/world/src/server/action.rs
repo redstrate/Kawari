@@ -108,6 +108,7 @@ pub fn execute_action(
         content_data: LuaContent::default(),
         base_parameters: BaseParameters::default(),
     };
+    // TODO: maybe move these misc effects to their own dedicated functions or something? I had some trouble remembering where this was
     // We need to set the player's mount id in their common spawn so both pillion works and also letting players see this existing actor's mount when they spawn.
     if request.action_type == ActionType::Mount {
         let mut data = data.lock();
@@ -129,6 +130,22 @@ pub fn execute_action(
             let msg = FromServer::SetCurrentMount(common.current_mount);
             network.send_to_by_actor_id(from_actor_id, msg, DestinationNetwork::ZoneClients);
         }
+    }
+
+    // We need to set the ornament so new players see it
+    if request.action_type == ActionType::Ornament {
+        let mut data = data.lock();
+        let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+            return;
+        };
+
+        let Some(actor) = instance.find_actor_mut(from_actor_id) else {
+            return;
+        };
+
+        let common = actor.get_common_spawn_mut();
+
+        common.ornament_id = request.action_id as u16;
     }
 
     let in_combo;
@@ -190,6 +207,9 @@ pub fn execute_action(
             }
             ActionType::Mount => {
                 execute_mount_action(network.clone(), from_actor_id, &request, actor, instance)
+            }
+            ActionType::Ornament => {
+                execute_ornament_action(network.clone(), from_actor_id, &request, actor, instance)
             }
             _ => unimplemented!(),
         };
@@ -797,6 +817,56 @@ pub fn execute_mount_action(
         instance,
         FromServer::PacketSegment(ipc, from_actor_id),
         DestinationNetwork::ZoneClients,
+    );
+
+    None
+}
+
+/// Handles ornament-related actions.
+pub fn execute_ornament_action(
+    network: Arc<Mutex<NetworkState>>,
+    from_actor_id: ObjectId,
+    request: &ActionRequest,
+    actor: &NetworkedActor,
+    instance: &Instance,
+) -> Option<EffectsBuilder> {
+    let mut network = network.lock();
+
+    let common_spawn = actor.get_common_spawn();
+
+    let effects = [TargetEffect::default(); 8]; // TODO: is there an ornament effect?
+
+    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActionEffect1(ActionEffect1 {
+        animation_target_id: request.target,
+        target: request.target,
+        action_id: request.action_id,
+        animation_lock: ANIMATION_LOCK_TIME,
+        rotation: common_spawn.rotation,
+        spell_id: request.action_id as u16,
+        source_sequence: request.sequence,
+        target_count: 1,
+        effects,
+        action_type: request.action_type,
+        global_sequence: network.global_action_sequence,
+        ..Default::default()
+    }));
+    network.global_action_sequence += 1;
+
+    network.send_in_range_inclusive_instance(
+        from_actor_id,
+        instance,
+        FromServer::PacketSegment(ipc, from_actor_id),
+        DestinationNetwork::ZoneClients,
+    );
+
+    // TODO: set in commonspawn for new spawns?
+
+    network.send_ac_in_range_inclusive_instance(
+        instance,
+        from_actor_id,
+        ActorControlCategory::SetOrnament {
+            id: request.action_id,
+        },
     );
 
     None

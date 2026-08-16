@@ -817,6 +817,12 @@ pub enum ActorControlCategory {
         unlocked: bool,
     },
 
+    #[brw(magic = 940u32)]
+    SetOrnament {
+        /// Index into the Ornament Excel sheet.
+        id: u32,
+    },
+
     #[brw(magic = 944u32)]
     SetGlasses {
         // Guessed
