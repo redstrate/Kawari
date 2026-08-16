@@ -1,4 +1,5 @@
--- Test script for "If I Only Had a Soul" fATE
+-- Test script for "If I Only Had a Soul" FATE
+
 BNPC_MOTIVATION = 4309315
 
 function onSetup(fate)

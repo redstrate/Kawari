@@ -204,7 +204,7 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn new(id: u16, game_data: &mut GameData) -> Self {
+    pub fn new(id: u16, game_data: &mut GameData, explorer_mode: bool) -> Self {
         let mut instance = Instance {
             zone: Zone::load(game_data, id),
             weather_id: game_data.get_weather(id as u32).unwrap_or_default() as u16,
@@ -241,14 +241,16 @@ impl Instance {
         }
 
         // Load initial event objects into instance
-        for (object, layer_name) in instance.zone.get_event_objects(game_data, false) {
+        for (object, layer_name) in instance.zone.get_event_objects(game_data, explorer_mode) {
             instance.insert_object(object.entity_id, object, layer_name);
         }
 
         // Load initial NPCs into instance
-        let config = get_config();
-        for npc in instance.zone.get_npcs(game_data) {
-            instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
+        if !explorer_mode {
+            let config = get_config();
+            for npc in instance.zone.get_npcs(game_data) {
+                instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
+            }
         }
 
         // Determine the starting set of FATEs

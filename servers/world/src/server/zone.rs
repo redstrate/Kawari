@@ -531,9 +531,13 @@ impl Zone {
                         };
 
                         // Hide shortcuts and exits, these will be spawned by the director.
-                        let event_state = if eobj.parent_data.base_id == EOBJ_SHORTCUT
+                        let event_state = if (eobj.parent_data.base_id == EOBJ_SHORTCUT
+                            && !explorer_mode)
                             || eobj.parent_data.base_id == EOBJ_EXIT
                         {
+                            EventState::OFF | EventState::UNK2 | EventState::UNK3
+                        } else if explorer_mode {
+                            // HACK: disable all walls in Explorer Mode
                             EventState::OFF | EventState::UNK2 | EventState::UNK3
                         } else {
                             EventState::empty()
@@ -565,7 +569,9 @@ impl Zone {
                         }
                     }
 
-                    if let LayerEntryData::Treasure(treasure) = &object.data {
+                    if let LayerEntryData::Treasure(treasure) = &object.data
+                        && !explorer_mode
+                    {
                         self.cached_treasure.insert(
                             treasure.parent_data.base_id,
                             SpawnTreasure {

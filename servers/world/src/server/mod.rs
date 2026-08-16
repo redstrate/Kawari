@@ -111,7 +111,8 @@ impl WorldServer {
                 .any(|x| x.zone.id == zone_id && x.content_finder_condition_id == 0)
             {
                 tracing::info!("Creating new public instance for zone {zone_id}!");
-                self.instances.push(Instance::new(zone_id, game_data));
+                self.instances
+                    .push(Instance::new(zone_id, game_data, false));
             }
 
             self.instances
@@ -120,7 +121,8 @@ impl WorldServer {
                 .unwrap()
         } else {
             tracing::info!("Creating new private instance for zone {zone_id}!");
-            self.instances.push(Instance::new(zone_id, game_data));
+            self.instances
+                .push(Instance::new(zone_id, game_data, false));
             self.instances.last_mut().unwrap()
         }
     }
@@ -146,7 +148,11 @@ impl WorldServer {
         content_settings: DutyFinderSetting,
         game_data: &mut GameData,
     ) -> Option<&mut Instance> {
-        let mut instance = Instance::new(zone_id, game_data);
+        let mut instance = Instance::new(
+            zone_id,
+            game_data,
+            content_settings.contains(DutyFinderSetting::EXPLORER_MODE),
+        );
         instance.content_finder_condition_id = content_finder_condition;
 
         if let Some(intended_use) = TerritoryIntendedUse::from_repr(instance.zone.intended_use)
