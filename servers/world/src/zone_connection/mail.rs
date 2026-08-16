@@ -222,7 +222,7 @@ impl ZoneConnection {
                 items,
             );
 
-            recipient_info = db.find_character_ids(Some(recipient_content_id), None);
+            recipient_info = db.find_character(Some(recipient_content_id), None);
         }
 
         if need_to_send_inventory {

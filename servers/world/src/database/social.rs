@@ -91,7 +91,7 @@ impl WorldDatabase {
     }
 
     pub fn find_party_member(&mut self, for_content_id: u64) -> PartyMember {
-        let found_character = self.find_character_ids(Some(for_content_id), None).unwrap();
+        let found_character = self.find_character(Some(for_content_id), None).unwrap();
 
         let config = get_config();
 

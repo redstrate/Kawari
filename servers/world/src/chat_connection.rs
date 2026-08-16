@@ -184,7 +184,7 @@ impl ChatConnection {
 
             // Tells only give us the recipient's name which isn't very helpful, so we need further info.
             if let Some(recipient_id) =
-                db.find_character_ids(None, Some(tell_data.recipient_name.clone()))
+                db.find_character(None, Some(tell_data.recipient_name.clone()))
             {
                 recipient_ids = recipient_id;
                 let mask = db.determine_online_status_mask(recipient_ids.content_id);

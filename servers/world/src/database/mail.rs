@@ -76,7 +76,7 @@ impl WorldDatabase {
             };
 
             preview.sender_name = if let Some(sender_info) =
-                self.find_character_ids(Some(letter.sender_content_id as u64), None)
+                self.find_character(Some(letter.sender_content_id as u64), None)
             {
                 sender_info.name.clone()
             } else if letter.sender_content_id as u64 == u64::MAX {

@@ -22,8 +22,7 @@ use kawari::{
 
 impl WorldDatabase {
     /// Returns a row from the Character table, searching either with a content id or a character's name. When sending tells, the ChatConnection is only given a name from the game client, so it needs to pull data in this fashion.
-    // TODO: What's a better name for this function?
-    pub fn find_character_ids(
+    pub fn find_character(
         &mut self,
         for_content_id: Option<u64>,
         for_name: Option<String>,

@@ -180,7 +180,7 @@ impl ZoneConnection {
                 return LogMessageType::UnableToInviteToCWLS;
             }
 
-            let Some(target_ids) = db.find_character_ids(Some(target_content_id), None) else {
+            let Some(target_ids) = db.find_character(Some(target_content_id), None) else {
                 return LogMessageType::UnableToInviteToCWLS;
             };
 
@@ -477,7 +477,7 @@ impl ZoneConnection {
                 return;
             }
 
-            target_ids = db.find_character_ids(Some(target_content_id), None);
+            target_ids = db.find_character(Some(target_content_id), None);
         }
         if let Some(ref target_ids) = target_ids
             && target_ids.actor_id.is_valid()
@@ -520,8 +520,7 @@ impl ZoneConnection {
                 {
                     let mut db = self.database.lock();
 
-                    let Some(found_name) = db.find_character_ids(Some(possible_successor), None)
-                    else {
+                    let Some(found_name) = db.find_character(Some(possible_successor), None) else {
                         return;
                     };
 
@@ -651,7 +650,7 @@ impl ZoneConnection {
         {
             let mut db = self.database.lock();
 
-            let Some(target_ids) = db.find_character_ids(Some(content_id), None) else {
+            let Some(target_ids) = db.find_character(Some(content_id), None) else {
                 return;
             };
 

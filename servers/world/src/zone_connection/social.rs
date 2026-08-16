@@ -93,7 +93,7 @@ impl ZoneConnection {
         let inviter_info;
         {
             let mut db = self.database.lock();
-            inviter_info = db.find_character_ids(Some(inviter_content_id), None);
+            inviter_info = db.find_character(Some(inviter_content_id), None);
         }
 
         if let Some(inviter_info) = inviter_info {
@@ -223,7 +223,7 @@ impl ZoneConnection {
             } else {
                 None
             };
-            recipient_info = db.find_character_ids(content_id, character_name);
+            recipient_info = db.find_character(content_id, character_name);
         }
 
         let Some(recipient_info) = recipient_info else {
