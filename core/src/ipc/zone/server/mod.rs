@@ -181,6 +181,9 @@ pub use mail::{
 mod aoe_effect;
 pub use aoe_effect::AoeEffect8;
 
+mod duty_support_information;
+pub use duty_support_information::DutySupportInformation;
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_bool_from, read_string,
     write_bool_as, write_string,
@@ -723,12 +726,7 @@ pub enum ServerZoneIpcData {
         unk: [u8; 16],
     },
     TrustInformation(TrustInformation),
-    DutySupportInformation {
-        /// List indices into the DawnContent Excel sheet.
-        #[br(count = 80)]
-        #[bw(pad_size_to = 80)]
-        available_content: Vec<u8>,
-    },
+    DutySupportInformation(DutySupportInformation),
     PortraitsInformation {
         unk: [u8; 56],
     },

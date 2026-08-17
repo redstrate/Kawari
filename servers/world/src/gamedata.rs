@@ -14,6 +14,7 @@ use icarus::ContentDirectorManagedSG::ContentDirectorManagedSGSheet;
 use icarus::ContentFinderCondition::ContentFinderConditionSheet;
 use icarus::CraftAction::CraftActionSheet;
 use icarus::CustomTalk::CustomTalkSheet;
+use icarus::DawnContent::DawnContentSheet;
 use icarus::ENpcBase::ENpcBaseSheet;
 use icarus::EObj::EObjSheet;
 use icarus::Emote::EmoteSheet;
@@ -106,6 +107,7 @@ pub struct GameData {
     pub gathering_item_level_convert_table_sheet: GatheringItemLevelConvertTableSheet,
     pub public_content_sheet: PublicContentSheet,
     pub fate_sheet: FateSheet,
+    pub dawn_content_sheet: DawnContentSheet,
 
     pub gimmick_rect_lookup: HashMap<u32, u32>,
     pub fate_event_range_lookup: HashMap<u32, u32>,
@@ -372,6 +374,9 @@ impl GameData {
         let fate_sheet =
             FateSheet::read_from(&mut resource_resolver, config.world.language()).unwrap();
 
+        let dawn_content_sheet =
+            DawnContentSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
         let mut gimmick_rect_lookup = HashMap::new();
         for (id, row) in gimmick_rect_sheet.into_iter().flatten_subrows() {
             gimmick_rect_lookup.insert(row.LayoutID, id);
@@ -418,6 +423,7 @@ impl GameData {
             fate_sheet,
             gimmick_rect_lookup,
             fate_event_range_lookup,
+            dawn_content_sheet,
         }
     }
 
@@ -1704,6 +1710,16 @@ impl GameData {
     pub fn get_fate_rule(&mut self, id: u32) -> Option<FateRule> {
         let row = self.fate_sheet.row(id)?;
         FateRule::from_repr(row.Rule)
+    }
+
+    /// Returns the list of ContentFinderCondition IDs in DawnContent.
+    pub fn list_dawn_content_content_finder_conditions(&mut self) -> Vec<(u32, u32)> {
+        self.dawn_content_sheet
+            .into_iter()
+            .flatten_subrows()
+            .map(|x| (x.0, x.1.Content))
+            .skip(1) // Don't consider the first empty row
+            .collect()
     }
 }
 

@@ -4,9 +4,9 @@ use std::time::{Instant, SystemTime};
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    ContainerType, DEBUG_COMMAND_TRIGGER, FestivalId, HandlerId, HandlerType, ItemOperationKind,
-    LogMessageType, MaxEx, ObjectId, ObjectTypeId, ObjectTypeKind, PlayerStateFlags1,
-    PlayerStateFlags2, PlayerStateFlags3, Position, QuestSpecialFlags, WarpType,
+    ContainerType, DEBUG_COMMAND_TRIGGER, FestivalId, HandlerId, HandlerType, InstanceContentType,
+    ItemOperationKind, LogMessageType, MaxEx, ObjectId, ObjectTypeId, ObjectTypeKind,
+    PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position, QuestSpecialFlags, WarpType,
     calculate_max_level,
 };
 use kawari::config::get_config;
@@ -17,10 +17,10 @@ use kawari::ipc::chat::ClientChatIpcData;
 
 use kawari::ipc::zone::{
     ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
-    CrossRealmListings, DutyFinderSetting, EventType, FurnitureTranslatedForObserver, ItemInfo,
-    LinkshellInviteResponse, MarketBoardHistory, MarketBoardHistoryEntry, MarketBoardItem,
-    OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType,
-    TrustContent, TrustInformation,
+    CrossRealmListings, DutyFinderSetting, DutySupportInformation, EventType,
+    FurnitureTranslatedForObserver, ItemInfo, LinkshellInviteResponse, MarketBoardHistory,
+    MarketBoardHistoryEntry, MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup,
+    SceneFlags, SearchInfo, SocialListRequestType, TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -1109,11 +1109,44 @@ async fn process_packet(
                                     connection.send_ipc_self(ipc).await;
                                 }
                                 ClientTriggerCommand::OpenDutySupportWindow => {
+                                    let mut available_content =
+                                        Vec::with_capacity(DutySupportInformation::INDICE_COUNT);
+                                    {
+                                        let mut game_data = connection.gamedata.lock();
+                                        let content_finder_conditions =
+                                            game_data.list_dawn_content_content_finder_conditions();
+
+                                        for (i, cfc) in content_finder_conditions {
+                                            let instance_id = game_data
+                                                .find_content_for_content_finder_id(cfc as u16)
+                                                .unwrap();
+                                            let content_type = game_data
+                                                .find_type_for_content(instance_id)
+                                                .unwrap();
+                                            let unlocked = match content_type {
+                                                InstanceContentType::Dungeon => connection
+                                                    .player_data
+                                                    .content
+                                                    .unlocked_dungeons
+                                                    .contains(instance_id as u32 - 1),
+                                                InstanceContentType::Raid => connection
+                                                    .player_data
+                                                    .content
+                                                    .unlocked_raids
+                                                    .contains(instance_id as u32 - 30001),
+                                                _ => false,
+                                            };
+                                            if unlocked {
+                                                available_content.push(i as u8);
+                                            }
+                                        }
+                                    }
+
                                     // We have to send at least one available duty to the client, otherwise it crashes.
                                     let ipc = ServerZoneIpcSegment::new(
-                                        ServerZoneIpcData::DutySupportInformation {
-                                            available_content: vec![1],
-                                        },
+                                        ServerZoneIpcData::DutySupportInformation(
+                                            DutySupportInformation { available_content },
+                                        ),
                                     );
                                     connection.send_ipc_self(ipc).await;
                                 }
