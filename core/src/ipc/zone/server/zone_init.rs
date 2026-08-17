@@ -42,7 +42,7 @@ bitflags! {
         /// Displays the "You successfully travel to <world name>" text on-screen, and probably does other things.
         const WORLD_TRAVEL = 0x100;
 
-        /// Unsure if it's purpose, but sets `IsCurrentWeathjerForced` and `IsNextWeatherForced` in the client.
+        /// Unsure if it's purpose, but sets `IsCurrentWeatherForced` and `IsNextWeatherForced` in the client.
         const FORCE_WEATHER = 0x200;
     }
 }

@@ -211,8 +211,7 @@ impl ZoneConnection {
 
         // Init Zone
         {
-            let mut flags = if true {
-                // TODO: RESTORE RESTORE RESTORE INITIAL LOGIN
+            let mut flags = if self.initial_login {
                 ZoneInitFlags::INITIAL_LOGIN
             } else if bound_by_duty {
                 ZoneInitFlags::INSTANCED_CONTENT | ZoneInitFlags::UNK5
@@ -278,8 +277,7 @@ impl ZoneConnection {
             .await;
         }
 
-        if true {
-            // TODO: RESTORE RESTORE RESTORE INITIAL LOGIN
+        if self.initial_login {
             self.send_quest_information().await;
             self.send_crafting_gathering_information().await;
         }
@@ -412,6 +410,8 @@ impl ZoneConnection {
                 self.player_data.character.actor_id,
             ))
             .await;
+
+        self.initial_login = false;
     }
 
     pub async fn warp(&mut self, warp_id: u32) {

@@ -187,6 +187,7 @@ async fn initial_setup(
                     dyeing_information: None,
                     marketboard_request_item_id: 0,
                     hide_spectator_ui: false,
+                    initial_login: true,
                 };
 
                 // Handle setup before passing off control to the zone connection.
