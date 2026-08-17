@@ -1718,6 +1718,25 @@ async fn process_packet(
                                         ))
                                         .await;
                                 }
+                                ClientTriggerCommand::RegisterDutySupport {
+                                    dawn_content_id,
+                                    ..
+                                } => {
+                                    let content_finder_condition_id;
+                                    {
+                                        let mut gamedata = connection.gamedata.lock();
+                                        content_finder_condition_id = gamedata
+                                            .get_dawn_content_cfc_id(dawn_content_id)
+                                            .unwrap();
+                                    }
+
+                                    connection
+                                        .register_for_content(
+                                            [content_finder_condition_id as u16, 0, 0, 0, 0],
+                                            DutyFinderSetting::default(),
+                                        )
+                                        .await;
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection

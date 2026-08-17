@@ -1721,6 +1721,11 @@ impl GameData {
             .skip(1) // Don't consider the first empty row
             .collect()
     }
+
+    /// Returns the ContentFinderCondition for this DawnContent.
+    pub fn get_dawn_content_cfc_id(&mut self, id: u32) -> Option<u32> {
+        Some(self.dawn_content_sheet.row(id)?.Content)
+    }
 }
 
 impl mlua::UserData for GameData {

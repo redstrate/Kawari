@@ -497,6 +497,17 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 2653u32)]
     OpenDutySupportWindow,
 
+    /// The client registers for a content in the Duty Support window.
+    #[brw(magic = 2654u32)]
+    RegisterDutySupport {
+        /// Index into the DawnContent Excel sheet.
+        dawn_content_id: u32,
+        unk1: u32,
+        unk2: u32,
+        unk3: u32,
+        unk4: u32,
+    },
+
     /// The client opens the Portrait window.
     #[brw(magic = 3200u32)]
     OpenPortraitsWindow,
