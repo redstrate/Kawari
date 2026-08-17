@@ -121,6 +121,16 @@ pub enum TargetEffectKind {
     /// Play this VFX.
     #[brw(magic = 59u8)]
     PlayVFX { unk: [u8; 5], effect_id: u16 },
+    /// Seen with the Gyshal Greens item.
+    #[brw(magic = 61u8)]
+    SummonCompanion {
+        param0: u8,
+        param1: u8,
+        param2: u8,
+        param3: u8,
+        param4: u8,
+        value: u16,
+    },
     /// Seen in the Summon Carbuncle action.
     #[brw(magic = 62u8)]
     SummonPet { unk: [u8; 7] },

@@ -1,3 +1,4 @@
+ITEM_ACTION_TYPE_GYSHAL_GREENS = 851
 ITEM_ACTION_TYPE_MINION = 853
 ITEM_ACTION_TYPE_FANTASIA = 1326 -- this is also used elsewhere, not sure what
 ITEM_ACTION_TYPE_ORCHESTRION = 25183
@@ -14,6 +15,8 @@ function dispatchItem(player, id, action_type, action_data, additional_data, is_
         return runAction("items/Orchestrion.lua", additional_data)
     elseif action_type == ITEM_ACTION_TYPE_FACEWEAR then
         return runAction("items/Facewear.lua", additional_data)
+    elseif action_type == ITEM_ACTION_TYPE_GYSHAL_GREENS then
+        return runAction("items/GyshalGreens.lua", additional_data)
     -- Otherwise, check if our item belongs to the Seasonal Miscellany or Miscellany item categories and has a vfx or not. Examples of ones that do play vfx: DAM, peach confetti. Examples of ones that don't play vfx: Realm Reborn Red, Heavenscracker.
     -- TODO: This may not be the best way but this seems to work for now
     elseif is_misc and has_vfx then

@@ -1067,35 +1067,6 @@ async fn process_packet(
                                         })
                                         .await;
 
-                                    // Then these are also sent!
-                                    connection
-                                        .actor_control_self(ActorControlCategory::SetPetEntityId {
-                                            unk1: 0,
-                                        })
-                                        .await;
-
-                                    connection
-                                        .actor_control_self(ActorControlCategory::CompanionUnlock {
-                                            unk1: 0,
-                                            unk2: 0,
-                                            unk3: 0,
-                                            unk4: 0,
-                                            unk5: 0,
-                                            unk6: 0,
-                                        })
-                                        .await;
-
-                                    connection
-                                        .actor_control_self(
-                                            ActorControlCategory::SetPetParameters {
-                                                pet_id: 0,
-                                                unk2: 0,
-                                                unk3: 0,
-                                                unk4: 7,
-                                            },
-                                        )
-                                        .await;
-
                                     // TODO: Remove this `let party_id` in an upcoming party refactor, this is temporary
                                     let party_id = if connection.party_id != 0 {
                                         Some(connection.party_id)

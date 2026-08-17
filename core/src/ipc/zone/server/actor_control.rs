@@ -456,11 +456,18 @@ pub enum ActorControlCategory {
     #[brw(magic = 236u32)]
     MovementRelatedUnk { unk1: u32 },
 
+    /// Updates the summoned status and time remaining of your chocobo companion.
     #[brw(magic = 253u32)]
-    CompanionUnlock {
-        unk1: u32,
-        unk2: u32, // unlocked?
-        unk3: u32,
+    CompanionUpdate {
+        /// When true, the chocobo is marked as "Summoned" in the Companion UI.
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        summoned: bool,
+        #[br(map = read_bool_from::<u32>)]
+        #[bw(map = write_bool_as::<u32>)]
+        set_time_remaining: bool,
+        /// In centiseconds. Only used if `set_time_remaining` is true, for some reason.
+        time_remaining: u32,
         unk4: u32,
         unk5: u32,
         unk6: u32,
@@ -484,6 +491,10 @@ pub enum ActorControlCategory {
         unk3: u32,
     },
 
+    /// Seen while dismissing your chocobo companion.
+    #[brw(magic = 258u32)]
+    DismissCompanion { unk1: u32 },
+
     /// Sets up "pets" like carbuncles.
     #[brw(magic = 260u32)]
     SetPetParameters {
@@ -493,6 +504,13 @@ pub enum ActorControlCategory {
         unk3: u32,
         /// Usually 7?
         unk4: u32,
+    },
+
+    /// Seen while summoning your chocobo companion.
+    #[brw(magic = 264u32)]
+    UnkCompanionRelated {
+        unk1: ObjectId,
+        unk2: u32, // TODO: maybe object type?
     },
 
     #[brw(magic = 270u32)]

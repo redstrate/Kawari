@@ -399,6 +399,66 @@ pub fn execute_action(
                             DestinationNetwork::ZoneClients,
                         );
                     }
+                    TargetEffectKind::SummonCompanion { .. } => {
+                        let Some(actor) = instance.find_actor(from_actor_id) else {
+                            return;
+                        };
+
+                        let mut network = network.lock();
+                        network.send_to_by_actor_id(
+                            from_actor_id,
+                            FromServer::ActorControlSelf(ActorControlCategory::CompanionUpdate {
+                                summoned: true,
+                                set_time_remaining: true,
+                                time_remaining: 180000,
+                                unk4: 0,
+                                unk5: 18,
+                                unk6: 29,
+                            }),
+                            DestinationNetwork::ZoneClients,
+                        );
+
+                        let companion_actor_id = ObjectId(fastrand::u32(..));
+
+                        let config = get_config();
+                        let mut game_data = game_data.lock();
+                        let base_npc = create_npc_common_spawn(
+                            &mut game_data,
+                            952,
+                            0,
+                            None,
+                            actor.get_common_spawn().level as u32,
+                        ); // TODO: hardcoded pet base id/name
+                        instance.insert_npc(
+                            companion_actor_id,
+                            SpawnNpc {
+                                common: CommonSpawn {
+                                    name: "Test Companion".to_string(),
+                                    owner_id: from_actor_id,
+                                    object_kind: ObjectKind::BattleNpc(BattleNpcSubKind::Chocobo),
+                                    level: actor.get_common_spawn().level,
+                                    position: actor.position(),
+                                    rotation: actor.rotation(),
+                                    ..base_npc.common
+                                },
+                                ..base_npc
+                            },
+                            &config,
+                        );
+
+                        // TODO: add to the party list
+
+                        network.send_to_by_actor_id(
+                            from_actor_id,
+                            FromServer::ActorControlSelf(
+                                ActorControlCategory::UnkCompanionRelated {
+                                    unk1: companion_actor_id,
+                                    unk2: 4,
+                                },
+                            ),
+                            DestinationNetwork::ZoneClients,
+                        );
+                    }
                     _ => {}
                 }
             }

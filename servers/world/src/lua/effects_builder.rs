@@ -105,6 +105,18 @@ impl UserData for EffectsBuilder {
                 }));
             Ok(())
         });
+        methods.add_method_mut("summon_companion", |_, this, _: ()| {
+            this.effects
+                .push(TargetEffect(TargetEffectKind::SummonCompanion {
+                    param0: 0,
+                    param1: 0,
+                    param2: 0,
+                    param3: 0,
+                    param4: 0,
+                    value: 1,
+                }));
+            Ok(())
+        });
     }
 }
 
