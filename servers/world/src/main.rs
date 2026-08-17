@@ -1102,8 +1102,8 @@ async fn process_packet(
                                                 trust_content_id: 1, // Holminster Switch
                                                 last_selected_characters: [0xFF; 16],
                                             }],
-                                            levels: [0; 34],
-                                            exp: [0; 34],
+                                            levels: [0; TrustInformation::NUM_CHARACTERS],
+                                            exp: [0; TrustInformation::NUM_CHARACTERS],
                                         }),
                                     );
                                     connection.send_ipc_self(ipc).await;

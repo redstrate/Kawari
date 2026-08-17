@@ -1,8 +1,5 @@
 use binrw::binrw;
 
-// TODO: Document Excel sheets better
-// TODO: Move some values into constants
-
 #[binrw]
 #[derive(Debug, Clone, Default)]
 pub struct TrustContent {
@@ -20,24 +17,32 @@ impl TrustContent {
 #[binrw]
 #[derive(Debug, Clone)]
 pub struct TrustInformation {
-    #[br(count = 32)]
-    #[bw(pad_size_to = TrustContent::SIZE * 32)]
+    #[br(count = Self::NUM_INDICES)]
+    #[bw(pad_size_to = TrustContent::SIZE * Self::NUM_INDICES)]
     /// Which Trust content that you have available.
     /// There must be at least one valid TrustContent, otherwise the window will never show.
     pub available_content: Vec<TrustContent>,
-    #[brw(pad_before = 14)] // empty
     /// Levels for each Trust character.
-    pub levels: [u8; 34],
+    pub levels: [u8; Self::NUM_CHARACTERS],
     /// Current EXP for each Trust character.
-    pub exp: [u32; 34],
+    #[brw(pad_after = 32)]
+    pub exp: [u32; Self::NUM_CHARACTERS],
+}
+
+impl TrustInformation {
+    /// Number of rows of "story content". This is loosely based on the number of <200 rows in the DawnContent Excel sheet.
+    pub const NUM_INDICES: usize = 33;
+
+    /// Number of rows of "story content". This is loosely based on the number of <200 rows in the DawnContent Excel sheet.
+    pub const NUM_CHARACTERS: usize = 27;
 }
 
 impl Default for TrustInformation {
     fn default() -> Self {
         Self {
             available_content: Default::default(),
-            levels: [0; 34],
-            exp: [0; 34],
+            levels: [0; Self::NUM_CHARACTERS],
+            exp: [0; Self::NUM_CHARACTERS],
         }
     }
 }
