@@ -196,8 +196,8 @@ use crate::packet::ServerIpcSegmentHeader;
 use crate::ipc::{
     chat::ChatChannel,
     zone::{
-        PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus, StrategyBoard,
-        StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
+        DutyFinderSetting, PartyMemberEntry, PartyMemberPositions, PartyUpdateStatus,
+        StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode, WaymarkPosition, WaymarkPreset,
     },
 };
 
@@ -401,16 +401,20 @@ pub enum ServerZoneIpcData {
         state1: u8,
         /// The class you registered with. Index into the ClassJob Excel sheet.
         classjob_id: u8,
-        unk1: [u8; 18],
+        unk1: [u8; 6],
+        duty_settings: DutyFinderSetting,
+        unk2: [u8; 4],
         /// The content IDs you registered for. Index into the ContentFinderCondition Excel sheet.
         content_ids: [u16; 5],
-        unk2: [u8; 10],
+        unk3: [u8; 10],
     },
     ContentFinderFound {
-        unk1: [u8; 28],
+        unk1: [u8; 8],
+        duty_settings: DutyFinderSetting,
+        unk2: [u8; 12],
         /// The content ID that popped. Index into the ContentFinderCondition Excel sheet.
         content_id: u16,
-        unk2: [u8; 10],
+        unk3: [u8; 10],
     },
     SpawnObject(SpawnObject),
     ActorGauge {
