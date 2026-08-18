@@ -1726,6 +1726,13 @@ impl GameData {
     pub fn get_dawn_content_cfc_id(&mut self, id: u32) -> Option<u32> {
         Some(self.dawn_content_sheet.row(id)?.Content)
     }
+
+    /// Returns the FateChain and special content information for this FATE.
+    pub fn get_fate_chain_special(&mut self, id: u32) -> Option<(u32, bool)> {
+        let row = self.fate_sheet.row(id)?;
+        // TODO: Unknown8 seems to be a marker for special fates, despite there being another column for that?!
+        Some((row.FATEChain, row.Unknown8))
+    }
 }
 
 impl mlua::UserData for GameData {

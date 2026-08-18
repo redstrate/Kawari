@@ -37,9 +37,10 @@ pub struct FateInstance {
 }
 
 impl FateInstance {
-    pub fn new(fate_id: u32, game_data: &mut GameData) -> Self {
+    pub fn new(fate_id: u32, game_data: &mut GameData) -> Option<Self> {
         let fate_rule = game_data.get_fate_rule(fate_id).unwrap_or_default();
         let fate_state = match fate_rule {
+            FateRule::Invalid => return None,
             FateRule::Gathering => FateState::Preparing,
             _ => FateState::Running,
         };
@@ -86,13 +87,13 @@ impl FateInstance {
             }
         }
 
-        Self {
+        Some(Self {
             fate_id,
             start_timestamp: timestamp_secs(),
             fate_state,
             data,
             motivation_npc: None,
-        }
+        })
     }
 
     pub fn create_unk_fate_packet(&self) -> ServerZoneIpcSegment {

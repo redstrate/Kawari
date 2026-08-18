@@ -271,7 +271,7 @@ fn process_debug_commands(
                 let mut game_data = game_data.lock();
                 instance
                     .fates
-                    .push(FateInstance::new(id.parse().unwrap(), &mut game_data));
+                    .push(FateInstance::new(id.parse().unwrap(), &mut game_data).unwrap());
                 let mut network = network.lock();
                 let fate = instance.fates.last().unwrap().clone();
                 inform_fate_spawn_globally(instance, &mut network, &fate);

@@ -180,23 +180,33 @@ impl Instance {
         }
 
         // Determine the starting set of FATEs
-        // TODO: filter by if they're special event FATEs
         let available_fates: Vec<u32> = instance
             .zone
             .map_ranges
             .iter()
             .filter_map(|x| x.fate)
             .collect();
-        instance.candiate_fates = available_fates.clone();
-        for fate_id in fastrand::choose_multiple(available_fates, MAXIMUM_FATES) {
-            instance.fates.push(FateInstance::new(fate_id, game_data));
-        }
+
+        // Filter all special event FATEs and chained ones for now.
+        instance.candiate_fates = available_fates
+            .iter()
+            .map(|x| *x)
+            .filter(|fate| {
+                let (chain, special) = game_data.get_fate_chain_special(*fate).unwrap_or_default();
+                return chain == 0 && !special;
+            })
+            .collect();
 
         if !instance.candiate_fates.is_empty() {
             instance.directors.push(DirectorData {
                 id: HandlerId::new(HandlerType::Fate, 0xFFFF),
                 ..Default::default()
             });
+        }
+        for fate_id in fastrand::choose_multiple(instance.candiate_fates.clone(), MAXIMUM_FATES) {
+            if let Some(fate) = FateInstance::new(fate_id, game_data) {
+                instance.fates.push(fate);
+            }
         }
 
         instance

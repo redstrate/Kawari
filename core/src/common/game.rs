@@ -1102,8 +1102,9 @@ pub enum FateState {
 #[brw(repr = u8)]
 #[derive(Debug, Clone, Copy, PartialEq, FromRepr, Default)]
 pub enum FateRule {
+    /// Used for FATEs that are no longer in the game, and ones never implemented.
     #[default]
-    Unk0 = 0,
+    Invalid = 0,
     Unk1 = 1,
     /// Gathering items to bring back to the motivation NPC.
     Gathering = 2,
