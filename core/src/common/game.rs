@@ -443,7 +443,6 @@ impl mlua::IntoLua for HandlerType {
 
 /// Helper type that can discerns the type and ID of a handler. This could be an event or a director.
 #[binrw]
-#[brw(little)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct HandlerId(pub u32);
 
@@ -536,7 +535,6 @@ impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sq
 
 // NOTE: When adding a new container type, make sure to add it to InventoryIterator!
 #[binrw]
-#[brw(little)]
 #[brw(repr = u16)]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Display, Deserialize, Serialize)]
 pub enum ContainerType {
@@ -810,7 +808,6 @@ impl std::fmt::Debug for EventState {
 
 // TODO: should we include the param here?
 #[binrw]
-#[brw(little)]
 #[brw(repr = u8)]
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub enum CharacterMode {
@@ -1076,7 +1073,6 @@ impl std::fmt::Debug for DeepDungeonRoomFlag {
 
 /// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Fate/FateContext.cs>.
 #[binrw]
-#[brw(little)]
 #[brw(repr = u32)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FateState {
@@ -1097,7 +1093,6 @@ pub enum FateState {
 
 /// Names for the Rule column in the FATE sheet.
 #[binrw]
-#[brw(little)]
 #[repr(u8)]
 #[brw(repr = u8)]
 #[derive(Debug, Clone, Copy, PartialEq, FromRepr, Default)]
@@ -1224,7 +1219,6 @@ impl std::fmt::Debug for HousingFlag {
 
 /// Helper newtype that can display the name of known festivals.
 #[binrw]
-#[brw(little)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct FestivalId(pub u16);
 

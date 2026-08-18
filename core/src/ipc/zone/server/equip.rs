@@ -3,7 +3,6 @@ use binrw::binrw;
 use crate::common::{LegacyEquipmentModelId, WeaponModelId};
 
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct Equip {
     pub main_weapon_id: WeaponModelId,

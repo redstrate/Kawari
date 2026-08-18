@@ -83,7 +83,6 @@ pub enum ObjectKind {
 // From https://github.com/SapphireServer/Sapphire/blob/bf3368224a00c180cbb7ba413b52395eba58ec0b/src/common/Common.h#L212
 // TODO: Where did they get this list from??
 #[binrw]
-#[brw(little)]
 #[brw(repr = u8)]
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Display, EnumIter, FromRepr)]
@@ -182,7 +181,6 @@ bitflags! {
 }
 
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct CommonSpawn {
     /// Initial target for this character.

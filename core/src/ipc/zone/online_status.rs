@@ -6,7 +6,6 @@ use crate::common::value_to_flag_byte_index_value;
 
 // See https://github.com/aers/FFXIVClientStructs/blob/28d9f0f77fdf388f596ba65768c7d6441e962d06/FFXIVClientStructs/FFXIV/Client/UI/Info/InfoProxyCommonList.cs#L86
 #[binrw]
-#[brw(little)]
 #[brw(repr = u8)]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Default, EnumIter, Eq, FromRepr, Hash, PartialEq)]
@@ -139,7 +138,6 @@ impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sq
 
 /// Represents a 64-bit online status. For possible values, see common_spawn.rs's OnlineStatus enum.
 #[binrw]
-#[brw(little)]
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct OnlineStatusMask {
     flags: [u8; 8],

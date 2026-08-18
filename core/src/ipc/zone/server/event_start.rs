@@ -49,7 +49,6 @@ impl mlua::IntoLua for EventType {
 }
 
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct EventStart {
     pub target_id: ObjectTypeId,

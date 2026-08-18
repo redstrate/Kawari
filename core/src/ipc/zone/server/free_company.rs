@@ -2,7 +2,6 @@ use crate::ipc::zone::server::{read_string, write_string};
 use binrw::binrw;
 
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Default, Clone)]
 pub struct FcHierarchy {
     /// The amount of company members that hold this rank.

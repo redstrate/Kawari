@@ -1,7 +1,6 @@
 use binrw::binrw;
 
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct DutySupportInformation {
     /// List of indices into the DawnContent Excel sheet.

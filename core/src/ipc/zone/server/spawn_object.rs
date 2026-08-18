@@ -9,7 +9,6 @@ use crate::{
 };
 
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Copy, Clone, Default)]
 pub struct SpawnObject {
     /// The object's spawn index. Note that this is a completely separate index from actors.

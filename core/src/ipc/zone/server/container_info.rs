@@ -3,7 +3,6 @@ use binrw::binrw;
 use crate::common::ContainerType;
 
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct ContainerInfo {
     pub sequence: u32,

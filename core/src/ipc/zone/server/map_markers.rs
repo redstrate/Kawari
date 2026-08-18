@@ -6,7 +6,6 @@ use crate::common::HandlerId;
 
 #[derive(Debug, Clone, Default)]
 #[binrw]
-#[brw(little)]
 #[brw(import{max_params: usize})]
 pub struct MapMarkers {
     /// How many markers to update.

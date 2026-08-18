@@ -67,7 +67,6 @@ bitflags! {
 
 #[derive(Debug, Clone, Default)]
 #[binrw]
-#[brw(little)]
 #[brw(import{max_params: usize})]
 #[brw(assert(params.len() <= max_params, "Too many params! {} > {}", params.len(), max_params))]
 pub struct EventScene {

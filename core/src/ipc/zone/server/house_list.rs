@@ -2,7 +2,6 @@ use crate::{common::HousingFlag, ipc::zone::PlotSize};
 use binrw::binrw;
 
 #[binrw]
-#[brw(little)]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct House {
     pub plot_size: PlotSize,
@@ -73,7 +72,6 @@ pub struct HouseExteriorColors {
 }
 
 #[binrw]
-#[brw(little)]
 #[derive(Clone, Debug, Default)]
 pub struct HouseList {
     pub land_id: u16,

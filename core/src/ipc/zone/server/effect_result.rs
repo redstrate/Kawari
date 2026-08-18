@@ -3,7 +3,6 @@ use binrw::binrw;
 use crate::common::ObjectId;
 
 #[binrw]
-#[brw(little)]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct EffectEntry {
     pub index: u8,
@@ -19,7 +18,6 @@ pub struct EffectEntry {
 }
 
 #[binrw]
-#[brw(little)]
 #[derive(Clone, Debug, Default)]
 pub struct EffectResult {
     /// How many actors are covered by this packet.

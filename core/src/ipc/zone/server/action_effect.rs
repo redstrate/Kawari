@@ -219,7 +219,6 @@ impl mlua::FromLua for DamageElement {
 }
 
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Clone, Copy, Default)]
 pub struct TargetEffect(#[brw(pad_size_to = 8)] pub TargetEffectKind);
 
@@ -240,7 +239,6 @@ impl std::fmt::Debug for ActionEffectFlag {
 }
 
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Clone, Default)]
 #[brw(import{max_targets: usize})]
 #[brw(assert(targets.len() <= max_targets, "Too many targets! {} > {}", targets.len(), max_targets))]

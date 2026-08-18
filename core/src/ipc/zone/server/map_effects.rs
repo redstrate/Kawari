@@ -9,7 +9,6 @@ use crate::{
 
 #[derive(Debug, Clone, Default)]
 #[binrw]
-#[brw(little)]
 #[brw(import{max_params: usize})]
 pub struct MapEffects {
     /// Should be the ID of the instance's director.

@@ -3,7 +3,6 @@ use binrw::binrw;
 use crate::common::HandlerId;
 
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Clone)]
 pub struct EventYieldHandler<const MAX_PARAMS: usize> {
     pub handler_id: HandlerId,

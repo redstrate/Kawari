@@ -5,7 +5,6 @@ use serde::Deserialize;
 use strum::FromRepr;
 
 #[binrw]
-#[brw(little)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
 #[cfg_attr(
     feature = "server",
@@ -86,7 +85,6 @@ pub enum ObjectTypeKind {
 
 // See https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Object/GameObject.cs#L238
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ObjectTypeId {
     pub object_id: ObjectId,

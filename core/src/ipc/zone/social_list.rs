@@ -231,7 +231,6 @@ pub struct SocialList {
 
 /// This struct represents information sent when the client adjusts the friend group icon of a friend with SetFriendGroupIcon. The server echoes it back as an acknowledgement in FriendGroupIcon.
 #[binrw]
-#[brw(little)]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FriendGroupIconInfo {
     /// The friend's content id.

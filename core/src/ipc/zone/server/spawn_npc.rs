@@ -23,7 +23,6 @@ impl std::fmt::Debug for CharacterDataFlag {
 }
 
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct SpawnNpc {
     /// Refers to a Game Object ID in the zone, usually an LGB that this enemy is "attached" to.

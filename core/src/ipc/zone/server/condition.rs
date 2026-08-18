@@ -104,7 +104,6 @@ impl mlua::FromLua for Condition {
 }
 
 #[binrw]
-#[brw(little)]
 #[derive(Default, Clone, Copy)]
 pub struct Conditions {
     #[brw(pad_after = 4)] // padding

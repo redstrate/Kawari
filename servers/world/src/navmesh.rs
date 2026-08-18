@@ -10,7 +10,6 @@ use recastnavigation_sys::{
 };
 
 #[binrw]
-#[brw(little)]
 #[derive(Default, Debug, Clone)]
 pub struct NavmeshParams {
     pub orig: [f32; 3],
@@ -22,7 +21,6 @@ pub struct NavmeshParams {
 
 /// Represents a navmesh tile for a zone.
 #[binrw]
-#[brw(little)]
 #[derive(Default, Debug, Clone)]
 pub struct NavmeshTile {
     #[br(temp)]
@@ -36,7 +34,6 @@ pub struct NavmeshTile {
 ///
 /// We reuse the .nvm file extension used by the retail server but these have no relations to ours.
 #[binrw]
-#[brw(little)]
 #[derive(Default, Debug, Clone)]
 pub struct Navmesh {
     /// The zone ID that the navmesh was generated with. Not guaranteed to be valid, it's only here for informative purposes in tools.
@@ -79,7 +76,7 @@ impl Navmesh {
     /// Reads an existing NVM file.
     pub fn from_existing(buffer: &[u8]) -> Option<Self> {
         let mut cursor = Cursor::new(buffer);
-        if let Ok(mut navmesh) = Self::read(&mut cursor) {
+        if let Ok(mut navmesh) = Self::read_le(&mut cursor) {
             navmesh.initialize();
             return Some(navmesh);
         }

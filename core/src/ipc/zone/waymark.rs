@@ -23,7 +23,6 @@ const COORDINATE_FACTOR: f32 = 1000.0;
 /// The game client sends i32s to the server and expects them back in this same format.
 /// We also implement Debug and Display so that PacketAnalyzer can view them correctly.
 #[binrw]
-#[brw(little)]
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct WaymarkCoordinate(pub i32);
 
@@ -66,7 +65,6 @@ pub type WaymarkPositions = [Option<WaymarkPosition>; NUM_WAYMARKERS];
 /// The game's interpretation of a waymark preset. Used by both client and server.
 /// We also provide some helpers below to display the data in a more sensible manner than just raw arrays, as well as convert to a simpler format for us to reuse in our party implementation.
 #[binrw]
-#[brw(little)]
 #[derive(Clone, Copy, Default)]
 pub struct WaymarkPreset {
     /// A bitmask describing which of the waymarks in this preset are enabled.

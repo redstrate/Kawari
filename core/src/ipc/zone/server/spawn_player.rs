@@ -5,7 +5,6 @@ use crate::ipc::zone::online_status::OnlineStatus;
 use super::{CommonSpawn, GameMasterRank};
 
 #[binrw]
-#[brw(little)]
 #[derive(Debug, Clone, Default)]
 pub struct SpawnPlayer {
     /// The account ID of the player.
