@@ -255,6 +255,7 @@ impl ZoneConnection {
                 CharacterMode::default()
             },
             glasses_ids: self.player_data.equipped_glasses_ids,
+            handler_id: self.content_handler_id.unwrap_or_default(),
             ..Default::default()
         }
     }

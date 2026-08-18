@@ -502,6 +502,18 @@ impl Instance {
     pub fn find_fate_by_id(&mut self, id: u32) -> Option<&FateInstance> {
         self.fates.iter().find(|x| x.fate_id == id)
     }
+
+    /// Returns the main (content) handler ID.
+    /// For example, an instance with PublicContent and a FATE director would always return the PublicContent.
+    pub fn content_handler_id(&self) -> Option<HandlerId> {
+        self.directors
+            .iter()
+            .filter(|x| x.id.handler_type().requires_content_id())
+            .map(|x| x.id)
+            .collect::<Vec<_>>()
+            .first()
+            .copied()
+    }
 }
 
 /// Removes the actor from this instance, and terminates the directors from the client.

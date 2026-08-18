@@ -130,7 +130,7 @@ pub enum FromServer {
     // TODO: temporary
     Conditions(Conditions),
     /// To inform the connection of the zone they're loading into.
-    ChangeZone(u16, u16, u16, Position, f32, LuaZone),
+    ChangeZone(u16, u16, u16, Position, f32, LuaZone, Option<HandlerId>),
     /// We need to inform the recipent about the direct message they're receiving.
     TellMessageReceived(ObjectId, TellMessage),
     /// We need to tell our chat connection that our zone connection has disconnected.

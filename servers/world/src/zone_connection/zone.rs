@@ -6,7 +6,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        FestivalId, HouseId, HouseUnit, HousingFlag, LandData, Position, WarpType, timestamp_secs,
+        FestivalId, HandlerId, HouseId, HouseUnit, HousingFlag, LandData, Position, WarpType,
+        timestamp_secs,
     },
     config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
@@ -52,9 +53,11 @@ impl ZoneConnection {
         exit_position: Position,
         exit_rotation: f32,
         lua_zone: &LuaZone,
+        handler_id: Option<HandlerId>,
     ) {
         self.spawned_in = false;
         self.fate_motivation_npcs.clear();
+        self.content_handler_id = handler_id;
 
         let bound_by_duty = content_finder_condition_id != 0;
 

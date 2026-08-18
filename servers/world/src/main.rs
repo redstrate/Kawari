@@ -190,6 +190,7 @@ async fn initial_setup(
                     hide_spectator_ui: false,
                     initial_login: true,
                     fate_motivation_npcs: HashMap::new(),
+                    content_handler_id: None,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -3818,6 +3819,7 @@ async fn process_server_msg(
                 position,
                 rotation,
                 lua_zone,
+                handler_id,
             ) => {
                 connection
                     .handle_zone_change(
@@ -3827,6 +3829,7 @@ async fn process_server_msg(
                         position,
                         rotation,
                         &lua_zone,
+                        handler_id,
                     )
                     .await;
                 lua_player.zone_data = lua_zone;

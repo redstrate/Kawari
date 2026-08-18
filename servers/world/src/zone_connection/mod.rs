@@ -204,6 +204,8 @@ pub struct ZoneConnection {
     pub initial_login: bool,
     /// Mapping of motivation NPCs to their FATE ids for easier lookup. Used in the FATE event handler.
     pub fate_motivation_npcs: HashMap<ObjectId, u16>,
+    /// Used only for the local player's PlayerSpawn.
+    pub content_handler_id: Option<HandlerId>,
 }
 
 impl ZoneConnection {

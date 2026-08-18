@@ -1055,6 +1055,7 @@ fn do_change_zone(
             exit_position.unwrap_or_default(),
             exit_rotation.unwrap_or_default(),
             target_instance.zone.to_lua_zone(target_instance.weather_id),
+            target_instance.content_handler_id(),
         );
         network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
     } else {

@@ -207,6 +207,7 @@ pub struct CommonSpawn {
     /// Index into the Pet Excel sheet. Seems to only be relevant for Carbuncles and other "pets".
     pub pet_id: u32,
     /// The director who spawned and is managing this actor, if any.
+    /// This needs to be set on the local player for various bits of the UI to work.
     pub handler_id: HandlerId,
     /// Seen set to the player owners of Carbuncles and Chocobos.
     pub owner_id: ObjectId,
