@@ -3074,8 +3074,8 @@ async fn process_packet(
                                 });
                             connection.send_ipc_self(ipc).await;
                         }
-                        ClientZoneIpcData::SetFriendGroupIcon { .. } => {
-                            tracing::warn!("Setting friend group icons is unimplemented");
+                        ClientZoneIpcData::SetFriendGroupIcon(icon_info) => {
+                            connection.set_friend_group_icon(icon_info).await;
                         }
                         ClientZoneIpcData::CreateLocalLinkshellRequest { .. } => {
                             tracing::warn!("Creating local linkshells is unimplemented");
