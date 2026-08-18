@@ -23,7 +23,7 @@ use crate::{
         director::{DirectorData, director_tick, handle_director_messages},
         effect::{handle_effect_messages, remove_effect, send_effects_list},
         fate::{fate_tick, start_fate},
-        instance::{Instance, NavmeshGenerationStep, QueuedTaskData},
+        instance::{Instance, NavmeshGenerationStep, QueuedTaskData, remove_actor_from_instance},
         linkshell::handle_linkshell_messages,
         network::{DestinationNetwork, NetworkState},
         party::{
@@ -2279,15 +2279,10 @@ pub async fn server_main_loop(
                         let mut data = data.lock();
 
                         for (_, actor_id) in &actor_ids {
-                            // inform the players in this zone that this actor left
-                            if let Some(current_instance) = data.find_actor_instance_mut(*actor_id)
-                            {
-                                network.remove_actor(current_instance, *actor_id);
-                            }
+                            remove_actor_from_instance(&mut data, &mut network, *actor_id);
                         }
 
                         // then find or create a new instance with the zone id and content finder condition
-                        // TODO: DUTY FINDER SETTING AAA
                         let mut game_data = game_data.lock();
                         if let Some(target_instance) = data.create_instance_for_content(
                             zone_id,
@@ -2302,7 +2297,7 @@ pub async fn server_main_loop(
                                     &mut network,
                                     &mut game_data,
                                     target_instance,
-                                    true, // TODO: this shouldn't be hardcoded
+                                    true,
                                     *client_id,
                                 );
                             }
@@ -2323,10 +2318,7 @@ pub async fn server_main_loop(
                     let mut data = data.lock();
                     let mut network = network.lock();
 
-                    // Inform the players in this zone that this actor left
-                    if let Some(current_instance) = data.find_actor_instance_mut(from_actor_id) {
-                        network.remove_actor(current_instance, from_actor_id);
-                    }
+                    remove_actor_from_instance(&mut data, &mut network, from_actor_id);
 
                     // create a new instance if necessary
                     let instance;

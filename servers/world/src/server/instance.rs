@@ -6,13 +6,14 @@ use std::{
 };
 
 use crate::{
-    ClientId, GameData, Navmesh, StatusEffects,
+    ClientId, FromServer, GameData, Navmesh, StatusEffects,
     server::{
+        WorldServer,
         action::cancel_action,
         actor::{NetworkedActor, NpcState},
         director::DirectorData,
         fate::FateInstance,
-        network::NetworkState,
+        network::{DestinationNetwork, NetworkState},
         zone::Zone,
     },
     zone_connection::{BaseParameters, TeleportQuery},
@@ -24,8 +25,8 @@ use kawari::{
     },
     config::{Config, get_config},
     ipc::zone::{
-        ActionRequest, Conditions, DutyFinderSetting, ServerZoneIpcSegment, SpawnNpc, SpawnObject,
-        SpawnPlayer, SpawnTreasure,
+        ActionRequest, ActorControlCategory, Conditions, DutyFinderSetting, ServerZoneIpcSegment,
+        SpawnNpc, SpawnObject, SpawnPlayer, SpawnTreasure,
     },
 };
 use parking_lot::Mutex;
@@ -190,10 +191,10 @@ impl Instance {
         // Filter all special event FATEs and chained ones for now.
         instance.candiate_fates = available_fates
             .iter()
-            .map(|x| *x)
+            .copied()
             .filter(|fate| {
                 let (chain, special) = game_data.get_fate_chain_special(*fate).unwrap_or_default();
-                return chain == 0 && !special;
+                chain == 0 && !special
             })
             .collect();
 
@@ -497,5 +498,27 @@ impl Instance {
     /// Returns the FATE instance for this ID.
     pub fn find_fate_by_id(&mut self, id: u32) -> Option<&FateInstance> {
         self.fates.iter().find(|x| x.fate_id == id)
+    }
+}
+
+/// Removes the actor from this instance, and terminates the directors from the client.
+pub fn remove_actor_from_instance(
+    data: &mut WorldServer,
+    network: &mut NetworkState,
+    actor_id: ObjectId,
+) {
+    if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
+        network.remove_actor(current_instance, actor_id);
+
+        // Terminate any directors
+        for director in &current_instance.directors {
+            network.send_to_by_actor_id(
+                actor_id,
+                FromServer::ActorControlSelf(ActorControlCategory::TerminateDirector {
+                    handler_id: director.id,
+                }),
+                DestinationNetwork::ZoneClients,
+            );
+        }
     }
 }
