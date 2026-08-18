@@ -49,8 +49,8 @@ use kawari::{
     config::get_config,
     ipc::zone::{
         ActionRequest, ActionType, ActorControlCategory, ClientTriggerCommand, Condition,
-        Conditions, DutyFinderSetting, EnmityList, Hater, HaterList, PlayerEnmity,
-        ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPreset,
+        Conditions, DutyFinderSetting, EnmityList, Hater, HaterList, PlayerEnmity, PrepareZoning,
+        PrepareZoningFlag, ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPreset,
     },
 };
 
@@ -828,13 +828,13 @@ pub async fn server_main_loop(
                     {
                         let mut data = data.lock();
                         for (i, instance) in data.instances.iter_mut().enumerate() {
-                            for task in &instance.queued_task {
-                                if task.point <= Instant::now() {
-                                    tasks_to_execute.push((i, task.clone()));
-                                }
+                            for task in &instance
+                                .queued_task
+                                .extract_if(.., |x| x.point <= Instant::now())
+                                .collect::<Vec<_>>()
+                            {
+                                tasks_to_execute.push((i, task.clone()));
                             }
-                            // Keep all tasks that happen in the future.
-                            instance.queued_task.retain(|x| x.point > Instant::now());
                         }
                     }
 
@@ -2138,6 +2138,48 @@ pub async fn server_main_loop(
                                 }
                             }
                         }
+                        ClientTriggerCommand::AcceptRevive => {
+                            // Currently always warp back to the entrance
+                            let mut data = data.lock();
+                            if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+                                if let Some(actor) = instance.find_actor_mut(from_actor_id) {
+                                    // poor man's revive
+                                    actor.get_common_spawn_mut().health_points =
+                                        actor.get_common_spawn().max_health_points;
+                                }
+                                update_actor_hp_mp(network.clone(), instance, from_actor_id);
+
+                                let mut network = network.lock();
+                                let mut game_data = game_data.lock();
+
+                                let ipc = ServerZoneIpcSegment::new(
+                                    ServerZoneIpcData::PrepareZoning(PrepareZoning {
+                                        territory_type_id: instance.zone.id,
+                                        warp_type: WarpType::Resurrection,
+                                        vfx_id: 113,
+                                        hide_character: 2,
+                                        fade_out_delay: 1,
+                                        flags: PrepareZoningFlag::UNK2,
+                                        ..Default::default()
+                                    }),
+                                );
+
+                                network.send_to_by_actor_id(
+                                    from_actor_id,
+                                    FromServer::PacketSegment(ipc, from_actor_id),
+                                    DestinationNetwork::ZoneClients,
+                                );
+
+                                change_zone_warp_to_entrance(
+                                    &mut network,
+                                    &mut game_data,
+                                    instance,
+                                    false,
+                                    from_id,
+                                    WarpType::Resurrection,
+                                );
+                            }
+                        }
                         _ => tracing::warn!("Unknown client trigger {:#?}", trigger),
                     }
                 }
@@ -2299,6 +2341,7 @@ pub async fn server_main_loop(
                                     target_instance,
                                     true,
                                     *client_id,
+                                    WarpType::Normal,
                                 );
                             }
                         } else {

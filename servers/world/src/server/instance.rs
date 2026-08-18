@@ -20,8 +20,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        DistanceRange, ENTRANCE_CIRCLE_IDS, HandlerId, HandlerType, MAXIMUM_FATES, ObjectId,
-        Position,
+        CharacterMode, DistanceRange, ENTRANCE_CIRCLE_IDS, HandlerId, HandlerType, MAXIMUM_FATES,
+        ObjectId, Position,
     },
     config::{Config, get_config},
     ipc::zone::{
@@ -294,7 +294,10 @@ impl Instance {
                 matches!(y, NetworkedActor::Player { .. })
                     || matches!(y, NetworkedActor::Npc { .. })
             })
-            .filter(|(_, y)| y.get_common_spawn().health_points > 0)
+            .filter(|(_, y)| {
+                y.get_common_spawn().health_points > 0
+                    && y.get_common_spawn().mode != CharacterMode::Dead
+            })
             .map(|(x, y)| {
                 (
                     *x,

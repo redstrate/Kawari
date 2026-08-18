@@ -17,7 +17,7 @@ use crate::{
     lua::LuaZone,
     server::{
         NetworkedActor, WorldServer,
-        actor::create_npc_common_spawn,
+        actor::{create_npc_common_spawn, set_character_mode},
         fate::inform_fate_spawn,
         instance::{Instance, QueuedTaskData, remove_actor_from_instance},
         network::{DestinationNetwork, NetworkState},
@@ -26,9 +26,10 @@ use crate::{
 };
 use kawari::{
     common::{
-        DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS, EOBJ_EXIT,
-        EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, EventState, HandlerType,
-        ObjectId, Position, WARP_DELAY, WarpType, euler_to_direction, internal_housing_row,
+        CharacterMode, DistanceRange, DropIn, DropInLayer, DropInObjectData, ENTRANCE_CIRCLE_IDS,
+        EOBJ_EXIT, EOBJ_HOUSING_ENTRANCE, EOBJ_SHORTCUT, EOBJ_SHORTCUT_EXPLORER_MODE, EventState,
+        HandlerType, ObjectId, Position, WARP_DELAY, WarpType, euler_to_direction,
+        internal_housing_row,
     },
     config::get_config,
     ipc::zone::{
@@ -941,6 +942,7 @@ pub fn change_zone_warp_to_entrance(
     target_instance: &mut Instance,
     needs_init_zone: bool,
     from_id: ClientId,
+    warp_type: WarpType,
 ) {
     let mut destiation_object = None;
 
@@ -979,7 +981,7 @@ pub fn change_zone_warp_to_entrance(
         exit_position,
         exit_rotation,
         from_id,
-        WarpType::Normal,
+        warp_type,
     );
 }
 
@@ -1265,6 +1267,15 @@ pub fn handle_zone_messages(
         ToServer::ZoneIn(from_id, from_actor_id, is_teleport) => {
             tracing::info!("Player {from_id:?} has finally zoned in, informing other players...");
 
+            // HACK: maybe there's states where you're dead, zone in and yet not a raise?
+            let mut data = data.lock();
+            let mut is_raise = false;
+            if let Some(instance) = data.find_actor_instance_mut(*from_actor_id)
+                && let Some(actor) = instance.find_actor_mut(*from_actor_id)
+            {
+                is_raise = actor.get_common_spawn().mode == CharacterMode::Dead;
+            }
+
             // Inform all clients to play the zone in animation
             let mut network = network.lock();
             let mut to_remove = Vec::new();
@@ -1273,7 +1284,7 @@ pub fn handle_zone_messages(
 
                 let category = ActorControlCategory::ZoneIn {
                     warp_finish_anim: 1,
-                    raise_anim: 0,
+                    raise_anim: if is_raise { 1 } else { 0 },
                     unk1: if *is_teleport { 110 } else { 0 },
                 };
 
@@ -1294,7 +1305,6 @@ pub fn handle_zone_messages(
             network.to_remove.append(&mut to_remove);
 
             // Then update the PlayerSpawn so respawning this player doesn't appear invisible again
-            let mut data = data.lock();
             if let Some(instance) = data.find_actor_instance_mut(*from_actor_id)
                 && let Some(actor) = instance.find_actor_mut(*from_actor_id)
             {
@@ -1312,6 +1322,18 @@ pub fn handle_zone_messages(
                         inform_fate_spawn(&mut network, *from_actor_id, fate);
                     }
                 }
+            }
+
+            if let Some(instance) = data.find_actor_instance_mut(*from_actor_id)
+                && is_raise
+            {
+                set_character_mode(
+                    instance,
+                    &mut network,
+                    *from_actor_id,
+                    CharacterMode::Normal,
+                    0,
+                );
             }
 
             true

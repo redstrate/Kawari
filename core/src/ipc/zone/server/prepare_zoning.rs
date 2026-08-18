@@ -11,7 +11,7 @@ bitflags! {
     impl PrepareZoningFlag: u8 {
         /// If set, the text that usually indicates the territory name is not shown.
         const HIDE_TERRITORY_NAME = 0x1;
-        const UNK2 = 0x2; // Seen while teleporting, water->air
+        const UNK2 = 0x2; // Seen while teleporting, water->air. Also during resurrections.
         const UNK4 = 0x4; // Seen while going from portal->water, water->air
         /// If set, the companion does not play a visible and loud despawn animation.
         const PRESERVE_COMPANION = 0x8;
@@ -40,6 +40,7 @@ pub struct PrepareZoning {
     pub warp_type: WarpType,
     /// If set to one, the character is hidden.
     /// This is not a boolean because technically there is a "third" mode for values 1, >2 but I'm not sure what they do or if they're even used by retail.
+    /// Mode 2 is used by resurrections.
     pub hide_character: u8,
     /// Seems to always be set to 1, but mostly unused by the client. If set to 0xFF (255) then the screen never fades out.
     pub fade_out_delay: u8,

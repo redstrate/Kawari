@@ -72,13 +72,9 @@ pub enum ClientTriggerCommand {
         target_seat_index: u32,
     },
 
-    /// The player presses the "Level Sync" button in the UI for FATEs.
-    #[brw(magic = 813u32)]
-    FateLevelSync {
-        /// Index into the Fate Excel sheet.
-        fate_id: u32,
-        unk1: u32,
-    },
+    /// The client accepted a revive, at least from the system.
+    #[brw(magic = 200u32)]
+    AcceptRevive,
 
     /// The client is finished zoning.
     #[brw(magic = 201u32)]
@@ -310,6 +306,14 @@ pub enum ClientTriggerCommand {
         fate_id: u32,
         /// ID of the motivation NPC actor.
         motivation_npc_id: ObjectId,
+    },
+
+    /// The player presses the "Level Sync" button in the UI for FATEs.
+    #[brw(magic = 813u32)]
+    FateLevelSync {
+        /// Index into the Fate Excel sheet.
+        fate_id: u32,
+        unk1: u32,
     },
 
     /// The client is requesting to update the type for this actor. Responds with AC FateStartNpc.
