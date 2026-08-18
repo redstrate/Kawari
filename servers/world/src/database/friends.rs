@@ -2,7 +2,7 @@ use diesel::prelude::*;
 
 use super::{Friends, WorldDatabase, schema::friends::dsl::*};
 use crate::GameData;
-use kawari::ipc::zone::PlayerEntry;
+use kawari::ipc::zone::{PlayerEntry, SocialListUIFlags};
 
 impl WorldDatabase {
     fn get_friend_content_ids(&mut self, for_content_id: i64) -> Vec<i64> {
@@ -100,6 +100,7 @@ impl WorldDatabase {
         for their_content_id in friend_content_ids {
             let mut friend_entry = self.get_player_entry(game_data, their_content_id);
             friend_entry.timestamp = self.get_friend_timestamp(for_content_id, their_content_id);
+            friend_entry.ui_flags |= self.get_friend_group_icon(for_content_id, their_content_id);
             friend_entries.push(friend_entry);
         }
         friend_entries
@@ -113,5 +114,33 @@ impl WorldDatabase {
             .first::<i64>(&mut self.connection)
             .unwrap_or_default();
         time as u32
+    }
+
+    pub fn set_friend_group_icon(
+        &mut self,
+        for_content_id: i64,
+        for_friend_content_id: i64,
+        icon: SocialListUIFlags,
+    ) {
+        diesel::update(friends)
+            .filter(content_id.eq(for_content_id))
+            .filter(friend_content_id.eq(for_friend_content_id))
+            .set(group_icon.eq(icon.bits() as i32))
+            .execute(&mut self.connection)
+            .unwrap();
+    }
+
+    fn get_friend_group_icon(
+        &mut self,
+        for_content_id: i64,
+        for_friend_content_id: i64,
+    ) -> SocialListUIFlags {
+        let icon = friends
+            .select(group_icon)
+            .filter(content_id.eq(for_content_id))
+            .filter(friend_content_id.eq(for_friend_content_id))
+            .first::<i32>(&mut self.connection)
+            .unwrap_or_default();
+        SocialListUIFlags::from_bits_truncate(icon as u16)
     }
 }

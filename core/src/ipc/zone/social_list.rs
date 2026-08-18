@@ -134,7 +134,7 @@ impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sq
     }
 }
 
-// TODO: This seems to actually be entirely wrong, or at least reused for friend group icons in the context of the friend list, we need to rethink this eventully
+// TODO: Rename the ICON_* consts if we discover other places they're reused
 /// Flags to enable or disable various things in the Social Menu UI.
 #[binrw]
 #[derive(Clone, Copy, Default, Eq, PartialEq)]
@@ -142,11 +142,13 @@ pub struct SocialListUIFlags(u16);
 
 bitflags! {
     impl SocialListUIFlags: u16 {
-        /// The player data was unable to be retrieved (deleted, on another datacenter (?), some other issue).
-        const UNABLE_TO_RETRIEVE = 1;
-        const UNKNOWN_2 = 2;
-        const UNKNOWN_4 = 4;
-        const UNKNOWN_256 = 256;
+        const ICON_STAR = 1;
+        const ICON_CIRCLE = 2;
+        const ICON_TRIANGLE = 3;
+        const ICON_DIAMOND = 4;
+        const ICON_HEART = 5;
+        const ICON_SPADE = 6;
+        const ICON_CLUB = 7;
         /// Enables the right-click context menu for this PlayerEntry.
         const ENABLE_CONTEXT_MENU = 4096;
     }
@@ -234,10 +236,10 @@ pub struct SocialList {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FriendGroupIconInfo {
     /// The friend's content id.
-    content_id: u64,
+    pub content_id: u64,
     /// The desired group icon. 0 is no icon, and 1-7 correspond to the desired symbols.
-    #[brw(pad_after = 4)] // empty
-    icon: u32, // TODO: This is actually SocialListUIFlags, but we need to rework that first
+    #[brw(pad_after = 6)] // empty
+    pub icon: SocialListUIFlags,
 }
 
 #[cfg(test)]
