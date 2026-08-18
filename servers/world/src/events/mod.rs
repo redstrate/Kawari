@@ -24,3 +24,6 @@ pub use instance_content::*;
 
 mod special_shop;
 pub use special_shop::*;
+
+mod fate;
+pub use fate::*;

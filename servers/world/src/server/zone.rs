@@ -18,6 +18,7 @@ use crate::{
     server::{
         NetworkedActor, WorldServer,
         actor::create_npc_common_spawn,
+        fate::inform_fate_spawn,
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
@@ -1307,7 +1308,7 @@ pub fn handle_zone_messages(
                     && director.id.handler_type() == HandlerType::Fate
                 {
                     for fate in &instance.fates {
-                        Instance::inform_fate_spawn(&mut network, *from_actor_id, fate);
+                        inform_fate_spawn(&mut network, *from_actor_id, fate);
                     }
                 }
             }

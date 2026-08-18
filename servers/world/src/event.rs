@@ -4,12 +4,12 @@ use async_trait::async_trait;
 use parking_lot::Mutex;
 
 use kawari::{
-    common::{CharacterMode, HandlerId, HandlerType, ObjectTypeId},
+    common::{CharacterMode, HandlerId, HandlerType, ObjectId, ObjectTypeId},
     ipc::zone::{Condition, EventType},
 };
 
 use crate::{
-    CraftingEventHandler, FishingEventHandler, GameData, GatheringEventHandler,
+    CraftingEventHandler, FateEventHandler, FishingEventHandler, GameData, GatheringEventHandler,
     GimmickAccessorEventHandler, InclusionShopEventHandler, InstanceContentEventHandler,
     LuaEventHandler, ShopEventHandler, SpecialShopEventHandler, ZoneConnection,
 };
@@ -84,6 +84,8 @@ pub fn dispatch_event(
     handler_id: HandlerId,
     base_id: Option<u32>,
     game_data: Arc<Mutex<GameData>>,
+    connection: &ZoneConnection,
+    actor_id: ObjectId,
 ) -> Option<Box<dyn EventHandler>> {
     let generic_lua_event = |path: &str| -> Option<Box<dyn EventHandler>> {
         if let Some(event) = LuaEventHandler::new(handler_id, base_id, path, game_data.clone()) {
@@ -209,6 +211,9 @@ pub fn dispatch_event(
         HandlerType::SpecialShop => Some(Box::new(SpecialShopEventHandler::new())),
         HandlerType::HousingAethernet => generic_lua_event("events/generic/HousingAethernet.lua"),
         HandlerType::InstanceContent => Some(Box::new(InstanceContentEventHandler::new())),
+        HandlerType::Fate => Some(Box::new(FateEventHandler {
+            fate_id: *connection.fate_motivation_npcs.get(&actor_id).unwrap(),
+        })),
         _ => None,
     }
 }

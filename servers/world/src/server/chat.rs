@@ -17,7 +17,7 @@ use crate::{
         WorldServer,
         action::execute_action,
         actor::spawn_custom_bnpc,
-        instance::FateInstance,
+        fate::{FateInstance, inform_fate_spawn_globally},
         network::{DestinationNetwork, NetworkState},
         zone::change_zone_warp_to_pop_range,
     },
@@ -273,7 +273,8 @@ fn process_debug_commands(
                     .fates
                     .push(FateInstance::new(id.parse().unwrap(), &mut game_data));
                 let mut network = network.lock();
-                instance.inform_fate_spawn_globally(&mut network, instance.fates.last().unwrap());
+                let fate = instance.fates.last().unwrap().clone();
+                inform_fate_spawn_globally(instance, &mut network, &fate);
             }
 
             true

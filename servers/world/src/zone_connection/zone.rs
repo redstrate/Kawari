@@ -54,6 +54,7 @@ impl ZoneConnection {
         lua_zone: &LuaZone,
     ) {
         self.spawned_in = false;
+        self.fate_motivation_npcs.clear();
 
         let bound_by_duty = content_finder_condition_id != 0;
 

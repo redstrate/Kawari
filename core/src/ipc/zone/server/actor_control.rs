@@ -1077,6 +1077,15 @@ pub enum ActorControlCategory {
         z: f32,
     },
 
+    /// Puts the collection point icon on top of their head.
+    #[brw(magic = 2360u32)]
+    SetCollectionPointNpc {
+        /// Index into the FATE Excel sheet.
+        fate_id: u32,
+        /// The NPC to be used.
+        motivation_npc: ObjectId,
+    },
+
     #[brw(magic = 2362u32)]
     UnkFate6 { fate_id: u32 },
 

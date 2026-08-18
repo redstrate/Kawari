@@ -303,6 +303,15 @@ pub enum ClientTriggerCommand {
         trigger: DirectorTrigger,
     },
 
+    /// Start the prepared FATE, through a motivation NPC.
+    #[brw(magic = 809u32)]
+    StartPreparingFATE {
+        /// Index into the Fate Excel sheet.
+        fate_id: u32,
+        /// ID of the motivation NPC actor.
+        motivation_npc_id: ObjectId,
+    },
+
     /// The client is requesting to update the type for this actor. Responds with AC FateStartNpc.
     #[brw(magic = 814u32)]
     RequestFateNpc {

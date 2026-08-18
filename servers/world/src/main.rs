@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 
@@ -188,6 +189,7 @@ async fn initial_setup(
                     marketboard_request_item_id: 0,
                     hide_spectator_ui: false,
                     initial_login: true,
+                    fate_motivation_npcs: HashMap::new(),
                 };
 
                 // Handle setup before passing off control to the zone connection.

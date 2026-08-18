@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     sync::Arc,
     time::{Instant, SystemTime},
 };
@@ -201,6 +202,8 @@ pub struct ZoneConnection {
     pub hide_spectator_ui: bool,
     /// Whether the player is spawned in before.
     pub initial_login: bool,
+    /// Mapping of motivation NPCs to their FATE ids for easier lookup. Used in the FATE event handler.
+    pub fate_motivation_npcs: HashMap<ObjectId, u16>,
 }
 
 impl ZoneConnection {

@@ -102,6 +102,9 @@ impl ZoneConnection {
                 }));
 
             self.send_ipc_self(ipc).await;
+
+            self.fate_motivation_npcs
+                .insert(actor_id, spawn.common.fate_id);
         }
     }
 
