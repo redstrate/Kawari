@@ -21,7 +21,7 @@ use kawari::{
     common::{ANIMATION_LOCK_TIME, COMBO_TIMEOUT, CharacterMode, ObjectId, STRIKING_DUMMY_NAME_ID},
     config::get_config,
     ipc::zone::{
-        ActionEffect1, ActionRequest, ActionType, ActorControlCategory, BattleNpcSubKind,
+        ActionEffect, ActionRequest, ActionType, ActorControlCategory, BattleNpcSubKind,
         CommonSpawn, EffectEntry, EffectResult, ObjectKind, ServerZoneIpcData,
         ServerZoneIpcSegment, SpawnNpc, TargetEffect, TargetEffectKind,
     },
@@ -493,21 +493,21 @@ pub fn execute_action(
                     };
                 }
 
-                let ipc =
-                    ServerZoneIpcSegment::new(ServerZoneIpcData::ActionEffect1(ActionEffect1 {
-                        animation_target_id: request.target,
-                        target: request.target,
-                        action_id: request.action_id,
-                        animation_lock: ANIMATION_LOCK_TIME,
-                        rotation: common_spawn.rotation,
-                        spell_id: action_animation_id,
-                        source_sequence: request.sequence,
-                        target_count: 1,
-                        effects,
-                        action_type: request.action_type,
-                        global_sequence: network.global_action_sequence,
-                        ..Default::default()
-                    }));
+                let ipc = ActionEffect {
+                    animation_target_id: request.target,
+                    targets: vec![request.target],
+                    action_id: request.action_id,
+                    animation_lock: ANIMATION_LOCK_TIME,
+                    rotation: common_spawn.rotation,
+                    spell_id: action_animation_id,
+                    source_sequence: request.sequence,
+                    effects,
+                    action_type: request.action_type,
+                    global_sequence: network.global_action_sequence,
+                    ..Default::default()
+                }
+                .package()
+                .unwrap();
                 network.global_action_sequence += 1;
 
                 let mut data = data.lock();
@@ -844,20 +844,21 @@ pub fn execute_mount_action(
         id: request.action_id as u16,
     });
 
-    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActionEffect1(ActionEffect1 {
+    let ipc = ActionEffect {
         animation_target_id: request.target,
-        target: request.target,
+        targets: vec![request.target],
         action_id: request.action_id,
         animation_lock: ANIMATION_LOCK_TIME,
         rotation: common_spawn.rotation,
         spell_id: request.action_id as u16,
         source_sequence: request.sequence,
-        target_count: 1,
         effects,
         action_type: request.action_type,
         global_sequence: network.global_action_sequence,
         ..Default::default()
-    }));
+    }
+    .package()
+    .unwrap();
     network.global_action_sequence += 1;
 
     network.send_in_range_inclusive_instance(
@@ -895,20 +896,21 @@ pub fn execute_ornament_action(
 
     let effects = [TargetEffect::default(); 8]; // TODO: is there an ornament effect?
 
-    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActionEffect1(ActionEffect1 {
+    let ipc = ActionEffect {
         animation_target_id: request.target,
-        target: request.target,
+        targets: vec![request.target],
         action_id: request.action_id,
         animation_lock: ANIMATION_LOCK_TIME,
         rotation: common_spawn.rotation,
         spell_id: request.action_id as u16,
         source_sequence: request.sequence,
-        target_count: 1,
         effects,
         action_type: request.action_type,
         global_sequence: network.global_action_sequence,
         ..Default::default()
-    }));
+    }
+    .package()
+    .unwrap();
     network.global_action_sequence += 1;
 
     network.send_in_range_inclusive_instance(

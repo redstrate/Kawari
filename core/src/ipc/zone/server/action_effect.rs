@@ -5,7 +5,7 @@ use strum_macros::{Display, EnumIter, FromRepr};
 
 use crate::{
     common::{ObjectId, ObjectTypeId, read_quantized_rotation, write_quantized_rotation},
-    ipc::zone::ActionType,
+    ipc::zone::{ActionType, ServerZoneIpcData, ServerZoneIpcSegment},
 };
 
 #[binrw]
@@ -242,7 +242,9 @@ impl std::fmt::Debug for ActionEffectFlag {
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
-pub struct ActionEffect1 {
+#[brw(import{max_targets: usize})]
+#[brw(assert(targets.len() <= max_targets, "Too many targets! {} > {}", targets.len(), max_targets))]
+pub struct ActionEffect {
     pub animation_target_id: ObjectTypeId,
     /// Index into the Action Excel sheet.
     pub action_id: u32,
@@ -262,11 +264,26 @@ pub struct ActionEffect1 {
     /// The kind of action.
     pub action_type: ActionType,
     pub flags: ActionEffectFlag,
+    #[br(temp)]
+    #[bw(calc = targets.len() as u8)]
     pub target_count: u8,
     #[brw(pad_before = 8)] // not read?
     pub effects: [TargetEffect; 8],
     #[brw(pad_before = 6, pad_after = 4)]
-    pub target: ObjectTypeId,
+    #[br(count = max_targets)]
+    #[brw(pad_size_to = max_targets * 8)]
+    pub targets: Vec<ObjectTypeId>,
+}
+
+impl ActionEffect {
+    pub fn package(&self) -> Option<ServerZoneIpcSegment> {
+        match self.targets.len() {
+            0..=1 => Some(ServerZoneIpcSegment::new(
+                ServerZoneIpcData::ActionEffect1 { data: self.clone() },
+            )),
+            _ => None,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -289,7 +306,9 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let action_result = ActionEffect1::read_le(&mut buffer).unwrap();
+        let action_result =
+            ActionEffect::read_le_args(&mut buffer, ActionEffectBinReadArgs { max_targets: 1 })
+                .unwrap();
         assert_eq!(
             action_result.animation_target_id.object_id,
             ObjectId(0x40070E42)
@@ -304,7 +323,6 @@ mod tests {
         assert_eq!(action_result.animation_variation, 0);
         assert_eq!(action_result.flags, ActionEffectFlag::empty());
         assert_eq!(action_result.action_type, ActionType::Action);
-        assert_eq!(action_result.target_count, 1);
 
         // effect 0: attack
         assert_eq!(
@@ -333,7 +351,7 @@ mod tests {
             }
         );
 
-        assert_eq!(action_result.target.object_id, ObjectId(0x40070E42));
+        assert_eq!(action_result.targets[0].object_id, ObjectId(0x40070E42));
     }
 
     #[test]
@@ -344,7 +362,9 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let action_result = ActionEffect1::read_le(&mut buffer).unwrap();
+        let action_result =
+            ActionEffect::read_le_args(&mut buffer, ActionEffectBinReadArgs { max_targets: 1 })
+                .unwrap();
         assert_eq!(
             action_result.animation_target_id.object_id,
             ObjectId(277554542)
@@ -359,7 +379,6 @@ mod tests {
         assert_eq!(action_result.animation_variation, 0);
         assert_eq!(action_result.flags, ActionEffectFlag::empty());
         assert_eq!(action_result.action_type, ActionType::Action);
-        assert_eq!(action_result.target_count, 1);
 
         assert_eq!(
             action_result.effects[0].0,
@@ -373,7 +392,7 @@ mod tests {
             }
         );
 
-        assert_eq!(action_result.target.object_id, ObjectId(277554542));
+        assert_eq!(action_result.targets[0].object_id, ObjectId(277554542));
     }
 
     #[test]
@@ -384,7 +403,9 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let action_result = ActionEffect1::read_le(&mut buffer).unwrap();
+        let action_result =
+            ActionEffect::read_le_args(&mut buffer, ActionEffectBinReadArgs { max_targets: 1 })
+                .unwrap();
         assert_eq!(
             action_result.animation_target_id.object_id,
             ObjectId(277114100)
@@ -399,7 +420,6 @@ mod tests {
         assert_eq!(action_result.animation_variation, 0);
         assert_eq!(action_result.flags, ActionEffectFlag::empty());
         assert_eq!(action_result.action_type, ActionType::Mount);
-        assert_eq!(action_result.target_count, 1);
 
         assert_eq!(
             action_result.effects[0].0,
@@ -410,7 +430,7 @@ mod tests {
             }
         );
 
-        assert_eq!(action_result.target.object_id, ObjectId(277114100));
+        assert_eq!(action_result.targets[0].object_id, ObjectId(277114100));
     }
 
     #[test]
@@ -421,7 +441,9 @@ mod tests {
         let buffer = read(d).unwrap();
         let mut buffer = Cursor::new(&buffer);
 
-        let action_result = ActionEffect1::read_le(&mut buffer).unwrap();
+        let action_result =
+            ActionEffect::read_le_args(&mut buffer, ActionEffectBinReadArgs { max_targets: 1 })
+                .unwrap();
         assert_eq!(
             action_result.animation_target_id.object_id,
             ObjectId(277114100)
@@ -436,7 +458,6 @@ mod tests {
         assert_eq!(action_result.animation_variation, 0);
         assert_eq!(action_result.flags, ActionEffectFlag::empty());
         assert_eq!(action_result.action_type, ActionType::Action);
-        assert_eq!(action_result.target_count, 1);
 
         assert_eq!(
             action_result.effects[0].0,
@@ -447,6 +468,6 @@ mod tests {
             }
         );
 
-        assert_eq!(action_result.target.object_id, ObjectId(277114100));
+        assert_eq!(action_result.targets[0].object_id, ObjectId(277114100));
     }
 }

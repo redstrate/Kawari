@@ -60,7 +60,7 @@ pub use event_start::{EventStart, EventType};
 
 mod action_effect;
 pub use action_effect::{
-    ActionEffect1, ActionEffectFlag, DamageElement, DamageKind, DamageType, TargetEffect,
+    ActionEffect, ActionEffectFlag, DamageElement, DamageKind, DamageType, TargetEffect,
     TargetEffectKind,
 };
 
@@ -179,7 +179,7 @@ pub use mail::{
 };
 
 mod aoe_effect;
-pub use aoe_effect::AoeEffect8;
+pub use aoe_effect::AoeEffect;
 
 mod duty_support_information;
 pub use duty_support_information::DutySupportInformation;
@@ -301,7 +301,10 @@ pub enum ServerZoneIpcData {
         // Unknown. It's filled with... something.
         unk: u16,
     },
-    ActionEffect1(ActionEffect1),
+    ActionEffect1 {
+        #[brw(args { max_targets: 1 } )]
+        data: ActionEffect,
+    },
     Equip(Equip),
     DeleteActor {
         /// The index into the client-side object pool.
@@ -980,7 +983,10 @@ pub enum ServerZoneIpcData {
         unk3: u32,
         unk4: u32,
     },
-    AoeEffect8(AoeEffect8),
+    AoeEffect8 {
+        #[brw(args { max_targets: 8 } )]
+        data: AoeEffect,
+    },
     ActorCast {
         /// Usually the same as `action_id`.
         spell_id: u16,
