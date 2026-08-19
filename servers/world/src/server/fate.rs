@@ -321,3 +321,18 @@ pub fn start_fate(fate: &mut FateInstance) {
     fate.fate_state = FateState::Running;
     fate.start_timestamp = timestamp_secs();
 }
+
+/// Move a FATE to Ending.
+pub fn end_fate(fate: &mut FateInstance) {
+    fate.fate_state = FateState::Ending;
+}
+
+/// Move a FATE to Ended.
+pub fn ended_fate(fate: &mut FateInstance) {
+    fate.fate_state = FateState::Ended;
+}
+
+/// Move a FATE to Unk10.
+pub fn unk10_fate(fate: &mut FateInstance) {
+    fate.fate_state = FateState::Unk10;
+}

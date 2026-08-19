@@ -1091,6 +1091,7 @@ pub enum FateState {
     Ended = 7,
     Failed = 8,
     Unk9 = 9,
+    /// Seen while moving from Ended. Maybe for despawn?
     Unk10 = 10,
 }
 

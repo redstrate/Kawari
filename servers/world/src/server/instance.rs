@@ -78,6 +78,8 @@ pub enum QueuedTaskData {
     ResetCombo,
     /// Respawn a new mob.
     RespawnMob { layout_id: u32 },
+    /// Ends a FATE.
+    EndFate { fate_id: u32 },
 }
 
 #[derive(Debug, Clone)]

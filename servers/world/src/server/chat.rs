@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use bstr::BString;
 use kawari::{
@@ -17,7 +17,8 @@ use crate::{
         WorldServer,
         action::execute_action,
         actor::spawn_custom_bnpc,
-        fate::{FateInstance, inform_fate_spawn_globally},
+        fate::{FateInstance, end_fate, inform_fate_spawn_globally},
+        instance::QueuedTaskData,
         network::{DestinationNetwork, NetworkState},
         zone::change_zone_warp_to_pop_range,
     },
@@ -355,9 +356,26 @@ fn process_debug_commands(
             {
                 let ranges = instance.zone.get_overlapping_map_ranges(actor.position().0);
                 if let Some(fate_range) = ranges.iter().find(|x| x.fate.is_some()) {
+                    let message;
+                    if let Some(instance) = instance
+                        .fates
+                        .iter()
+                        .find(|x| x.fate_id == fate_range.fate.unwrap())
+                    {
+                        message = format!(
+                            "Fate Id: {}\nState: {:?}\nStarted At: {:?}",
+                            fate_range.fate.unwrap(),
+                            instance.fate_state,
+                            instance.start_timestamp
+                        );
+                    } else {
+                        message =
+                            format!("Fate Id: {}\nState: Not Spawned", fate_range.fate.unwrap());
+                    }
+
                     let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage(
                         ServerNoticeMessage {
-                            message: format!("Fate Id: {}", fate_range.fate.unwrap()),
+                            message,
                             ..Default::default()
                         },
                     ));
@@ -381,6 +399,49 @@ fn process_debug_commands(
                         DestinationNetwork::ZoneClients,
                     );
                 }
+            }
+
+            true
+        }
+        "!fatecomplete" => {
+            // TODO: this code should be standardized somewhere
+
+            let mut data = data.lock();
+            let mut network = network.lock();
+            let mut ac = None;
+            if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                && let Some(actor) = instance.find_actor(from_actor_id)
+            {
+                let ranges = instance.zone.get_overlapping_map_ranges(actor.position().0);
+                if let Some(fate_range) = ranges.iter().find(|x| x.fate.is_some())
+                    && let Some(fate_instance) = instance
+                        .fates
+                        .iter_mut()
+                        .find(|x| x.fate_id == fate_range.fate.unwrap())
+                {
+                    end_fate(fate_instance);
+                    ac = Some(fate_instance.create_fate_init_ac());
+
+                    instance.insert_task(
+                        from_id,
+                        from_actor_id,
+                        Duration::from_secs(1),
+                        QueuedTaskData::EndFate {
+                            fate_id: fate_range.fate.unwrap(),
+                        },
+                    );
+                }
+            }
+
+            if let Some(instance) = data.find_actor_instance(from_actor_id)
+                && let Some(ac) = ac
+            {
+                network.send_to_instance(
+                    ObjectId::default(),
+                    instance,
+                    FromServer::ActorControlSelf(ac),
+                    DestinationNetwork::ZoneClients,
+                );
             }
 
             true

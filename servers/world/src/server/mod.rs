@@ -22,7 +22,7 @@ use crate::{
         chat::handle_chat_messages,
         director::{DirectorData, director_tick, handle_director_messages},
         effect::{handle_effect_messages, remove_effect, send_effects_list},
-        fate::{fate_tick, start_fate},
+        fate::{ended_fate, fate_tick, start_fate, unk10_fate},
         instance::{Instance, NavmeshGenerationStep, QueuedTaskData, remove_actor_from_instance},
         linkshell::handle_linkshell_messages,
         network::{DestinationNetwork, NetworkState},
@@ -993,6 +993,44 @@ pub async fn server_main_loop(
                                     let actor_id = ObjectId(fastrand::u32(..));
                                     let config = get_config();
                                     instance.insert_npc(actor_id, npc, &config);
+                                }
+                            }
+                            QueuedTaskData::EndFate { fate_id } => {
+                                let mut data = data.lock();
+                                let mut ended_ac = None;
+                                let mut unk10_ac = None;
+                                if let Some(instance) = data.instances.get_mut(*instance_index) {
+                                    if let Some(fate_instance) =
+                                        instance.fates.iter_mut().find(|x| x.fate_id == *fate_id)
+                                    {
+                                        ended_fate(fate_instance);
+                                        ended_ac = Some(fate_instance.create_fate_init_ac());
+
+                                        unk10_fate(fate_instance);
+                                        unk10_ac = Some(fate_instance.create_fate_init_ac());
+                                    }
+
+                                    // Remove the instance
+                                    instance.fates.retain(|x| x.fate_id != *fate_id);
+                                }
+
+                                if let Some(instance) = data.instances.get(*instance_index)
+                                    && let Some(ended_ac) = ended_ac
+                                    && let Some(unk10_ac) = unk10_ac
+                                {
+                                    let mut network = network.lock();
+                                    network.send_to_instance(
+                                        ObjectId::default(),
+                                        instance,
+                                        FromServer::ActorControlSelf(ended_ac),
+                                        DestinationNetwork::ZoneClients,
+                                    );
+                                    network.send_to_instance(
+                                        ObjectId::default(),
+                                        instance,
+                                        FromServer::ActorControlSelf(unk10_ac),
+                                        DestinationNetwork::ZoneClients,
+                                    );
                                 }
                             }
                         }

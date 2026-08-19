@@ -14,6 +14,7 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!equip <name>` | Forcefully equip an item, useful for bypassing class/job and other client restrictions. This will *overwrite* any item in that slot! |
 | `!fate <id>` | Starts this FATE. |
 | `!fateinfo` | Tells you information about the FATE you're standing in. |
+| `!fatecomplete`| Completes the FATE that you're standing in. |
 | `!festival <id1> <id2> <id3> <id4>` | Sets the festival in the current zone. Multiple festivals can be set together to create interesting effects. |
 | `!finishevent` | Forcefully finishes the current event, useful if the script has an error and you're stuck talking to something. |
 | `!gate` | Spawns a non-functional debug GATE. |
