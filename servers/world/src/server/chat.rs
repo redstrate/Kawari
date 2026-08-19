@@ -347,6 +347,44 @@ fn process_debug_commands(
 
             true
         }
+        "!fateinfo" => {
+            let mut data = data.lock();
+            let mut network = network.lock();
+            if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                && let Some(actor) = instance.find_actor(from_actor_id)
+            {
+                let ranges = instance.zone.get_overlapping_map_ranges(actor.position().0);
+                if let Some(fate_range) = ranges.iter().find(|x| x.fate.is_some()) {
+                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage(
+                        ServerNoticeMessage {
+                            message: format!("Fate Id: {}", fate_range.fate.unwrap()),
+                            ..Default::default()
+                        },
+                    ));
+
+                    network.send_to(
+                        from_id,
+                        FromServer::PacketSegment(ipc, from_actor_id),
+                        DestinationNetwork::ZoneClients,
+                    );
+                } else {
+                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage(
+                        ServerNoticeMessage {
+                            message: "There's not a FATE here.".to_string(),
+                            ..Default::default()
+                        },
+                    ));
+
+                    network.send_to(
+                        from_id,
+                        FromServer::PacketSegment(ipc, from_actor_id),
+                        DestinationNetwork::ZoneClients,
+                    );
+                }
+            }
+
+            true
+        }
         _ => false,
     }
 }
