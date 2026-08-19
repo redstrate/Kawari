@@ -7,8 +7,8 @@ use axum::routing::get;
 use kawari::common::{
     ContainerType, DEBUG_COMMAND_TRIGGER, FestivalId, HandlerId, HandlerType, InstanceContentType,
     ItemOperationKind, LogMessageType, MaxEx, ObjectId, ObjectTypeId, ObjectTypeKind,
-    PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position, QuestSpecialFlags, WarpType,
-    calculate_max_level,
+    PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position, QuestSpecialFlags,
+    TAB_SHARED_FATE_COUNT, WarpType, calculate_max_level,
 };
 use kawari::config::get_config;
 use kawari_world::inventory::{Item, MAX_LARGE_STORAGE, Storage, get_next_free_slot};
@@ -1684,11 +1684,28 @@ async fn process_packet(
                                     }
                                 }
                                 ClientTriggerCommand::OpenSharedFATEWindow { page } => {
+                                    let start_index = TAB_SHARED_FATE_COUNT * page as usize;
+                                    let fate_counts = &connection.player_data.quest.shared_fates.0
+                                        [start_index..start_index + 6];
+
                                     connection
                                         .send_ipc_self(ServerZoneIpcSegment::new(
                                             ServerZoneIpcData::SharedFATEInformation {
                                                 page: page as u8,
-                                                unk1: [0; 15], // Dummied out for now
+                                                fate_count: [
+                                                    fate_counts[0],
+                                                    fate_counts[1],
+                                                    fate_counts[2],
+                                                    fate_counts[3],
+                                                    fate_counts[4],
+                                                    fate_counts[5],
+                                                    0, // The remaining values aren't empty on retail, but I don't know what they do so...
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0,
+                                                ],
                                             },
                                         ))
                                         .await;

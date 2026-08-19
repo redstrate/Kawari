@@ -20,7 +20,7 @@ use kawari::{
 
 use crate::{
     ActiveQuests, Bitmask, BuddyLevels, CharaMake, ClassExperience, ClassLevels,
-    FavoriteAetherytes, GlassesIds, GrandCompanyRanks, PartyMembers, QuestBitmask,
+    FavoriteAetherytes, GlassesIds, GrandCompanyRanks, PartyMembers, QuestBitmask, SharedFates,
 };
 
 #[derive(Insertable, Identifiable, Queryable, Selectable, AsChangeset, Debug, Default, Clone)]
@@ -106,6 +106,7 @@ pub struct Quest {
     pub unlocked_map_markers: Bitmask<UNLOCKED_MAP_MARKERS_BITMASK_SIZE>,
     pub completed_levequests: Bitmask<COMPLETED_LEVEQUEST_BITMASK_SIZE>,
     pub gathered_gathering_items: QuestBitmask<GATHERED_GATHERING_ITEMS_BITMASK_SIZE>,
+    pub shared_fates: SharedFates,
 }
 
 #[derive(

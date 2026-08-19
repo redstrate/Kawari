@@ -8,7 +8,7 @@ use diesel::expression::AsExpression;
 use diesel::serialize;
 use diesel::sql_types::Text;
 use diesel::sqlite::Sqlite;
-use kawari::constants::CLASSJOB_ARRAY_SIZE;
+use kawari::constants::{CLASSJOB_ARRAY_SIZE, SHARED_FATES_SIZE};
 use serde::{Deserialize, Serialize};
 pub use zone_connection::{ObsfucationData, PlayerData, TeleportReason, ZoneConnection};
 
@@ -131,3 +131,4 @@ define_sql_array!(PartyMembers, i64, 8);
 define_sql_array!(GrandCompanyRanks, u8, 3);
 define_sql_array!(BuddyLevels, u8, 3);
 define_sql_array!(GlassesIds, u16, 2);
+define_sql_array!(SharedFates, u8, SHARED_FATES_SIZE);

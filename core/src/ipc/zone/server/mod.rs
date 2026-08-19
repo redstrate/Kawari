@@ -1435,8 +1435,9 @@ pub enum ServerZoneIpcData {
     SharedFATEInformation {
         /// The page index, starting from zero.
         page: u8,
-        /// Unsure what this means yet.
-        unk1: [u8; 15],
+        /// How many FATEs were done for each zone.
+        #[brw(pad_after = 3)] // not used
+        fate_count: [u8; 12],
     },
     UnkDirector2 {
         unk: [u8; 24],

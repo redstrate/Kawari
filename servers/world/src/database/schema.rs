@@ -43,6 +43,7 @@ diesel::table! {
         unlocked_map_markers -> Text,
         completed_levequests -> Text,
         gathered_gathering_items -> Text,
+        shared_fates -> Text,
     }
 }
 
