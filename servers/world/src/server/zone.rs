@@ -832,14 +832,16 @@ fn begin_change_zone<'a>(
             DestinationNetwork::ZoneClients,
         );
 
-        remove_actor_from_instance(data, network, actor_id);
-
         // inform the players in this zone that this actor left
         if let Some(current_instance) = data.find_actor_instance_mut(actor_id) {
             // HACK: This is to prevent actors from disappearing when warping within the same zone.
             if current_instance.zone.id != destination_zone_id {
                 needs_init_zone = true;
             }
+        }
+
+        if needs_init_zone {
+            remove_actor_from_instance(data, network, actor_id);
         }
 
         // then find or create a new instance with the zone id
