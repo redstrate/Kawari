@@ -840,6 +840,10 @@ impl ZoneConnection {
         // If we *don't* do this there is a pretty big delay before this can happen again.
         if run_finish_event {
             // To handle PreHandler's & others nesting, which is probably not going to scale.
+            if let Some(event) = events.last() {
+                // TODO: Introduce a proper "we returned from nesting" function maybe?
+                event.0.on_return(&event.1, self, 255, &[], player).await;
+            }
             self.event_finish(events).await;
 
             return true;

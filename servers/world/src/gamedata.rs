@@ -1074,12 +1074,20 @@ impl GameData {
         Some(content_finder_row.ShortCode)
     }
 
-    /// Returns the DefaultTalk for a given FateShop and rank.
-    pub fn get_fate_default_talk(&mut self, fate_shop_id: u32, rank: u8) -> u32 {
+    /// Returns the DefaultTalk for a given FateShop and index.
+    pub fn get_fate_default_talk(&mut self, fate_shop_id: u32, index: u8) -> u32 {
         let sheet = FateShopSheet::read_from(&mut self.resource, Language::None).unwrap();
         let row = sheet.row(fate_shop_id).unwrap();
 
-        row.DefaultTalk[rank as usize]
+        row.DefaultTalk[index as usize]
+    }
+
+    /// Returns the SpecialShop for a given FateShop and rank.
+    pub fn get_fate_special_shop(&mut self, fate_shop_id: u32, index: u8) -> u32 {
+        let sheet = FateShopSheet::read_from(&mut self.resource, Language::None).unwrap();
+        let row = sheet.row(fate_shop_id).unwrap();
+
+        row.SpecialShop[index as usize]
     }
 
     /// Returns the pop type for this EObj.
@@ -1754,6 +1762,24 @@ impl GameData {
         let row = self.fate_progress_ui_sheet.row(row)?;
         Some(row.ReqFatesToRank2 + row.ReqFatesToRank3 + row.ReqFatesToRank4)
     }
+
+    /// Determines the current FATE rank based on the FateProgressUI row and number of FATEs completed.
+    pub fn get_fate_rank(&mut self, row: u32, count: u8) -> Option<u8> {
+        let row = self.fate_progress_ui_sheet.row(row)?;
+        if count > row.ReqFatesToRank4 {
+            return Some(4);
+        }
+        if count > row.ReqFatesToRank3 {
+            return Some(3);
+        }
+        if count > row.ReqFatesToRank2 {
+            return Some(2);
+        }
+        if count > 0 {
+            return Some(1);
+        }
+        Some(0)
+    }
 }
 
 impl mlua::UserData for GameData {
@@ -1772,8 +1798,14 @@ impl mlua::UserData for GameData {
         );
         methods.add_method_mut(
             "get_fate_default_talk",
-            |_, this, (fate_shop_id, rank): (u32, u8)| {
-                Ok(this.get_fate_default_talk(fate_shop_id, rank))
+            |_, this, (fate_shop_id, index): (u32, u8)| {
+                Ok(this.get_fate_default_talk(fate_shop_id, index))
+            },
+        );
+        methods.add_method_mut(
+            "get_fate_special_shop",
+            |_, this, (fate_shop_id, index): (u32, u8)| {
+                Ok(this.get_fate_special_shop(fate_shop_id, index))
             },
         );
         methods.add_method_mut("lookup_ikd_route_content", |_, this, id: u32| {

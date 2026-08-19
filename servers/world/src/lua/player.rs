@@ -580,6 +580,23 @@ impl LuaPlayer {
     fn finish_dyeing(&mut self) {
         self.queued_tasks.push(LuaTask::FinishDyeing {});
     }
+
+    fn get_territory_fate_rank(&mut self, game_data: mlua::Value) -> Option<u8> {
+        let game_data = match game_data {
+            mlua::Value::UserData(ud) => ud.borrow::<Arc<Mutex<GameData>>>().unwrap().clone(),
+            _ => unreachable!(),
+        };
+
+        let mut game_data = game_data.lock();
+
+        if let Some(row) = game_data.get_fate_progress_ui_row(self.player_data.volatile.zone_id) {
+            let fate_count = self.player_data.quest.shared_fates.0[row as usize];
+            let rank = game_data.get_fate_rank(row, fate_count);
+            return rank;
+        }
+
+        None
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1038,6 +1055,13 @@ impl UserData for LuaPlayer {
         methods.add_method_mut("finish_dyeing", |_, this, _: ()| {
             this.finish_dyeing();
             Ok(())
+        });
+        methods.add_method_mut("get_territory_fate_rank", |_, this, _: ()| {
+            this.finish_dyeing();
+            Ok(())
+        });
+        methods.add_method_mut("get_territory_fate_rank", |lua, this, _: ()| {
+            Ok(this.get_territory_fate_rank(lua.globals().get("GAME_DATA").unwrap()))
         });
     }
 
