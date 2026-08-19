@@ -20,6 +20,7 @@ use icarus::EObj::EObjSheet;
 use icarus::Emote::EmoteSheet;
 use icarus::EquipSlotCategory::EquipSlotCategorySheet;
 use icarus::Fate::FateSheet;
+use icarus::FateProgressUI::FateProgressUISheet;
 use icarus::FateShop::FateShopSheet;
 use icarus::FittingShopCategoryItem::FittingShopCategoryItemSheet;
 use icarus::GatheringItem::GatheringItemSheet;
@@ -108,6 +109,7 @@ pub struct GameData {
     pub public_content_sheet: PublicContentSheet,
     pub fate_sheet: FateSheet,
     pub dawn_content_sheet: DawnContentSheet,
+    pub fate_progress_ui_sheet: FateProgressUISheet,
 
     pub gimmick_rect_lookup: HashMap<u32, u32>,
     pub fate_event_range_lookup: HashMap<u32, u32>,
@@ -377,6 +379,9 @@ impl GameData {
         let dawn_content_sheet =
             DawnContentSheet::read_from(&mut resource_resolver, Language::None).unwrap();
 
+        let fate_progress_ui_sheet =
+            FateProgressUISheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
         let mut gimmick_rect_lookup = HashMap::new();
         for (id, row) in gimmick_rect_sheet.into_iter().flatten_subrows() {
             gimmick_rect_lookup.insert(row.LayoutID, id);
@@ -424,6 +429,7 @@ impl GameData {
             gimmick_rect_lookup,
             fate_event_range_lookup,
             dawn_content_sheet,
+            fate_progress_ui_sheet,
         }
     }
 
@@ -1732,6 +1738,21 @@ impl GameData {
         let row = self.fate_sheet.row(id)?;
         // TODO: Unknown8 seems to be a marker for special fates, despite there being another column for that?!
         Some((row.FATEChain, row.Unknown8))
+    }
+
+    /// Returns the FateProgressUI row for a given TerritoryType ID, if available.
+    pub fn get_fate_progress_ui_row(&mut self, territorytype_id: i32) -> Option<u32> {
+        self.fate_progress_ui_sheet
+            .into_iter()
+            .flatten_subrows()
+            .find(|x| x.1.Location == territorytype_id)
+            .map(|x| x.0)
+    }
+
+    /// Returns the maximum number of FATEs needed for this FateProgressUI row.
+    pub fn get_fate_progress_maximum_count(&mut self, row: u32) -> Option<u8> {
+        let row = self.fate_progress_ui_sheet.row(row)?;
+        Some(row.ReqFatesToRank2 + row.ReqFatesToRank3 + row.ReqFatesToRank4)
     }
 }
 

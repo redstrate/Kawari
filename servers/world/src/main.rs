@@ -1687,28 +1687,24 @@ async fn process_packet(
                                     let start_index = TAB_SHARED_FATE_COUNT * page as usize;
                                     let fate_counts = &connection.player_data.quest.shared_fates.0
                                         [start_index..start_index + 6];
+                                    let mut fate_count_maximum = [0u8; 6];
+                                    {
+                                        for (j, i) in (start_index..start_index + 6).enumerate() {
+                                            let mut gamedata = connection.gamedata.lock();
+                                            fate_count_maximum[j] = gamedata
+                                                .get_fate_progress_maximum_count(i as u32)
+                                                .unwrap_or_default();
+                                        }
+                                    }
 
-                                    connection
-                                        .send_ipc_self(ServerZoneIpcSegment::new(
-                                            ServerZoneIpcData::SharedFATEInformation {
-                                                page: page as u8,
-                                                fate_count: [
-                                                    fate_counts[0],
-                                                    fate_counts[1],
-                                                    fate_counts[2],
-                                                    fate_counts[3],
-                                                    fate_counts[4],
-                                                    fate_counts[5],
-                                                    0, // The remaining values aren't empty on retail, but I don't know what they do so...
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                ],
-                                            },
-                                        ))
-                                        .await;
+                                    let ipc = ServerZoneIpcSegment::new(
+                                        ServerZoneIpcData::SharedFATEInformation {
+                                            page: page as u8,
+                                            fate_count: fate_counts.try_into().unwrap(),
+                                            fate_count_maximum,
+                                        },
+                                    );
+                                    connection.send_ipc_self(ipc).await;
                                 }
                                 ClientTriggerCommand::FateLevelSync { fate_id, unk1, .. } => {
                                     tracing::info!("Syncing level for fate {fate_id} {unk1}");
@@ -4294,6 +4290,9 @@ async fn process_server_msg(
                         0, 0, 5, 14400, 0, 0, 0, 0, 0, duration, settings,
                     ],
                 )
+            }
+            FromServer::FATEComplete => {
+                connection.record_fate_completion();
             }
             _ => {
                 tracing::error!(

@@ -1436,8 +1436,10 @@ pub enum ServerZoneIpcData {
         /// The page index, starting from zero.
         page: u8,
         /// How many FATEs were done for each zone.
+        fate_count: [u8; 6],
+        /// How many FATEs are needed to max rank in this zone.
         #[brw(pad_after = 3)] // not used
-        fate_count: [u8; 12],
+        fate_count_maximum: [u8; 6],
     },
     UnkDirector2 {
         unk: [u8; 24],

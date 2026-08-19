@@ -205,4 +205,11 @@ impl ZoneConnection {
         self.player_data.quest.completed.data = vec![0x0; COMPLETED_QUEST_BITMASK_SIZE];
         self.send_quest_information().await;
     }
+
+    pub fn record_fate_completion(&mut self) {
+        let mut gamedata = self.gamedata.lock();
+        if let Some(row) = gamedata.get_fate_progress_ui_row(self.player_data.volatile.zone_id) {
+            self.player_data.quest.shared_fates.0[row as usize] += 1;
+        }
+    }
 }

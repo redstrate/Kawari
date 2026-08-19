@@ -1031,6 +1031,12 @@ pub async fn server_main_loop(
                                         FromServer::ActorControlSelf(unk10_ac),
                                         DestinationNetwork::ZoneClients,
                                     );
+                                    network.send_to_instance(
+                                        ObjectId::default(),
+                                        instance,
+                                        FromServer::FATEComplete,
+                                        DestinationNetwork::ZoneClients,
+                                    );
                                 }
                             }
                         }

@@ -235,6 +235,8 @@ pub enum FromServer {
     SyncMaxLevel(u8),
     /// Play the initial cutscene for instanced content.
     PlayInitialCutscene(u32, u32),
+    /// A FATE was completed. This is meant to track SHARED FATE completion and not much else yet.
+    FATEComplete,
 }
 
 #[derive(Debug, Clone)]
