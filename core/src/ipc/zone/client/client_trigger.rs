@@ -308,6 +308,13 @@ pub enum ClientTriggerCommand {
         motivation_npc_id: ObjectId,
     },
 
+    /// Seen while entering a running FATE. Unsure what it could be used for.
+    #[brw(magic = 812u32)]
+    EnteredRunningFate {
+        /// Index into the Fate Excel sheet.
+        fate_id: u32,
+    },
+
     /// The player presses the "Level Sync" button in the UI for FATEs.
     #[brw(magic = 813u32)]
     FateLevelSync {
