@@ -21,14 +21,14 @@ unsafe extern "C" {
         htbits: i32,
         window: *const c_void,
         window_size: i32,
-    ) -> c_void;
+    ) -> ();
     pub fn OodleNetwork1TCP_Train(
         state: *mut c_void,
         shared: *const c_void,
         training_packet_pointers: *const c_void,
         training_packet_sizes: i32,
         num_training_packets: i32,
-    ) -> c_void;
+    ) -> ();
     pub fn OodleNetwork1TCP_Decode(
         state: *mut c_void,
         shared: *const c_void,
@@ -64,7 +64,7 @@ pub fn OodleNetwork1_Shared_SetWindow(
     htbits: i32,
     window: *const c_void,
     window_size: i32,
-) -> c_void {
+) -> () {
     panic!("Something is trying to use Oodle but the feature isn't enabled!")
 }
 
@@ -75,7 +75,7 @@ pub fn OodleNetwork1TCP_Train(
     training_packet_pointers: *const c_void,
     training_packet_sizes: i32,
     num_training_packets: i32,
-) -> c_void {
+) -> () {
     panic!("Something is trying to use Oodle but the feature isn't enabled!")
 }
 

@@ -78,28 +78,29 @@ pub fn npc_behavior(
                 if rotation >= PI { -PI } else { rotation }
             };
 
-            let position;
-            let rotation;
             // If we are in distance, rotate towards target
-            if distance <= MINIMUM_PATHFINDING_DISTANCE {
-                position = Some(spawn.common.position);
-                rotation = Some(rotate(spawn.common.position.0, target_pos));
+            let (position, rotation) = if distance <= MINIMUM_PATHFINDING_DISTANCE {
+                (
+                    Some(spawn.common.position),
+                    Some(rotate(spawn.common.position.0, target_pos)),
+                )
             } else if !current_path.is_empty() {
                 // otherwise, Follow current path
                 let next_position = current_path[0];
 
                 let current_position = last_position.unwrap_or(spawn.common.position.0);
 
-                position = Some(Position(Vec3A::lerp(
-                    current_position,
-                    next_position,
-                    *current_path_lerp,
-                )));
-                rotation = Some(rotate(current_position, next_position));
+                (
+                    Some(Position(Vec3A::lerp(
+                        current_position,
+                        next_position,
+                        *current_path_lerp,
+                    ))),
+                    Some(rotate(current_position, next_position)),
+                )
             } else {
-                position = None;
-                rotation = None;
-            }
+                (None, None)
+            };
 
             if let NpcTarget::Actor(actor) = current_target {
                 target_actor_pos.insert(*actor, target_pos);

@@ -291,18 +291,10 @@ pub fn update_party_waymark(
         waymarks[waymark_id as usize] = waymark;
     }
 
-    let placement_mode;
-    let position_data;
-    match waymark {
-        Some(pos_data) => {
-            placement_mode = WaymarkPlacementMode::Placed;
-            position_data = pos_data;
-        }
-        None => {
-            placement_mode = WaymarkPlacementMode::Removed;
-            position_data = WaymarkPosition::default();
-        }
-    }
+    let (placement_mode, position_data) = match waymark {
+        Some(pos_data) => (WaymarkPlacementMode::Placed, pos_data),
+        None => (WaymarkPlacementMode::Removed, WaymarkPosition::default()),
+    };
 
     let msg = FromServer::WaymarkUpdated(waymark_id as u8, placement_mode, position_data, zone_id);
     network.send_to_party_or_self(from_actor_id, msg);
@@ -704,16 +696,14 @@ pub fn handle_party_messages(
                 party_list = build_party_list(party, &data);
             }
 
-            let update_status;
-            let party_info;
-
-            if member_count < 2 {
-                update_status = PartyUpdateStatus::DisbandingParty;
-                party_info = None;
+            let (update_status, party_info) = if member_count < 2 {
+                (PartyUpdateStatus::DisbandingParty, None)
             } else {
-                update_status = PartyUpdateStatus::MemberLeftParty;
-                party_info = Some((*party_id, chatchannel_id, leader_id, party_list));
-            }
+                (
+                    PartyUpdateStatus::MemberLeftParty,
+                    Some((*party_id, chatchannel_id, leader_id, party_list)),
+                )
+            };
 
             let msg = FromServer::PartyUpdate(
                 PartyUpdateTargets {
@@ -819,16 +809,15 @@ pub fn handle_party_messages(
             // Construct the party list we're sending back to the clients in this party.
             let party_list = build_party_list(party, &data);
 
-            let update_status;
-            let party_info;
             let member_count = party.get_member_count();
-            if member_count < 2 {
-                update_status = PartyUpdateStatus::DisbandingParty;
-                party_info = None;
+            let (update_status, party_info) = if member_count < 2 {
+                (PartyUpdateStatus::DisbandingParty, None)
             } else {
-                update_status = PartyUpdateStatus::MemberKicked;
-                party_info = Some((*party_id, party.chatchannel_id, party.leader_id, party_list));
-            }
+                (
+                    PartyUpdateStatus::MemberKicked,
+                    Some((*party_id, party.chatchannel_id, party.leader_id, party_list)),
+                )
+            };
 
             let msg = FromServer::PartyUpdate(
                 PartyUpdateTargets {

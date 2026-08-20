@@ -121,19 +121,18 @@ pub fn euler_to_direction(euler: (f32, f32, f32)) -> f32 {
     let dst_z = vector[2] * m22 + vector[0] * m02 + vector[1] * m12;
 
     let squared = dst_z * dst_z + dst_x * dst_x;
-    let v1;
-    let v2;
 
-    if squared > 0.00000011920929 {
+    let (v1, v2) = if squared > 0.00000011920929 {
         let mut ret = f32::sqrt(squared);
         ret = -((squared * ret) * ret - 1.0) * (0.5 * ret) + ret;
         ret = -((squared * ret) * ret - 1.0) * (0.5 * ret) + ret;
-        v1 = dst_z * (-(((squared * ret) * ret) - 1.0) * (0.5 * ret) + ret);
-        v2 = dst_x * (-(((squared * ret) * ret) - 1.0) * (0.5 * ret) + ret);
+        (
+            dst_z * (-(((squared * ret) * ret) - 1.0) * (0.5 * ret) + ret),
+            dst_x * (-(((squared * ret) * ret) - 1.0) * (0.5 * ret) + ret),
+        )
     } else {
-        v1 = 0.0;
-        v2 = 0.0;
-    }
+        (0.0, 0.0)
+    };
 
     f32::atan2(v2, v1)
 }
