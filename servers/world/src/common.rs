@@ -237,6 +237,8 @@ pub enum FromServer {
     PlayInitialCutscene(u32, u32),
     /// A FATE was completed. This is meant to track SHARED FATE completion and not much else yet.
     FATEComplete,
+    /// Instruct the client's zone connection to check if the teleport can be shared.
+    CheckTeleportSharingEligibility(u32),
 }
 
 #[derive(Debug, Clone)]

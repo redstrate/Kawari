@@ -206,6 +206,8 @@ pub struct ZoneConnection {
     pub fate_motivation_npcs: HashMap<ObjectId, u16>,
     /// Used only for the local player's PlayerSpawn.
     pub content_handler_id: Option<HandlerId>,
+    /// Whether the player can offer this teleport to their party.
+    pub can_share_teleport: bool, // TODO: remove this and add more teleport reasons
 }
 
 impl ZoneConnection {
@@ -513,5 +515,15 @@ impl ZoneConnection {
             });
             self.send_ipc_self(ipc).await;
         }
+    }
+
+    pub fn check_tele_sharing_eligibility(&mut self, aetheryte_id: u32) {
+        let mut gamedata = self.gamedata.lock();
+        // The teleport can only be offered if it's a town aetheryte (not shard) and the player is actually teleporting, not using the aethernet.
+        self.can_share_teleport = gamedata.is_aetheryte(aetheryte_id);
+    }
+
+    pub fn can_offer_teleport(&self) -> bool {
+        self.party_id != 0 && self.can_share_teleport
     }
 }
