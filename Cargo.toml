@@ -120,3 +120,6 @@ glam = { version = "0.33", features = ["std", "all-types", "fast-math"], default
 
 # For Windows ANSI support
 nu-ansi-term = "0.50"
+
+# Dependency of serde-xml-rs, needed to access EmitterConfig.
+xml = { version = "1.4", default-features = false }

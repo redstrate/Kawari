@@ -7,6 +7,7 @@ use axum::{
 use kawari::config::get_config;
 use serde::{Deserialize, Serialize};
 use tower_http::services::ServeDir;
+use xml::EmitterConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct GateStatus {
@@ -97,83 +98,133 @@ impl<T> From<T> for Xml<T> {
 }
 
 async fn session_get_init(_body: String) -> Xml<Vec<u8>> {
-    // TODO: just a guess
     Xml(
-        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result>
-<return_code>OK</return_code>
-<information/>
-<inquiry_categoryList/>
-<inquiry_itemList/>
-<report_itemList/>
-</result>"
-            .as_bytes()
-            .to_vec(),
+        r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?><result><return_code>OK</return_code><sessionKey>aaaa</sessionKey></result>"#
+        .as_bytes()
+        .to_vec(),
     )
 }
 
 async fn view_get_init() -> Xml<Vec<u8>> {
-    Xml(
-        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><result>
-<return_code>OK</return_code>
-<information/>
-<inquiry_categoryList/>
-<inquiry_itemList/>
-<report_itemList/>
-</result>"
-            .as_bytes()
-            .to_vec(),
-    )
+    let result = ViewInitResult {
+        return_code: "OK".to_string(),
+        ..Default::default()
+    };
+
+    // FFXIV's XML parser cannot parse the padding
+    let config = EmitterConfig::new().pad_self_closing(false);
+    let xml = serde_xml_rs::SerdeXml::new().emitter(config);
+
+    Xml(xml.to_string(&result).unwrap().as_bytes().to_vec())
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename = "item")]
 struct Item {
+    /// Title of the item.
     title: String,
+    /// UNIX timestamp of when this item was published.
     published: i64,
+    /// UNIX timestamp of when this item was updated.
     updated: i64,
+    /// Unique ID of this item.
     lsb_id: String,
+    /// ID of the parent item, if applicable.
     lsb_parentid: Option<String>,
+    /// Tag for this item.
     lsb_tag: Option<String>,
+    /// Category for this item.
     #[serde(rename = "catId")]
     cat_id: i32,
+    /// Text description for this item.
     content: String,
 }
 
-#[derive(Serialize)]
-#[serde(rename = "information")]
+#[derive(Serialize, Default)]
 struct Information {
     #[serde(rename = "#content")]
     items: Vec<Item>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Default)]
+struct SubCategory {
+    label: String,
+    #[serde(rename = "subCategoryId")]
+    sub_category_id: i64,
+}
+
+#[derive(Serialize, Default)]
+struct SubCategoryList {
+    #[serde(rename = "subCategory")]
+    items: Vec<SubCategory>,
+}
+
+#[derive(Serialize, Default)]
+#[serde(rename = "mainCategory")]
+struct MainCategory {
+    label: String,
+    #[serde(rename = "mainCategoryId")]
+    main_category_id: i64,
+    #[serde(rename = "subCategoryList")]
+    subcategories: SubCategoryList,
+}
+
+#[derive(Serialize, Default)]
+struct InquiryCategoryList {
+    #[serde(rename = "#content")]
+    categories: Vec<MainCategory>,
+}
+
+#[derive(Serialize, Default)]
+#[serde(rename = "item")]
+struct InquiryItemListItem {
+    title: String,
+    kid: i64,
+}
+
+#[derive(Serialize, Default)]
+struct InquiryItemList {
+    #[serde(rename = "#content")]
+    items: Vec<InquiryItemListItem>,
+}
+
+#[derive(Serialize, Default)]
+struct ReportItemList {}
+
+#[derive(Serialize, Default)]
 #[serde(rename = "result")]
-struct Result {
+struct ViewInitResult {
+    #[serde(rename = "return_code")]
     return_code: String,
+    #[serde(rename = "information")]
+    information: Information,
+    #[serde(rename = "inquiry_categoryList")]
+    inquiry_category_list: InquiryCategoryList,
+    #[serde(rename = "inquiry_itemList")]
+    inquiry_item_list: InquiryItemList,
+    #[serde(rename = "report_itemList")]
+    report_item_list: ReportItemList,
+}
+
+#[derive(Serialize, Default)]
+#[serde(rename = "result")]
+struct HeadlineResult {
+    #[serde(rename = "return_code")]
+    return_code: String,
+    #[serde(rename = "information")]
     information: Information,
 }
 
 async fn get_headline_all() -> Xml<Vec<u8>> {
-    let result = Result {
+    let result = HeadlineResult {
         return_code: "OK".to_string(),
-        information: Information {
-            items: vec![Item {
-                title: "Test".to_string(),
-                published: 1752130800,
-                updated: 1752130800,
-                lsb_id: "c8819ec6f93f6c56d760b42c2ba2f43fe6598fc8".to_string(),
-                lsb_parentid: None,
-                lsb_tag: None,
-                cat_id: 1,
-                content: "Hello, world!".to_string(),
-            }],
-        },
+        ..Default::default()
     };
 
-    Xml(serde_xml_rs::to_string(&result)
-        .unwrap()
-        .as_bytes()
-        .to_vec())
+    let config = EmitterConfig::new().pad_self_closing(false);
+    let xml = serde_xml_rs::SerdeXml::new().emitter(config);
+
+    Xml(xml.to_string(&result).unwrap().as_bytes().to_vec())
 }
 
 #[tokio::main]
