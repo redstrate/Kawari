@@ -223,6 +223,20 @@ pub fn scramble_packet(opcode_name: &str, base_key: u8, opcode_based_key: i32, d
                     unscramble_add::<u16>(data, offset, base_key as u16);
                 }
             }
+            "PartyList" => {
+                let op_offset = 456;
+                for i in 0..8 {
+                    let offset = op_offset * i;
+                    unscramble_add::<u64>(data, 64 + offset, base_key as u64);
+                    unscramble_add::<u32>(data, 72 + offset, base_key as u32);
+                    unscramble_add::<u32>(data, 76 + offset, base_key as u32);
+                    unscramble_add::<u32>(data, 80 + offset, base_key as u32);
+                    unscramble_add::<u16>(data, 96 + offset, base_key as u16);
+                    unscramble_add::<u8>(data, 101 + offset, base_key);
+                    unscramble_add::<u8>(data, 103 + offset, base_key);
+                    unscramble_add::<u8>(data, 105 + offset, base_key);
+                }
+            }
             _ => {}
         }
     }
