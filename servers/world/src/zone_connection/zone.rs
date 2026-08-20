@@ -445,7 +445,7 @@ impl ZoneConnection {
             ))
             .await;
 
-        if self.party_id != 0 && !housing_aethernet && !taking_offered_teleport {
+        if self.can_offer_teleport() {
             let teleport_info = TeleportQuery {
                 aetheryte_id: aetheryte_id as u16,
             };
@@ -458,6 +458,8 @@ impl ZoneConnection {
                     teleport_info,
                 ))
                 .await;
+            // Reset it so we don't inadvertently share an invalid aetheryte (housing/city aethernet shard)
+            self.can_share_teleport = false;
         }
 
         if taking_offered_teleport {

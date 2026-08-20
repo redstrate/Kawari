@@ -191,6 +191,7 @@ async fn initial_setup(
                     initial_login: true,
                     fate_motivation_npcs: HashMap::new(),
                     content_handler_id: None,
+                    can_share_teleport: false,
                 };
 
                 // Handle setup before passing off control to the zone connection.
@@ -4293,6 +4294,9 @@ async fn process_server_msg(
             }
             FromServer::FATEComplete => {
                 connection.record_fate_completion();
+            }
+            FromServer::CheckTeleportSharingEligibility(aetheryte_id) => {
+                connection.check_tele_sharing_eligibility(aetheryte_id);
             }
             _ => {
                 tracing::error!(

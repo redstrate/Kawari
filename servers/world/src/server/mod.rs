@@ -1255,6 +1255,9 @@ pub async fn server_main_loop(
                             {
                                 let mut network = network.lock();
                                 network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
+                                let msg =
+                                    FromServer::CheckTeleportSharingEligibility(*aetheryte_id);
+                                network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                             }
 
                             let mut data = data.lock();
