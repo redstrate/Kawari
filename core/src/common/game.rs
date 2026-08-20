@@ -94,7 +94,7 @@ pub const MAXIMUM_FATES: usize = 6;
 pub const MOB_RESPAWN_TIME: Duration = Duration::from_mins(2);
 
 /// How long until a normal mob decides to move to a new location.
-pub const MOB_WANDER_TIME: Duration = Duration::from_secs(30);
+pub const MOB_WANDER_TIME: Duration = Duration::from_secs(10);
 
 /// How many Shared FATEs are shown on each page.
 pub const TAB_SHARED_FATE_COUNT: usize = 6;

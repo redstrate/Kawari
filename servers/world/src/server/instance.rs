@@ -21,7 +21,7 @@ use crate::{
 use kawari::{
     common::{
         CharacterMode, DistanceRange, ENTRANCE_CIRCLE_IDS, HandlerId, HandlerType, MAXIMUM_FATES,
-        ObjectId, Position,
+        MOB_WANDER_TIME, ObjectId, Position,
     },
     config::{Config, get_config},
     ipc::zone::{
@@ -278,7 +278,8 @@ impl Instance {
                 newly_hated_actor: None,
                 currently_invulnerable: false,
                 status_effects: StatusEffects::default(),
-                last_wander_timestamp: Instant::now() + Duration::from_secs(fastrand::u64(0..60)),
+                last_wander_timestamp: Instant::now()
+                    + Duration::from_secs(fastrand::u64(0..MOB_WANDER_TIME.as_secs())),
             },
         );
     }
