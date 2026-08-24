@@ -596,12 +596,17 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 };
 
                 let mut network = network.lock();
-                for id in instance.actors.keys() {
-                    let Some((handle, _)) = network.get_by_actor_mut(*id) else {
+                for id in instance
+                    .actors
+                    .iter()
+                    .filter(|x| matches!(x.1, NetworkedActor::Player { .. }))
+                    .map(|x| *x.0)
+                {
+                    let Some((handle, _)) = network.get_by_actor_mut(id) else {
                         continue;
                     };
 
-                    let msg = FromServer::PacketSegment(vars.clone(), *id);
+                    let msg = FromServer::PacketSegment(vars.clone(), id);
                     let _ = handle.send(msg.clone()); // TODO: use result
                 }
             }

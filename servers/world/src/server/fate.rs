@@ -18,6 +18,7 @@ use crate::{
     ClientId, FromServer, GameData,
     lua::{KawariLua, KawariLuaState},
     server::{
+        actor::NetworkedActor,
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
@@ -309,8 +310,13 @@ pub fn inform_fate_spawn_globally(
     network: &mut NetworkState,
     fate: &FateInstance,
 ) {
-    for actor in instance.actors.keys() {
-        inform_fate_spawn(network, *actor, fate);
+    for actor in instance
+        .actors
+        .iter()
+        .filter(|x| matches!(x.1, NetworkedActor::Player { .. }))
+        .map(|x| *x.0)
+    {
+        inform_fate_spawn(network, actor, fate);
     }
 }
 
@@ -410,9 +416,10 @@ pub fn spawn_fate(
     instance: &mut Instance,
     fate_id: u32,
 ) {
-    instance
-        .fates
-        .push(FateInstance::new(fate_id, lua.clone(), game_data).unwrap());
+    let Some(new_instance) = FateInstance::new(fate_id, lua.clone(), game_data) else {
+        return;
+    };
+    instance.fates.push(new_instance);
     let fate = instance.fates.last().unwrap().clone();
     inform_fate_spawn_globally(instance, network, &fate);
 
