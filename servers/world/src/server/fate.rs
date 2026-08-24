@@ -16,7 +16,7 @@ use parking_lot::Mutex;
 
 use crate::{
     ClientId, FromServer, GameData,
-    lua::KawariLua,
+    lua::{KawariLua, KawariLuaState},
     server::{
         instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
@@ -37,7 +37,7 @@ pub struct FateInstance {
 }
 
 impl FateInstance {
-    pub fn new(fate_id: u32, game_data: &mut GameData) -> Option<Self> {
+    pub fn new(fate_id: u32, lua: KawariLua, game_data: &mut GameData) -> Option<Self> {
         let fate_rule = game_data.get_fate_rule(fate_id).unwrap_or_default();
         let fate_state = match fate_rule {
             FateRule::Invalid => return None,
@@ -46,45 +46,31 @@ impl FateInstance {
         };
 
         // Setup Lua state
-        let lua = KawariLua::new();
-
-        // Find the script for this FATE
-        let file_name = get_config()
-            .filesystem
-            .locate_script_file("content/test_fate_soul.lua");
+        let script_name;
+        {
+            let state = lua.0.app_data_ref::<KawariLuaState>().unwrap();
+            script_name = state.fate_scripts.get(&fate_id).cloned();
+        }
 
         let mut data = FateData::default();
 
-        // HACK: hardcoded to this FATE for now
-        if fate_id == 603 {
-            let result = std::fs::read(&file_name);
-            if let Err(err) = result {
+        if let Some(script) = &script_name {
+            let file = std::fs::read(script).unwrap();
+
+            if let Err(err) = lua.0.load(file).set_name("@".to_string() + script).exec() {
                 tracing::warn!(
-                    "Failed to load {}: {:?} instance content won't be scripted!",
-                    file_name,
+                    "Syntax error in {}: {:?} instance content won't be scripted!",
+                    script,
                     err
                 );
             } else {
-                let file = result.unwrap();
+                data.lua = lua;
 
-                if let Err(err) = lua
-                    .0
-                    .load(file)
-                    .set_name("@".to_string() + &file_name)
-                    .exec()
-                {
-                    tracing::warn!(
-                        "Syntax error in {}: {:?} instance content won't be scripted!",
-                        file_name,
-                        err
-                    );
-                } else {
-                    data.lua = lua;
-
-                    // Call into the onSetup function before returning, as we need the flag to be initialized before any players change zones.
-                    data.setup();
-                }
+                // Call into the onSetup function before returning, as we need the flag to be initialized before any players change zones.
+                data.setup();
             }
+        } else {
+            tracing::warn!("FATE {fate_id} isn't scripted yet!");
         }
 
         Some(Self {
@@ -119,7 +105,7 @@ impl FateInstance {
 #[derive(Debug, Clone, PartialEq)]
 pub enum LuaFateTask {
     SpawnBattleNpc { id: u32 },
-    SetMotivationNpc { id: u32 },
+    SpawnMotivationNpc { id: u32 },
 }
 
 // TODO: Maybe collapse into FateData?
@@ -134,8 +120,8 @@ impl UserData for LuaFate {
             this.tasks.push(LuaFateTask::SpawnBattleNpc { id });
             Ok(())
         });
-        methods.add_method_mut("set_motivation_npc", |_, this, id: u32| {
-            this.tasks.push(LuaFateTask::SetMotivationNpc { id });
+        methods.add_method_mut("spawn_motivation_npc", |_, this, id: u32| {
+            this.tasks.push(LuaFateTask::SpawnMotivationNpc { id });
             Ok(())
         });
     }
@@ -191,7 +177,6 @@ pub fn fate_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance) {
                     if let Some(mut npc) = instance.zone.get_battle_npc(*id) {
                         npc.common.fate_id = fate_id as u16;
                         npc.common.handler_id = HandlerId::new(HandlerType::Fate, 65535);
-                        npc.common.display_flags = DisplayFlag::FATE_START_NPC;
                         let config = get_config();
                         instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
                     } else {
@@ -200,7 +185,19 @@ pub fn fate_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance) {
                         );
                     }
                 }
-                LuaFateTask::SetMotivationNpc { id } => {
+                LuaFateTask::SpawnMotivationNpc { id } => {
+                    if let Some(mut npc) = instance.zone.get_battle_npc(*id) {
+                        npc.common.fate_id = fate_id as u16;
+                        npc.common.handler_id = HandlerId::new(HandlerType::Fate, 65535);
+                        npc.common.display_flags = DisplayFlag::FATE_START_NPC;
+                        let config = get_config();
+                        instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
+                    } else {
+                        tracing::warn!(
+                            "Failed to find bnpc {id} for SpawnBattleNpc, it won't spawn!"
+                        );
+                    }
+
                     if let Some((object_id, position)) = instance.find_npc(*id) {
                         // TODO: consolidate this code with the one in Instance
                         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(
@@ -394,13 +391,14 @@ pub fn unk10_fate(fate: &mut FateInstance) {
 pub fn start_next_fate(
     network: &mut NetworkState,
     game_data: &mut GameData,
+    lua: &KawariLua,
     instance: &mut Instance,
 ) {
     // Remove any FATEs that already spawned.
     let mut candidate_fates = instance.candiate_fates.clone();
     candidate_fates.retain(|x| instance.fates.iter().find(|y| y.fate_id == *x).is_none());
     if let Some(fate_id) = fastrand::choice(candidate_fates) {
-        spawn_fate(network, game_data, instance, fate_id);
+        spawn_fate(network, game_data, lua, instance, fate_id);
     }
 }
 
@@ -408,12 +406,13 @@ pub fn start_next_fate(
 pub fn spawn_fate(
     network: &mut NetworkState,
     game_data: &mut GameData,
+    lua: &KawariLua,
     instance: &mut Instance,
     fate_id: u32,
 ) {
     instance
         .fates
-        .push(FateInstance::new(fate_id, game_data).unwrap());
+        .push(FateInstance::new(fate_id, lua.clone(), game_data).unwrap());
     let fate = instance.fates.last().unwrap().clone();
     inform_fate_spawn_globally(instance, network, &fate);
 

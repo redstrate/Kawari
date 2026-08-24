@@ -95,7 +95,12 @@ struct WorldServer {
 
 impl WorldServer {
     /// Ensures an instance exists, and creates one if not found.
-    fn ensure_exists(&mut self, zone_id: u16, game_data: &mut GameData) -> &mut Instance {
+    fn ensure_exists(
+        &mut self,
+        zone_id: u16,
+        game_data: &mut GameData,
+        lua: &KawariLua,
+    ) -> &mut Instance {
         let is_public_instance;
         if let Some(intended_use) = game_data.get_intended_use(zone_id as u32) {
             is_public_instance = !is_private_area(intended_use);
@@ -112,7 +117,7 @@ impl WorldServer {
             {
                 tracing::info!("Creating new public instance for zone {zone_id}!");
                 self.instances
-                    .push(Instance::new(zone_id, game_data, false));
+                    .push(Instance::new(zone_id, game_data, lua, false));
             }
 
             self.instances
@@ -122,7 +127,7 @@ impl WorldServer {
         } else {
             tracing::info!("Creating new private instance for zone {zone_id}!");
             self.instances
-                .push(Instance::new(zone_id, game_data, false));
+                .push(Instance::new(zone_id, game_data, lua, false));
             self.instances.last_mut().unwrap()
         }
     }
@@ -147,10 +152,12 @@ impl WorldServer {
         content_finder_condition: u16,
         content_settings: DutyFinderSetting,
         game_data: &mut GameData,
+        lua: &KawariLua,
     ) -> Option<&mut Instance> {
         let mut instance = Instance::new(
             zone_id,
             game_data,
+            lua,
             content_settings.contains(DutyFinderSetting::EXPLORER_MODE),
         );
         instance.content_finder_condition_id = content_finder_condition;
@@ -277,6 +284,7 @@ fn server_logic_tick(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
     gamedata: Arc<Mutex<GameData>>,
+    lua: Arc<Mutex<KawariLua>>,
 ) {
     let mut actors_to_update_hp_mp = Vec::new();
     let mut actors_to_fake_zone_jump = Vec::new();
@@ -768,11 +776,13 @@ fn server_logic_tick(
         let mut game_data = gamedata.lock();
         let mut data = data.lock();
         let mut network = network.lock();
+        let lua = lua.lock();
         let from_id = network.find_by_actor(id).unwrap();
         change_zone_warp_to_pop_range(
             &mut data,
             &mut network,
             &mut game_data,
+            &lua,
             None, // None here means that we don't want to change their current instance
             exit_pop_range_id,
             id,
@@ -818,7 +828,12 @@ pub async fn server_main_loop(
                 interval.tick().await;
 
                 // Execute general server logic
-                server_logic_tick(data.clone(), network.clone(), game_data.clone());
+                server_logic_tick(
+                    data.clone(),
+                    network.clone(),
+                    game_data.clone(),
+                    lua.clone(),
+                );
 
                 // Execute list of queued tasks
                 {
@@ -956,6 +971,7 @@ pub async fn server_main_loop(
                                 let mut data = data.lock();
                                 let mut network = network.lock();
                                 let mut game_data = game_data.lock();
+                                let lua = lua.lock();
 
                                 let from_id = network.find_by_actor(task.from_actor_id).unwrap();
 
@@ -963,6 +979,7 @@ pub async fn server_main_loop(
                                     &mut data,
                                     &mut network,
                                     &mut game_data,
+                                    &lua,
                                     None, // Means we don't want to change their current instance
                                     *id,
                                     task.from_actor_id,
@@ -1043,7 +1060,8 @@ pub async fn server_main_loop(
                                 if let Some(instance) = data.instances.get_mut(*instance_index) {
                                     let mut network = network.lock();
                                     let mut game_data = game_data.lock();
-                                    start_next_fate(&mut network, &mut game_data, instance);
+                                    let lua = lua.lock();
+                                    start_next_fate(&mut network, &mut game_data, &lua, instance);
                                 }
                             }
                         }
@@ -1064,7 +1082,13 @@ pub async fn server_main_loop(
             &msg,
         );
         handled |= handle_social_messages(data.clone(), network.clone(), &msg);
-        handled |= handle_zone_messages(data.clone(), network.clone(), game_data.clone(), &msg);
+        handled |= handle_zone_messages(
+            data.clone(),
+            network.clone(),
+            game_data.clone(),
+            lua.clone(),
+            &msg,
+        );
         handled |= handle_action_messages(data.clone(), game_data.clone(), network.clone(), &msg);
         handled |= handle_effect_messages(data.clone(), network.clone(), lua.clone(), &msg);
         handled |= handle_director_messages(data.clone(), network.clone(), game_data.clone(), &msg);
@@ -1147,7 +1171,8 @@ pub async fn server_main_loop(
                     let instance;
                     {
                         let mut game_data = game_data.lock();
-                        instance = data.ensure_exists(zone_id, &mut game_data);
+                        let lua = lua.lock();
+                        instance = data.ensure_exists(zone_id, &mut game_data, &lua);
                     }
 
                     instance.insert_empty_actor(from_actor_id);
@@ -2345,11 +2370,13 @@ pub async fn server_main_loop(
 
                         // then find or create a new instance with the zone id and content finder condition
                         let mut game_data = game_data.lock();
+                        let lua = lua.lock();
                         if let Some(target_instance) = data.create_instance_for_content(
                             zone_id,
                             content_id,
                             settings,
                             &mut game_data,
+                            &lua,
                         ) {
                             for (client_id, actor_id) in &actor_ids {
                                 target_instance.insert_empty_actor(*actor_id);
@@ -2386,7 +2413,8 @@ pub async fn server_main_loop(
                     let instance;
                     {
                         let mut game_data = game_data.lock();
-                        instance = data.ensure_exists(old_zone_id, &mut game_data);
+                        let lua = lua.lock();
+                        instance = data.ensure_exists(old_zone_id, &mut game_data, &lua);
                     }
 
                     instance.insert_empty_actor(from_actor_id);
@@ -2589,6 +2617,7 @@ pub async fn server_main_loop(
                     let mut data = data.lock();
                     let mut network = network.lock();
                     let mut game_data = game_data.lock();
+                    let lua = lua.lock();
 
                     let to_actor_id = data.find_actor_by_name(&name);
 
@@ -2596,6 +2625,7 @@ pub async fn server_main_loop(
                         &mut network,
                         &mut data,
                         &mut game_data,
+                        &lua,
                         from_id,
                         to_actor_id,
                     );
@@ -2604,6 +2634,7 @@ pub async fn server_main_loop(
                     let mut data = data.lock();
                     let mut network = network.lock();
                     let mut game_data = game_data.lock();
+                    let lua = lua.lock();
 
                     let actor_id = data.find_actor_by_name(&name);
                     if let Some(client_id) = network.find_by_actor(actor_id) {
@@ -2611,6 +2642,7 @@ pub async fn server_main_loop(
                             &mut network,
                             &mut data,
                             &mut game_data,
+                            &lua,
                             client_id,
                             from_actor_id,
                         );

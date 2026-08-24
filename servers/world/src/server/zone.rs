@@ -14,7 +14,7 @@ use physis::{
 
 use crate::{
     ClientId, FromServer, GameData, StatusEffects, TerritoryNameKind, ToServer,
-    lua::LuaZone,
+    lua::{KawariLua, LuaZone},
     server::{
         NetworkedActor, WorldServer,
         actor::{create_npc_common_spawn, set_character_mode},
@@ -808,6 +808,7 @@ fn begin_change_zone<'a>(
     data: &'a mut WorldServer,
     network: &mut NetworkState,
     game_data: &mut GameData,
+    lua: &KawariLua,
     destination_zone_id: Option<u16>,
     actor_id: ObjectId,
     warp_type: WarpType,
@@ -845,7 +846,7 @@ fn begin_change_zone<'a>(
         }
 
         // then find or create a new instance with the zone id
-        let instance = data.ensure_exists(destination_zone_id, game_data);
+        let instance = data.ensure_exists(destination_zone_id, game_data, lua);
         // Insert an empty actor that will be filled later
         instance.insert_empty_actor(actor_id);
 
@@ -891,6 +892,7 @@ pub fn change_zone_warp_to_pop_range(
     data: &mut WorldServer,
     network: &mut NetworkState,
     game_data: &mut GameData,
+    lua: &KawariLua,
     destination_zone_id: Option<u16>,
     destination_instance_id: u32,
     actor_id: ObjectId,
@@ -902,6 +904,7 @@ pub fn change_zone_warp_to_pop_range(
         data,
         network,
         game_data,
+        lua,
         destination_zone_id,
         actor_id,
         warp_type,
@@ -992,6 +995,7 @@ pub fn change_zone_to_player(
     network: &mut NetworkState,
     data: &mut WorldServer,
     game_data: &mut GameData,
+    lua: &KawariLua,
     from_id: ClientId,
     to_actor_id: ObjectId,
 ) {
@@ -1010,6 +1014,7 @@ pub fn change_zone_to_player(
         data,
         network,
         game_data,
+        lua,
         Some(destination_zone_id),
         from_actor_id,
         WarpType::Normal,
@@ -1083,6 +1088,7 @@ pub fn handle_zone_messages(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
     game_data: Arc<Mutex<GameData>>,
+    lua: Arc<Mutex<KawariLua>>,
     msg: &ToServer,
 ) -> bool {
     match msg {
@@ -1128,11 +1134,13 @@ pub fn handle_zone_messages(
             let mut data = data.lock();
             let mut network = network.lock();
             let mut game_data = game_data.lock();
+            let lua = lua.lock();
 
             let (target_instance, needs_init_zone) = begin_change_zone(
                 &mut data,
                 &mut network,
                 &mut game_data,
+                &lua,
                 Some(*zone_id),
                 *actor_id,
                 *warp_type,
@@ -1186,10 +1194,12 @@ pub fn handle_zone_messages(
             }
 
             let mut game_data = game_data.lock();
+            let lua = lua.lock();
             change_zone_warp_to_pop_range(
                 &mut data,
                 &mut network,
                 &mut game_data,
+                &lua,
                 Some(destination_zone_id),
                 destination_instance_id,
                 *actor_id,
@@ -1204,6 +1214,7 @@ pub fn handle_zone_messages(
             let mut data = data.lock();
             let mut network = network.lock();
             let mut game_data = game_data.lock();
+            let lua = lua.lock();
 
             // first, find the warp and it's destination
             let (destination_instance_id, destination_zone_id) = game_data
@@ -1214,6 +1225,7 @@ pub fn handle_zone_messages(
                 &mut data,
                 &mut network,
                 &mut game_data,
+                &lua,
                 Some(destination_zone_id),
                 destination_instance_id,
                 *actor_id,
@@ -1228,6 +1240,7 @@ pub fn handle_zone_messages(
             let mut data = data.lock();
             let mut network = network.lock();
             let mut game_data = game_data.lock();
+            let lua = lua.lock();
 
             // first, find the warp and it's destination
             let (destination_instance_id, destination_zone_id) = game_data
@@ -1238,6 +1251,7 @@ pub fn handle_zone_messages(
                 &mut data,
                 &mut network,
                 &mut game_data,
+                &lua,
                 Some(destination_zone_id),
                 destination_instance_id,
                 *actor_id,
@@ -1252,11 +1266,13 @@ pub fn handle_zone_messages(
             let mut data = data.lock();
             let mut network = network.lock();
             let mut game_data = game_data.lock();
+            let lua = lua.lock();
 
             change_zone_warp_to_pop_range(
                 &mut data,
                 &mut network,
                 &mut game_data,
+                &lua,
                 Some(*territory_id),
                 *pop_range_id,
                 *from_actor_id,
@@ -1355,10 +1371,12 @@ pub fn handle_zone_messages(
             let mut data = data.lock();
             let mut network = network.lock();
             let mut game_data = game_data.lock();
+            let lua = lua.lock();
             change_zone_warp_to_pop_range(
                 &mut data,
                 &mut network,
                 &mut game_data,
+                &lua,
                 Some(zone_id),
                 *id,
                 *from_actor_id,

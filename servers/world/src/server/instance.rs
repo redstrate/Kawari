@@ -7,6 +7,7 @@ use std::{
 
 use crate::{
     ClientId, FromServer, GameData, Navmesh, StatusEffects,
+    lua::KawariLua,
     server::{
         WorldServer,
         action::cancel_action,
@@ -133,7 +134,7 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn new(id: u16, game_data: &mut GameData, explorer_mode: bool) -> Self {
+    pub fn new(id: u16, game_data: &mut GameData, lua: &KawariLua, explorer_mode: bool) -> Self {
         let mut instance = Instance {
             zone: Zone::load(game_data, id),
             weather_id: game_data.get_weather(id as u32).unwrap_or_default() as u16,
@@ -208,7 +209,7 @@ impl Instance {
         }
         for fate_id in fastrand::choose_multiple(instance.candiate_fates.clone(), MAXIMUM_FATES) {
             let should_start;
-            if let Some(fate) = FateInstance::new(fate_id, game_data) {
+            if let Some(fate) = FateInstance::new(fate_id, lua.clone(), game_data) {
                 should_start = fate.fate_state == FateState::Running;
                 instance.fates.push(fate);
             } else {

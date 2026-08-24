@@ -143,6 +143,7 @@ impl KawariLua {
         // Locate these based on the ID in their filename
         load_based_on_filename("effects", &mut extra_lua_state.effect_scripts);
         load_based_on_filename("actions", &mut extra_lua_state.action_scripts);
+        load_based_on_filename("fates", &mut extra_lua_state.fate_scripts);
 
         lua.set_app_data(extra_lua_state);
         lua.globals().set("registerAction", register_action_func)?;
@@ -201,6 +202,7 @@ pub struct KawariLuaState {
     pub gm_command_scripts: HashMap<u32, String>,
     pub effect_scripts: HashMap<u32, String>,
     pub zone_eobj_scripts: HashMap<u32, String>,
+    pub fate_scripts: HashMap<u32, String>,
 }
 
 #[cfg(test)]

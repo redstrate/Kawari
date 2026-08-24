@@ -239,11 +239,13 @@ fn process_debug_commands(
 
                 let mut network = network.lock();
                 let mut game_data = game_data.lock();
+                let lua = lua.lock();
                 // None here means we don't want them to change from their current instance.
                 change_zone_warp_to_pop_range(
                     &mut data,
                     &mut network,
                     &mut game_data,
+                    &lua,
                     None,
                     shortcut_poprange_id,
                     from_actor_id,
@@ -269,7 +271,14 @@ fn process_debug_commands(
             {
                 let mut network = network.lock();
                 let mut game_data = game_data.lock();
-                spawn_fate(&mut network, &mut game_data, instance, id.parse().unwrap());
+                let lua = lua.lock();
+                spawn_fate(
+                    &mut network,
+                    &mut game_data,
+                    &lua,
+                    instance,
+                    id.parse().unwrap(),
+                );
             }
 
             true
