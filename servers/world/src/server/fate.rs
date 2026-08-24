@@ -15,15 +15,15 @@ use mlua::{Function, UserData, UserDataMethods};
 use parking_lot::Mutex;
 
 use crate::{
-    FromServer, GameData,
+    ClientId, FromServer, GameData,
     lua::KawariLua,
     server::{
-        instance::Instance,
+        instance::{Instance, QueuedTaskData},
         network::{DestinationNetwork, NetworkState},
     },
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct FateInstance {
     /// Index into the Fate Excel sheet.
     pub fate_id: u32,
@@ -89,13 +89,13 @@ impl FateInstance {
 
         Some(Self {
             fate_id,
-            start_timestamp: timestamp_secs(),
             fate_state,
             data,
-            motivation_npc: None,
+            ..Default::default()
         })
     }
 
+    /// Returns the packet that updates the start timestamp and time limit for this FATE.
     pub fn create_unk_fate_packet(&self) -> ServerZoneIpcSegment {
         ServerZoneIpcSegment::new(ServerZoneIpcData::UnkFate {
             fate_id: self.fate_id,
@@ -107,6 +107,7 @@ impl FateInstance {
         })
     }
 
+    /// Returns the ActorControl that updates the state for this FATE.
     pub fn create_fate_init_ac(&self) -> ActorControlCategory {
         ActorControlCategory::FateInit {
             fate_id: self.fate_id,
@@ -316,15 +317,67 @@ pub fn inform_fate_spawn_globally(
     }
 }
 
-/// Move a FATE from Preparing to Running.
-pub fn start_fate(fate: &mut FateInstance) {
-    fate.fate_state = FateState::Running;
-    fate.start_timestamp = timestamp_secs();
+/// Move a FATE from Preparing to Running. For a version that networks to other players, use `start_fate`.
+pub fn internally_start_fate(instance: &mut Instance, fate_id: u32) {
+    {
+        let Some(fate) = instance.find_fate_by_id_mut(fate_id) else {
+            return;
+        };
+
+        fate.fate_state = FateState::Running;
+        fate.start_timestamp = timestamp_secs();
+    }
+
+    instance.insert_task(
+        ClientId::default(),
+        ObjectId::default(),
+        FATE_TIME_LIMIT,
+        QueuedTaskData::EndFate { fate_id },
+    );
 }
 
-/// Move a FATE to Ending.
-pub fn end_fate(fate: &mut FateInstance) {
-    fate.fate_state = FateState::Ending;
+/// Move a FATE from Preparing to Running.
+pub fn start_fate(network: &mut NetworkState, instance: &mut Instance, fate_id: u32) {
+    internally_start_fate(instance, fate_id);
+
+    let fate_init_ac;
+    let fate_unk_packet;
+    let motivation_npc;
+    {
+        let Some(fate) = instance.find_fate_by_id_mut(fate_id) else {
+            return;
+        };
+
+        fate_init_ac = fate.create_fate_init_ac();
+        fate_unk_packet = fate.create_unk_fate_packet();
+        motivation_npc = fate.motivation_npc.map(|x| x.0);
+    }
+
+    network.send_to_instance(
+        ObjectId::default(),
+        instance,
+        FromServer::ActorControlSelf(fate_init_ac),
+        DestinationNetwork::ZoneClients,
+    );
+
+    network.send_to_instance(
+        ObjectId::default(),
+        instance,
+        FromServer::PacketSegment(fate_unk_packet, Default::default()),
+        DestinationNetwork::ZoneClients,
+    );
+
+    if let Some(motivation_npc) = motivation_npc {
+        network.send_to_instance(
+            ObjectId::default(),
+            instance,
+            FromServer::ActorControlSelf(ActorControlCategory::SetCollectionPointNpc {
+                fate_id,
+                motivation_npc,
+            }),
+            DestinationNetwork::ZoneClients,
+        );
+    }
 }
 
 /// Move a FATE to Ended.
@@ -335,4 +388,36 @@ pub fn ended_fate(fate: &mut FateInstance) {
 /// Move a FATE to Unk10.
 pub fn unk10_fate(fate: &mut FateInstance) {
     fate.fate_state = FateState::Unk10;
+}
+
+/// Spawns a random FATE from the candiate pool.
+pub fn start_next_fate(
+    network: &mut NetworkState,
+    game_data: &mut GameData,
+    instance: &mut Instance,
+) {
+    // Remove any FATEs that already spawned.
+    let mut candidate_fates = instance.candiate_fates.clone();
+    candidate_fates.retain(|x| instance.fates.iter().find(|y| y.fate_id == *x).is_none());
+    if let Some(fate_id) = fastrand::choice(candidate_fates) {
+        spawn_fate(network, game_data, instance, fate_id);
+    }
+}
+
+/// Spawns the specified FATE.
+pub fn spawn_fate(
+    network: &mut NetworkState,
+    game_data: &mut GameData,
+    instance: &mut Instance,
+    fate_id: u32,
+) {
+    instance
+        .fates
+        .push(FateInstance::new(fate_id, game_data).unwrap());
+    let fate = instance.fates.last().unwrap().clone();
+    inform_fate_spawn_globally(instance, network, &fate);
+
+    if fate.fate_state == FateState::Running {
+        start_fate(network, instance, fate_id);
+    }
 }

@@ -12,7 +12,7 @@ use crate::{
         action::cancel_action,
         actor::{NetworkedActor, NpcState},
         director::DirectorData,
-        fate::FateInstance,
+        fate::{FateInstance, internally_start_fate},
         network::{DestinationNetwork, NetworkState},
         zone::Zone,
     },
@@ -20,8 +20,8 @@ use crate::{
 };
 use kawari::{
     common::{
-        CharacterMode, DistanceRange, ENTRANCE_CIRCLE_IDS, HandlerId, HandlerType, MAXIMUM_FATES,
-        MOB_WANDER_TIME, ObjectId, Position,
+        CharacterMode, DistanceRange, ENTRANCE_CIRCLE_IDS, FateState, HandlerId, HandlerType,
+        MAXIMUM_FATES, MOB_WANDER_TIME, ObjectId, Position,
     },
     config::{Config, get_config},
     ipc::zone::{
@@ -207,8 +207,16 @@ impl Instance {
             });
         }
         for fate_id in fastrand::choose_multiple(instance.candiate_fates.clone(), MAXIMUM_FATES) {
+            let should_start;
             if let Some(fate) = FateInstance::new(fate_id, game_data) {
+                should_start = fate.fate_state == FateState::Running;
                 instance.fates.push(fate);
+            } else {
+                should_start = false;
+            }
+            // TODO: meh i kind of hate that we do this. ideally we could read the faterule from the outside and determine how to start it. i dunno
+            if should_start {
+                internally_start_fate(&mut instance, fate_id);
             }
         }
 
@@ -499,11 +507,6 @@ impl Instance {
     /// Returns the FATE instance for this ID.
     pub fn find_fate_by_id_mut(&mut self, id: u32) -> Option<&mut FateInstance> {
         self.fates.iter_mut().find(|x| x.fate_id == id)
-    }
-
-    /// Returns the FATE instance for this ID.
-    pub fn find_fate_by_id(&mut self, id: u32) -> Option<&FateInstance> {
-        self.fates.iter().find(|x| x.fate_id == id)
     }
 
     /// Returns the main (content) handler ID.

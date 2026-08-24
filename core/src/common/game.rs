@@ -88,7 +88,7 @@ pub const ANIMATION_LOCK_TIME: f32 = 0.6;
 pub const FATE_TIME_LIMIT: Duration = Duration::from_mins(15);
 
 /// How many FATEs can be active at once in a instance of a zone.
-pub const MAXIMUM_FATES: usize = 6;
+pub const MAXIMUM_FATES: usize = 5;
 
 /// How long until a normal mob respawns.
 pub const MOB_RESPAWN_TIME: Duration = Duration::from_mins(2);
@@ -1077,8 +1077,9 @@ impl std::fmt::Debug for DeepDungeonRoomFlag {
 /// See <https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/Fate/FateContext.cs>.
 #[binrw]
 #[brw(repr = u32)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum FateState {
+    #[default]
     Unk0 = 0,
     Unk1 = 1,
     Unk2 = 2,

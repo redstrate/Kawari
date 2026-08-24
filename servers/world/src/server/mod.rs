@@ -22,7 +22,7 @@ use crate::{
         chat::handle_chat_messages,
         director::{DirectorData, director_tick, handle_director_messages},
         effect::{handle_effect_messages, remove_effect, send_effects_list},
-        fate::{ended_fate, fate_tick, start_fate, unk10_fate},
+        fate::{ended_fate, fate_tick, start_fate, start_next_fate, unk10_fate},
         instance::{Instance, NavmeshGenerationStep, QueuedTaskData, remove_actor_from_instance},
         linkshell::handle_linkshell_messages,
         network::{DestinationNetwork, NetworkState},
@@ -1037,6 +1037,13 @@ pub async fn server_main_loop(
                                         FromServer::FATEComplete,
                                         DestinationNetwork::ZoneClients,
                                     );
+                                }
+
+                                // Fill in the FATE slot
+                                if let Some(instance) = data.instances.get_mut(*instance_index) {
+                                    let mut network = network.lock();
+                                    let mut game_data = game_data.lock();
+                                    start_next_fate(&mut network, &mut game_data, instance);
                                 }
                             }
                         }
@@ -2143,47 +2150,11 @@ pub async fn server_main_loop(
                                 }
                             }
                         }
-                        ClientTriggerCommand::StartPreparingFATE {
-                            fate_id,
-                            motivation_npc_id,
-                        } => {
+                        ClientTriggerCommand::StartPreparingFATE { fate_id, .. } => {
                             let mut data = data.lock();
                             if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
-                                if let Some(fate) = instance.find_fate_by_id_mut(*fate_id) {
-                                    start_fate(fate);
-                                }
-                                if let Some(fate) = instance.find_fate_by_id(*fate_id).cloned() {
-                                    let mut network = network.lock();
-
-                                    network.send_to_instance(
-                                        ObjectId::default(),
-                                        instance,
-                                        FromServer::ActorControlSelf(fate.create_fate_init_ac()),
-                                        DestinationNetwork::ZoneClients,
-                                    );
-
-                                    network.send_to_instance(
-                                        ObjectId::default(),
-                                        instance,
-                                        FromServer::PacketSegment(
-                                            fate.create_unk_fate_packet(),
-                                            Default::default(),
-                                        ),
-                                        DestinationNetwork::ZoneClients,
-                                    );
-
-                                    network.send_to_instance(
-                                        ObjectId::default(),
-                                        instance,
-                                        FromServer::ActorControlSelf(
-                                            ActorControlCategory::SetCollectionPointNpc {
-                                                fate_id: *fate_id,
-                                                motivation_npc: *motivation_npc_id,
-                                            },
-                                        ),
-                                        DestinationNetwork::ZoneClients,
-                                    );
-                                }
+                                let mut network = network.lock();
+                                start_fate(&mut network, instance, *fate_id);
                             }
                         }
                         ClientTriggerCommand::AcceptRevive => {

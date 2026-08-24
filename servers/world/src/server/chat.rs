@@ -17,7 +17,7 @@ use crate::{
         WorldServer,
         action::execute_action,
         actor::spawn_custom_bnpc,
-        fate::{FateInstance, end_fate, inform_fate_spawn_globally},
+        fate::spawn_fate,
         instance::QueuedTaskData,
         network::{DestinationNetwork, NetworkState},
         zone::change_zone_warp_to_pop_range,
@@ -267,15 +267,9 @@ fn process_debug_commands(
             if let Some((_, id)) = chat_message.split_once(' ')
                 && let Some(instance) = data.find_actor_instance_mut(from_actor_id)
             {
-                // TODO: remove oldest fate as to avoid the maximum limit
-
-                let mut game_data = game_data.lock();
-                instance
-                    .fates
-                    .push(FateInstance::new(id.parse().unwrap(), &mut game_data).unwrap());
                 let mut network = network.lock();
-                let fate = instance.fates.last().unwrap().clone();
-                inform_fate_spawn_globally(instance, &mut network, &fate);
+                let mut game_data = game_data.lock();
+                spawn_fate(&mut network, &mut game_data, instance, id.parse().unwrap());
             }
 
             true
@@ -404,44 +398,21 @@ fn process_debug_commands(
             true
         }
         "!fatecomplete" => {
-            // TODO: this code should be standardized somewhere
-
             let mut data = data.lock();
-            let mut network = network.lock();
-            let mut ac = None;
             if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
                 && let Some(actor) = instance.find_actor(from_actor_id)
             {
                 let ranges = instance.zone.get_overlapping_map_ranges(actor.position().0);
-                if let Some(fate_range) = ranges.iter().find(|x| x.fate.is_some())
-                    && let Some(fate_instance) = instance
-                        .fates
-                        .iter_mut()
-                        .find(|x| x.fate_id == fate_range.fate.unwrap())
-                {
-                    end_fate(fate_instance);
-                    ac = Some(fate_instance.create_fate_init_ac());
-
+                if let Some(fate_range) = ranges.iter().find(|x| x.fate.is_some()) {
                     instance.insert_task(
                         from_id,
                         from_actor_id,
-                        Duration::from_secs(1),
+                        Duration::ZERO,
                         QueuedTaskData::EndFate {
                             fate_id: fate_range.fate.unwrap(),
                         },
                     );
                 }
-            }
-
-            if let Some(instance) = data.find_actor_instance(from_actor_id)
-                && let Some(ac) = ac
-            {
-                network.send_to_instance(
-                    ObjectId::default(),
-                    instance,
-                    FromServer::ActorControlSelf(ac),
-                    DestinationNetwork::ZoneClients,
-                );
             }
 
             true
