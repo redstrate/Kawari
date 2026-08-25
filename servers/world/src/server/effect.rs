@@ -99,6 +99,7 @@ pub fn send_effects_list(
         statuses,
         classjob_id: common_spawn.class_job,
         level: common_spawn.level,
+        flags: common_spawn.level, // NOTE: seen this set while level synced, but zero otherwise?
         health_points: common_spawn.health_points,
         max_health_points: common_spawn.max_health_points,
         resource_points: common_spawn.resource_points,

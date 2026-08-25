@@ -1721,6 +1721,12 @@ async fn process_packet(
 
                                     connection.send_stats().await;
                                     connection.update_class_info().await;
+
+                                    connection
+                                        .actor_control_self(ActorControlCategory::FateLevelSynced {
+                                            fate_id,
+                                        })
+                                        .await;
                                 }
                                 ClientTriggerCommand::EquipGlasses { slot, id } => {
                                     connection.player_data.equipped_glasses_ids[slot as usize] =

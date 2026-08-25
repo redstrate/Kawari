@@ -1086,8 +1086,9 @@ pub enum ActorControlCategory {
         motivation_npc: ObjectId,
     },
 
+    /// Needs to be sent otherwise the Level Sync button disappears.
     #[brw(magic = 2362u32)]
-    UnkFate6 { fate_id: u32 },
+    FateLevelSynced { fate_id: u32 },
 
     #[brw(magic = 2363u32)]
     UnkFate7 {

@@ -502,7 +502,11 @@ impl ZoneConnection {
         let current_level;
         {
             let gamedata = self.gamedata.lock();
-            current_level = self.current_level(&gamedata);
+            if let Some(synced_level) = self.synced_level {
+                current_level = synced_level;
+            } else {
+                current_level = self.current_level(&gamedata) as u8;
+            }
         }
 
         let base_parameters = self.base_parameters();
@@ -510,7 +514,7 @@ impl ZoneConnection {
         self.handle
             .send(ToServer::SetNewStatValues(
                 self.player_data.character.actor_id,
-                current_level as u8,
+                current_level,
                 self.player_data.classjob.current_class as u8,
                 base_parameters,
             ))
