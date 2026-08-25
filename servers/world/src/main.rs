@@ -1017,6 +1017,11 @@ async fn process_packet(
                                     connection.teleport_reason = TeleportReason::NotSpecified;
                                 }
                                 ClientTriggerCommand::BeginContentsReplay => {
+                                    connection.conditions.set_condition(
+                                        kawari::ipc::zone::Condition::DutyRecorderPlayback,
+                                    );
+                                    connection.send_conditions().await;
+
                                     connection
                                         .actor_control_self(
                                             ActorControlCategory::BeginContentsReplay { unk1: 1 },
@@ -1024,6 +1029,11 @@ async fn process_packet(
                                         .await;
                                 }
                                 ClientTriggerCommand::EndContentsReplay => {
+                                    connection.conditions.remove_condition(
+                                        kawari::ipc::zone::Condition::DutyRecorderPlayback,
+                                    );
+                                    connection.send_conditions().await;
+
                                     connection
                                         .actor_control_self(
                                             ActorControlCategory::EndContentsReplay { unk1: 1 },
