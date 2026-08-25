@@ -338,10 +338,12 @@ pub fn kill_actor(network: Arc<Mutex<NetworkState>>, instance: &mut Instance, ac
     // Inform the director that their actor died
     let mut npc_id = None;
     let mut position = None;
+    let mut fate_id = None;
     if let Some(actor) = instance.find_actor(actor_id)
         && let Some(npc) = actor.get_npc_spawn()
     {
         npc_id = Some(npc.common.layout_id);
+        fate_id = Some(npc.common.fate_id);
     }
 
     // Transistion into the dead state so they stop moving.
@@ -356,6 +358,13 @@ pub fn kill_actor(network: Arc<Mutex<NetworkState>>, instance: &mut Instance, ac
         && let Some(director) = &mut instance.directors.first_mut()
     {
         director.on_actor_death(npc_id, position.unwrap());
+    }
+
+    // If we're associated with a Fate, that's handled by a completely different system!
+    if let Some(fate_id) = fate_id
+        && let Some(fate) = instance.find_fate_by_id_mut(fate_id as u32)
+    {
+        fate.data.on_actor_death();
     }
 
     // Cancel existing tasks

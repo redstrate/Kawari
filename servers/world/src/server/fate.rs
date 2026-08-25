@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use kawari::{
     common::{
@@ -35,6 +35,8 @@ pub struct FateInstance {
     pub data: FateData,
     /// The start NPC for this FATE, if applicable.
     pub motivation_npc: Option<(ObjectId, Position)>,
+    /// Current progress of this FATE.
+    pub progress: u32,
 }
 
 impl FateInstance {
@@ -107,6 +109,7 @@ impl FateInstance {
 pub enum LuaFateTask {
     SpawnBattleNpc { id: u32 },
     SpawnMotivationNpc { id: u32 },
+    SetProgress { progress: u32 },
 }
 
 // TODO: Maybe collapse into FateData?
@@ -125,6 +128,10 @@ impl UserData for LuaFate {
             this.tasks.push(LuaFateTask::SpawnMotivationNpc { id });
             Ok(())
         });
+        methods.add_method_mut("set_progress", |_, this, progress: u32| {
+            this.tasks.push(LuaFateTask::SetProgress { progress });
+            Ok(())
+        });
     }
 }
 
@@ -138,7 +145,7 @@ pub struct FateData {
 impl FateData {
     pub fn setup(&mut self) {
         let mut run_script = || {
-            let mut lua_director = self.create_lua_director();
+            let mut lua_director = self.create_lua_fate();
             let err = self.lua.0.scope(|scope| {
                 let data = scope.create_userdata_ref_mut(&mut lua_director)?;
 
@@ -148,7 +155,7 @@ impl FateData {
 
                 Ok(())
             });
-            self.apply_lua_director(lua_director);
+            self.apply_lua_fate(lua_director);
             err
         };
         if let Err(err) = run_script() {
@@ -156,18 +163,39 @@ impl FateData {
         }
     }
 
-    fn create_lua_director(&self) -> LuaFate {
+    fn create_lua_fate(&self) -> LuaFate {
         LuaFate { tasks: Vec::new() }
     }
 
-    fn apply_lua_director(&mut self, lua: LuaFate) {
+    fn apply_lua_fate(&mut self, lua: LuaFate) {
         self.tasks.extend_from_slice(&lua.tasks);
+    }
+
+    pub fn on_actor_death(&mut self) {
+        let mut run_script = || {
+            let mut lua_fate = self.create_lua_fate();
+            let err = self.lua.0.scope(|scope| {
+                let data = scope.create_userdata_ref_mut(&mut lua_fate)?;
+
+                let func: Function = self.lua.0.globals().get("onActorDeath")?;
+
+                func.call::<()>(data)?;
+
+                Ok(())
+            });
+            self.apply_lua_fate(lua_fate);
+            err
+        };
+        if let Err(err) = run_script() {
+            tracing::warn!("Syntax error during onActorDeath: {err:?}");
+        }
     }
 }
 
 /// Perform any queued FATE tasks
 pub fn fate_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance) {
     let mut fates = instance.fates.clone();
+    let mut fates_that_updated = Vec::new();
     for fate in &mut fates {
         let tasks = fate.data.tasks.clone();
         let fate_id = fate.fate_id;
@@ -230,6 +258,10 @@ pub fn fate_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance) {
                         );
                     }
                 }
+                LuaFateTask::SetProgress { progress } => {
+                    fate.progress = *progress;
+                    fates_that_updated.push((fate_id, *progress));
+                }
             }
         }
     }
@@ -237,6 +269,32 @@ pub fn fate_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance) {
     for (fate, new_fate) in instance.fates.iter_mut().zip(fates) {
         fate.data.tasks.clear();
         fate.motivation_npc = new_fate.motivation_npc;
+        fate.progress = new_fate.progress;
+    }
+
+    // Send any FateUpdates as needed
+    let mut network = network.lock();
+    for (fate_id, progress) in fates_that_updated {
+        network.send_to_instance(
+            ObjectId::default(),
+            instance,
+            FromServer::ActorControlSelf(ActorControlCategory::FateUpdate {
+                fate_id,
+                progress,
+                param: 0,
+            }),
+            DestinationNetwork::ZoneClients,
+        );
+
+        if progress == 100 {
+            // TODO: Introduce the slight delay seen in retail (higher for turn-in FATEs)
+            instance.insert_task(
+                ClientId::default(),
+                ObjectId::default(),
+                Duration::ZERO,
+                QueuedTaskData::EndFate { fate_id },
+            );
+        }
     }
 }
 
