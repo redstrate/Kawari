@@ -183,7 +183,7 @@ impl ZoneConnection {
         let mut game_festival_phases = [0; 8];
 
         // Set up ocean fishing
-        {
+        if bound_by_duty {
             let mut gamedata = self.gamedata.lock();
             if let Some(spots) =
                 gamedata.lookup_ikd_route_spots_via_content(content_finder_condition_id as u32)
