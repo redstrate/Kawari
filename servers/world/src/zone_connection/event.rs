@@ -9,8 +9,8 @@ use kawari::{
     common::{CharacterMode, HandlerId, ObjectTypeId},
     config::get_config,
     ipc::zone::{
-        EventResume, EventScene, EventStart, EventType, SceneFlags, ServerZoneIpcData,
-        ServerZoneIpcSegment,
+        ActorControlCategory, EventResume, EventScene, EventStart, EventType, SceneFlags,
+        ServerZoneIpcData, ServerZoneIpcSegment,
     },
 };
 
@@ -134,6 +134,13 @@ impl ZoneConnection {
             self.send_conditions().await;
 
             self.set_character_mode(character_mode, 0).await;
+
+            if handler.disable_event_pos_rollback() {
+                self.actor_control_self(ActorControlCategory::DisableEventPosRollback {
+                    handler_id: event_id,
+                })
+                .await;
+            }
 
             events.push((
                 handler,

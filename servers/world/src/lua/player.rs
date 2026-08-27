@@ -10,11 +10,11 @@ use crate::{
     zone_connection::BaseParameters,
 };
 use kawari::{
-    common::{HandlerId, ObjectTypeId, ObjectTypeKind, Position},
+    common::{ObjectTypeId, ObjectTypeKind, Position},
     ipc::zone::{
         ActorControlCategory, ActorControlSelf, ActorSetPos, EventType, GrandCompany, OnlineStatus,
         SceneFlags, ServerNoticeFlags, ServerNoticeMessage, ServerZoneIpcData,
-        ServerZoneIpcSegment,
+        ServerZoneIpcSegment, WalkInEvent,
     },
     packet::PacketSegment,
 };
@@ -222,43 +222,18 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::UnlockAllContent {});
     }
 
-    fn do_solnine_teleporter(
-        &mut self,
-        event_id: u32,
-        path_id: u32,
-        unk2: u16,
-        unk3: u16,
-        speed: u16,
-        unk4: u16,
-        unk5: u32,
-    ) {
-        let packets_to_send = [
-            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::DisableEventPosRollback {
-                    handler_id: HandlerId(event_id),
-                },
-            })),
-            ServerZoneIpcSegment::new(ServerZoneIpcData::WalkInEvent {
+    fn walk_in_event(&mut self, path_id: u32, speed: u16, pop_range_id: u32) {
+        if let Some((position, rotation)) = self.zone_data.cached_pop_ranges.get(&pop_range_id) {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::WalkInEvent(WalkInEvent {
                 path_id,
-                unk2,
-                unk3,
+                rotation: *rotation,
                 speed,
-                constant: 1,
-                unk4,
-                unk5,
-            }),
-            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::MovementRelatedUnk {
-                    unk1: 1, // Sometimes the server sends 2 for this, but it's still completely unknown what it means.
-                },
-            })),
-            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
-                category: ActorControlCategory::SetPetEntityId { unk1: 1 },
-            })),
-        ];
-
-        for ipc in packets_to_send {
+                position: *position,
+                ..Default::default()
+            }));
             create_ipc_self(self, ipc, self.player_data.character.actor_id);
+        } else {
+            tracing::warn!("Failed to find pop range {pop_range_id} for walk_in_event {path_id}!");
         }
     }
 
@@ -769,19 +744,9 @@ impl UserData for LuaPlayer {
             Ok(())
         });
         methods.add_method_mut(
-            "do_solnine_teleporter",
-            |_,
-             this,
-             (event_id, path_id, unk2, unk3, speed, unk4, unk5): (
-                u32,
-                u32,
-                u16,
-                u16,
-                u16,
-                u16,
-                u32,
-            )| {
-                this.do_solnine_teleporter(event_id, path_id, unk2, unk3, speed, unk4, unk5);
+            "walk_in_event",
+            |_, this, (path_id, speed, pop_range_id): (u32, u16, u32)| {
+                this.walk_in_event(path_id, speed, pop_range_id);
                 Ok(())
             },
         );

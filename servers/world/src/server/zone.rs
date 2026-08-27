@@ -110,6 +110,7 @@ pub struct Zone {
     bg_path: String,
     cached_housing_plots: Vec<HousingPlot>,
     cached_eobj_base_ids: HashMap<u32, u32>,
+    cached_pop_ranges: HashMap<u32, (Position, f32)>,
 }
 
 impl Zone {
@@ -220,12 +221,10 @@ impl Zone {
         for layer_group in &zone.layer_groups {
             for chunk in &layer_group.chunks {
                 for layer in &chunk.layers {
-                    if !layer.header.has_layer_set(zone.layer_set as u32) {
-                        continue;
-                    }
+                    // NOTE: We don't check layer set here because it fails pop ranges for Moonfire Faire?
 
                     for object in &layer.objects {
-                        let (scale, _, translation) =
+                        let (scale, rotation, translation) =
                             Affine3A::from(object.transform).to_scale_rotation_translation();
 
                         if let LayerEntryData::EventNPC(npc) = &object.data {
@@ -259,6 +258,15 @@ impl Zone {
                                 fate: game_data.find_fate_by_event_range(object.instance_id),
                                 ..Default::default()
                             });
+                        }
+                        if let LayerEntryData::PopRange(_) = &object.data {
+                            zone.cached_pop_ranges.insert(
+                                object.instance_id,
+                                (
+                                    Position(translation.into()),
+                                    euler_to_direction(rotation.to_euler(EulerRot::XYZ)),
+                                ),
+                            );
                         }
                     }
 
@@ -449,6 +457,7 @@ impl Zone {
             map_id: self.map_id,
             cached_npc_base_ids: self.cached_npc_base_ids.clone(),
             cached_eobj_base_ids: self.cached_eobj_base_ids.clone(),
+            cached_pop_ranges: self.cached_pop_ranges.clone(),
             ..Default::default()
         }
     }

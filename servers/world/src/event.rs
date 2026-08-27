@@ -67,6 +67,11 @@ pub trait EventHandler: std::fmt::Debug + Send + Sync {
     fn character_mode(&self) -> CharacterMode {
         CharacterMode::Normal
     }
+
+    /// Whether we should send the DisableEventPosRollback ActorControl.
+    fn disable_event_pos_rollback(&self) -> bool {
+        false
+    }
 }
 
 /// Extracts the script id from a given CustomTalk `name`. For example, "CmnDefBeginnerGuide_00327" will return 327.

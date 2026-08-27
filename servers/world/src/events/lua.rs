@@ -222,4 +222,12 @@ impl EventHandler for LuaEventHandler {
             .get("CONDITION")
             .unwrap_or(Condition::OccupiedInQuestEvent)
     }
+
+    fn disable_event_pos_rollback(&self) -> bool {
+        self.lua
+            .0
+            .globals()
+            .get("DISABLE_EVENT_POS_ROLLBACK")
+            .unwrap_or(false)
+    }
 }

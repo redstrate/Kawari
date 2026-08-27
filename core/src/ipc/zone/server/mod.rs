@@ -184,6 +184,9 @@ pub use aoe_effect::AoeEffect;
 mod duty_support_information;
 pub use duty_support_information::DutySupportInformation;
 
+mod walk_in_event;
+pub use walk_in_event::{WalkInEvent, WalkInEventType};
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_bool_from, read_string,
     write_bool_as, write_string,
@@ -489,20 +492,7 @@ pub enum ServerZoneIpcData {
     },
     SetSearchInfo(SearchInfo),
     Blacklist(Blacklist),
-    WalkInEvent {
-        /// Object ID of the ClientPath in the zone.
-        path_id: u32,
-        unk2: u16,
-        #[brw(pad_before = 2)]
-        unk3: u16,
-        /// In some unknown amount of units.
-        speed: u16,
-        /// Always seems to be 1.
-        constant: u16,
-        unk4: u16,
-        #[brw(pad_after = 4)]
-        unk5: u32,
-    },
+    WalkInEvent(WalkInEvent),
     GrandCompanyInfo {
         /// Which Grand Company this player is affiliated with.
         active_company_id: GrandCompany,
