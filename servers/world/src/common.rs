@@ -124,7 +124,7 @@ pub enum FromServer {
     /// We need to summon a player's minion, and tell other clients
     ActorSummonsMinion(u32),
     /// We need to despawn a player's minion, and tell other clients
-    ActorDespawnsMinion(),
+    ActorDespawnsMinion,
     /// The player should lose this effect.
     LoseEffect(u16, u16, ObjectId),
     // TODO: temporary
@@ -134,7 +134,7 @@ pub enum FromServer {
     /// We need to inform the recipent about the direct message they're receiving.
     TellMessageReceived(ObjectId, TellMessage),
     /// We need to tell our chat connection that our zone connection has disconnected.
-    ChatDisconnected(),
+    ChatDisconnected,
     /// Inform the chat connection that its zone connection has joined a party.
     SetPartyChatChannel(u32),
     /// Inform the client that they've received a social invite (party, friends list, free company). Other social features have their own dedicated opcodes and FromServer responses.
@@ -172,7 +172,7 @@ pub enum FromServer {
     /// Inform the client that the board sharer has made a real-time update.
     StrategyBoardRealtimeUpdate(StrategyBoardUpdate),
     /// Inform the client that the board sharer has ended their real-time sharing session.
-    StrategyBoardRealtimeFinished(),
+    StrategyBoardRealtimeFinished,
     /// Inform the client that a waymark was placed or updated.
     WaymarkUpdated(u8, WaymarkPlacementMode, WaymarkPosition, i32),
     /// Inform the client that a waymark preset was applied.
@@ -180,17 +180,17 @@ pub enum FromServer {
     /// Inform the client that they entered an instance exit range.
     EnteredInstanceEntranceRange(u32),
     /// Inform the client to increment the rested EXP by 10 seconds.
-    IncrementRestedExp(),
+    IncrementRestedExp,
     /// Inform the client about a countdown that was started in their party.
     Countdown(u64, u64, String, ObjectId, u16),
     /// Inform the client that a sign/marker was applied to a target by someone in their party.
     TargetSignToggled(u32, ObjectId, ObjectTypeId),
     /// Request the client to begin preparing to leave this content.
-    LeaveContent(),
+    LeaveContent,
     /// Request the client to finish their current event.
-    FinishEvent(),
+    FinishEvent,
     /// When a fish bites.
-    FishBite(),
+    FishBite,
     /// Inform the client that another player has dismounted.
     ActorDismounted(ObjectId),
     /// Inform the client of the whereabouts of their party members.
@@ -218,11 +218,11 @@ pub enum FromServer {
     /// Inform the zone connection about their current mount's model id. Helps persist mounts across zone transitions and through log-outs.
     SetCurrentMount(u16),
     /// Inform the chat connection that it needs to refresh its non-party ChatChannels due to some event necessitating it.
-    MustRefreshChatChannels(),
+    MustRefreshChatChannels,
     /// Inform the client that a friend removal has taken place.
     FriendRemoved(u64, String),
     /// Inform the client that a new letter has arrived in their mailbox.
-    NewLetterArrived(),
+    NewLetterArrived,
     /// Plays a cutscene from the instance director.
     PlayDirectorCutscene(u32, HandlerId),
     /// Inform the client that another player has placed a piece of furniture.

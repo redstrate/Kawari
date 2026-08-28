@@ -26,7 +26,7 @@ pub fn handle_linkshell_messages(network: Arc<Mutex<NetworkState>>, msg: &ToServ
             }
 
             // Tell the chat connection it's time to refresh its info.
-            let msg = FromServer::MustRefreshChatChannels();
+            let msg = FromServer::MustRefreshChatChannels;
             network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ChatClients);
 
             true
@@ -48,7 +48,7 @@ pub fn handle_linkshell_messages(network: Arc<Mutex<NetworkState>>, msg: &ToServ
                 DestinationNetwork::ZoneClients,
             );
 
-            let msg = FromServer::MustRefreshChatChannels();
+            let msg = FromServer::MustRefreshChatChannels;
             network.send_to_linkshell(*linkshell_id, None, msg, DestinationNetwork::ChatClients);
 
             // Now update our state.
@@ -88,7 +88,7 @@ pub fn handle_linkshell_messages(network: Arc<Mutex<NetworkState>>, msg: &ToServ
                     DestinationNetwork::ZoneClients,
                 );
 
-                let msg = FromServer::MustRefreshChatChannels();
+                let msg = FromServer::MustRefreshChatChannels;
                 network.send_to_by_actor_id(*target_actor_id, msg, DestinationNetwork::ChatClients);
             }
 
@@ -151,7 +151,7 @@ pub fn handle_linkshell_messages(network: Arc<Mutex<NetworkState>>, msg: &ToServ
             network.send_to_by_actor_id(*target_actor_id, msg, DestinationNetwork::ZoneClients);
 
             // Refresh due to now being part of this LS. The client does block chat messages as an invitee, but we can do better and just not send them the packets at all.
-            let msg = FromServer::MustRefreshChatChannels();
+            let msg = FromServer::MustRefreshChatChannels;
             network.send_to_by_actor_id(*target_actor_id, msg, DestinationNetwork::ChatClients);
 
             true
@@ -184,7 +184,7 @@ pub fn handle_linkshell_messages(network: Arc<Mutex<NetworkState>>, msg: &ToServ
             network.send_to_linkshell(*linkshell_id, None, msg, DestinationNetwork::ZoneClients);
 
             // Refresh due to member rank changing from Invitee to Member
-            let msg = FromServer::MustRefreshChatChannels();
+            let msg = FromServer::MustRefreshChatChannels;
             network.send_to_by_actor_id(*from_actor_id, msg, DestinationNetwork::ChatClients);
 
             true

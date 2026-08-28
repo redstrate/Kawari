@@ -614,7 +614,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 let mut network = network.lock();
                 network.send_to_by_actor_id(
                     *actor_id,
-                    FromServer::LeaveContent(),
+                    FromServer::LeaveContent,
                     DestinationNetwork::ZoneClients,
                 );
             }
@@ -656,7 +656,7 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 let mut network = network.lock();
                 network.send_to_by_actor_id(
                     *actor_id,
-                    FromServer::FinishEvent(),
+                    FromServer::FinishEvent,
                     DestinationNetwork::ZoneClients,
                 );
             }

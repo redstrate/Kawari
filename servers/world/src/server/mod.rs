@@ -404,7 +404,7 @@ fn server_logic_tick(
                 // We're on the 10 second mark, and you're in a sanctuary...
                 if in_sanctuary && rested_exp_counter == 0 {
                     // Update rested EXP! (This means it only has a ten second granularity, but who cares?)
-                    let msg = FromServer::IncrementRestedExp();
+                    let msg = FromServer::IncrementRestedExp;
                     if handle.send(msg).is_err() {
                         // TODO: remove as needed
                         //self.to_remove.push(id);
@@ -955,7 +955,7 @@ pub async fn server_main_loop(
                                 let mut network = network.lock();
                                 network.send_to(
                                     task.from_id,
-                                    FromServer::FishBite(),
+                                    FromServer::FishBite,
                                     DestinationNetwork::ZoneClients,
                                 );
                             }
@@ -1327,7 +1327,7 @@ pub async fn server_main_loop(
                             network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
                         }
                         ClientTriggerCommand::DespawnMinion => {
-                            let msg = FromServer::ActorDespawnsMinion();
+                            let msg = FromServer::ActorDespawnsMinion;
 
                             let mut network = network.lock();
                             network.send_to(from_id, msg, DestinationNetwork::ZoneClients);
@@ -2318,7 +2318,7 @@ pub async fn server_main_loop(
                     // Tell our sibling chat connection that it's time to go too.
                     network.send_to_by_actor_id(
                         from_actor_id,
-                        FromServer::ChatDisconnected(),
+                        FromServer::ChatDisconnected,
                         DestinationNetwork::ChatClients,
                     );
 

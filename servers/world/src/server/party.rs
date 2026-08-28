@@ -1062,7 +1062,7 @@ pub fn handle_party_messages(
         }
         ToServer::StrategyBoardRealtimeFinished(party_id) => {
             let mut network = network.lock();
-            let msg = FromServer::StrategyBoardRealtimeFinished();
+            let msg = FromServer::StrategyBoardRealtimeFinished;
 
             // Tell everyone about the session ending, and reset state so further real-time sessions can be initiated.
             network.send_to_party(*party_id, None, msg, DestinationNetwork::ZoneClients);

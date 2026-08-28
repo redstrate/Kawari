@@ -156,7 +156,7 @@ pub fn handle_social_messages(
             let mut network = network.lock();
             network.send_to_by_actor_id(
                 *recipient_actor_id,
-                FromServer::NewLetterArrived(),
+                FromServer::NewLetterArrived,
                 DestinationNetwork::ZoneClients,
             );
 

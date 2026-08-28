@@ -438,13 +438,13 @@ async fn client_chat_loop(
             msg = internal_recv.recv() => match msg {
                 Some(msg) => match msg {
                     FromServer::TellMessageReceived(from_actor_id, message_info) => connection.tell_message_received(from_actor_id, message_info.clone()).await,
-                    FromServer::ChatDisconnected() => {
+                    FromServer::ChatDisconnected => {
                         tracing::info!("ChatConnection {:#?} received shutdown, disconnecting!", connection.id);
                         break;
                     }
                     FromServer::SetPartyChatChannel(channel_id) => connection.set_party_chatchannel(channel_id).await,
                     FromServer::PartyMessageReceived(message_data) => connection.party_message_received(message_data).await,
-                    FromServer::MustRefreshChatChannels() => connection.refresh_chatchannels().await,
+                    FromServer::MustRefreshChatChannels => connection.refresh_chatchannels().await,
                     FromServer::CWLSMessageReceived(message_info) => connection.cwls_message_received(message_info).await,
                     _ => tracing::error!("ChatConnection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
                 },
@@ -3808,7 +3808,7 @@ async fn process_server_msg(
                     .await;
                 connection.active_minion = minion_id;
             }
-            FromServer::ActorDespawnsMinion() => {
+            FromServer::ActorDespawnsMinion => {
                 connection
                     .handle
                     .send(ToServer::ActorDespawnsMinion(
@@ -3982,7 +3982,7 @@ async fn process_server_msg(
             FromServer::StrategyBoardRealtimeUpdate(update_data) => {
                 connection.strategy_board_updated(update_data).await
             }
-            FromServer::StrategyBoardRealtimeFinished() => {
+            FromServer::StrategyBoardRealtimeFinished => {
                 connection.strategy_board_realtime_finished().await
             }
             FromServer::WaymarkUpdated(id, placement_mode, position, zone_id) => {
@@ -4022,7 +4022,7 @@ async fn process_server_msg(
                     )
                     .await;
             }
-            FromServer::IncrementRestedExp() => connection.add_rested_exp_seconds(10).await,
+            FromServer::IncrementRestedExp => connection.add_rested_exp_seconds(10).await,
             FromServer::Countdown(account_id, content_id, name, starter_actor_id, duration) => {
                 connection
                     .start_countdown(account_id, content_id, name, starter_actor_id, duration)
@@ -4033,7 +4033,7 @@ async fn process_server_msg(
                     .target_sign_toggled(sign_id, from_actor_id, target_actor)
                     .await
             }
-            FromServer::LeaveContent() => {
+            FromServer::LeaveContent => {
                 connection
                     .handle
                     .send(ToServer::LeaveContent(
@@ -4045,10 +4045,10 @@ async fn process_server_msg(
                     ))
                     .await;
             }
-            FromServer::FinishEvent() => {
+            FromServer::FinishEvent => {
                 connection.event_finish(events).await;
             }
-            FromServer::FishBite() => {
+            FromServer::FishBite => {
                 let handler_id = HandlerId::new(HandlerType::Fishing, 1).0;
 
                 let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LogMessage {
@@ -4182,7 +4182,7 @@ async fn process_server_msg(
                     .friend_removed(their_content_id, their_name)
                     .await;
             }
-            FromServer::NewLetterArrived() => {
+            FromServer::NewLetterArrived => {
                 connection.send_mailbox_status().await;
             }
             FromServer::PlayDirectorCutscene(cutscene_id, content_handler_id) => {
