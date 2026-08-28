@@ -154,6 +154,10 @@ impl WorldServer {
         game_data: &mut GameData,
         lua: &KawariLua,
     ) -> Option<&mut Instance> {
+        tracing::info!(
+            "Creating new instance for content {content_finder_condition} (zone {zone_id})!"
+        );
+
         let mut instance = Instance::new(
             zone_id,
             game_data,
@@ -222,6 +226,11 @@ impl WorldServer {
             }
 
             instance.directors.push(director);
+        } else {
+            tracing::warn!(
+                "No director created for TerritoryIntendedUse {}! If this is unexpected, please report it.",
+                instance.zone.intended_use
+            );
         }
 
         // Ensure we have the entrance set correctly

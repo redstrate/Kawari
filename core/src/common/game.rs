@@ -427,6 +427,7 @@ impl HandlerType {
             TerritoryIntendedUse::OccultCrescent => Some(Self::PublicContent),
             TerritoryIntendedUse::Blunderville => Some(Self::PublicContent),
             TerritoryIntendedUse::TripleTriadBattleHall => Some(Self::PublicContent),
+            TerritoryIntendedUse::LordOfVerminion => Some(Self::GoldSaucer),
             _ => None,
         }
     }

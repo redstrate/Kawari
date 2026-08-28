@@ -203,6 +203,7 @@ pub fn dispatch_event(
             generic_lua_event("events/generic/GoldSaucerArcadeMachine.lua")
         }
         HandlerType::GoldSaucerTalk => generic_lua_event("events/generic/GoldSaucerTalk.lua"),
+        HandlerType::Verminion => generic_lua_event("events/generic/Verminion.lua"),
         HandlerType::DpsChallengeOfficer => {
             generic_lua_event("events/generic/DpsChallengeOfficer.lua")
         }

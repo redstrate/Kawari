@@ -29,6 +29,7 @@ use icarus::GatheringPoint::GatheringPointSheet;
 use icarus::GatheringPointBase::GatheringPointBaseSheet;
 use icarus::GilShopItem::GilShopItemSheet;
 use icarus::GimmickRect::{GimmickRectRow, GimmickRectSheet};
+use icarus::GoldSaucerContent::GoldSaucerContentSheet;
 use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
 use icarus::HousingAethernet::HousingAethernetSheet;
 use icarus::HousingLandSet::{HousingLandSetSheet, LandSetElement};
@@ -110,6 +111,7 @@ pub struct GameData {
     pub fate_sheet: FateSheet,
     pub dawn_content_sheet: DawnContentSheet,
     pub fate_progress_ui_sheet: FateProgressUISheet,
+    pub gold_saucer_content_sheet: GoldSaucerContentSheet,
 
     pub gimmick_rect_lookup: HashMap<u32, u32>,
     pub fate_event_range_lookup: HashMap<u32, u32>,
@@ -382,6 +384,9 @@ impl GameData {
         let fate_progress_ui_sheet =
             FateProgressUISheet::read_from(&mut resource_resolver, Language::None).unwrap();
 
+        let gold_saucer_content_sheet =
+            GoldSaucerContentSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
         let mut gimmick_rect_lookup = HashMap::new();
         for (id, row) in gimmick_rect_sheet.into_iter().flatten_subrows() {
             gimmick_rect_lookup.insert(row.LayoutID, id);
@@ -430,6 +435,7 @@ impl GameData {
             fate_event_range_lookup,
             dawn_content_sheet,
             fate_progress_ui_sheet,
+            gold_saucer_content_sheet,
         }
     }
 
@@ -1780,6 +1786,13 @@ impl GameData {
         }
         Some(0)
     }
+
+    /// Returns the ContentFinderCondition for a given GoldSaucerContent.
+    pub fn lookup_gold_saucer_content(&mut self, id: u32) -> u32 {
+        let row = self.gold_saucer_content_sheet.row(id).unwrap();
+
+        row.ContentFinderCondition as u32
+    }
 }
 
 impl mlua::UserData for GameData {
@@ -1813,6 +1826,9 @@ impl mlua::UserData for GameData {
         });
         methods.add_method_mut("find_eobj_base_id", |_, this, id: u32| {
             Ok(this.find_eobj_base_id(id))
+        });
+        methods.add_method_mut("lookup_gold_saucer_content", |_, this, id: u32| {
+            Ok(this.lookup_gold_saucer_content(id))
         });
     }
 }
