@@ -739,8 +739,8 @@ pub enum InstanceContentType {
     VariantDungeon = 19,
     CriterionDungeon = 20,
     AdvancedVariantDungeon = 21,
-    Unk22 = 22,
-    Unk23 = 23,
+    CrucibleOfTheUnbroken = 22,
+    KeyboundBrawler = 23,
 }
 
 // TODO: see if this can be extrapolated from game data
