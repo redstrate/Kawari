@@ -738,13 +738,14 @@ impl ZoneConnection {
                     scene_flags,
                     params,
                 } => {
-                    self.event_scene(
-                        &events.last().unwrap().1,
-                        *scene,
-                        *scene_flags,
-                        params.clone(),
-                    )
-                    .await;
+                    if let Some(event) = events.last() {
+                        self.event_scene(&event.1, *scene, *scene_flags, params.clone())
+                            .await;
+                    } else {
+                        tracing::warn!(
+                            "Something tried to call play_scene({scene}, {scene_flags}, {params:?}) but there was no active event! This is a bug!"
+                        );
+                    }
                 }
                 LuaTask::ResumeEvent {
                     scene,
