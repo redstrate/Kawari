@@ -886,6 +886,7 @@ async fn process_packet(
                                         companion_rank: connection.player_data.buddy.rank as u8,
                                         companion_stars: connection.player_data.buddy.stars as u8,
                                         companion_color: connection.player_data.buddy.color as u8,
+                                        completed_lovm_stages: 255, // TODO: placeholder to show them in the Duty Finder
                                         ..Default::default()
                                     }),
                                 );
