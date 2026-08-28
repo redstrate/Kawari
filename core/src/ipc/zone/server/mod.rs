@@ -869,18 +869,22 @@ pub enum ServerZoneIpcData {
         starter_name: String,
     },
     DirectorPopupMessage {
-        unk1: u64, // Empty?
+        unk1: ObjectTypeId, // Sometimes has data, but it's not read by the client.
         /// Should be the ID of the instance's director.
         handler_id: HandlerId,
         /// Index into the BNPCName Excel sheet.
         npc_name: u32,
         /// Index into the InstanceContentTextData Excel sheet.
         text_data_id: u32,
-        unk4: u32,
-        unk5: u32,
-        unk6: u32,
-        unk7: u32,
-        unk8: u32,
+        duration_msecs: u32,
+        /// The icon/image that shows on the top left
+        icon: u32,
+        kind: ObjectKind, // Used when resolving npc_name.
+        /// The appearance of the text box.
+        style: u8,
+        #[brw(pad_after = 1)] // padding
+        unk7: u8,
+        unk8: u64,
     },
     DirectorSetupMapEffects64 {
         /// The map effects to setup.
