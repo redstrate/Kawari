@@ -17,10 +17,12 @@ use crate::{
         action::{execute_action, handle_action_messages},
         actor::{
             NetworkedActor, NpcState, kill_actor, set_character_mode, set_player_minion,
-            spawn_custom_bnpc, update_actor_hp_mp,
+            update_actor_hp_mp,
         },
         chat::handle_chat_messages,
-        director::{DirectorData, director_tick, handle_director_messages},
+        director::{
+            DirectorData, director_tick, handle_director_messages, handle_director_trigger,
+        },
         effect::{handle_effect_messages, remove_effect, send_effects_list},
         fate::{ended_fate, fate_tick, start_fate, start_next_fate, unk10_fate},
         instance::{Instance, NavmeshGenerationStep, QueuedTaskData, remove_actor_from_instance},
@@ -41,10 +43,10 @@ use crate::{
 };
 use kawari::{
     common::{
-        AUTO_ATTACK_RATE, CharacterMode, DEAD_DESPAWN_TIME, DirectorEvent, DirectorTrigger,
-        HandlerId, HandlerType, MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MOB_RESPAWN_TIME,
-        ObjectId, ObjectTypeId, ObjectTypeKind, Position, WarpType, determine_initial_pop_range,
-        euler_to_direction, is_private_area,
+        AUTO_ATTACK_RATE, CharacterMode, DEAD_DESPAWN_TIME, HandlerId, HandlerType,
+        MAX_SPAWNED_ACTORS, MAX_SPAWNED_OBJECTS, MOB_RESPAWN_TIME, ObjectId, ObjectTypeId,
+        ObjectTypeKind, Position, WarpType, determine_initial_pop_range, euler_to_direction,
+        is_private_area,
     },
     config::get_config,
     ipc::zone::{
@@ -2009,162 +2011,6 @@ pub async fn server_main_loop(
                                 0,
                             );
                         }
-                        ClientTriggerCommand::DirectorTrigger {
-                            handler_id,
-                            trigger,
-                        } => {
-                            // TODO: should we move this to director.rs?
-
-                            let mut network = network.lock();
-
-                            match trigger {
-                                DirectorTrigger::Sync { .. } => {
-                                    // Always send a sync response for now
-                                    network.send_to_by_actor_id(
-                                        from_actor_id,
-                                        FromServer::ActorControlSelf(
-                                            ActorControlCategory::DirectorEvent {
-                                                handler_id: *handler_id,
-                                                event: DirectorEvent::SyncResponse {
-                                                    arg1: 1,
-                                                    arg2: 0,
-                                                    arg3: 0,
-                                                    arg4: 0,
-                                                },
-                                            },
-                                        ),
-                                        DestinationNetwork::ZoneClients,
-                                    );
-                                }
-                                DirectorTrigger::SummonStrikingDummy { .. } => {
-                                    let mut data = data.lock();
-                                    let mut game_data = game_data.lock();
-                                    spawn_custom_bnpc(
-                                        &mut data,
-                                        &mut game_data,
-                                        from_actor_id,
-                                        11744,
-                                        541,
-                                    );
-                                }
-                                DirectorTrigger::GoldSaucerUnk1 { .. } => {
-                                    // dummied out
-                                }
-                                DirectorTrigger::GoldSaucerUnk2 { .. } => {
-                                    // hardcoded for now
-
-                                    network.send_to_by_actor_id(
-                                        from_actor_id,
-                                        FromServer::ActorControlSelf(
-                                            ActorControlCategory::DirectorEvent {
-                                                handler_id: *handler_id,
-                                                event: DirectorEvent::Unknown {
-                                                    id: 9,
-                                                    arg1: 74,
-                                                    arg2: 1,
-                                                    arg3: 0,
-                                                    arg4: 0,
-                                                },
-                                            },
-                                        ),
-                                        DestinationNetwork::ZoneClients,
-                                    );
-
-                                    let layout_id = 7773571; // TODO: hardcoded to airforce one NPC for now
-
-                                    network.send_to_by_actor_id(
-                                        from_actor_id,
-                                        FromServer::ActorControlSelf(
-                                            ActorControlCategory::DirectorEvent {
-                                                handler_id: *handler_id,
-                                                event: DirectorEvent::Unknown {
-                                                    id: 6,
-                                                    arg1: layout_id,
-                                                    arg2: 1775917801,
-                                                    arg3: 0,
-                                                    arg4: 0,
-                                                },
-                                            },
-                                        ),
-                                        DestinationNetwork::ZoneClients,
-                                    );
-
-                                    network.send_to_by_actor_id(
-                                        from_actor_id,
-                                        FromServer::ActorControlSelf(
-                                            ActorControlCategory::DirectorEvent {
-                                                handler_id: *handler_id,
-                                                event: DirectorEvent::Unknown {
-                                                    id: 11,
-                                                    arg1: 3,
-                                                    arg2: 0,
-                                                    arg3: 0,
-                                                    arg4: 0,
-                                                },
-                                            },
-                                        ),
-                                        DestinationNetwork::ZoneClients,
-                                    );
-
-                                    let mut data = data.lock();
-
-                                    let Some(instance) =
-                                        data.find_actor_instance_mut(from_actor_id)
-                                    else {
-                                        continue;
-                                    };
-
-                                    let Some(director) = &instance.directors.first() else {
-                                        continue;
-                                    };
-
-                                    if let Some(mut npc) = instance.zone.get_battle_npc(layout_id) {
-                                        npc.common.handler_id = director.id;
-                                        let config = get_config();
-                                        instance.insert_npc(
-                                            ObjectId(fastrand::u32(..)),
-                                            npc,
-                                            &config,
-                                        );
-                                    } else {
-                                        tracing::warn!(
-                                            "Failed to find npc {layout_id} for SpawnLayoutNpc, it won't spawn!"
-                                        );
-                                    }
-                                }
-                                DirectorTrigger::VariantVote { route } => {
-                                    let mut data = data.lock();
-                                    let Some(instance) =
-                                        data.find_actor_instance_mut(from_actor_id)
-                                    else {
-                                        tracing::warn!(
-                                            "Somehow failed to find an instance for actor?"
-                                        );
-                                        continue;
-                                    };
-
-                                    if let Some(director) = &mut instance.directors.first_mut() {
-                                        director.variant_vote(*route);
-                                    } else {
-                                        tracing::warn!(
-                                            "Expected a director when recieving a VariantVote?"
-                                        );
-                                    }
-
-                                    network.send_to_by_actor_id(
-                                        from_actor_id,
-                                        FromServer::ActorControlSelf(
-                                            ActorControlCategory::DirectorEvent {
-                                                handler_id: *handler_id,
-                                                event: DirectorEvent::HideVariantVoteRoute,
-                                            },
-                                        ),
-                                        DestinationNetwork::ZoneClients,
-                                    );
-                                }
-                                _ => tracing::info!("DirectorTrigger: {handler_id} {trigger:?}"),
-                            }
-                        }
                         ClientTriggerCommand::ToggleAutoAttack { on, target, .. } => {
                             let mut data = data.lock();
                             if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
@@ -2232,6 +2078,17 @@ pub async fn server_main_loop(
                                     WarpType::Resurrection,
                                 );
                             }
+                        }
+                        ClientTriggerCommand::DirectorTrigger {
+                            handler_id,
+                            trigger,
+                        } => {
+                            handle_director_trigger(
+                                network.clone(),
+                                from_actor_id,
+                                *handler_id,
+                                trigger,
+                            );
                         }
                         _ => tracing::warn!("Unknown client trigger {:#?}", trigger),
                     }

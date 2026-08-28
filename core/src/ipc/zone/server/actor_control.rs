@@ -324,6 +324,7 @@ pub enum ActorControlCategory {
     #[brw(magic = 109u32)]
     DirectorEvent {
         handler_id: HandlerId,
+        #[br(args(handler_id))]
         event: DirectorEvent,
     },
 

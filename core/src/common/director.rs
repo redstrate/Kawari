@@ -1,122 +1,48 @@
 //! Content director related types.
 
-use crate::common::{read_bool_from, write_bool_as};
+use crate::common::{HandlerId, HandlerType, read_bool_from, write_bool_as};
 use binrw::binrw;
 
-// TODO: this may not apply to MassivePcContentDirector! Needs more research for that one.
-/// Events are sent by the server (who is acting as the director) to change state.
+/// Used by descendants of the `Client::Game::MassivePcContent::MassivePcContentDirector` class.
+///
+/// For the client implementation, see `Client::Game::MassivePcContent::MassivePcContentDirector.ProcessCommonDirectorUpdate`.
 #[binrw]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum DirectorEvent {
-    /// Changes the festival phases for Ocean Fishing, but probably used for other things.
-    /// In Ocean Fishing, seen with params of 13 and 23 (IKDRoute + 1 and something else unknown.)
-    #[brw(magic = 2u32)]
-    ChangeFestivalPhases {
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
-        arg4: u32,
-    },
-    /// Shows the Ocean Fishing scoring window, but probably used for other things.
-    /// In Ocean Fishing, seen with a param of 19 (IKDRoute probably.)
-    #[brw(magic = 3u32)]
-    ShowOceanFishingWindow {
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
-        arg4: u32,
-    },
-    /// Shows the Variant Dungeon vote window, but probably used for other things.
-    #[brw(magic = 0x10000002u32)]
-    VariantVoteRoute {
-        /// For Variant Dungeons, how many votes are needed
-        votes_needed: u32,
-        /// For Variant Dungeons, what route the NPC chose.
-        npc_route: u32,
-    },
-    /// Hides the vote window, but probably used for other things.
-    #[brw(magic = 0x10000004u32)]
-    HideVariantVoteRoute,
-
-    // Below are all of the events specific to InstanceContentDirector.
-    // TODO: move out of this enum, and create one for PublicContentDirector etc.
-    /// Shows "Duty Commenced", and starts the clock ticking down. `arg` is the number of seconds the duty should last.
-    #[brw(magic = 0x40000001u32)]
-    DutyCommence {
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
-        arg4: u32,
-    },
-    /// `arg` is unknown.
-    #[brw(magic = 0x40000002u32)]
-    DutyCompletedFlyText {
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
-        arg4: u32,
-    },
-    /// `arg` is unknown.
-    #[brw(magic = 0x40000003u32)]
-    DutyCompleted {
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
-        arg4: u32,
-    },
-    /// `arg` is unknown.
-    #[brw(magic = 0x40000005u32)]
-    PartyWipe {
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
-        arg4: u32,
-    },
-    /// `arg` is unknown.
-    #[brw(magic = 0x40000006u32)]
-    DutyRecommence {
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
-        arg4: u32,
-    },
-    /// Shows "one or more party members have yet to complete this duty" message along with the rewards.
-    #[brw(magic = 0x4000000Cu32)]
-    DutyFirstTimeCompletionNotice {
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
-        arg4: u32,
-    },
-
-    // Below is all of the events specific to ContentDirectors.
-    /// Seems to be in response to the Sync trigger. Arg seems to always be 1.
+pub enum MassivePcContentEvent {
+    /// Temporary placeholder!
     #[brw(magic = 0x80000000u32)]
-    SyncResponse {
+    Unknown1 {
         arg1: u32,
         arg2: u32,
         arg3: u32,
         arg4: u32,
     },
+}
+
+/// Used by descendants of the `Client::Game::InstanceContent::ContentDirector` class.
+///
+/// For the client implementation, see `Client::Game::InstanceContent::ContentDirector.ProcessCommonDirectorUpdate`.
+#[binrw]
+#[br(import(handler_id: HandlerId))]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum ContentDirectorEvent {
     /// Sets the current background music.
     #[brw(magic = 0x80000001u32)]
     SetBGM {
         /// Index into the BGM Excel sheet.
         bgm: u32,
     },
-    /// Sets some field in ContentDirector, unsure how this is used.
+    /// Sets some field in ContentDirector, unsure how or when this is used.
     #[brw(magic = 0x80000002u32)]
     UnknownDirector2 { param: u32 },
-    /// Sets some field in ContentDirector, unsure how this is used.
+    /// Sets the time left in ContentDirector, unsure how or when this is used.
     #[brw(magic = 0x80000003u32)]
     UnknownDirector3 { param: u32 },
-    /// Sets the remaining time in the duty. `arg` is the number of seconds.
+    /// Sets the remaining time in this duty instance.
     #[brw(magic = 0x80000004u32)]
     SetDutyTimeRemaining {
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
-        arg4: u32,
+        /// In seconds.
+        time_remaining: u32,
     },
     /// Sets some field in ContentDirector, unsure how this is used.
     #[brw(magic = 0x80000005u32)]
@@ -126,12 +52,7 @@ pub enum DirectorEvent {
     UnknownDirector6 { param: u32 },
     /// Does something duty action manager related.
     #[brw(magic = 0x80000007u32)]
-    UnknownDirector7 {
-        arg1: u32,
-        arg2: u32,
-        arg3: u32,
-        arg4: u32,
-    },
+    UnknownDirector7 { arg1: u32 },
     /// Activates a new QTE event.
     #[brw(magic = 0x80000008u32)]
     QTEActivate { arg1: u32 },
@@ -241,10 +162,11 @@ pub enum DirectorEvent {
     /// Manages a map effect?
     #[brw(magic = 0x80000026u32)]
     UnknownDirector26 { arg1: u32, arg2: u32, arg3: u32 },
-    /// At least used in The Merchant's Tale. First `arg` is the index into InstanceContextTextData.
+    /// Used in The Merchant's Tale.
     #[brw(magic = 0x80000027u32)]
     NpcYell {
-        arg1: u32,
+        /// Index into the InstanceContentTextData sheet.
+        text_data: u32,
         arg2: u32,
         arg3: u32,
         arg4: u32,
@@ -261,9 +183,102 @@ pub enum DirectorEvent {
     /// Calls into ContentsReplayManager.
     #[brw(magic = 0x8000002Bu32)]
     UnknownDirectorContentsReplayManager,
-    /// Executes a command (ClientTrigger.)
+    /// Sends a DirectorTrigger of unknown purpose.
     #[brw(magic = 0x8000002Cu32)]
     UnknownDirectorExecuteCommand,
+
+    #[br(pre_assert(handler_id.handler_type() == HandlerType::InstanceContent))]
+    InstanceContent(InstanceContentDirectorEvent),
+}
+
+/// Updates handled by `Client::Game::InstanceContent::InstanceContentDirector` class.
+///
+/// For the client implementation, see `Client::Game::InstanceContent::InstanceContentDirector.ProcessDirectorSpecificDirectorUpdate`.
+#[binrw]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum InstanceContentDirectorEvent {
+    /// Shows "Duty Commenced", and starts the clock ticking down.
+    #[brw(magic = 0x40000001u32)]
+    DutyCommence {
+        /// In seconds.
+        time_limit: u32,
+    },
+    /// `arg` is unknown.
+    #[brw(magic = 0x40000002u32)]
+    DutyCompletedFlyText {
+        arg1: u32,
+        arg2: u32,
+        arg3: u32,
+        arg4: u32,
+    },
+    /// `arg` is unknown.
+    #[brw(magic = 0x40000003u32)]
+    DutyCompleted {
+        arg1: u32,
+        arg2: u32,
+        arg3: u32,
+        arg4: u32,
+    },
+    /// `arg` is unknown.
+    #[brw(magic = 0x40000005u32)]
+    PartyWipe {
+        arg1: u32,
+        arg2: u32,
+        arg3: u32,
+        arg4: u32,
+    },
+    /// `arg` is unknown.
+    #[brw(magic = 0x40000006u32)]
+    DutyRecommence {
+        arg1: u32,
+        arg2: u32,
+        arg3: u32,
+        arg4: u32,
+    },
+    /// Sets some array in InstanceContentDirector?
+    #[brw(magic = 0x40000007u32)]
+    Unknown7 { arg1: u32, arg2: u32 },
+    /// Shows "one or more party members have yet to complete this duty" message along with the rewards.
+    #[brw(magic = 0x4000000Cu32)]
+    DutyFirstTimeCompletionNotice {
+        arg1: u32,
+        arg2: u32,
+        arg3: u32,
+        arg4: u32,
+    },
+}
+
+/// Updates handled by `Client::Game::Gimmick::GimmickEventHandler`.
+/// While this is technically generic across Gimmick types, it's only been seen for GimmickRect so far.
+///
+/// For the client implementation, see `Client::Game::Gimmick::GimmickEventHandler.ProcessEventSpecificDirectorUpdate`.
+#[binrw]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum GimmickRectEvent {
+    /// (Assumed) when this is sent, the GimmickRect is set to active on the client-side.
+    /// This is most commonly used for entrances in dungeons.
+    #[brw(magic = 0x80000000u32)]
+    Activate {
+        /// Retail technically sends a 1 here, but I don't think it's read by the client.
+        arg1: u32,
+    },
+}
+
+/// Events are sent by the server (who is acting as the director) to change state.
+#[binrw]
+#[br(import(handler_id: HandlerId))]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum DirectorEvent {
+    /// Event for GimmickRect handlers.
+    #[br(pre_assert(handler_id.handler_type() == HandlerType::GimmickRect))]
+    GimmickRect(GimmickRectEvent),
+    /// Event for handlers backed by ContentDirector.
+    #[br(pre_assert(handler_id.handler_type().is_content_director()))]
+    ContentDirector(#[br(args(handler_id))] ContentDirectorEvent),
+    /// Event for MassivePcContent handlers.
+    #[br(pre_assert(handler_id.handler_type() == HandlerType::MassivePcContent))]
+    MassivePcContentDirector(MassivePcContentEvent),
+    /// Unknown event.
     Unknown {
         id: u32,
         arg1: u32,
@@ -273,22 +288,19 @@ pub enum DirectorEvent {
     },
 }
 
-/// Triggers are sent by clients to inform the director of their actions.
+/// Used by descendants of the `Client::Game::InstanceContent::ContentDirector` class.
+#[binrw]
+#[br(import(handler_id: HandlerId))]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum ContentDirectorTrigger {
+    #[br(pre_assert(handler_id.handler_type() == HandlerType::InstanceContent))]
+    InstanceContent(InstanceContentDirectorTrigger),
+}
+
+/// Updates handled by `Client::Game::InstanceContent::InstanceContentDirector` class.
 #[binrw]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum DirectorTrigger {
-    /// Seen while GATEs were spawning.
-    #[brw(magic = 0u32)]
-    GoldSaucerUnk1 { unk1: u32, unk2: u32, unk3: u32 },
-    /// Seen while GATEs were spawning.
-    #[brw(magic = 1u32)]
-    GoldSaucerUnk2 { unk1: u32, unk2: u32, unk3: u32 },
-    /// Seen when voting in a Variant Dungeon, but probably used for other things.
-    #[brw(magic = 0x10000002u32)]
-    VariantVote {
-        /// For Variant Dungeons, the first `arg` is the route chosen by this player.
-        route: u32,
-    },
+pub enum InstanceContentDirectorTrigger {
     /// When the player finishes the cutscene, I think.
     #[brw(magic = 0x40000001u32)]
     FinishedCutscene {
@@ -300,9 +312,42 @@ pub enum DirectorTrigger {
     /// When the player requests to summon a striking dummy. `arg` always seems to be 1.
     #[brw(magic = 0x40000006u32)]
     SummonStrikingDummy { unk1: u32, unk2: u32, unk3: u32 },
-    /// Unknown purpose.
+}
+
+/// Updates handled by `Client::Game::Gimmick::GimmickEventHandler`.
+/// While this is technically generic across Gimmick types, it's only been seen for GimmickRect so far.
+#[binrw]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum GimmickRectTrigger {
+    /// (Assumed) that the client is checking whether this GimmickRect is active.
     #[brw(magic = 0x80000000u32)]
-    Sync { unk1: u32, unk2: u32, unk3: u32 },
+    CheckIfActive,
+}
+
+/// Used by descendants of the `Client::Game::MassivePcContent::MassivePcContentDirector` class.
+#[binrw]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum MassivePcContentTrigger {
+    /// Temporary placeholder.
+    #[brw(magic = 0x80000000u32)]
+    Unknown1 { arg1: u32, arg2: u32, arg3: u32 },
+}
+
+/// Triggers are sent by the client to inform the director of various actions it took.
+#[binrw]
+#[br(import(handler_id: HandlerId))]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum DirectorTrigger {
+    /// Trigger for GimmickRect handlers.
+    #[br(pre_assert(handler_id.handler_type() == HandlerType::GimmickRect))]
+    GimmickRect(GimmickRectTrigger),
+    /// Trigger for handlers backed by ContentDirector.
+    #[br(pre_assert(handler_id.handler_type().is_content_director()))]
+    ContentDirector(#[br(args(handler_id))] ContentDirectorTrigger),
+    /// Trigger for MassivePcContent handlers.
+    #[br(pre_assert(handler_id.handler_type() == HandlerType::MassivePcContent))]
+    MassivePcContentDirector(MassivePcContentTrigger),
+    /// Unknown trigger.
     Unknown {
         id: u32,
         unk1: u32,

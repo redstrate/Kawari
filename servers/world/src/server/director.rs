@@ -1,8 +1,11 @@
+// TODO: Restore DirectorTrigger handling, I removed it after the refactor...
+
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use kawari::{
     common::{
-        DirectorEvent, DutyOption, EOBJ_EXIT, EOBJ_SHORTCUT, EventState, HandlerId, HandlerType,
+        ContentDirectorEvent, DirectorEvent, DirectorTrigger, DutyOption, EOBJ_EXIT, EOBJ_SHORTCUT,
+        EventState, GimmickRectEvent, HandlerId, HandlerType, InstanceContentDirectorEvent,
         ObjectId, ObjectTypeId, ObjectTypeKind, Position, PublicContentType,
     },
     config::get_config,
@@ -484,6 +487,7 @@ impl DirectorData {
         }
     }
 
+    #[allow(unused)] // TODO: temporary after refactor
     pub fn variant_vote(&mut self, vote: u32) {
         let mut run_script = || {
             let mut lua_director = self.create_lua_director();
@@ -709,7 +713,9 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     ActorControlSelf {
                         category: ActorControlCategory::DirectorEvent {
                             handler_id: director_id,
-                            event: DirectorEvent::SetBGM { bgm: *id },
+                            event: DirectorEvent::ContentDirector(ContentDirectorEvent::SetBGM {
+                                bgm: *id,
+                            }),
                         },
                     },
                 ));
@@ -776,26 +782,27 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     );
                 }
             }
-            LuaDirectorTask::VariantVoteRoute { npc_route } => {
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(
-                    ActorControlSelf {
-                        category: ActorControlCategory::DirectorEvent {
-                            handler_id: director_id,
-                            event: DirectorEvent::VariantVoteRoute {
-                                votes_needed: 1, // TODO: set to the number of players in the instance
-                                npc_route: *npc_route,
-                            },
-                        },
-                    },
-                ));
-
-                let mut network = network.lock();
-                network.send_to_instance(
-                    ObjectId::default(),
-                    instance,
-                    FromServer::PacketSegment(ipc, ObjectId::default()), // TODO: how do we just send it from the player?
-                    DestinationNetwork::ZoneClients,
-                );
+            LuaDirectorTask::VariantVoteRoute { .. } => {
+                // TODO: Restore, this was removed after the refactor
+                // let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(
+                //     ActorControlSelf {
+                //         category: ActorControlCategory::DirectorEvent {
+                //             handler_id: director_id,
+                //             event: DirectorEvent::VariantVoteRoute {
+                //                 votes_needed: 1, // TODO: set to the number of players in the instance
+                //                 npc_route: *npc_route,
+                //             },
+                //         },
+                //     },
+                // ));
+                //
+                // let mut network = network.lock();
+                // network.send_to_instance(
+                //     ObjectId::default(),
+                //     instance,
+                //     FromServer::PacketSegment(ipc, ObjectId::default()), // TODO: how do we just send it from the player?
+                //     DestinationNetwork::ZoneClients,
+                // );
             }
             LuaDirectorTask::PlayCutscene { cutscene_id } => {
                 let mut network = network.lock();
@@ -830,12 +837,16 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                     ActorControlSelf {
                         category: ActorControlCategory::DirectorEvent {
                             handler_id: director_id,
-                            event: DirectorEvent::DutyCompleted {
-                                arg1: 0,
-                                arg2: 0,
-                                arg3: 0,
-                                arg4: 0,
-                            },
+                            event: DirectorEvent::ContentDirector(
+                                ContentDirectorEvent::InstanceContent(
+                                    InstanceContentDirectorEvent::DutyCompleted {
+                                        arg1: 0,
+                                        arg2: 0,
+                                        arg3: 0,
+                                        arg4: 0,
+                                    },
+                                ),
+                            ),
                         },
                     },
                 ));
@@ -1123,12 +1134,14 @@ pub fn handle_director_messages(
                 ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
                     category: ActorControlCategory::DirectorEvent {
                         handler_id: instance.directors.first().unwrap().id,
-                        event: DirectorEvent::DutyCommence {
-                            arg1: instance.duration.unwrap_or_default().as_secs() as u32,
-                            arg2: 0,
-                            arg3: 0,
-                            arg4: 0,
-                        },
+                        event: DirectorEvent::ContentDirector(
+                            ContentDirectorEvent::InstanceContent(
+                                InstanceContentDirectorEvent::DutyCommence {
+                                    time_limit: instance.duration.unwrap_or_default().as_secs()
+                                        as u32,
+                                },
+                            ),
+                        ),
                     },
                 }));
             let mut network = network.lock();
@@ -1171,12 +1184,12 @@ pub fn handle_director_messages(
                 ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
                     category: ActorControlCategory::DirectorEvent {
                         handler_id: instance.directors.first().unwrap().id,
-                        event: DirectorEvent::SetDutyTimeRemaining {
-                            arg1: instance.duration.unwrap_or_default().as_secs() as u32,
-                            arg2: 0,
-                            arg3: 0,
-                            arg4: 0,
-                        },
+                        event: DirectorEvent::ContentDirector(
+                            ContentDirectorEvent::SetDutyTimeRemaining {
+                                time_remaining: instance.duration.unwrap_or_default().as_secs()
+                                    as u32,
+                            },
+                        ),
                     },
                 }));
             network.send_to_by_actor_id(
@@ -1189,4 +1202,30 @@ pub fn handle_director_messages(
         }
         _ => false,
     }
+}
+
+/// Handles an incoming director trigger from a client.
+pub fn handle_director_trigger(
+    network: Arc<Mutex<NetworkState>>,
+    from_actor_id: ObjectId,
+    handler_id: HandlerId,
+    _trigger: &DirectorTrigger,
+) {
+    if handler_id.handler_type() == HandlerType::GimmickRect {
+        let ipc =
+            ServerZoneIpcSegment::new(ServerZoneIpcData::ActorControlSelf(ActorControlSelf {
+                category: ActorControlCategory::DirectorEvent {
+                    handler_id,
+                    event: DirectorEvent::GimmickRect(GimmickRectEvent::Activate { arg1: 1 }),
+                },
+            }));
+        let mut network = network.lock();
+        network.send_to_by_actor_id(
+            from_actor_id,
+            FromServer::PacketSegment(ipc, from_actor_id),
+            DestinationNetwork::ZoneClients,
+        );
+    }
+
+    // TODO: send triggers to Lua etc.
 }

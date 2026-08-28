@@ -296,6 +296,7 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 808u32)]
     DirectorTrigger {
         handler_id: HandlerId,
+        #[br(args(handler_id))]
         trigger: DirectorTrigger,
     },
 
