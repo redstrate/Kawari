@@ -428,6 +428,7 @@ impl HandlerType {
             TerritoryIntendedUse::Blunderville => Some(Self::PublicContent),
             TerritoryIntendedUse::TripleTriadBattleHall => Some(Self::PublicContent),
             TerritoryIntendedUse::LordOfVerminion => Some(Self::GoldSaucer),
+            TerritoryIntendedUse::SeasonalInstancedArea => Some(Self::InstanceContent),
             _ => None,
         }
     }
