@@ -1051,7 +1051,7 @@ async fn process_packet(
 
                                     // SetMode isn't important, no, but it's included for accuracy.
                                     connection
-                                        .set_character_mode(CharacterMode::Normal, 0)
+                                        .set_character_mode(CharacterMode::Normal, 0, true)
                                         .await;
 
                                     // Retail indeed does send an AC, not an ACS for this.
@@ -4077,7 +4077,7 @@ async fn process_server_msg(
             FromServer::ActorDismounted(from_actor_id) => {
                 // SetMode seems unnecessary (the dismount sequence works without it) but it's included for accuracy.
                 connection
-                    .set_character_mode(CharacterMode::Normal, 0)
+                    .set_character_mode(CharacterMode::Normal, 0, true)
                     .await;
                 connection.player_data.volatile.current_mount = 0;
                 connection
@@ -4319,6 +4319,9 @@ async fn process_server_msg(
             }
             FromServer::CheckTeleportSharingEligibility(aetheryte_id) => {
                 connection.check_tele_sharing_eligibility(aetheryte_id);
+            }
+            FromServer::SetCharacterMode(mode, arg) => {
+                connection.set_character_mode(mode, arg, false).await;
             }
             _ => {
                 tracing::error!(

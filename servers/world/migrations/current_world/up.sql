@@ -1,71 +1,20 @@
 -- Your SQL goes here
-CREATE TABLE `classjob`(
+CREATE TABLE `unlock`(
 	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`current_class` INTEGER NOT NULL,
-	`levels` TEXT NOT NULL,
-	`exp` TEXT NOT NULL,
-	`first_class` INTEGER NOT NULL,
-	`rested_exp` INTEGER NOT NULL,
-	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
-);
-
-CREATE TABLE `aetheryte`(
-	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`unlocked` TEXT NOT NULL,
-	`homepoint` INTEGER NOT NULL,
-	`favorite_aetherytes` TEXT NOT NULL,
-	`free_aetheryte` INTEGER NOT NULL,
-	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
-);
-
-CREATE TABLE `linkshells`(
-	`id` BIGINT NOT NULL PRIMARY KEY,
-	`name` TEXT NOT NULL,
-	`creation_time` BIGINT NOT NULL,
-	`is_crossworld` BOOL NOT NULL
-);
-
-CREATE TABLE `quest`(
-	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`completed` TEXT NOT NULL,
-	`active` TEXT NOT NULL,
-	`completed_legacy` TEXT NOT NULL,
-	`unlocked_map_markers` TEXT NOT NULL,
-	`completed_levequests` TEXT NOT NULL,
-	`gathered_gathering_items` TEXT NOT NULL,
-	`shared_fates` TEXT NOT NULL,
-	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
-);
-
-CREATE TABLE `inventory`(
-	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`contents` TEXT NOT NULL,
-	`equipped_glasses_ids` TEXT NOT NULL,
-	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
-);
-
-CREATE TABLE `buddy`(
-	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`name` TEXT NOT NULL,
-	`rank` INTEGER NOT NULL,
-	`stars` INTEGER NOT NULL,
-	`levels` TEXT NOT NULL,
-	`exp` INTEGER NOT NULL,
-	`color` INTEGER NOT NULL,
-	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
-);
-
-CREATE TABLE `search_info`(
-	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`online_status` INTEGER NOT NULL,
-	`comment` TEXT NOT NULL,
-	`selected_languages` INTEGER NOT NULL,
-	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
-);
-
-CREATE TABLE `companion`(
-	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`unlocked_equip` TEXT NOT NULL,
+	`unlocks` TEXT NOT NULL,
+	`seen_active_help` TEXT NOT NULL,
+	`minions` TEXT NOT NULL,
+	`mounts` TEXT NOT NULL,
+	`orchestrion_rolls` TEXT NOT NULL,
+	`cutscene_seen` TEXT NOT NULL,
+	`ornaments` TEXT NOT NULL,
+	`caught_fish` TEXT NOT NULL,
+	`caught_spearfish` TEXT NOT NULL,
+	`adventures` TEXT NOT NULL,
+	`triple_triad_cards` TEXT NOT NULL,
+	`glasses_styles` TEXT NOT NULL,
+	`chocobo_taxi_stands` TEXT NOT NULL,
+	`titles` TEXT NOT NULL,
 	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
 );
 
@@ -84,6 +33,132 @@ CREATE TABLE `customize`(
 	`chara_make` TEXT NOT NULL,
 	`city_state` INTEGER NOT NULL,
 	`remake_mode` INTEGER NOT NULL,
+	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
+);
+
+CREATE TABLE `search_info`(
+	`content_id` BIGINT NOT NULL PRIMARY KEY,
+	`online_status` INTEGER NOT NULL,
+	`comment` TEXT NOT NULL,
+	`selected_languages` INTEGER NOT NULL,
+	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
+);
+
+CREATE TABLE `friends`(
+	`id` BIGINT NOT NULL PRIMARY KEY,
+	`content_id` BIGINT NOT NULL,
+	`friend_content_id` BIGINT NOT NULL,
+	`group_icon` INTEGER NOT NULL,
+	`invite_time` BIGINT NOT NULL,
+	`is_pending` INTEGER NOT NULL
+);
+
+CREATE TABLE `quest`(
+	`content_id` BIGINT NOT NULL PRIMARY KEY,
+	`completed` TEXT NOT NULL,
+	`active` TEXT NOT NULL,
+	`completed_legacy` TEXT NOT NULL,
+	`unlocked_map_markers` TEXT NOT NULL,
+	`completed_levequests` TEXT NOT NULL,
+	`gathered_gathering_items` TEXT NOT NULL,
+	`shared_fates` TEXT NOT NULL,
+	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
+);
+
+CREATE TABLE `classjob`(
+	`content_id` BIGINT NOT NULL PRIMARY KEY,
+	`current_class` INTEGER NOT NULL,
+	`levels` TEXT NOT NULL,
+	`exp` TEXT NOT NULL,
+	`first_class` INTEGER NOT NULL,
+	`rested_exp` INTEGER NOT NULL,
+	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
+);
+
+CREATE TABLE `linkshell_members`(
+	`id` BIGINT NOT NULL PRIMARY KEY,
+	`content_id` BIGINT NOT NULL,
+	`linkshell_id` BIGINT NOT NULL,
+	`invite_time` BIGINT NOT NULL,
+	`rank` INTEGER NOT NULL
+);
+
+CREATE TABLE `grand_company`(
+	`content_id` BIGINT NOT NULL PRIMARY KEY,
+	`active_company` INTEGER NOT NULL,
+	`company_ranks` TEXT NOT NULL,
+	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
+);
+
+CREATE TABLE `linkshells`(
+	`id` BIGINT NOT NULL PRIMARY KEY,
+	`name` TEXT NOT NULL,
+	`creation_time` BIGINT NOT NULL,
+	`is_crossworld` BOOL NOT NULL
+);
+
+CREATE TABLE `buddy`(
+	`content_id` BIGINT NOT NULL PRIMARY KEY,
+	`name` TEXT NOT NULL,
+	`rank` INTEGER NOT NULL,
+	`stars` INTEGER NOT NULL,
+	`levels` TEXT NOT NULL,
+	`exp` INTEGER NOT NULL,
+	`color` INTEGER NOT NULL,
+	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
+);
+
+CREATE TABLE `party`(
+	`id` BIGINT NOT NULL PRIMARY KEY,
+	`leader_content_id` BIGINT NOT NULL,
+	`members` TEXT NOT NULL
+);
+
+CREATE TABLE `mail`(
+	`id` BIGINT NOT NULL PRIMARY KEY,
+	`kind` INTEGER NOT NULL,
+	`read` BOOL NOT NULL,
+	`timestamp` BIGINT NOT NULL,
+	`recipient_content_id` BIGINT NOT NULL,
+	`sender_content_id` BIGINT NOT NULL,
+	`message` TEXT NOT NULL,
+	`attached_items` TEXT NOT NULL
+);
+
+CREATE TABLE `inventory`(
+	`content_id` BIGINT NOT NULL PRIMARY KEY,
+	`contents` TEXT NOT NULL,
+	`equipped_glasses_ids` TEXT NOT NULL,
+	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
+);
+
+CREATE TABLE `volatile`(
+	`content_id` BIGINT NOT NULL PRIMARY KEY,
+	`position` TEXT NOT NULL,
+	`rotation` DOUBLE NOT NULL,
+	`zone_id` INTEGER NOT NULL,
+	`display_flags` INTEGER NOT NULL,
+	`title` INTEGER NOT NULL,
+	`is_online` BOOL NOT NULL,
+	`client_language` INTEGER NOT NULL,
+	`mode` INTEGER NOT NULL,
+	`mode_arg` INTEGER NOT NULL,
+	`current_mount` INTEGER NOT NULL,
+	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
+);
+
+CREATE TABLE `aetheryte`(
+	`content_id` BIGINT NOT NULL PRIMARY KEY,
+	`unlocked` TEXT NOT NULL,
+	`homepoint` INTEGER NOT NULL,
+	`favorite_aetherytes` TEXT NOT NULL,
+	`free_aetheryte` INTEGER NOT NULL,
+	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
+);
+
+CREATE TABLE `companion`(
+	`content_id` BIGINT NOT NULL PRIMARY KEY,
+	`unlocked_equip` TEXT NOT NULL,
 	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
 );
 
@@ -108,19 +183,6 @@ CREATE TABLE `content`(
 	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
 );
 
-CREATE TABLE `volatile`(
-	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`position` TEXT NOT NULL,
-	`rotation` DOUBLE NOT NULL,
-	`zone_id` INTEGER NOT NULL,
-	`display_flags` INTEGER NOT NULL,
-	`title` INTEGER NOT NULL,
-	`is_online` BOOL NOT NULL,
-	`client_language` INTEGER NOT NULL,
-	`current_mount` INTEGER NOT NULL,
-	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
-);
-
 CREATE TABLE `character`(
 	`content_id` BIGINT NOT NULL PRIMARY KEY,
 	`service_account_id` BIGINT NOT NULL,
@@ -129,66 +191,6 @@ CREATE TABLE `character`(
 	`name` TEXT NOT NULL,
 	`time_played_minutes` BIGINT NOT NULL,
 	`warrior_of_light` INTEGER NOT NULL
-);
-
-CREATE TABLE `mail`(
-	`id` BIGINT NOT NULL PRIMARY KEY,
-	`kind` INTEGER NOT NULL,
-	`read` BOOL NOT NULL,
-	`timestamp` BIGINT NOT NULL,
-	`recipient_content_id` BIGINT NOT NULL,
-	`sender_content_id` BIGINT NOT NULL,
-	`message` TEXT NOT NULL,
-	`attached_items` TEXT NOT NULL
-);
-
-CREATE TABLE `linkshell_members`(
-	`id` BIGINT NOT NULL PRIMARY KEY,
-	`content_id` BIGINT NOT NULL,
-	`linkshell_id` BIGINT NOT NULL,
-	`invite_time` BIGINT NOT NULL,
-	`rank` INTEGER NOT NULL
-);
-
-CREATE TABLE `friends`(
-	`id` BIGINT NOT NULL PRIMARY KEY,
-	`content_id` BIGINT NOT NULL,
-	`friend_content_id` BIGINT NOT NULL,
-	`group_icon` INTEGER NOT NULL,
-	`invite_time` BIGINT NOT NULL,
-	`is_pending` INTEGER NOT NULL
-);
-
-CREATE TABLE `party`(
-	`id` BIGINT NOT NULL PRIMARY KEY,
-	`leader_content_id` BIGINT NOT NULL,
-	`members` TEXT NOT NULL
-);
-
-CREATE TABLE `grand_company`(
-	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`active_company` INTEGER NOT NULL,
-	`company_ranks` TEXT NOT NULL,
-	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
-);
-
-CREATE TABLE `unlock`(
-	`content_id` BIGINT NOT NULL PRIMARY KEY,
-	`unlocks` TEXT NOT NULL,
-	`seen_active_help` TEXT NOT NULL,
-	`minions` TEXT NOT NULL,
-	`mounts` TEXT NOT NULL,
-	`orchestrion_rolls` TEXT NOT NULL,
-	`cutscene_seen` TEXT NOT NULL,
-	`ornaments` TEXT NOT NULL,
-	`caught_fish` TEXT NOT NULL,
-	`caught_spearfish` TEXT NOT NULL,
-	`adventures` TEXT NOT NULL,
-	`triple_triad_cards` TEXT NOT NULL,
-	`glasses_styles` TEXT NOT NULL,
-	`chocobo_taxi_stands` TEXT NOT NULL,
-	`titles` TEXT NOT NULL,
-	FOREIGN KEY (`content_id`) REFERENCES `character`(`content_id`)
 );
 
 CREATE TABLE `aether_current`(

@@ -55,7 +55,8 @@ impl ZoneConnection {
             let event_arg = event.1.event_arg;
             let event_id = event.1.id;
 
-            self.set_character_mode(CharacterMode::Normal, 0).await;
+            self.set_character_mode(CharacterMode::Normal, 0, true)
+                .await;
 
             // Remove the condition given at the start of the event
             self.conditions.remove_condition(event.1.condition);
@@ -133,7 +134,7 @@ impl ZoneConnection {
             self.conditions.toggle_condition(condition, true);
             self.send_conditions().await;
 
-            self.set_character_mode(character_mode, 0).await;
+            self.set_character_mode(character_mode, 0, true).await;
 
             if handler.disable_event_pos_rollback() {
                 self.actor_control_self(ActorControlCategory::DisableEventPosRollback {

@@ -815,10 +815,15 @@ impl std::fmt::Debug for EventState {
     }
 }
 
-// TODO: should we include the param here?
 #[binrw]
+#[repr(u8)]
 #[brw(repr = u8)]
-#[derive(Debug, Clone, Copy, Default, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, FromRepr)]
+#[cfg_attr(
+    feature = "server",
+    derive(diesel::expression::AsExpression, diesel::deserialize::FromSqlRow)
+)]
+#[cfg_attr(feature = "server", diesel(sql_type = diesel::sql_types::Integer))]
 pub enum CharacterMode {
     /// Has no effect, never used.
     None = 0,
@@ -855,6 +860,30 @@ pub enum CharacterMode {
     Unknown1 = 15,
     /// Playing an instrument. Param is a index into the Perform Excel sheet.
     Performance = 16,
+}
+
+#[cfg(feature = "server")]
+impl diesel::serialize::ToSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite>
+    for CharacterMode
+{
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, diesel::sqlite::Sqlite>,
+    ) -> diesel::serialize::Result {
+        out.set_value(*self as i32);
+        Ok(diesel::serialize::IsNull::No)
+    }
+}
+
+#[cfg(feature = "server")]
+impl diesel::deserialize::FromSql<diesel::sql_types::Integer, diesel::sqlite::Sqlite>
+    for CharacterMode
+{
+    fn from_sql(
+        mut integer: <diesel::sqlite::Sqlite as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        Ok(CharacterMode::from_repr(integer.read_integer() as u8).unwrap_or_default())
+    }
 }
 
 #[binrw]

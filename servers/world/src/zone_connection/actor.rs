@@ -249,11 +249,8 @@ impl ZoneConnection {
             active_minion: self.active_minion as u16,
             // TODO: Dismount if entering a duty? Towns are probably fine to leave alone.
             current_mount: self.player_data.volatile.current_mount as u16,
-            mode: if self.player_data.volatile.current_mount != 0 {
-                CharacterMode::Mounted
-            } else {
-                CharacterMode::default()
-            },
+            mode: self.player_data.volatile.mode,
+            mode_arg: self.player_data.volatile.mode_arg as u8,
             glasses_ids: self.player_data.equipped_glasses_ids,
             handler_id: self.content_handler_id.unwrap_or_default(),
             ..Default::default()
@@ -280,14 +277,25 @@ impl ZoneConnection {
     }
 
     /// Sets this actor's CharacterMode and informs other clients.
-    pub async fn set_character_mode(&mut self, mode: CharacterMode, arg: u8) {
-        self.handle
-            .send(ToServer::SetCharacterMode(
-                self.player_data.character.actor_id,
-                mode,
-                arg,
-            ))
-            .await;
+    pub async fn set_character_mode(&mut self, mode: CharacterMode, arg: u8, inform_server: bool) {
+        if inform_server {
+            self.handle
+                .send(ToServer::SetCharacterMode(
+                    self.player_data.character.actor_id,
+                    mode,
+                    arg,
+                ))
+                .await;
+        }
+        self.player_data.volatile.mode = mode;
+        self.player_data.volatile.mode_arg = arg as i32;
+
+        // Inform other players of our new mode
+        self.broadcast_actor_control(ActorControlCategory::SetMode {
+            mode,
+            mode_arg: arg as u32,
+        })
+        .await;
     }
 
     pub async fn spawn_treasure(&mut self, spawn: SpawnTreasure) {

@@ -255,14 +255,11 @@ pub fn set_character_mode(
         actor.get_common_spawn_mut().mode_arg = mode_arg;
     }
 
-    // Inform actors
-    network.send_ac_in_range_inclusive_instance(
-        instance,
+    // Tell the client of their new CharacterMode, they will be in charge of distributing that information to other players
+    network.send_to_by_actor_id(
         from_actor_id,
-        ActorControlCategory::SetMode {
-            mode,
-            mode_arg: mode_arg as u32,
-        },
+        FromServer::SetCharacterMode(mode, mode_arg),
+        DestinationNetwork::ZoneClients,
     );
 }
 

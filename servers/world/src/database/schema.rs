@@ -71,6 +71,8 @@ diesel::table! {
         title -> Integer,
         is_online -> Bool,
         client_language -> Integer,
+        mode -> Integer,
+        mode_arg -> Integer,
         current_mount -> Integer,
     }
 }

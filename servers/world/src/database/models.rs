@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 use kawari::{
-    common::{ClientLanguage, EquipDisplayFlag, ObjectId, Position},
+    common::{CharacterMode, ClientLanguage, EquipDisplayFlag, ObjectId, Position},
     constants::{
         ACTIVE_HELP_BITMASK_SIZE, ADVENTURE_BITMASK_SIZE, AETHER_CURRENT_BITMASK_SIZE,
         AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE, AETHERYTE_UNLOCK_BITMASK_SIZE,
@@ -156,6 +156,8 @@ pub struct Volatile {
     pub title: i32,
     pub is_online: bool,
     pub client_language: ClientLanguage,
+    pub mode: CharacterMode,
+    pub mode_arg: i32,
     pub current_mount: i32,
 }
 

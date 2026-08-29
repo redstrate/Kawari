@@ -239,6 +239,8 @@ pub enum FromServer {
     FATEComplete,
     /// Instruct the client's zone connection to check if the teleport can be shared.
     CheckTeleportSharingEligibility(u32),
+    /// Inform the client of their player's new CharacterMode.
+    SetCharacterMode(CharacterMode, u8),
 }
 
 #[derive(Debug, Clone)]
