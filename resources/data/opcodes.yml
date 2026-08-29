@@ -1174,7 +1174,7 @@ ClientZoneIpcType:
   size: 24
 - name: RequestRecruitingPartyCount
   comment: Sent when opening up the Duty Finder.
-  opcode: 216
+  opcode: 413
   size: 8
 - name: UnkMarketBoardRequest1
   comment: Sent when requesting an item's offers I think?
