@@ -360,6 +360,24 @@ impl ChatConnection {
         from_actor_id: ObjectId,
         result: ChatDiceRollResult,
     ) {
+        if result.community_id.channel_type == ChatChannelType::CWLinkshell
+            && !self.chatchannels.cwls.contains(&result.community_id)
+        {
+            tracing::error!(
+                "cwls_message_received: We received a dice roll not destined for one of our linkshells, what happened? Discarding result. The destination linkshell was {:#?}",
+                result.community_id
+            );
+            return;
+        } else if result.community_id.channel_type == ChatChannelType::Party
+            && result.community_id.channel_number != self.chatchannels.party.channel_number
+        {
+            tracing::error!(
+                "cwls_message_received: We received a dice roll not destined for our party, what happened? Discarding result. The destination party was {:#?}",
+                result.community_id
+            );
+            return;
+        }
+
         let ipc = ServerChatIpcSegment::new(ServerChatIpcData::ChatDiceRollResult(result));
         self.send_ipc_from(from_actor_id, ipc).await;
     }
