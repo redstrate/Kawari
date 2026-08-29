@@ -515,7 +515,7 @@ impl Instance {
     pub fn content_handler_id(&self) -> Option<HandlerId> {
         self.directors
             .iter()
-            .filter(|x| x.id.handler_type().requires_content_id())
+            .filter(|x| x.id.handler_type().is_content_director())
             .map(|x| x.id)
             .collect::<Vec<_>>()
             .first()

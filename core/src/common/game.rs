@@ -433,11 +433,6 @@ impl HandlerType {
         }
     }
 
-    /// Whether this handler type needs a ContentFinderCondition to function.
-    pub fn requires_content_id(&self) -> bool {
-        !matches!(self, HandlerType::Fate | HandlerType::GoldSaucer)
-    }
-
     /// If this HandlerType is a descendant of the ContentDirector class in the client.
     /// Only useful for determining the correct DirectorEvent and DirectorTrigger really.
     pub fn is_content_director(&self) -> bool {

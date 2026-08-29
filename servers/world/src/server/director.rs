@@ -927,7 +927,7 @@ pub fn handle_director_messages(
                     .content_settings
                     .unwrap_or_default()
                     .contains(DutyFinderSetting::EXPLORER_MODE)
-                    && director.id.handler_type().requires_content_id()
+                    && director.id.handler_type().is_content_director()
                 {
                     1
                 } else {
@@ -938,7 +938,7 @@ pub fn handle_director_messages(
                     *from_actor_id,
                     FromServer::ActorControlSelf(ActorControlCategory::InitDirector {
                         handler_id: director.id,
-                        content_id: if director.id.handler_type().requires_content_id() {
+                        content_id: if director.id.handler_type().is_content_director() {
                             instance.content_id
                         } else {
                             0xFFFF
@@ -969,8 +969,7 @@ pub fn handle_director_messages(
 
             let mut network = network.lock();
             for director in &instance.directors {
-                // This seems to only be set for directors of content.
-                if director.id.handler_type().requires_content_id() {
+                if director.id.handler_type().is_content_director() {
                     network.send_to_by_actor_id(
                         *from_actor_id,
                         FromServer::PacketSegment(director.build_var_segment(), *from_actor_id),
@@ -1039,10 +1038,7 @@ pub fn handle_director_messages(
                         ),
                         DestinationNetwork::ZoneClients,
                     );
-                }
-
-                // Set up for certain public content
-                if director.id.handler_type() == HandlerType::PublicContent {
+                } else if director.id.handler_type() == HandlerType::PublicContent {
                     let content_type;
                     {
                         let mut game_data = gamedata.lock();
