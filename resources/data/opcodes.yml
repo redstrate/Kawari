@@ -1184,6 +1184,10 @@ ClientZoneIpcType:
   comment: Sent when requesting an item's offers too I think?
   opcode: 904
   size: 8
+- name: PerformanceNote
+  comment: Sent when playing an instrument.
+  opcode: 310
+  size: 24
 ServerLobbyIpcType:
 - name: NackReply
   comment: Sent by the server to indicate an lobby error occured.

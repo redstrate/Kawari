@@ -666,6 +666,9 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 3)] // unused
         request_id: u8,
     },
+    PerformanceNote {
+        unk1: [u8; 24],
+    },
 }
 
 #[cfg(test)]

@@ -1776,6 +1776,21 @@ async fn process_packet(
                                         )
                                         .await;
                                 }
+                                ClientTriggerCommand::StartOrStopPerforming { perform_id } => {
+                                    if perform_id == 0 {
+                                        connection
+                                            .set_character_mode(CharacterMode::Normal, 0, true)
+                                            .await;
+                                    } else {
+                                        connection
+                                            .set_character_mode(
+                                                CharacterMode::Performance,
+                                                perform_id as u8,
+                                                true,
+                                            )
+                                            .await;
+                                    }
+                                }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
                                     connection
@@ -3724,6 +3739,9 @@ async fn process_packet(
                                 },
                             );
                             connection.send_ipc_self(ipc).await;
+                        }
+                        ClientZoneIpcData::PerformanceNote { .. } => {
+                            // TODO: what to do with these?
                         }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(

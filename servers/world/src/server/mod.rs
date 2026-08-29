@@ -1481,6 +1481,7 @@ pub async fn server_main_loop(
                                         from_actor_id,
                                         CharacterMode::EmoteLoop,
                                         mode,
+                                        true,
                                     );
                                 }
                             }
@@ -2014,6 +2015,7 @@ pub async fn server_main_loop(
                                 from_actor_id,
                                 CharacterMode::Normal,
                                 0,
+                                true,
                             );
                         }
                         ClientTriggerCommand::ToggleAutoAttack { on, target, .. } => {
@@ -2457,7 +2459,7 @@ pub async fn server_main_loop(
                         continue;
                     };
 
-                    set_character_mode(instance, &mut network, from_actor_id, mode, arg);
+                    set_character_mode(instance, &mut network, from_actor_id, mode, arg, false);
                 }
                 ToServer::BroadcastActorControl(from_actor_id, actor_control) => {
                     let mut network = network.lock();

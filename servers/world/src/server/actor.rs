@@ -239,6 +239,7 @@ pub fn set_character_mode(
     from_actor_id: ObjectId,
     mode: CharacterMode,
     mode_arg: u8,
+    inform_client: bool,
 ) {
     // Update internal data model for new spawns
     {
@@ -256,11 +257,13 @@ pub fn set_character_mode(
     }
 
     // Tell the client of their new CharacterMode, they will be in charge of distributing that information to other players
-    network.send_to_by_actor_id(
-        from_actor_id,
-        FromServer::SetCharacterMode(mode, mode_arg),
-        DestinationNetwork::ZoneClients,
-    );
+    if inform_client {
+        network.send_to_by_actor_id(
+            from_actor_id,
+            FromServer::SetCharacterMode(mode, mode_arg),
+            DestinationNetwork::ZoneClients,
+        );
+    }
 }
 
 pub fn set_shared_group_timeline_state(
@@ -323,7 +326,14 @@ pub fn kill_actor(network: Arc<Mutex<NetworkState>>, instance: &mut Instance, ac
     let mut network = network.lock();
 
     // First, set their state (otherwise they can still walk)
-    set_character_mode(instance, &mut network, actor_id, CharacterMode::Dead, 0);
+    set_character_mode(
+        instance,
+        &mut network,
+        actor_id,
+        CharacterMode::Dead,
+        0,
+        true,
+    );
 
     // Then, play the death animation.
     {

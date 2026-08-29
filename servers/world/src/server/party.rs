@@ -1191,6 +1191,7 @@ pub fn handle_party_messages(
                 *from_actor_id,
                 CharacterMode::RidingPillion,
                 1 + *target_seat_index as u8,
+                true,
             );
 
             // Inform the passenger that they are riding

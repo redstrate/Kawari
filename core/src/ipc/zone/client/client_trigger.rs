@@ -449,6 +449,13 @@ pub enum ClientTriggerCommand {
         action_id: u32,
     },
 
+    /// The client wants to start or stop playing an instrument.
+    #[brw(magic = 1820u32)]
+    StartOrStopPerforming {
+        /// Index into the Perform Excel sheet. If zero, it means to stop performing.
+        perform_id: u32,
+    },
+
     /// The client opens the General tab in the Gold Saucer window.
     #[brw(magic = 1850u32)]
     OpenGoldSaucerGeneralTab,

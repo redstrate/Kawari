@@ -1361,6 +1361,7 @@ pub fn handle_zone_messages(
                     *from_actor_id,
                     CharacterMode::Normal,
                     0,
+                    true,
                 );
             }
 
