@@ -869,22 +869,27 @@ pub enum ServerZoneIpcData {
         starter_name: String,
     },
     DirectorPopupMessage {
-        unk1: ObjectTypeId, // Sometimes has data, but it's not read by the client.
+        /// The actor id of who's saying the text. Unused, as the client does not use it past reading it.
+        actor_id: ObjectTypeId,
         /// Should be the ID of the instance's director.
         handler_id: HandlerId,
         /// Index into the BNPCName Excel sheet.
         npc_name: u32,
         /// Index into the InstanceContentTextData Excel sheet.
+        /// This value has to be in this InstanceContent's range of InstanceContentTextDataObjectiveStart and InstanceContentTextDataObjectiveEnd. If not, the client will crash.
         text_data_id: u32,
         duration_msecs: u32,
         /// The icon/image that shows on the top left
         icon: u32,
-        kind: ObjectKind, // Used when resolving npc_name.
+        /// What kind of object the speaker (npc_name) is. Used when resolving npc_name.
+        kind: ObjectKind,
         /// The appearance of the text box.
         style: u8,
+        /// Amount of parameters to be read. Max value is 2.
         #[brw(pad_after = 1)] // padding
-        unk7: u8,
-        unk8: u64,
+        params_count: u8,
+        param1: u32,
+        param2: u32,
     },
     DirectorSetupMapEffects64 {
         /// The map effects to setup.
