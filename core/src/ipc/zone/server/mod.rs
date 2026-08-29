@@ -889,7 +889,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 1)] // padding
         params_count: u8,
         param1: u32,
-        param2: u32
+        param2: u32,
     },
     DirectorSetupMapEffects64 {
         /// The map effects to setup.
