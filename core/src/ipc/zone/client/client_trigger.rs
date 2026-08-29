@@ -1,4 +1,6 @@
-use binrw::binrw;
+use std::io::Cursor;
+
+use binrw::{BinWrite, binrw};
 use strum_macros::IntoStaticStr;
 
 use crate::common::{
@@ -548,7 +550,6 @@ pub enum ClientTriggerCommand {
     #[doc(hidden)]
     Unknown {
         category: u32,
-        // seen in haircut event
         unk1: u32,
         unk2: u32,
         unk3: u32,
@@ -557,30 +558,47 @@ pub enum ClientTriggerCommand {
     },
 }
 
+#[derive(Debug, Clone, Default, PartialEq)]
+pub enum ClientTriggerTarget {
+    /// Refers to a GameObject.
+    Actor(ObjectTypeId),
+    /// Refers to a player by their unique content ID.
+    ContentId(u64),
+    #[default]
+    None,
+}
+
+fn read_target(id: u64) -> ClientTriggerTarget {
+    if let Ok(actor) = ObjectTypeId::try_from(id) {
+        ClientTriggerTarget::Actor(actor)
+    } else if id > 0 {
+        ClientTriggerTarget::ContentId(id)
+    } else {
+        ClientTriggerTarget::None
+    }
+}
+
+fn write_target(target: &ClientTriggerTarget) -> u64 {
+    match target {
+        ClientTriggerTarget::Actor(object_type_id) => {
+            let mut cursor = Cursor::new(Vec::new());
+            object_type_id.write_le(&mut cursor).unwrap();
+
+            u64::from_le_bytes(cursor.into_inner().try_into().unwrap_or_default())
+        }
+        ClientTriggerTarget::ContentId(content_id) => *content_id,
+        ClientTriggerTarget::None => 0,
+    }
+}
+
 #[binrw]
 #[derive(Debug, Clone)]
 pub struct ClientTrigger {
     #[brw(pad_size_to = 24)] // take into account categories without params
     pub trigger: ClientTriggerCommand,
-
-    /// Can be a ObjectTypeId or a content ID.
-    #[br(temp)]
-    #[bw(calc = {
-        if let Some(target) = self.target {
-            target.into()
-        } else {
-            content_id.unwrap_or_default()
-        }
-    })]
-    target_id: u64,
-
-    // TODO: replace with an enum
-    #[br(calc = ObjectTypeId::try_from(target_id).ok())]
-    #[bw(ignore)]
-    pub target: Option<ObjectTypeId>,
-    #[br(calc = if target.is_none() { Some(target_id) } else { None } )]
-    #[bw(ignore)]
-    pub content_id: Option<u64>,
+    #[br(map = read_target)]
+    #[bw(map = write_target)]
+    pub target: ClientTriggerTarget,
 }
 
 impl Default for ClientTrigger {
@@ -590,8 +608,7 @@ impl Default for ClientTrigger {
                 actor_id: ObjectId::default(),
                 actor_type: 0,
             },
-            target: None,
-            content_id: None,
+            target: Default::default(),
         }
     }
 }
@@ -623,15 +640,12 @@ mod tests {
                 unk2: 0,
             }
         );
-        // For this CT command, there should never be a content id in this field.
-        assert!(toggle_sign.content_id.is_none());
-        assert!(toggle_sign.target.is_some());
         assert_eq!(
-            toggle_sign.target.unwrap(),
-            ObjectTypeId {
+            toggle_sign.target,
+            ClientTriggerTarget::Actor(ObjectTypeId {
                 object_id: ObjectId(1140471), // Random NPC in New Gridania
                 object_type: ObjectTypeKind::EObjOrNpc,
-            }
+            })
         )
     }
 }

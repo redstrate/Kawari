@@ -9,7 +9,9 @@ mod send_chat_message;
 pub use send_chat_message::SendChatMessage;
 
 mod client_trigger;
-pub use crate::ipc::zone::client::client_trigger::{ClientTrigger, ClientTriggerCommand};
+pub use crate::ipc::zone::client::client_trigger::{
+    ClientTrigger, ClientTriggerCommand, ClientTriggerTarget,
+};
 
 mod event_yield_handler;
 pub use crate::ipc::zone::client::event_yield_handler::EventYieldHandler;

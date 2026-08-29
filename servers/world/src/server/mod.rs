@@ -50,9 +50,9 @@ use kawari::{
     },
     config::get_config,
     ipc::zone::{
-        ActionRequest, ActionType, ActorControlCategory, ClientTriggerCommand, Condition,
-        Conditions, DutyFinderSetting, EnmityList, Hater, HaterList, PlayerEnmity, PrepareZoning,
-        PrepareZoningFlag, ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPreset,
+        ActionRequest, ActionType, ActorControlCategory, ClientTriggerCommand, ClientTriggerTarget,
+        Condition, Conditions, DutyFinderSetting, EnmityList, Hater, HaterList, PlayerEnmity,
+        PrepareZoning, PrepareZoningFlag, ServerZoneIpcData, ServerZoneIpcSegment, WaymarkPreset,
     },
 };
 
@@ -1371,20 +1371,22 @@ pub async fn server_main_loop(
                             );
                         }
                         ClientTriggerCommand::SetSoftTarget => {
-                            let msg = FromServer::ActorControlTarget(
-                                from_actor_id,
-                                trigger.target.unwrap_or_default(),
-                                ActorControlCategory::SetSoftTarget,
-                            );
+                            if let ClientTriggerTarget::Actor(actor) = trigger.target {
+                                let msg = FromServer::ActorControlTarget(
+                                    from_actor_id,
+                                    actor,
+                                    ActorControlCategory::SetSoftTarget,
+                                );
 
-                            let mut network = network.lock();
-                            let data = data.lock();
-                            network.send_in_range(
-                                from_actor_id,
-                                &data,
-                                msg,
-                                DestinationNetwork::ZoneClients,
-                            );
+                                let mut network = network.lock();
+                                let data = data.lock();
+                                network.send_in_range(
+                                    from_actor_id,
+                                    &data,
+                                    msg,
+                                    DestinationNetwork::ZoneClients,
+                                );
+                            }
                         }
                         ClientTriggerCommand::ChangePose { unk1, pose } => {
                             let msg = FromServer::ActorControl(
@@ -1443,41 +1445,44 @@ pub async fn server_main_loop(
                             }
                         }
                         ClientTriggerCommand::Emote { emote, hide_text } => {
-                            let msg = FromServer::ActorControlTarget(
-                                from_actor_id,
-                                trigger.target.unwrap(),
-                                ActorControlCategory::Emote {
-                                    emote: *emote,
-                                    hide_text: *hide_text,
-                                },
-                            );
-
-                            let mut network = network.lock();
-                            let mut data = data.lock();
-                            network.send_in_range(
-                                from_actor_id,
-                                &data,
-                                msg,
-                                DestinationNetwork::ZoneClients,
-                            );
-
-                            // setup persistence if looping
-                            let emote_mode;
-                            {
-                                let mut game_data = game_data.lock();
-                                emote_mode = game_data.get_emote_mode(*emote);
-                            }
-
-                            if let Some(mode) = emote_mode
-                                && let Some(instance) = data.find_actor_instance_mut(from_actor_id)
-                            {
-                                set_character_mode(
-                                    instance,
-                                    &mut network,
+                            if let ClientTriggerTarget::Actor(actor) = trigger.target {
+                                let msg = FromServer::ActorControlTarget(
                                     from_actor_id,
-                                    CharacterMode::EmoteLoop,
-                                    mode,
+                                    actor,
+                                    ActorControlCategory::Emote {
+                                        emote: *emote,
+                                        hide_text: *hide_text,
+                                    },
                                 );
+
+                                let mut network = network.lock();
+                                let mut data = data.lock();
+                                network.send_in_range(
+                                    from_actor_id,
+                                    &data,
+                                    msg,
+                                    DestinationNetwork::ZoneClients,
+                                );
+
+                                // setup persistence if looping
+                                let emote_mode;
+                                {
+                                    let mut game_data = game_data.lock();
+                                    emote_mode = game_data.get_emote_mode(*emote);
+                                }
+
+                                if let Some(mode) = emote_mode
+                                    && let Some(instance) =
+                                        data.find_actor_instance_mut(from_actor_id)
+                                {
+                                    set_character_mode(
+                                        instance,
+                                        &mut network,
+                                        from_actor_id,
+                                        CharacterMode::EmoteLoop,
+                                        mode,
+                                    );
+                                }
                             }
                         }
                         ClientTriggerCommand::ToggleWeapon { shown, unk_flag } => {
@@ -1628,7 +1633,7 @@ pub async fn server_main_loop(
                             );
                         }
                         ClientTriggerCommand::ToggleSign { sign_id, .. } => {
-                            let Some(target_actor) = trigger.target else {
+                            let ClientTriggerTarget::Actor(target_actor) = trigger.target else {
                                 continue;
                             };
 

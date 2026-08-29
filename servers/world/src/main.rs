@@ -17,11 +17,12 @@ use physis::{TerritoryIntendedUse, equipment::EquipSlot};
 use kawari::ipc::chat::ClientChatIpcData;
 
 use kawari::ipc::zone::{
-    ActorControlCategory, CWLSLeaveReason, Conditions, ContentFinderUserAction, CrossRealmListing,
-    CrossRealmListings, DutyFinderSetting, DutySupportInformation, EventType,
-    FurnitureTranslatedForObserver, ItemInfo, LinkshellInviteResponse, MarketBoardHistory,
-    MarketBoardHistoryEntry, MarketBoardItem, OnlineStatus, OnlineStatusMask, PlayerSetup,
-    SceneFlags, SearchInfo, SocialListRequestType, TrustContent, TrustInformation,
+    ActorControlCategory, CWLSLeaveReason, ClientTriggerTarget, Conditions,
+    ContentFinderUserAction, CrossRealmListing, CrossRealmListings, DutyFinderSetting,
+    DutySupportInformation, EventType, FurnitureTranslatedForObserver, ItemInfo,
+    LinkshellInviteResponse, MarketBoardHistory, MarketBoardHistoryEntry, MarketBoardItem,
+    OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType,
+    TrustContent, TrustInformation,
 };
 
 use kawari::ipc::zone::{
@@ -1671,14 +1672,18 @@ async fn process_packet(
                                     }
                                 }
                                 ClientTriggerCommand::RequestPlayerName => {
-                                    connection
-                                        .send_ipc_self(ServerZoneIpcSegment::new(
-                                            ServerZoneIpcData::PlayerName {
-                                                content_id: trigger.content_id.unwrap_or_default(),
-                                                name: "It's a mystery".to_string(), // Dummied out name for now
-                                            },
-                                        ))
-                                        .await;
+                                    if let ClientTriggerTarget::ContentId(content_id) =
+                                        trigger.target
+                                    {
+                                        connection
+                                            .send_ipc_self(ServerZoneIpcSegment::new(
+                                                ServerZoneIpcData::PlayerName {
+                                                    content_id,
+                                                    name: "It's a mystery".to_string(), // Dummied out name for now
+                                                },
+                                            ))
+                                            .await;
+                                    }
                                 }
                                 ClientTriggerCommand::TeleportOfferReply { decline_teleport } => {
                                     if !decline_teleport
