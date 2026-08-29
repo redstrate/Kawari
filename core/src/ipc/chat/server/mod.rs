@@ -2,7 +2,7 @@ use binrw::binrw;
 use kawari_core_macro::opcode_data;
 
 use crate::{
-    ipc::chat::SendCWLinkshellMessage,
+    ipc::chat::{ChatDiceRollResult, SendCWLinkshellMessage},
     opcodes::ServerChatIpcType,
     packet::{IpcSegment, ServerIpcSegmentHeader},
 };
@@ -38,6 +38,7 @@ pub enum ServerChatIpcData {
     CWLinkshellMessage(CWLinkshellMessage),
     AllianceMessage(AllianceMessage),
     AllianceMessageEcho(AllianceMessageEcho),
+    ChatDiceRollResult(ChatDiceRollResult),
 }
 
 #[cfg(test)]

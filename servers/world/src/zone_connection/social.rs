@@ -1,11 +1,11 @@
 //! Other social features, as well as invite sending and replies.
-use crate::{ToServer, ZoneConnection};
+use crate::{ToServer, ZoneConnection, common::roll_die};
 use kawari::{
-    common::{LogMessageType, timestamp_secs},
+    common::{LogMessageType, ObjectId, timestamp_secs},
     ipc::zone::{
         InviteReply, InviteType, InviteUpdateType, OnlineStatus, OnlineStatusMask, PlayerEntry,
         SearchUIClassJobMask, SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment,
-        SocialList, SocialListRequestType, SocialListUILanguages,
+        SocialList, SocialListRequestType, SocialListUILanguages, ZoneDiceRollResult,
     },
 };
 
@@ -514,5 +514,36 @@ impl ZoneConnection {
             num_results: self.search_results.len() as u32,
         });
         self.send_ipc_self(ipc).await;
+    }
+
+    pub async fn send_dice_roll(&mut self, num_sides: u16) {
+        let (roll_maximum, roll_result) = roll_die(num_sides);
+
+        let result = ZoneDiceRollResult {
+            account_id: self.player_data.character.service_account_id as u64,
+            content_id: self.player_data.character.content_id as u64,
+            actor_id: self.player_data.character.actor_id,
+            world_id: self.config.world_id,
+            roll_result,
+            num_sides: roll_maximum,
+            unk: 0x100,
+            name: self.player_data.character.name.clone(),
+        };
+
+        self.handle
+            .send(ToServer::ZoneDiceRoll(
+                self.player_data.character.actor_id,
+                result,
+            ))
+            .await;
+    }
+
+    pub async fn dice_roll_received(
+        &mut self,
+        from_actor_id: ObjectId,
+        result: ZoneDiceRollResult,
+    ) {
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ZoneDiceRollResult(result));
+        self.send_ipc_from(from_actor_id, ipc).await;
     }
 }

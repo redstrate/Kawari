@@ -4,15 +4,16 @@ use parking_lot::Mutex;
 use tokio::net::TcpStream;
 
 use super::common::ClientId;
-use crate::{ServerHandle, ToServer, WorldDatabase, database::Character};
+use crate::{ServerHandle, ToServer, WorldDatabase, common::roll_die, database::Character};
 use kawari::{
     common::{ObjectId, timestamp_secs},
     config::WorldConfig,
     ipc::{
         chat::{
-            CWLinkshellMessage, ChatChannel, ChatChannelType, ClientChatIpcSegment, PartyMessage,
-            SendCWLinkshellMessage, SendPartyMessage, SendTellMessage, ServerChatIpcData,
-            ServerChatIpcSegment, TellMessage, TellNotFoundError,
+            CWLinkshellMessage, ChatChannel, ChatChannelType, ChatDiceRollData, ChatDiceRollResult,
+            ClientChatIpcSegment, PartyMessage, SendCWLinkshellMessage, SendPartyMessage,
+            SendTellMessage, ServerChatIpcData, ServerChatIpcSegment, TellMessage,
+            TellNotFoundError,
         },
         zone::{CrossworldLinkshellEx, OnlineStatus},
     },
@@ -332,6 +333,35 @@ impl ChatConnection {
                 self.chatchannels.cwls[index].channel_number = shell.ids.linkshell_id as u32;
             }
         }
+    }
+
+    pub async fn send_dice_roll(&mut self, roll_data: ChatDiceRollData) {
+        let (num_sides, roll_result) = roll_die(roll_data.num_sides);
+
+        let result = ChatDiceRollResult {
+            community_id: roll_data.community_id,
+            account_id: self.player_data.account_id,
+            content_id: self.player_data.content_id,
+            roll_result,
+            num_sides,
+            world_id: self.config.world_id,
+            unk1: roll_data.unk2,
+            unk2: roll_data.unk1,
+            character_name: self.player_data.name.clone(),
+        };
+
+        self.handle
+            .send(ToServer::ChatDiceRoll(self.player_data.actor_id, result))
+            .await;
+    }
+
+    pub async fn dice_roll_received(
+        &mut self,
+        from_actor_id: ObjectId,
+        result: ChatDiceRollResult,
+    ) {
+        let ipc = ServerChatIpcSegment::new(ServerChatIpcData::ChatDiceRollResult(result));
+        self.send_ipc_from(from_actor_id, ipc).await;
     }
 
     pub async fn set_party_chatchannel(&mut self, party_channel_number: u32) {

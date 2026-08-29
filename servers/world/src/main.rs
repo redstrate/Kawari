@@ -415,6 +415,9 @@ async fn client_chat_loop(
                                             ClientChatIpcData::SendAllianceMessage(_data) => {
                                                 tracing::info!("Chatting in alliances is unimplemented");
                                             }
+                                            ClientChatIpcData::DiceRollCWLS(data) | ClientChatIpcData::DiceRollParty(data) => {
+                                                connection.send_dice_roll(*data).await;
+                                            }
                                             ClientChatIpcData::Unknown { unk } => {
                                                 tracing::warn!("Unknown chat packet {:?} recieved ({} bytes)", data.header.op_code, unk.len());
                                             }
@@ -447,6 +450,7 @@ async fn client_chat_loop(
                     FromServer::PartyMessageReceived(message_data) => connection.party_message_received(message_data).await,
                     FromServer::MustRefreshChatChannels => connection.refresh_chatchannels().await,
                     FromServer::CWLSMessageReceived(message_info) => connection.cwls_message_received(message_info).await,
+                    FromServer::ChatDiceRoll(from_actor_id, roll_data) => connection.dice_roll_received(from_actor_id, roll_data).await,
                     _ => tracing::error!("ChatConnection {:#?} received a FromServer message we don't care about: {:#?}, ensure you're using the right client network or that you've implemented a handler for it if we actually care about it!", client_handle.id, msg),
                 },
                 None => break,
@@ -1790,6 +1794,9 @@ async fn process_packet(
                                             )
                                             .await;
                                     }
+                                }
+                                ClientTriggerCommand::ZoneDiceRoll { num_sides } => {
+                                    connection.send_dice_roll(num_sides as u16).await;
                                 }
                                 _ => {
                                     // inform the server of our trigger, it will handle sending it to other clients
@@ -4340,6 +4347,11 @@ async fn process_server_msg(
             }
             FromServer::SetCharacterMode(mode, arg) => {
                 connection.set_character_mode(mode, arg, false).await;
+            }
+            FromServer::ZoneDiceRoll(from_actor_id, roll_data) => {
+                connection
+                    .dice_roll_received(from_actor_id, roll_data)
+                    .await;
             }
             _ => {
                 tracing::error!(

@@ -6,7 +6,8 @@ use crate::{
     FromServer, ToServer,
     server::{DestinationNetwork, WorldServer, network::NetworkState},
 };
-use kawari::{common::LogMessageType, ipc::zone::InviteType};
+
+use kawari::{common::LogMessageType, ipc::chat::ChatChannelType, ipc::zone::InviteType};
 
 /// Process social invitation and moogle mail-related messages.
 pub fn handle_social_messages(
@@ -159,6 +160,56 @@ pub fn handle_social_messages(
                 FromServer::NewLetterArrived,
                 DestinationNetwork::ZoneClients,
             );
+
+            true
+        }
+        ToServer::ChatDiceRoll(from_actor_id, roll_data) => {
+            let mut network = network.lock();
+            let msg = FromServer::ChatDiceRoll(*from_actor_id, roll_data.clone());
+
+            match roll_data.community_id.channel_type {
+                ChatChannelType::CWLinkshell => {
+                    network.send_to_linkshell(
+                        roll_data.community_id.channel_number as u64,
+                        None,
+                        msg,
+                        DestinationNetwork::ChatClients,
+                    );
+                }
+                ChatChannelType::Party => {
+                    let Some(id) = network.parties.iter().find_map(|(key, val)| {
+                        (val.chatchannel_id == roll_data.community_id.channel_number).then_some(key)
+                    }) else {
+                        return true;
+                    };
+
+                    let party_id = *id;
+
+                    network.send_to_party(party_id, None, msg, DestinationNetwork::ChatClients);
+                }
+                _ => {
+                    tracing::warn!(
+                        "Unimplemented dice roll channel: {:?}, we should implement this when possible!",
+                        roll_data.community_id.channel_type
+                    );
+                }
+            }
+
+            true
+        }
+        ToServer::ZoneDiceRoll(from_actor_id, roll_data) => {
+            let mut network = network.lock();
+            let data = data.lock();
+
+            if let Some(instance) = data.find_actor_instance(*from_actor_id) {
+                let msg = FromServer::ZoneDiceRoll(*from_actor_id, roll_data.clone());
+                network.send_in_range_inclusive_instance(
+                    *from_actor_id,
+                    instance,
+                    msg,
+                    DestinationNetwork::ZoneClients,
+                );
+            }
 
             true
         }

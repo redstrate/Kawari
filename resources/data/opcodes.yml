@@ -787,6 +787,10 @@ ServerZoneIpcType:
   comment: Sent to populate the hits label in the marketboard.
   opcode: 559
   size: 8
+- name: ZoneDiceRollResult
+  comment: Sent to the client and nearby players after the client sends a dice roll.
+  opcode: 361
+  size: 64
 ClientZoneIpcType:
 - name: InitRequest
   comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -1287,6 +1291,10 @@ ServerChatIpcType:
   comment: Sent by the server in response to a client sending a private message to the specified crossworld linkshell.
   opcode: 114
   size: 1096
+- name: ChatDiceRollResult
+  comment: Sent in response to various chat connection DiceRoll packets. It's sent to all online members, including the dice roll initiator, of the specified chat mode.
+  opcode: 301
+  size: 64
 ClientChatIpcType:
 - name: SendTellMessage
   comment: Sent by the client when sending a private message to another client.
@@ -1308,6 +1316,14 @@ ClientChatIpcType:
   comment: Sent by the client when sending a message to a cross-world linkshell.
   opcode: 109
   size: 1040
+- name: DiceRollParty
+  comment: Sent by the client to their party or a local linkshell.
+  opcode: 111
+  size: 48
+- name: DiceRollCWLS
+  comment: Sent by the client to their CWLS.
+  opcode: 112
+  size: 48
 CustomIpcType:
 - name: RequestCreateCharacter
   comment: Request the world server to create a character
