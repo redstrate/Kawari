@@ -14,7 +14,7 @@ use physis::{
     lgb::Lgb,
     lvb::Lvb,
     pcb::{ListEntry, Node, Pcb, Polygon},
-    resource::{ResourceResolver, SqPackResource},
+    resource::{ResourceResolver, SqPackResource, UnpackedResource},
     sgb::Sgb,
 };
 use recastnavigation_sys::{
@@ -40,6 +40,10 @@ fn main() {
     );
 
     let mut resolver = ResourceResolver::new();
+    for path in config.filesystem.additional_search_paths {
+        let unpacked_resource = UnpackedResource::from_existing(&path);
+        resolver.add_source(unpacked_resource);
+    }
     resolver.add_source(SqPackResource::from_existing(&config.filesystem.game_path));
 
     let sheet = TerritoryTypeSheet::read_from(&mut resolver, Language::None).unwrap();
