@@ -499,6 +499,8 @@ pub enum ToServer {
     ChatDiceRoll(ObjectId, ChatDiceRollResult),
     /// The client uses the /random command to send a dice roll to nearby players in the vicinity.
     ZoneDiceRoll(ObjectId, ZoneDiceRollResult),
+    /// Tell the server to reload the active festivals in all running instances.
+    ReloadFestivals,
 }
 
 #[derive(Clone, Debug)]

@@ -263,6 +263,18 @@ fn main() {
         output_str.push_str("}\n");
         output_str.push_str("}\n");
 
+        output_str.push_str("pub fn festival_list() -> &'static [(u16, &'static str)] {\n");
+        output_str.push_str("&[\n");
+        for value in yml.as_sequence().unwrap() {
+            output_str.push_str(&format!(
+                "({}, \"{}\"),\n",
+                value.get("Id").unwrap().as_i64().unwrap(),
+                value.get("Name").unwrap().as_str().unwrap()
+            ));
+        }
+        output_str.push_str("]\n");
+        output_str.push_str("}\n");
+
         std::fs::write("src/festivals.rs", output_str).expect("Failed to write constants file!");
     }
 }

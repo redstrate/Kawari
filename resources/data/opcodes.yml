@@ -1393,3 +1393,7 @@ CustomIpcType:
   comment: Response to requesting the full character list.
   opcode: 17
   size: 1024
+- name: ReloadFestivals
+  comment: Reloads the festivals in all running instances.
+  opcode: 18
+  size: 0

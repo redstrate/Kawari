@@ -19,17 +19,15 @@
         <label class="form-label" for="login_message">Login Message</label>
         <input class="form-control" type='text' id='login_message' name='login_message' value='{{ config.world.login_message }}' maxlength='775'/>
 
-        <label class="form-label" for="festival0">Festival 1</label>
-        <input class="form-control" type='number' id='festival0' name='festival0' value='{{ config.world.active_festivals[0] }}'/>
-
-        <label class="form-label" for="festival1">Festival 2</label>
-        <input class="form-control" type='number' id='festival1' name='festival1' value='{{ config.world.active_festivals[1] }}'/>
-
-        <label class="form-label" for="festival2">Festival 3</label>
-        <input class="form-control" type='number' id='festival2' name='festival2' value='{{ config.world.active_festivals[2] }}'/>
-
-        <label class="form-label" for="festival3">Festival 4</label>
-        <input class="form-control" type='number' id='festival3' name='festival3' value='{{ config.world.active_festivals[3] }}'/>
+        {% for active_festival in config.world.active_festivals %}
+            <label class="form-label" for="festival{{ loop.index0 }}">Festival {{ loop.index }}</label>
+            <select class="form-control" id='festival{{ loop.index0 }}' name='festival{{ loop.index0 }}'>
+                <option value="0">None</option>
+                {% for test in festival_list %}
+                    <option value="{{ test.0 }}" {% if active_festival == test.0 %}selected="selected"{% endif %} >{{ test.1 }}</option>
+                {% endfor %}
+            </select>
+        {% endfor %}
 
         <label class="form-label" for="world">World ID</label>
         <input class="form-control" type='number' id='world' name='world' value='{{ config.world.world_id }}'/>

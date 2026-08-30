@@ -3,6 +3,7 @@ use axum::routing::post;
 use axum::{Router, extract::Form, routing::get};
 use kawari::common::{BasicCharacterData, User};
 use kawari::config::get_config;
+use kawari::festivals::festival_list;
 use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment};
 use kawari::packet::send_custom_world_packet;
 use kawari::web_static_dir;
@@ -20,10 +21,11 @@ fn setup_default_environment() -> Environment<'static> {
 
 async fn root() -> Html<String> {
     let config = get_config();
+    let festival_list = festival_list();
 
     let environment = setup_default_environment();
     let template = environment.get_template("admin_general.html").unwrap();
-    Html(template.render(context! { config }).unwrap())
+    Html(template.render(context! { config, festival_list }).unwrap())
 }
 
 async fn users() -> Html<String> {
@@ -76,6 +78,10 @@ struct Input {
     festival1: Option<u16>,
     festival2: Option<u16>,
     festival3: Option<u16>,
+    festival4: Option<u16>,
+    festival5: Option<u16>,
+    festival6: Option<u16>,
+    festival7: Option<u16>,
     world: Option<u16>,
     login_message: Option<String>,
 }
@@ -97,14 +103,13 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
 
     config.world.active_festivals = [
         input.festival0.unwrap_or(0),
-        input.festival1.unwrap_or(1),
-        input.festival2.unwrap_or(2),
-        input.festival3.unwrap_or(3),
-        // TODO: expose these in the UI
-        0,
-        0,
-        0,
-        0,
+        input.festival1.unwrap_or(0),
+        input.festival2.unwrap_or(0),
+        input.festival3.unwrap_or(0),
+        input.festival4.unwrap_or(0),
+        input.festival5.unwrap_or(0),
+        input.festival6.unwrap_or(0),
+        input.festival7.unwrap_or(0),
     ];
 
     if let Some(world) = input.world {
@@ -117,6 +122,10 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
 
     serde_yaml_ng::to_writer(&std::fs::File::create("config.yaml").unwrap(), &config)
         .expect("TODO: panic message");
+
+    // Reload active festivals on the World server
+    // (There is no response.)
+    let _ = send_custom_world_packet(CustomIpcSegment::new(CustomIpcData::ReloadFestivals)).await;
 
     Redirect::to("/")
 }

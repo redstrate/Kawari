@@ -106,6 +106,7 @@ pub enum CustomIpcData {
         #[bw(map = write_string)]
         json: String,
     },
+    ReloadFestivals,
 }
 
 #[cfg(test)]

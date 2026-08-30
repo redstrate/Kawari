@@ -124,6 +124,8 @@ async fn initial_setup(
                     state: ConnectionState::None,
                     database: database.clone(),
                     gamedata: game_data.clone(),
+                    id,
+                    handle,
                 };
                 // Handle the first batch of segments before handing off control to the loop proper.
                 let segments = connection.parse_packet(&buf[..n]);

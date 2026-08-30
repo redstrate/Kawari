@@ -2546,6 +2546,25 @@ pub async fn server_main_loop(
                         ActorControlCategory::SetGlasses { index: slot, id },
                     );
                 }
+                ToServer::ReloadFestivals => {
+                    // TODO: This would override festivals in special zones that use this for content (like Ocean fishing) currently
+                    // TODO: what about the latter 4 festivals?
+                    let mut network = network.lock();
+                    let config = get_config();
+                    let clients: Vec<ClientId> = network.clients.keys().copied().collect();
+                    for id in clients {
+                        network.send_to(
+                            id,
+                            FromServer::ActorControlSelf(ActorControlCategory::SetFestival {
+                                festival1: config.world.active_festivals[0] as u32,
+                                festival2: config.world.active_festivals[1] as u32,
+                                festival3: config.world.active_festivals[2] as u32,
+                                festival4: config.world.active_festivals[3] as u32,
+                            }),
+                            DestinationNetwork::ZoneClients,
+                        );
+                    }
+                }
                 ToServer::FatalError(err) => return Err(err),
                 _ => {
                     tracing::error!("Received a ToServer message we don't handle yet: {msg:#?}");
