@@ -1,6 +1,9 @@
 use binrw::binrw;
 use kawari_core_macro::opcode_data;
 
+mod dice_roll;
+pub use dice_roll::ChatDiceRollData;
+
 mod send_alliance_message;
 pub use send_alliance_message::SendAllianceMessage;
 
@@ -31,6 +34,8 @@ pub enum ClientChatIpcData {
     GetChannelList { unk: [u8; 8] },
     SendCWLinkshellMessage(SendCWLinkshellMessage),
     SendAllianceMessage(SendAllianceMessage),
+    DiceRollCWLS(ChatDiceRollData),
+    DiceRollParty(ChatDiceRollData),
 }
 
 #[cfg(test)]

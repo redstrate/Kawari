@@ -187,6 +187,9 @@ pub use duty_support_information::DutySupportInformation;
 mod walk_in_event;
 pub use walk_in_event::{WalkInEvent, WalkInEventType};
 
+mod dice_roll_result;
+pub use dice_roll_result::ZoneDiceRollResult;
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_bool_from, read_string,
     write_bool_as, write_string,
@@ -1569,6 +1572,7 @@ pub enum ServerZoneIpcData {
         /// Sets the "N hits" label in the "Search Results" window for the marketboard.
         hits: u32,
     },
+    ZoneDiceRollResult(ZoneDiceRollResult),
 }
 
 #[cfg(test)]

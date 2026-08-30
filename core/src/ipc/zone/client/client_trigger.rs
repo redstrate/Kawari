@@ -546,6 +546,14 @@ pub enum ClientTriggerCommand {
     #[brw(magic = 3201u32)]
     BeginLoading,
 
+    /// The client rolls an n-sided die with the /random command. If the amount of sides is zero (meaning the player didn't specify any), the server treats it as a 999-sided die.
+    #[brw(magic = 9000u32)]
+    ZoneDiceRoll {
+        // Only the second u32 is used, the others seem unused
+        #[brw(pad_before = 4, pad_after = 12)]
+        num_sides: u32,
+    },
+
     /// The client opens the Mogpendium or interacts with the Retainer Bell.
     #[brw(magic = 9003u32)]
     OpenUnk1 { unk1: u32, unk2: u32 },

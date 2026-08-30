@@ -22,14 +22,16 @@ use kawari::{
         WeaponModelId,
     },
     ipc::{
-        chat::{CWLinkshellMessage, ChatChannelType, PartyMessage, TellMessage},
+        chat::{
+            CWLinkshellMessage, ChatChannelType, ChatDiceRollResult, PartyMessage, TellMessage,
+        },
         zone::{
             ActionRequest, ActorControlCategory, CWLSLeaveReason, CWLSPermissionRank,
             ClientTrigger, Conditions, Config, CrossworldLinkshellInvite, DutyFinderSetting,
             InviteReply, InviteType, OnlineStatus, PartyMemberEntry, PartyMemberPositions,
             PartyUpdateStatus, ReadyCheckReply, ServerZoneIpcSegment, SpawnNpc, SpawnObject,
             SpawnPlayer, SpawnTreasure, StrategyBoard, StrategyBoardUpdate, WaymarkPlacementMode,
-            WaymarkPosition, WaymarkPreset,
+            WaymarkPosition, WaymarkPreset, ZoneDiceRollResult,
         },
     },
 };
@@ -241,6 +243,10 @@ pub enum FromServer {
     CheckTeleportSharingEligibility(u32),
     /// Inform the client of their player's new CharacterMode.
     SetCharacterMode(CharacterMode, u8),
+    /// Inform the chat connection that someone (or their own player) in one of their ChatChannels sent a dice roll.
+    ChatDiceRoll(ObjectId, ChatDiceRollResult),
+    /// Inform the zone connection that someone (or their own player) in the vicinity sent a dice roll.
+    ZoneDiceRoll(ObjectId, ZoneDiceRollResult),
 }
 
 #[derive(Debug, Clone)]
@@ -489,6 +495,10 @@ pub enum ToServer {
     EnterTerritoryEvent(ObjectId),
     /// This player is now ready for the instanced content to begin.
     ReadyToCommence(ObjectId),
+    /// The client uses the /dice command to send a dice roll to one of their ChatChannels.
+    ChatDiceRoll(ObjectId, ChatDiceRollResult),
+    /// The client uses the /random command to send a dice roll to nearby players in the vicinity.
+    ZoneDiceRoll(ObjectId, ZoneDiceRollResult),
 }
 
 #[derive(Clone, Debug)]
@@ -540,4 +550,26 @@ where
     }
 
     ret
+}
+
+/// Rolls an n-sided die, up to n = 999 inclusive.
+pub fn roll_die(num_sides: u16) -> (u16, u16) {
+    let mut sides_clamped = num_sides;
+
+    // We can't use the standard clamp for this: when the side count is 0, it means the client wants the default of 999 sides.
+    // This does matter: it causes the client to display different text.
+    // Examples:
+    // /dice will display {Random! <some value from 1-999>} (in the client-sent packet, the number of sides specified would be 0, and the server will also send back 0 sides).
+    // /dice 999 will display {Random! <some value from 1-999> (1-999)}.
+    // /dice 456 will display {Random! <some value from 1-456> (1-456)}.
+    if !(1..=999).contains(&sides_clamped) {
+        sides_clamped = 999;
+    }
+
+    // We do a clamp here from 0-999 inclusive to ensure the client will display the correct text, as described above.
+    let sides_result = num_sides.clamp(0, 999);
+
+    let roll_result = fastrand::u16(1..sides_clamped + 1); // +1 since this range is exclusive, and we *do* allow the maximum value to be rolled.
+
+    (sides_result, roll_result)
 }

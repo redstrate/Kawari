@@ -19,6 +19,9 @@ pub use party_message::PartyMessage;
 mod cwlinkshell_message;
 pub use cwlinkshell_message::CWLinkshellMessage;
 
+mod dice_roll_result;
+pub use dice_roll_result::ChatDiceRollResult;
+
 pub type ServerChatIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ServerChatIpcType>, ServerChatIpcType, ServerChatIpcData>;
 
@@ -38,6 +41,7 @@ pub enum ServerChatIpcData {
     CWLinkshellMessage(CWLinkshellMessage),
     AllianceMessage(AllianceMessage),
     AllianceMessageEcho(AllianceMessageEcho),
+    ChatDiceRollResult(ChatDiceRollResult),
 }
 
 #[cfg(test)]
