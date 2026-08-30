@@ -148,11 +148,7 @@ jobs:
           kawari-run*
           !*.d
           resources/
-          !resources/data/tests
-          !resources/data/opcodes.json
-          !resources/data/scrambler
-          !resources/data/constants.yml
-          !resources/data/README.md
+          !resources/data/
           version.txt
           docs/
           !docs/src/
