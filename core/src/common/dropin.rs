@@ -1,4 +1,5 @@
 use crate::common::Position;
+use physis::layer::ServerPathInstanceObject;
 use serde::{Deserialize, Serialize};
 
 /// A JSON file that appends an existing (and usually empty) LGB.
@@ -69,11 +70,15 @@ pub enum DropInObjectData {
         /// Index into the ENpcBase and ENpcResident sheet.
         base_id: u32,
     },
+    /// Represents a path for a battle NPC to follow.
+    #[serde(rename = "server_path")]
+    ServerPath(ServerPathInstanceObject),
 }
 
 #[cfg(test)]
 mod tests {
     use glam::Vec3A;
+    use physis::layer::{PathControlPoint, PathInstanceObject};
 
     use super::*;
 
@@ -93,6 +98,38 @@ mod tests {
                         position: Position(Vec3A::from_array([-266.0561, 29.50931, -562.5141])),
                         rotation: 0.0,
                         data: DropInObjectData::GatheringPoint { base_id: 30001 }
+                    }]
+                }]
+            }
+        );
+    }
+
+    #[test]
+    fn test_serverpath_example() {
+        let json =
+            std::fs::read_to_string("../resources/data/tests/example_serverpath_dropin.json")
+                .unwrap();
+        let dropin: DropIn = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(
+            dropin,
+            DropIn {
+                appends: "bg/ffxiv/sea_s1/fld/s1f1/level/planlive.lgb".to_string(),
+                layers: vec![DropInLayer {
+                    name: "CRF_MINING_LV20".to_string(),
+                    objects: vec![DropInObject {
+                        layout_id: 4001271,
+                        position: Position(Vec3A::from_array([-266.0561, 29.50931, -562.5141])),
+                        rotation: 0.0,
+                        data: DropInObjectData::ServerPath(ServerPathInstanceObject {
+                            parent_data: PathInstanceObject {
+                                control_points: vec![PathControlPoint {
+                                    position: [5.0, 0.0, -5.0],
+                                    point_id: 1,
+                                    select: false
+                                }]
+                            }
+                        })
                     }]
                 }]
             }

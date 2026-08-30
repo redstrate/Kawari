@@ -34,6 +34,13 @@ pub enum NpcState {
     Hate,
     /// DEAD!
     Dead,
+    /// Currently following a path.
+    OnPath {
+        /// The layout ID of the ServerPath object.
+        layout_id: u32,
+        /// The index of the control point we're going to.
+        index: usize,
+    },
 }
 
 impl NpcState {

@@ -48,3 +48,5 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!toggleaethercurrentcompflgset <id>` | Toggles the unlock status of the specified AetherCurrentCompFlgSet ID. |
 | `!toggleallcutscene` | Marks all cutscenes as seen. |
 | `!yell <id>` | Sends a debug NpcYell. |
+| `!path <id> <path id>` | Sends a particular NPC to follow a path. Not very useful. |
+| `!target` | Prints your currently targeted actor. |

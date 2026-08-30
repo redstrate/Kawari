@@ -16,7 +16,7 @@ use crate::{
     server::{
         WorldServer,
         action::execute_action,
-        actor::spawn_custom_bnpc,
+        actor::{NetworkedActor, NpcState, spawn_custom_bnpc},
         fate::spawn_fate,
         instance::QueuedTaskData,
         network::{DestinationNetwork, NetworkState},
@@ -422,6 +422,48 @@ fn process_debug_commands(
                         },
                     );
                 }
+            }
+
+            true
+        }
+        "!path" => {
+            let parts: Vec<&str> = chat_message.split(' ').collect();
+            let actor_id: ObjectId = ObjectId(parts[1].parse().unwrap());
+            let layout_id: u32 = parts[2].parse().unwrap();
+
+            let mut data = data.lock();
+            if let Some(instance) = data.find_actor_instance_mut(actor_id)
+                && let Some(NetworkedActor::Npc { state, .. }) = instance.find_actor_mut(actor_id)
+            {
+                *state = NpcState::OnPath {
+                    layout_id,
+                    index: 0,
+                };
+            } else {
+                tracing::warn!("Could not find the actor for !path: {actor_id:?}");
+            }
+
+            true
+        }
+        "!target" => {
+            let mut data = data.lock();
+            if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                && let Some(actor) = instance.find_actor(from_actor_id)
+            {
+                let common_spawn = actor.get_common_spawn();
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ServerNoticeMessage(
+                    ServerNoticeMessage {
+                        message: format!("Targetting {:?}", common_spawn.target_id),
+                        ..Default::default()
+                    },
+                ));
+
+                let mut network = network.lock();
+                network.send_to(
+                    from_id,
+                    FromServer::PacketSegment(ipc, from_actor_id),
+                    DestinationNetwork::ZoneClients,
+                );
             }
 
             true

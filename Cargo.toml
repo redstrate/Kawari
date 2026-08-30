@@ -38,7 +38,7 @@ panic = "abort"
 
 [workspace.dependencies]
 # Used to read game data
-physis = { git = "https://github.com/redstrate/physis", features = ["glam"], default-features = false }
+physis = { git = "https://github.com/redstrate/physis", features = ["glam", "serde"], default-features = false }
 
 # Serialization used everywhere
 serde = { version = "1.0", features = ["derive"], default-features = false }

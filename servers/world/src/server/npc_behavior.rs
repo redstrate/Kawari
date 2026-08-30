@@ -59,6 +59,7 @@ pub fn npc_behavior(
             && spawn.common.health_points > 0
         {
             let target_pos;
+            let use_min_distance;
             match current_target {
                 NpcTarget::Actor(actor) => {
                     if let Some(target_actor) = instance.find_actor(*actor) {
@@ -67,11 +68,20 @@ pub fn npc_behavior(
                         // If we can't find the target actor for some reason (despawn, disconnect, left zone), fall back on a sane-ish destination
                         target_pos = last_position.unwrap_or(spawn.common.position.0);
                     }
+                    use_min_distance = true;
                 }
-                NpcTarget::Position(position) => target_pos = *position,
+                NpcTarget::Position(position) => {
+                    target_pos = *position;
+                    use_min_distance = false;
+                }
             }
 
             let distance = Vec3A::distance(spawn.common.position.0, target_pos);
+            let min_distance = if use_min_distance {
+                MINIMUM_PATHFINDING_DISTANCE
+            } else {
+                f32::MAX
+            };
 
             let rotate = |from_pos: Vec3A, to_pos: Vec3A| {
                 let rotation = f32::atan2(to_pos.x - from_pos.x, to_pos.z - from_pos.z);
@@ -79,7 +89,7 @@ pub fn npc_behavior(
             };
 
             // If we are in distance, rotate towards target
-            let (position, rotation) = if distance <= MINIMUM_PATHFINDING_DISTANCE {
+            let (position, rotation) = if distance <= min_distance {
                 (
                     Some(spawn.common.position),
                     Some(rotate(spawn.common.position.0, target_pos)),
@@ -208,6 +218,12 @@ pub fn npc_behavior(
                             .find_wander_position(spawn.common.position.0),
                     ));
                     *last_wander_timestamp = Instant::now();
+                }
+
+                if let NpcState::OnPath { .. } = *state
+                    && current_target.is_none()
+                {
+                    *current_target = Some(NpcTarget::Position(Vec3A::default()))
                 }
             } else if !current_path.is_empty() {
                 let next_position = current_path[0];

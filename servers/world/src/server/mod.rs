@@ -1352,17 +1352,25 @@ pub async fn server_main_loop(
                                 }
                             };
 
+                            let object_type_id = ObjectTypeId {
+                                object_id: *actor_id,
+                                object_type: actor_type,
+                            };
+
+                            let mut data = data.lock();
+                            if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                                && let Some(actor) = instance.find_actor_mut(from_actor_id)
+                            {
+                                actor.get_common_spawn_mut().target_id = object_type_id;
+                            }
+
                             let msg = FromServer::ActorControlTarget(
                                 from_actor_id,
-                                ObjectTypeId {
-                                    object_id: *actor_id,
-                                    object_type: actor_type,
-                                },
+                                object_type_id,
                                 ActorControlCategory::SetTarget,
                             );
 
                             let mut network = network.lock();
-                            let data = data.lock();
                             network.send_in_range(
                                 from_actor_id,
                                 &data,

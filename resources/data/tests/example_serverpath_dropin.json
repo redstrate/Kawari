@@ -1,0 +1,35 @@
+{
+    "appends": "bg/ffxiv/sea_s1/fld/s1f1/level/planlive.lgb",
+    "layers": [
+        {
+            "name": "CRF_MINING_LV20",
+            "objects": [
+                {
+                    "layout_id": 4001271,
+                    "position": {
+                        "x": -266.0561,
+                        "y": 29.50931,
+                        "z": -562.5141
+                    },
+                    "rotation": 0.0,
+                    "data": {
+                        "type": "server_path",
+                        "parent_data": {
+                            "control_points": [
+                                {
+                                    "position": [
+                                        5.0,
+                                        0.0,
+                                        -5.0
+                                    ],
+                                    "point_id": 1,
+                                    "select": false
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

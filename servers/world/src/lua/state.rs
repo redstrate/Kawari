@@ -109,10 +109,10 @@ impl KawariLua {
 
             for search_dir in search_dirs {
                 let effects_dir = format!("{search_dir}/{name}");
-                for entry in std::fs::read_dir(&effects_dir)
-                    .expect("Didn't find effects directory?")
-                    .flatten()
-                {
+                let Ok(effects_dir) = std::fs::read_dir(&effects_dir) else {
+                    continue;
+                };
+                for entry in effects_dir.flatten() {
                     for entry in std::fs::read_dir(entry.path())
                         .expect("Failed to read into effects directory")
                         .flatten()

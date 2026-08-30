@@ -253,10 +253,11 @@ impl Instance {
         search_dirs.push("resources/timelines/".to_string());
 
         'outer: for search_dir in search_dirs {
-            for entry in std::fs::read_dir(search_dir)
-                .expect("Didn't find timelines directory?")
-                .flatten()
-            {
+            let Ok(search_dir) = std::fs::read_dir(search_dir) else {
+                continue;
+            };
+
+            for entry in search_dir.flatten() {
                 if !entry
                     .file_name()
                     .to_str()

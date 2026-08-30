@@ -188,11 +188,12 @@ impl Zone {
             search_dirs.push("resources/dropins/".to_string());
 
             'outer: for search_dir in search_dirs {
+                let Ok(search_dir) = std::fs::read_dir(search_dir) else {
+                    continue;
+                };
+
                 // Load drop-ins
-                for entry in std::fs::read_dir(search_dir)
-                    .expect("Didn't find dropins directory?")
-                    .flatten()
-                {
+                for entry in search_dir.flatten() {
                     if !entry.file_name().to_str().unwrap().ends_with(".json") {
                         continue;
                     }
