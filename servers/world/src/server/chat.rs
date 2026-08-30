@@ -433,12 +433,17 @@ fn process_debug_commands(
 
             let mut data = data.lock();
             if let Some(instance) = data.find_actor_instance_mut(actor_id)
-                && let Some(NetworkedActor::Npc { state, .. }) = instance.find_actor_mut(actor_id)
+                && let Some(NetworkedActor::Npc {
+                    state,
+                    navmesh_target,
+                    ..
+                }) = instance.find_actor_mut(actor_id)
             {
                 *state = NpcState::OnPath {
                     layout_id,
                     index: 0,
                 };
+                *navmesh_target = None;
             } else {
                 tracing::warn!("Could not find the actor for !path: {actor_id:?}");
             }

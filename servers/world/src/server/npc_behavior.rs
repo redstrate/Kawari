@@ -80,7 +80,7 @@ pub fn npc_behavior(
             let min_distance = if use_min_distance {
                 MINIMUM_PATHFINDING_DISTANCE
             } else {
-                f32::MAX
+                0.0
             };
 
             let rotate = |from_pos: Vec3A, to_pos: Vec3A| {
@@ -220,10 +220,19 @@ pub fn npc_behavior(
                     *last_wander_timestamp = Instant::now();
                 }
 
-                if let NpcState::OnPath { .. } = *state
-                    && current_target.is_none()
-                {
-                    *current_target = Some(NpcTarget::Position(Vec3A::default()))
+                if let NpcState::OnPath { layout_id, index } = *state {
+                    if let Some(path) = instance.zone.cached_paths.get(&layout_id) {
+                        if let Some(control_point) = path.parent_data.control_points.get(index) {
+                            // TODO: take into account the position/rotation/scale of the object
+                            *current_target = Some(NpcTarget::Position(Vec3A::from_array(
+                                control_point.position,
+                            )));
+                        } else {
+                            tracing::warn!("Control point {index} out of range for {layout_id}!");
+                        }
+                    } else {
+                        tracing::warn!("Failed to find path {layout_id}?");
+                    }
                 }
             } else if !current_path.is_empty() {
                 let next_position = current_path[0];
@@ -234,6 +243,7 @@ pub fn npc_behavior(
             }
 
             let mut reset_target = false;
+            let mut reset_target_for_path = false;
             let can_take_action; // FIXME: this is kind of stupid because enemies can do ranged attacks, etc.
             if let Some(current_target) = current_target {
                 let target_pos;
@@ -274,6 +284,17 @@ pub fn npc_behavior(
                         // Drop the current target if we can't path to them too
                         if path.is_empty() {
                             reset_target = true;
+                        }
+
+                        if let NpcState::OnPath { layout_id, index } = state {
+                            *index += 1;
+                            // NOTE: Currently loops for now, although we probably don't want that forever
+                            if let Some(path) = instance.zone.cached_paths.get(layout_id)
+                                && *index + 1 > path.parent_data.control_points.len()
+                            {
+                                *index = 0;
+                            }
+                            reset_target_for_path = true;
                         }
                     }
                 } else {
@@ -344,6 +365,10 @@ pub fn npc_behavior(
                 *current_target = None;
                 *state = NpcState::natural_state_of(spawn);
                 spawn.common.target_id = ObjectTypeId::default();
+            }
+
+            if reset_target_for_path {
+                *current_target = None;
             }
 
             // update common spawn

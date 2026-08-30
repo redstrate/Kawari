@@ -6,7 +6,7 @@ use physis::{
     TerritoryIntendedUse,
     layer::{
         ExitRangeInstanceObject, InstanceObject, LayerEntryData, PopRangeInstanceObject,
-        TriggerBoxShape,
+        ServerPathInstanceObject, TriggerBoxShape,
     },
     lgb::Lgb,
     lvb::Lvb,
@@ -111,6 +111,7 @@ pub struct Zone {
     cached_housing_plots: Vec<HousingPlot>,
     cached_eobj_base_ids: HashMap<u32, u32>,
     cached_pop_ranges: HashMap<u32, (Position, f32)>,
+    pub cached_paths: HashMap<u32, ServerPathInstanceObject>,
 }
 
 impl Zone {
@@ -393,6 +394,16 @@ impl Zone {
                     zone.cached_housing_plots.push(HousingPlot {
                         entrance_position: map_range.position,
                     });
+                }
+            }
+        }
+
+        // create path cache
+        for layer in &zone.dropin_layers {
+            for object in &layer.objects {
+                if let DropInObjectData::ServerPath(server_path) = &object.data {
+                    zone.cached_paths
+                        .insert(object.layout_id, server_path.clone());
                 }
             }
         }
