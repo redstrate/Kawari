@@ -2,7 +2,7 @@ use binrw::binrw;
 use kawari_core_macro::opcode_data;
 
 use crate::{
-    ipc::chat::{ChatDiceRollResult, SendCWLinkshellMessage},
+    ipc::chat::SendCWLinkshellMessage,
     opcodes::ServerChatIpcType,
     packet::{IpcSegment, ServerIpcSegmentHeader},
 };
@@ -18,6 +18,9 @@ pub use party_message::PartyMessage;
 
 mod cwlinkshell_message;
 pub use cwlinkshell_message::CWLinkshellMessage;
+
+mod dice_roll_result;
+pub use dice_roll_result::ChatDiceRollResult;
 
 pub type ServerChatIpcSegment =
     IpcSegment<ServerIpcSegmentHeader<ServerChatIpcType>, ServerChatIpcType, ServerChatIpcData>;

@@ -2,7 +2,7 @@ use crate::common::{CHAR_NAME_MAX_LENGTH, ObjectId, read_string, write_string};
 use binrw::binrw;
 
 #[binrw]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct ZoneDiceRollResult {
     /// The sender's account id.
     pub account_id: u64,

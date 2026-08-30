@@ -2,7 +2,7 @@ use binrw::binrw;
 use kawari_core_macro::opcode_data;
 
 mod dice_roll;
-pub use dice_roll::{ChatDiceRollData, ChatDiceRollResult};
+pub use dice_roll::ChatDiceRollData;
 
 mod send_alliance_message;
 pub use send_alliance_message::SendAllianceMessage;
