@@ -54,6 +54,18 @@ async fn auto_config() -> String {
         .unwrap()
 }
 
+async fn help() -> Html<String> {
+    let config = get_config();
+
+    let environment = setup_default_environment();
+    let template = environment.get_template("help.html").unwrap();
+    Html(
+        template
+            .render(context! { login_server => config.login.server_name, enable_registration => config.login.enable_registration })
+            .unwrap(),
+    )
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -62,6 +74,7 @@ async fn main() {
         .route("/", get(root))
         .route("/setup", get(setup))
         .route("/.well-known/xiv", get(auto_config))
+        .route("/help", get(help))
         .nest_service("/static", ServeDir::new(web_static_dir!("")));
 
     let config = get_config();

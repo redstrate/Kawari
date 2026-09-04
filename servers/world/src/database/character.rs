@@ -775,6 +775,8 @@ impl WorldDatabase {
                 .map(|x| BasicCharacterData {
                     content_id: x.content_id as u64,
                     name: x.name.clone(),
+                    gm_rank: x.gm_rank.to_string(),
+                    service_account_id: x.service_account_id as u64,
                 })
                 .collect();
 

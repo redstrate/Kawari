@@ -4,7 +4,7 @@ use physis::blowfish::LobbyBlowfish;
 use tokio::net::TcpStream;
 
 use kawari::{
-    common::{GAME_SERVICE, MAX_CHARACTERS, MaxEx, ObjectId, WORLD_NAME},
+    common::{BasicServiceAccountData, GAME_SERVICE, MAX_CHARACTERS, ObjectId, WORLD_NAME},
     config::get_config,
     constants::SUPPORTED_EXPAC_VERSIONS,
     ipc::lobby::{
@@ -314,7 +314,7 @@ impl LobbyConnection {
             return;
         };
 
-        let entitled_expansion: MaxEx =
+        let entitled_expansion: BasicServiceAccountData =
             serde_json::from_str(&login_reply.body_mut().read_to_string().unwrap()).unwrap();
 
         // now send them the character list

@@ -174,10 +174,14 @@ pub struct User {
 pub struct BasicCharacterData {
     pub content_id: u64,
     pub name: String,
+    pub gm_rank: String,
+    pub service_account_id: u64,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct MaxEx {
+pub struct BasicServiceAccountData {
+    pub id: u64,
+    pub user_id: u64,
     pub max_ex: u32,
     pub legacy: bool,
 }

@@ -203,6 +203,14 @@ async fn get_max_ex(
     serde_json::to_string(&max_ex.unwrap()).unwrap()
 }
 
+async fn get_service_accounts(State(state): State<LoginServerState>) -> String {
+    // TODO: introduce a better failure state
+    let mut database = state.database.lock();
+    let accounts = database.get_service_accounts();
+
+    serde_json::to_string(&accounts).unwrap()
+}
+
 async fn login() -> Html<String> {
     let config = get_config();
     let environment = setup_default_environment();
@@ -534,6 +542,7 @@ async fn main() {
         .route("/_private/service_accounts", get(check_session))
         .route("/_private/users", get(get_users))
         .route("/_private/max_ex", get(get_max_ex))
+        .route("/_private/all_service_accounts", get(get_service_accounts))
         // public website
         .route("/oauth/oa/oauthlogin", get(login))
         .route("/oauth/oa/oauthlogin", post(do_login))

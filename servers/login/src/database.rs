@@ -2,7 +2,7 @@ use crate::models::*;
 use diesel::prelude::*;
 use diesel::{Connection, SqliteConnection};
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
-use kawari::common::MaxEx;
+use kawari::common::BasicServiceAccountData;
 use serde::Serialize;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
@@ -360,24 +360,46 @@ impl LoginDatabase {
         }
     }
 
-    /// Returns the max expansion level for the `service_account_id`
-    pub fn get_max_expansion(&mut self, for_service_account_id: u64) -> Option<MaxEx> {
+    /// Grabs basic information about every service account in the database.
+    pub fn get_service_accounts(&mut self) -> Vec<kawari::common::BasicServiceAccountData> {
         use crate::schema::service_account::dsl::*;
 
-        Some(MaxEx {
-            max_ex: service_account
-                .filter(id.eq(for_service_account_id as i64))
-                .select(ServiceAccount::as_select())
-                .first(&mut self.connection)
-                .ok()?
-                .max_ex as u32,
-            legacy: service_account
-                .filter(id.eq(for_service_account_id as i64))
-                .select(ServiceAccount::as_select())
-                .first(&mut self.connection)
-                .ok()?
-                .legacy
-                == 1,
+        if let Ok(service_accounts) = service_account
+            .select(ServiceAccount::as_select())
+            .load(&mut self.connection)
+        {
+            service_accounts
+                .iter()
+                .map(|x| kawari::common::BasicServiceAccountData {
+                    id: x.id as u64,
+                    user_id: x.user_id as u64,
+                    max_ex: x.max_ex as u32,
+                    legacy: x.legacy == 1,
+                })
+                .collect()
+        } else {
+            Vec::default()
+        }
+    }
+
+    /// Returns the max expansion level for the `service_account_id`
+    pub fn get_max_expansion(
+        &mut self,
+        for_service_account_id: u64,
+    ) -> Option<BasicServiceAccountData> {
+        use crate::schema::service_account::dsl::*;
+
+        let account = service_account
+            .filter(id.eq(for_service_account_id as i64))
+            .select(ServiceAccount::as_select())
+            .first(&mut self.connection)
+            .ok()?;
+
+        Some(BasicServiceAccountData {
+            max_ex: account.max_ex as u32,
+            legacy: account.legacy == 1,
+            id: account.id as u64,
+            user_id: account.user_id as u64,
         })
     }
 

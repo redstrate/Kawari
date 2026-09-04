@@ -1,7 +1,7 @@
 use axum::response::{Html, Redirect};
 use axum::routing::post;
 use axum::{Router, extract::Form, routing::get};
-use kawari::common::{BasicCharacterData, User};
+use kawari::common::{BasicCharacterData, BasicServiceAccountData, User};
 use kawari::config::get_config;
 use kawari::festivals::festival_list;
 use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment};
@@ -69,6 +69,34 @@ async fn characters() -> Html<String> {
     }
 }
 
+async fn service_accounts() -> Html<String> {
+    let environment = setup_default_environment();
+    let template = environment
+        .get_template("admin_serviceaccounts.html")
+        .unwrap();
+
+    let config = get_config();
+    let Ok(mut login_reply) = ureq::get(&*format!(
+        "{}/_private/all_service_accounts",
+        config.login.server_name
+    ))
+    .call() else {
+        // TODO: add a better error message here
+        tracing::warn!("Failed to contact login server, is it running?");
+        return Html(template.render(context! {}).unwrap());
+    };
+
+    let Ok(body) = login_reply.body_mut().read_to_string() else {
+        // TODO: add a better error message here
+        tracing::warn!("Failed to contact login server, is it running?");
+        return Html(template.render(context! {}).unwrap());
+    };
+
+    let service_accounts: Option<Vec<BasicServiceAccountData>> = serde_json::from_str(&body).ok();
+
+    Html(template.render(context! { service_accounts }).unwrap())
+}
+
 #[derive(Deserialize, Debug)]
 #[allow(dead_code)]
 struct Input {
@@ -84,21 +112,28 @@ struct Input {
     festival7: Option<u16>,
     world: Option<u16>,
     login_message: Option<String>,
+    enable_registration: Option<String>,
 }
 
 async fn apply(Form(input): Form<Input>) -> Redirect {
     let mut config = get_config();
 
-    if let Some(gate_open) = input.worlds_open {
-        config.frontier.worlds_open = gate_open == "on";
+    if let Some(value) = input.worlds_open {
+        config.frontier.worlds_open = value == "on";
     } else {
         config.frontier.worlds_open = false;
     }
 
-    if let Some(gate_open) = input.login_open {
-        config.frontier.login_open = gate_open == "on";
+    if let Some(value) = input.login_open {
+        config.frontier.login_open = value == "on";
     } else {
         config.frontier.login_open = false;
+    }
+
+    if let Some(value) = input.enable_registration {
+        config.login.enable_registration = value == "on";
+    } else {
+        config.login.enable_registration = false;
     }
 
     config.world.active_festivals = [
@@ -139,6 +174,7 @@ async fn main() {
         .route("/apply", post(apply))
         .route("/users", get(users))
         .route("/characters", get(characters))
+        .route("/service_accounts", get(service_accounts))
         .nest_service("/static", ServeDir::new(web_static_dir!("")));
 
     let config = get_config();

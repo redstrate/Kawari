@@ -7,15 +7,19 @@
 <table class="table">
   <thead>
     <tr>
+      <th scope="col">Service Account ID</th>
       <th scope="col">Content ID</th>
       <th scope="col">Name</th>
+      <th scope="col">GM Rank</th>
     </tr>
   </thead>
   <tbody>
     {% for char in characters %}
       <tr>
+        <td>{{ char.service_account_id }}</td>
         <td>{{ char.content_id }}</td>
         <td>{{ char.name }}</td>
+        <td>{{ char.gm_rank }}</td>
       </tr>
     {% endfor %}
   </tbody>

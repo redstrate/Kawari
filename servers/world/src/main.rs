@@ -5,10 +5,10 @@ use std::time::{Instant, SystemTime};
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    ContainerType, DEBUG_COMMAND_TRIGGER, FestivalId, HandlerId, HandlerType, InstanceContentType,
-    ItemOperationKind, LogMessageType, MaxEx, ObjectId, ObjectTypeId, ObjectTypeKind,
-    PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position, QuestSpecialFlags,
-    TAB_SHARED_FATE_COUNT, WarpType, calculate_max_level,
+    BasicServiceAccountData, ContainerType, DEBUG_COMMAND_TRIGGER, FestivalId, HandlerId,
+    HandlerType, InstanceContentType, ItemOperationKind, LogMessageType, ObjectId, ObjectTypeId,
+    ObjectTypeKind, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position,
+    QuestSpecialFlags, TAB_SHARED_FATE_COUNT, WarpType, calculate_max_level,
 };
 use kawari::config::get_config;
 use kawari_world::inventory::{Item, MAX_LARGE_STORAGE, Storage, get_next_free_slot};
@@ -598,7 +598,7 @@ async fn process_packet(
                                 return false;
                             };
 
-                            let expansion: MaxEx = serde_json::from_str(
+                            let expansion: BasicServiceAccountData = serde_json::from_str(
                                 &login_reply.body_mut().read_to_string().unwrap(),
                             )
                             .unwrap();
