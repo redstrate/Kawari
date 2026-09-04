@@ -20,9 +20,6 @@ web:
 
 world:
   server_name: "server ip"
-
-launcher:
-  server_name: "http://server ip:21065"
 ```
 
 If you need to change the ports our servers are using, add a `port` key to any of the above sections. The default port range is 21057-21067 over TCP.

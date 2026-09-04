@@ -141,10 +141,7 @@ jobs:
           kawari-patch*
           kawari-web*
           kawari-world*
-          kawari-launcher*
-          kawari-savedatabank*
           kawari-navimesh*
-          kawari-datacentertravel*
           kawari-run*
           !*.d
           resources/

@@ -803,20 +803,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kawari-launcher"
-version = "7.55.2"
-dependencies = [
- "axum",
- "kawari",
- "minijinja",
- "serde",
- "tokio",
- "tower-http",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "kawari-lobby"
 version = "7.55.2"
 dependencies = [

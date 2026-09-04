@@ -59,7 +59,6 @@ async fn main() {
     tokio::join!(
         start_server("kawari-admin"),
         start_server("kawari-frontier"),
-        start_server("kawari-launcher"),
         start_server("kawari-lobby"),
         start_server("kawari-login"),
         start_server("kawari-patch"),

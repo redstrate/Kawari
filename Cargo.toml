@@ -6,7 +6,6 @@ members = [
     # Servers
     "servers/admin",
     "servers/frontier",
-    "servers/launcher",
     "servers/lobby",
     "servers/login",
     "servers/patch",

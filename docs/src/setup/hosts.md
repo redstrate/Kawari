@@ -3,7 +3,6 @@ If you only plan on running Kawari locally and not putting it behind a reverse p
 ```
 127.0.0.1 admin.ffxiv.localhost
 127.0.0.1 ffxiv.localhost
-127.0.0.1 launcher.ffxiv.localhost
 127.0.0.1 config-dl.ffxiv.localhost
 127.0.0.1 frontier.ffxiv.localhost
 127.0.0.1 patch.ffxiv.localhost
