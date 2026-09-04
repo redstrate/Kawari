@@ -385,11 +385,29 @@ impl WorldDatabase {
             classjob_levels.0[index as usize] = 1; // inital level
         }
 
+        // The first character will get the highest GM privileges to not
+        // make running Kawari locally a pain. Subsequent characters (even
+        // on the same account) are normal users until they're promoted.
+        let is_first_character;
+        {
+            use schema::character::dsl::*;
+
+            is_first_character = character
+                .count()
+                .first::<i64>(&mut self.connection)
+                .unwrap_or_default()
+                == 0
+        }
+
         let character = Character {
             content_id: content_id as i64,
             service_account_id: service_account_id as i64,
             actor_id,
-            gm_rank: GameMasterRank::Debug,
+            gm_rank: if is_first_character {
+                GameMasterRank::Debug
+            } else {
+                GameMasterRank::NormalUser
+            },
             name: name.to_string(),
             ..Default::default()
         };
