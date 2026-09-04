@@ -322,7 +322,7 @@ impl ZoneConnection {
                     .inventory
                     .currency
                     .get_item_for_id(currency_kind);
-                if slot.quantity + item.quantity <= item.stack_size {
+                if slot.quantity + item.quantity <= item.stack_size as i32 {
                     slot.quantity += item.quantity;
                     item_taken = true;
                 }
@@ -332,7 +332,7 @@ impl ZoneConnection {
                     .inventory
                     .crystals
                     .get_item_for_id(crystal_kind);
-                if slot.quantity + item.quantity <= item.stack_size {
+                if slot.quantity + item.quantity <= item.stack_size as i32 {
                     slot.quantity += item.quantity;
                     item_taken = true;
                 }

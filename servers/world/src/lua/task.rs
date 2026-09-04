@@ -64,7 +64,7 @@ pub enum LuaTask {
     },
     AddItem {
         id: u32,
-        quantity: u32,
+        quantity: i32,
         send_client_update: bool,
     },
     UnlockContent {

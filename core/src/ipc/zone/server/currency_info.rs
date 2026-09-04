@@ -12,7 +12,7 @@ pub struct CurrencyInfo {
     pub slot: u16,
     /// How much of the currency we're holding.
     #[brw(pad_after = 4)] // not read by the client
-    pub quantity: u32,
+    pub quantity: i32,
     /// Index into the Item Excel sheet.
     #[brw(pad_after = 4)] // not read by the client
     pub item_id: u32,

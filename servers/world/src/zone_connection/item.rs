@@ -330,13 +330,13 @@ impl ZoneConnection {
             src_actor_id: self.player_data.character.actor_id,
             src_storage_id: src_container,
             src_container_index: src_index,
-            src_stack: src_item.quantity,
+            src_stack: src_item.quantity as u32,
             src_item_id: src_item.item_id,
 
             dst_actor_id: self.player_data.character.actor_id,
             dst_storage_id: dst_container,
             dst_container_index: dst_index,
-            dst_stack: dst_item.quantity,
+            dst_stack: dst_item.quantity as u32,
             dst_item_id: dst_item.item_id,
 
             dummy_container: ContainerType::Equipped,

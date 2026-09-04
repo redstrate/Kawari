@@ -60,13 +60,20 @@ impl SpecialShopEventHandler {
         // TODO: Use the ItemCost field to determine which currency is used
 
         if let Some(item_info) = result {
-            if connection.player_data.inventory.currency.gil.quantity >= item_info.price_mid {
+            if connection.player_data.inventory.currency.gil.quantity >= item_info.price_mid as i32
+            {
                 if let Some(add_result) = connection
                     .player_data
                     .inventory
                     .add_in_next_free_slot(Item::new(&item_info, 1))
                 {
-                    connection.player_data.inventory.currency.gil.quantity -= item_info.price_mid;
+                    connection.player_data.inventory.currency.gil.quantity = connection
+                        .player_data
+                        .inventory
+                        .currency
+                        .gil
+                        .quantity
+                        .saturating_sub_unsigned(item_info.price_mid);
                     ShopEventHandler::send_gilshop_item_update(
                         connection,
                         ItemInfo {

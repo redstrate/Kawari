@@ -33,7 +33,7 @@ struct ClassJobLevelValue {
 #[derive(Deserialize)]
 struct InventoryItem {
     slot: i32,
-    quantity: u32,
+    quantity: i32,
     id: u32,
     crafter_content_id: u64,
     item_flags: u8,

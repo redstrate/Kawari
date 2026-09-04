@@ -72,7 +72,7 @@ pub struct AttachedItemInfo {
     /// Index into the Items Excel sheet.
     pub item_id: u32,
     /// The quantity of this item.
-    pub item_quantity: u32,
+    pub item_quantity: i32,
     pub unk: [u8; 12], // Observed as all zeroes
 }
 

@@ -206,7 +206,7 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::ToggleOrchestrion { id });
     }
 
-    pub fn add_item(&mut self, id: u32, quantity: u32, send_client_update: bool) {
+    pub fn add_item(&mut self, id: u32, quantity: i32, send_client_update: bool) {
         self.queued_tasks.push(LuaTask::AddItem {
             id,
             quantity,
@@ -711,7 +711,7 @@ impl UserData for LuaPlayer {
             this.toggle_orchestrion(id);
             Ok(())
         });
-        methods.add_method_mut("add_item", |_, this, (id, quantity): (u32, u32)| {
+        methods.add_method_mut("add_item", |_, this, (id, quantity): (u32, i32)| {
             // Can't think of any situations where we wouldn't want to force a client inventory update after using debug commands.
             this.add_item(id, quantity, true);
             Ok(())

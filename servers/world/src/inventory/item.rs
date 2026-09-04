@@ -8,7 +8,7 @@ use crate::ItemRow;
 #[derive(Default, Copy, Clone, Serialize, Deserialize, Debug)]
 pub struct Item {
     /// How many of this item occupies it's slot.
-    pub quantity: u32,
+    pub quantity: i32,
     /// Index into the Item Excel sheet.
     pub item_id: u32,
     /// The player who crafted this item.
@@ -46,7 +46,7 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn new(item_info: &ItemRow, quantity: u32) -> Self {
+    pub fn new(item_info: &ItemRow, quantity: i32) -> Self {
         Self {
             quantity,
             item_id: item_info.id,

@@ -55,7 +55,7 @@ impl BuyBackList {
         if !shop_buyback_items.is_empty() {
             for item in shop_buyback_items {
                 params[offset] = item.item_id;
-                params[offset + 1] = item.quantity;
+                params[offset + 1] = item.quantity as u32;
                 params[offset + 2] = item.price_low;
                 params[offset + 5] = shop_id;
                 params[offset + 8] = item.condition as u32;

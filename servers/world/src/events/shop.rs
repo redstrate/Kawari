@@ -83,7 +83,9 @@ impl ShopEventHandler {
             .remove_item(shop_id, buyback_index);
 
         // Queue up the player's adjusted gil, but we're not going to send an entire inventory update to the client.
-        let cost = item_dst_info.quantity * bb_item.price_low;
+        let cost = item_dst_info
+            .quantity
+            .saturating_mul(bb_item.price_low as i32);
         let new_gil = connection.player_data.inventory.currency.gil.quantity - cost;
         connection.player_data.inventory.currency.gil.quantity = new_gil;
 
@@ -110,8 +112,8 @@ impl ShopEventHandler {
                 message_type: LogMessageType::ItemBoughtBack as u32,
                 params_count: 3,
                 item_id: bb_item.item_id,
-                item_quantity: item_dst_info.quantity,
-                total_sale_cost: item_dst_info.quantity * bb_item.price_low,
+                item_quantity: item_dst_info.quantity as u32,
+                total_sale_cost: cost as u32,
             }),
         ];
 
@@ -128,7 +130,7 @@ impl ShopEventHandler {
     ) {
         let buy_sell_mode = results[0];
         let item_index = results[1];
-        let item_quantity = results[2] as u32;
+        let item_quantity = results[2];
 
         tracing::info!(
             "Client is interacting with a shop! {:#?} {buy_sell_mode:#?} {item_quantity:#?} {item_index:#?}",
@@ -146,16 +148,20 @@ impl ShopEventHandler {
             }
 
             if let Some(item_info) = result {
-                if connection.player_data.inventory.currency.gil.quantity
-                    >= item_quantity * item_info.price_mid
-                {
+                let cost = item_quantity.saturating_mul(item_info.price_mid as i32);
+                if connection.player_data.inventory.currency.gil.quantity >= cost {
                     if let Some(add_result) = connection
                         .player_data
                         .inventory
                         .add_in_next_free_slot(Item::new(&item_info, item_quantity))
                     {
-                        connection.player_data.inventory.currency.gil.quantity -=
-                            item_quantity * item_info.price_mid;
+                        connection.player_data.inventory.currency.gil.quantity = connection
+                            .player_data
+                            .inventory
+                            .currency
+                            .gil
+                            .quantity
+                            .saturating_sub(cost);
                         Self::send_gilshop_item_update(
                             connection,
                             ItemInfo {
@@ -175,7 +181,7 @@ impl ShopEventHandler {
                             connection,
                             event.id.0,
                             item_info.id,
-                            item_quantity,
+                            item_quantity as u32,
                             item_info.price_mid,
                             LogMessageType::ItemBought,
                         )
@@ -234,7 +240,7 @@ impl ShopEventHandler {
                     .push_item(event.id.0, bb_item);
 
                 connection.player_data.inventory.currency.gil.quantity +=
-                    quantity * item_info.price_low;
+                    quantity.saturating_mul(item_info.price_low as i32);
                 Self::send_gilshop_item_update(
                     connection,
                     ItemInfo {
@@ -260,7 +266,7 @@ impl ShopEventHandler {
                     src_actor_id: connection.player_data.character.actor_id,
                     src_storage_id: ContainerType::Currency,
                     src_container_index: 0,
-                    src_stack: connection.player_data.inventory.currency.gil.quantity,
+                    src_stack: connection.player_data.inventory.currency.gil.quantity as u32,
                     src_item_id: CurrencyKind::Gil as u32,
                     dst_actor_id: Default::default(),
                     dummy_container: ContainerType::DiscardingItemSentinel,
@@ -287,7 +293,7 @@ impl ShopEventHandler {
                     src_actor_id: connection.player_data.character.actor_id,
                     src_storage_id: storage,
                     src_container_index: index as u16,
-                    src_stack: quantity,
+                    src_stack: quantity as u32,
                     src_item_id: item_info.id,
                     dst_actor_id: Default::default(),
                     dummy_container: ContainerType::DiscardingItemSentinel,
@@ -306,7 +312,7 @@ impl ShopEventHandler {
                     connection,
                     event.id.0,
                     item_info.id,
-                    quantity,
+                    quantity as u32,
                     item_info.price_low,
                     LogMessageType::ItemSold,
                 )

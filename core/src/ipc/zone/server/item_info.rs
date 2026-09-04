@@ -13,7 +13,9 @@ pub struct ItemInfo {
     /// What slot in the container this item is placed in.
     pub slot: u16,
     /// How many of this item occupies it's slot.
-    pub quantity: u32,
+    ///
+    /// This is a signed integer as the client cannot display anything beyond INT_MIN/INT_MAX.
+    pub quantity: i32,
     /// Index into the Item Excel sheet.
     #[brw(pad_after = 4)] // unused
     pub item_id: u32,

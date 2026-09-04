@@ -261,7 +261,7 @@ impl Inventory {
                     dst_item.quantity = dst_item
                         .quantity
                         .saturating_add(src_item.quantity)
-                        .min(dst_item.stack_size);
+                        .min(dst_item.stack_size as i32);
                 }
             }
             ItemOperationKind::SplitStack => {
@@ -276,10 +276,10 @@ impl Inventory {
                         );
                         return;
                     };
-                    if original_item.quantity >= action.dst_stack {
-                        original_item.quantity -= action.dst_stack;
+                    if original_item.quantity >= action.dst_stack as i32 {
+                        original_item.quantity -= action.dst_stack as i32;
                         src_item = *original_item;
-                        src_item.quantity = action.dst_stack
+                        src_item.quantity = action.dst_stack as i32
                     } else {
                         tracing::warn!(
                             "Client sent a bogus split amount: {}! Rejecting item operation!",
@@ -350,7 +350,7 @@ impl Inventory {
             for page in &mut self.pages {
                 for (slot_index, slot) in page.slots.iter_mut().enumerate() {
                     if slot.item_id == item.item_id
-                        && slot.quantity + item.quantity <= item.stack_size
+                        && slot.quantity + item.quantity <= item.stack_size as i32
                     {
                         slot.quantity += item.quantity;
                         return Some(ItemInfo {

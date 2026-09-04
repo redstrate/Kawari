@@ -192,9 +192,9 @@ impl ZoneConnection {
                     let slot = self.player_data.inventory.currency.get_item_for_id(*id);
 
                     if *amount > 0 {
-                        slot.quantity = slot.quantity.saturating_add(*amount as u32);
+                        slot.quantity = slot.quantity.saturating_add(*amount);
                     } else {
-                        slot.quantity = slot.quantity.saturating_sub(-(*amount) as u32);
+                        slot.quantity = slot.quantity.saturating_sub(-(*amount));
                     }
 
                     if *send_client_update {
@@ -219,9 +219,9 @@ impl ZoneConnection {
                     let slot = self.player_data.inventory.crystals.get_item_for_id(*id);
 
                     if *amount > 0 {
-                        slot.quantity = slot.quantity.saturating_add(*amount as u32);
+                        slot.quantity = slot.quantity.saturating_add(*amount);
                     } else {
-                        slot.quantity = slot.quantity.saturating_sub(-(*amount) as u32);
+                        slot.quantity = slot.quantity.saturating_sub(-(*amount));
                     }
 
                     if *send_client_update {
