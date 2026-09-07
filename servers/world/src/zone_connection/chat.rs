@@ -233,47 +233,48 @@ impl ZoneConnection {
             }
             "!acs" => {
                 let parts: Vec<&str> = chat_message.split(' ').collect();
-
-                self.actor_control_self(ActorControlCategory::Unknown {
-                    category: parts.get(1).cloned().unwrap().parse().unwrap(),
-                    param1: parts
-                        .get(2)
-                        .cloned()
-                        .unwrap_or_default()
-                        .parse()
-                        .unwrap_or_default(),
-                    param2: parts
-                        .get(3)
-                        .cloned()
-                        .unwrap_or_default()
-                        .parse()
-                        .unwrap_or_default(),
-                    param3: parts
-                        .get(4)
-                        .cloned()
-                        .unwrap_or_default()
-                        .parse()
-                        .unwrap_or_default(),
-                    param4: parts
-                        .get(5)
-                        .cloned()
-                        .unwrap_or_default()
-                        .parse()
-                        .unwrap_or_default(),
-                    param5: parts
-                        .get(6)
-                        .cloned()
-                        .unwrap_or_default()
-                        .parse()
-                        .unwrap_or_default(),
-                })
-                .await;
+                if parts.len() > 1 {
+                    self.actor_control_self(ActorControlCategory::Unknown {
+                        category: parts.get(1).cloned().unwrap().parse().unwrap_or_default(),
+                        param1: parts
+                            .get(2)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
+                        param2: parts
+                            .get(3)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
+                        param3: parts
+                            .get(4)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
+                        param4: parts
+                            .get(5)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
+                        param5: parts
+                            .get(6)
+                            .cloned()
+                            .unwrap_or_default()
+                            .parse()
+                            .unwrap_or_default(),
+                    })
+                    .await;
+                }
 
                 true
             }
             "!yell" => {
                 if let Some((_, npc_yell_id)) = chat_message.split_once(' ') {
-                    let npc_yell_id = npc_yell_id.parse().unwrap();
+                    let npc_yell_id = npc_yell_id.parse().unwrap_or_default();
 
                     let name_id;
                     {
@@ -331,22 +332,24 @@ impl ZoneConnection {
                 true
             }
             "!settime" => {
-                // TODO: Figure out how UTC is converted to Eorzean time and make this friendly by allowing for strings such as "6:30PM" or "18:30"
-                // TODO: Write the GM command equivalent which would just set the time offset directly as an i64/u64 (whichever this actually is)
-                let val = chat_message.split_once(' ').unwrap();
-                let val = val.1.parse::<i64>().unwrap();
-                self.set_eorzean_time(val).await;
+                if let Some((_, val)) = chat_message.split_once(' ') {
+                    // TODO: Figure out how UTC is converted to Eorzean time and make this friendly by allowing for strings such as "6:30PM" or "18:30"
+                    // TODO: Write the GM command equivalent which would just set the time offset directly as an i64/u64 (whichever this actually is)
+                    let val = val.parse::<i64>().unwrap_or_default();
+                    self.set_eorzean_time(val).await;
+                }
 
                 true
             }
             "!emptypacket" => {
                 let parts: Vec<&str> = chat_message.split(' ').collect();
-
-                self.send_arbitrary_packet(
-                    parts.get(1).unwrap().parse().unwrap(),
-                    vec![0; parts.get(2).unwrap().parse().unwrap()],
-                )
-                .await;
+                if parts.len() == 3 {
+                    self.send_arbitrary_packet(
+                        parts.get(1).unwrap().parse().unwrap_or_default(),
+                        vec![0; parts.get(2).unwrap().parse().unwrap_or_default()],
+                    )
+                    .await;
+                }
 
                 true
             }
