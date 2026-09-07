@@ -47,9 +47,9 @@ pub struct AoeEffect {
 impl AoeEffect {
     pub fn package(&self) -> Option<ServerZoneIpcSegment> {
         match self.target_ids.len() {
-            0..=8 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::AoeEffect8 {
-                data: self.clone(),
-            })),
+            0..=8 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::AoeEffect8(
+                self.clone(),
+            ))),
             _ => None,
         }
     }

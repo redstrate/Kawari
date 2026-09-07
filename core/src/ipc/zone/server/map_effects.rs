@@ -26,10 +26,10 @@ impl MapEffects {
     pub fn package(&self) -> Option<ServerZoneIpcSegment> {
         match self.states.len() {
             0..=64 => Some(ServerZoneIpcSegment::new(
-                ServerZoneIpcData::DirectorSetupMapEffects64 { data: self.clone() },
+                ServerZoneIpcData::DirectorSetupMapEffects64(self.clone()),
             )),
             65..=128 => Some(ServerZoneIpcSegment::new(
-                ServerZoneIpcData::DirectorSetupMapEffects128 { data: self.clone() },
+                ServerZoneIpcData::DirectorSetupMapEffects128(self.clone()),
             )),
             _ => None,
         }

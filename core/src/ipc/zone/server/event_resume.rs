@@ -25,15 +25,15 @@ pub struct EventResume {
 impl EventResume {
     pub fn package(&self) -> Option<ServerZoneIpcSegment> {
         match self.params.len() {
-            0..=2 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventResume2 {
-                data: self.clone(),
-            })),
-            3..=4 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventResume4 {
-                data: self.clone(),
-            })),
-            5..=8 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventResume8 {
-                data: self.clone(),
-            })),
+            0..=2 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventResume2(
+                self.clone(),
+            ))),
+            3..=4 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventResume4(
+                self.clone(),
+            ))),
+            5..=8 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventResume8(
+                self.clone(),
+            ))),
             _ => None,
         }
     }

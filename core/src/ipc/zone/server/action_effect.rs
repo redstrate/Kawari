@@ -276,9 +276,9 @@ pub struct ActionEffect {
 impl ActionEffect {
     pub fn package(&self) -> Option<ServerZoneIpcSegment> {
         match self.targets.len() {
-            0..=1 => Some(ServerZoneIpcSegment::new(
-                ServerZoneIpcData::ActionEffect1 { data: self.clone() },
-            )),
+            0..=1 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::ActionEffect1(
+                self.clone(),
+            ))),
             _ => None,
         }
     }

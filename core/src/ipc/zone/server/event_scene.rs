@@ -89,30 +89,30 @@ pub struct EventScene {
 impl EventScene {
     pub fn package(&self) -> Option<ServerZoneIpcSegment> {
         match self.params.len() {
-            0..=2 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene2 {
-                data: self.clone(),
-            })),
-            3..=4 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene4 {
-                data: self.clone(),
-            })),
-            5..=8 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene8 {
-                data: self.clone(),
-            })),
-            9..=16 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene16 {
-                data: self.clone(),
-            })),
-            17..=32 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene32 {
-                data: self.clone(),
-            })),
-            33..=64 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene64 {
-                data: self.clone(),
-            })),
-            65..=128 => Some(ServerZoneIpcSegment::new(
-                ServerZoneIpcData::EventScene128 { data: self.clone() },
-            )),
-            129..=255 => Some(ServerZoneIpcSegment::new(
-                ServerZoneIpcData::EventScene255 { data: self.clone() },
-            )),
+            0..=2 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene2(
+                self.clone(),
+            ))),
+            3..=4 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene4(
+                self.clone(),
+            ))),
+            5..=8 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene8(
+                self.clone(),
+            ))),
+            9..=16 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene16(
+                self.clone(),
+            ))),
+            17..=32 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene32(
+                self.clone(),
+            ))),
+            33..=64 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene64(
+                self.clone(),
+            ))),
+            65..=128 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene128(
+                self.clone(),
+            ))),
+            129..=255 => Some(ServerZoneIpcSegment::new(ServerZoneIpcData::EventScene255(
+                self.clone(),
+            ))),
             _ => None,
         }
     }

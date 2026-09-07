@@ -243,61 +243,17 @@ pub enum ServerZoneIpcData {
     WeatherId(WeatherChange),
     UpdateItem(ItemInfo),
     ContainerInfo(ContainerInfo),
-    EventResume2 {
-        /// Data to resume this event.
-        #[brw(args { max_params: 2 } )]
-        data: EventResume,
-    },
-    EventResume4 {
-        /// Data to resume this event.
-        #[brw(args { max_params: 4 } )]
-        data: EventResume,
-    },
-    EventResume8 {
-        /// Data to resume this event.
-        #[brw(args { max_params: 8 } )]
-        data: EventResume,
-    },
-    EventScene2 {
-        /// Data to resume this event.
-        #[brw(args { max_params: 2 } )]
-        data: EventScene,
-    },
-    EventScene4 {
-        /// Data to resume this event.
-        #[brw(args { max_params: 4 } )]
-        data: EventScene,
-    },
-    EventScene8 {
-        /// Data to resume this event.
-        #[brw(args { max_params: 8 } )]
-        data: EventScene,
-    },
-    EventScene16 {
-        /// Data to resume this event.
-        #[brw(args { max_params: 16 } )]
-        data: EventScene,
-    },
-    EventScene32 {
-        /// Data to resume this event.
-        #[brw(args { max_params: 32 } )]
-        data: EventScene,
-    },
-    EventScene64 {
-        /// Data to resume this event.
-        #[brw(args { max_params: 64 } )]
-        data: EventScene,
-    },
-    EventScene128 {
-        /// Data to resume this event.
-        #[brw(args { max_params: 128 } )]
-        data: EventScene,
-    },
-    EventScene255 {
-        /// Data to resume this event.
-        #[brw(args { max_params: 255 } )]
-        data: EventScene,
-    },
+    EventResume2(#[brw(args { max_params: 2 } )] EventResume),
+    EventResume4(#[brw(args { max_params: 4 } )] EventResume),
+    EventResume8(#[brw(args { max_params: 8 } )] EventResume),
+    EventScene2(#[brw(args { max_params: 2 } )] EventScene),
+    EventScene4(#[brw(args { max_params: 4 } )] EventScene),
+    EventScene8(#[brw(args { max_params: 8 } )] EventScene),
+    EventScene16(#[brw(args { max_params: 16 } )] EventScene),
+    EventScene32(#[brw(args { max_params: 32 } )] EventScene),
+    EventScene64(#[brw(args { max_params: 64 } )] EventScene),
+    EventScene128(#[brw(args { max_params: 128 } )] EventScene),
+    EventScene255(#[brw(args { max_params: 255 } )] EventScene),
     EventStart(EventStart),
     UpdateHpMpTp {
         /// The new health point value.
@@ -307,10 +263,7 @@ pub enum ServerZoneIpcData {
         // Unknown. It's filled with... something.
         unk: u16,
     },
-    ActionEffect1 {
-        #[brw(args { max_targets: 1 } )]
-        data: ActionEffect,
-    },
+    ActionEffect1(#[brw(args { max_targets: 1 } )] ActionEffect),
     Equip(Equip),
     DeleteActor {
         /// The index into the client-side object pool.
@@ -661,18 +614,9 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 4)]
         flag2: u8,
     },
-    UpdateMapMarkers8 {
-        #[brw(args { max_params: 8 } )]
-        data: MapMarkers,
-    },
-    UpdateMapMarkers16 {
-        #[brw(args { max_params: 16 } )]
-        data: MapMarkers,
-    },
-    UpdateMapMarkers32 {
-        #[brw(args { max_params: 32 } )]
-        data: MapMarkers,
-    },
+    UpdateMapMarkers8(#[brw(args { max_params: 8 } )] MapMarkers),
+    UpdateMapMarkers16(#[brw(args { max_params: 16 } )] MapMarkers),
+    UpdateMapMarkers32(#[brw(args { max_params: 32 } )] MapMarkers),
     QuestTracker(QuestTracker),
     HouseList(HouseList),
     HousingWardInfo(HousingWardInfo),
@@ -894,16 +838,8 @@ pub enum ServerZoneIpcData {
         param1: u32,
         param2: u32,
     },
-    DirectorSetupMapEffects64 {
-        /// The map effects to setup.
-        #[brw(args { max_params: 64 } )]
-        data: MapEffects,
-    },
-    DirectorSetupMapEffects128 {
-        /// The map effects to setup.
-        #[brw(args { max_params: 128 } )]
-        data: MapEffects,
-    },
+    DirectorSetupMapEffects64(#[brw(args { max_params: 64 } )] MapEffects),
+    DirectorSetupMapEffects128(#[brw(args { max_params: 128 } )] MapEffects),
     DirectorMapEffect {
         /// Should be the ID of the instance's director.
         handler_id: HandlerId,
@@ -985,10 +921,7 @@ pub enum ServerZoneIpcData {
         unk3: u32,
         unk4: u32,
     },
-    AoeEffect8 {
-        #[brw(args { max_targets: 8 } )]
-        data: AoeEffect,
-    },
+    AoeEffect8(#[brw(args { max_targets: 8 } )] AoeEffect),
     ActorCast {
         /// Usually the same as `action_id`.
         spell_id: u16,
