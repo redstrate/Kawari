@@ -66,6 +66,7 @@ Test the friend list:
 - [ ] Send another request and accept this time: it should show correctly in both lists and both characters' floating names should appear in the clients' friend colours.
 - [ ] Open the friend list and ensure that it shows both players online with correct zone information, classjob level, and so on.
 - [ ] Remove that friend: ensure both players are removed from each other's lists and that their floating names return to their original colours.
+- [ ] Set a friend group/marker on a friend in the friend list.
 
 Test cross-world linkshells:
 - [ ] Create a cross-world linkshell: ensure the CWLS UI refreshes properly with the newly created shell.
@@ -122,4 +123,4 @@ The following tests should also be visible to others in the zone upon completion
 - [ ] Run the `/playtime` command and ensure it displays your character's total play time.
 For the following, ensure the following items display their correct unimplemented messages when trying to do them.
 - [ ] Fellowships & Fellowship Finder
-- [ ] Set a friend group/marker on a friend in the friend list
+- [ ] Run the `/dice` and `/random` commands and ensure they display both for you and another player
