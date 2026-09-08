@@ -2650,7 +2650,7 @@ async fn process_packet(
                             connection.send_crossworld_linkshells(true).await;
                         }
                         ClientZoneIpcData::SearchFellowships { .. } => {
-                            tracing::info!("Fellowships is unimplemented");
+                            tracing::info!("Fellowship Finder is unimplemented");
                         }
                         ClientZoneIpcData::StartCountdown {
                             starter_actor_id,
