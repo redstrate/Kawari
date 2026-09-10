@@ -86,7 +86,7 @@ pub fn opcode_data(_metadata: TokenStream, input: TokenStream) -> TokenStream {
     input.variants.push_value(::syn::parse::Parser::parse2(syn::Variant::parse, quote! {
         #[doc(hidden)]
         Unknown {
-            #[br(count = size - (crate::packet::IPC_HEADER_SIZE + crate::packet::PACKET_SEGMENT_HEADER_SIZE))]
+            #[br(count = size.saturating_sub(crate::packet::IPC_HEADER_SIZE + crate::packet::PACKET_SEGMENT_HEADER_SIZE))]
             unk: Vec<u8>,
         }
     }).unwrap());
