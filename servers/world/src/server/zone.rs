@@ -972,11 +972,13 @@ pub fn change_zone_warp_to_entrance(
 ) {
     let mut destiation_object = None;
 
-    if let Some(director) = &target_instance.directors.first() {
+    if let Some(director) = &target_instance
+        .directors
+        .iter()
+        .find(|x| x.id.handler_type() == HandlerType::PublicContent)
+    {
         // Some PublicContent has the pop range defined in the Excel sheet, we can use that if available.
-        if director.id.handler_type() == HandlerType::PublicContent
-            && let Some(pop_range_id) =
-                game_data.find_public_content_pop_range(director.id.event_id())
+        if let Some(pop_range_id) = game_data.find_public_content_pop_range(director.id.event_id())
         {
             destiation_object = target_instance
                 .zone

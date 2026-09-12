@@ -1038,7 +1038,9 @@ pub fn handle_director_messages(
                         ),
                         DestinationNetwork::ZoneClients,
                     );
-                } else if director.id.handler_type() == HandlerType::PublicContent {
+                }
+
+                if director.id.handler_type() == HandlerType::PublicContent {
                     let content_type;
                     {
                         let mut game_data = gamedata.lock();

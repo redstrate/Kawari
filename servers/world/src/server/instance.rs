@@ -134,7 +134,13 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn new(id: u16, game_data: &mut GameData, lua: &KawariLua, explorer_mode: bool) -> Self {
+    pub fn new(
+        id: u16,
+        game_data: &mut GameData,
+        lua: &KawariLua,
+        explorer_mode: bool,
+        allow_special_fates: bool,
+    ) -> Self {
         let mut instance = Instance {
             zone: Zone::load(game_data, id),
             weather_id: game_data.get_weather(id as u32).unwrap_or_default() as u16,
@@ -197,7 +203,10 @@ impl Instance {
             .copied()
             .filter(|fate| {
                 let (chain, special) = game_data.get_fate_chain_special(*fate).unwrap_or_default();
-                chain == 0 && !special
+                if !allow_special_fates && special {
+                    return false;
+                }
+                chain == 0
             })
             .collect();
 

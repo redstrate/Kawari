@@ -119,7 +119,7 @@ impl WorldServer {
             {
                 tracing::info!("Creating new public instance for zone {zone_id}!");
                 self.instances
-                    .push(Instance::new(zone_id, game_data, lua, false));
+                    .push(Instance::new(zone_id, game_data, lua, false, false));
             }
 
             self.instances
@@ -129,7 +129,7 @@ impl WorldServer {
         } else {
             tracing::info!("Creating new private instance for zone {zone_id}!");
             self.instances
-                .push(Instance::new(zone_id, game_data, lua, false));
+                .push(Instance::new(zone_id, game_data, lua, false, false));
             self.instances.last_mut().unwrap()
         }
     }
@@ -165,6 +165,7 @@ impl WorldServer {
             game_data,
             lua,
             content_settings.contains(DutyFinderSetting::EXPLORER_MODE),
+            true, // Needed for Occult Crescent I guess
         );
         instance.content_finder_condition_id = content_finder_condition;
 
