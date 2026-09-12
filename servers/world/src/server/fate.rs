@@ -62,7 +62,7 @@ impl FateInstance {
 
             if let Err(err) = lua.0.load(file).set_name("@".to_string() + script).exec() {
                 tracing::warn!(
-                    "Syntax error in {}: {:?} instance content won't be scripted!",
+                    "Syntax error in {}: {:?} the FATE won't be scripted!",
                     script,
                     err
                 );
