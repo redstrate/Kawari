@@ -1,7 +1,11 @@
 use binrw::binrw;
+use bstr::BString;
 
 use crate::{
-    common::{CHAR_NAME_MAX_LENGTH, ClientLanguage, read_string, write_string},
+    common::{
+        CHAR_NAME_MAX_LENGTH, ClientLanguage, read_sestring, read_string, write_sestring,
+        write_string,
+    },
     ipc::zone::{FellowshipActivityTag, SocialListUILanguages},
 };
 
@@ -58,7 +62,7 @@ pub struct FellowshipSearchInfo {
     #[brw(pad_after = 5)]
     #[brw(pad_size_to = 192)]
     #[br(count = 192)]
-    #[br(map = read_string)]
-    #[bw(map = write_string)]
-    pub fellowship_description: String,
+    #[br(map = read_sestring)]
+    #[bw(map = write_sestring)]
+    pub fellowship_description: BString, // NOTE: This is a BString due to the fact that SEString macros can appear in its contents.
 }

@@ -717,6 +717,8 @@ pub enum LogMessageType {
     UnableToAcceptAttachmentInventoryFull = 0x17B, // Unable to accept attachment. Inventory is full.
     FurnitureMovedToStoreroom = 0xD9F,             // The <item name> was moved to your storeroom.
     FurnitureMovedToInventory = 0xDA0,             // The <item name> was moved to your inventory.
+    UnableToJoinMoreFellowships = 0x15FE,          // You cannot join any more Fellowships.
+    UnableToCreateMoreFellowships = 0x15E3,        // You cannot create any more Fellowshiops.
 }
 
 /// Names for rows in the Excel sheet of the same name.
