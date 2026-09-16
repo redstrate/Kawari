@@ -269,7 +269,7 @@ ServerZoneIpcType:
   size: 104
 - name: Fellowships
   comment: The fellowships you have joined.
-  opcode: 108
+  opcode: 439
   size: 808
 - name: DailyQuests
   comment: Sent shortly after the server sends InitZone, this with UnkZoneLoad2 it makes everything load faster.
@@ -791,6 +791,14 @@ ServerZoneIpcType:
   comment: Sent to the client and nearby players after the client sends a dice roll.
   opcode: 801
   size: 64
+- name: SearchFellowshipsResults
+  comment: Sent to the client when their Fellowship Finder search yielded some results.
+  opcode: 682
+  size: 1520
+- name: SearchFellowshipsNoResults
+  comment: Sent to the client when their Fellowship Finder search yielded no results.
+  opcode: 218
+  size: 24
 ClientZoneIpcType:
 - name: InitRequest
   comment: Sent by the client when they successfully initialize with the server, and they need several bits of information (e.g. what zone to load.)
@@ -1192,6 +1200,10 @@ ClientZoneIpcType:
   comment: Sent when playing an instrument.
   opcode: 266
   size: 24
+- name: CreateFellowship
+  comment: Sent when creating a new Fellowship.
+  opcode: 243
+  size: 64
 ServerLobbyIpcType:
 - name: NackReply
   comment: Sent by the server to indicate an lobby error occured.

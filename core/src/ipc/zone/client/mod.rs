@@ -669,6 +669,9 @@ pub enum ClientZoneIpcData {
     PerformanceNote {
         unk1: [u8; 24],
     },
+    CreateFellowship {
+        unk1: [u8; 64],
+    },
 }
 
 #[cfg(test)]
