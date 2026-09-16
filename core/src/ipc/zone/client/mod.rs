@@ -670,7 +670,15 @@ pub enum ClientZoneIpcData {
         unk1: [u8; 24],
     },
     CreateFellowship {
-        unk1: [u8; 64],
+        #[brw(pad_size_to = 60)]
+        #[br(count = 60)]
+        #[br(map = read_string)]
+        #[bw(map = write_string)]
+        #[brw(pad_after = 4)] // Seems to just be padding/garbage
+        name: String,
+    },
+    SearchFellowshipsJoin {
+        community_id: u64,
     },
 }
 

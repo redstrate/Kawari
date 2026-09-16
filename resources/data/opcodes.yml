@@ -1204,6 +1204,10 @@ ClientZoneIpcType:
   comment: Sent when creating a new Fellowship.
   opcode: 243
   size: 64
+- name: SearchFellowshipsJoin
+  comment: Sent when joining a Fellowship from the Fellowship Finder.
+  opcode: 237
+  size: 8
 ServerLobbyIpcType:
 - name: NackReply
   comment: Sent by the server to indicate an lobby error occured.

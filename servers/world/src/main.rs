@@ -5,10 +5,10 @@ use std::time::{Instant, SystemTime};
 use axum::Router;
 use axum::routing::get;
 use kawari::common::{
-    BasicServiceAccountData, ContainerType, DEBUG_COMMAND_TRIGGER, FestivalId, HandlerId,
-    HandlerType, InstanceContentType, ItemOperationKind, LogMessageType, ObjectId, ObjectTypeId,
-    ObjectTypeKind, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3, Position,
-    QuestSpecialFlags, TAB_SHARED_FATE_COUNT, WarpType, calculate_max_level,
+    BasicServiceAccountData, ClientLanguage, ContainerType, DEBUG_COMMAND_TRIGGER, FestivalId,
+    HandlerId, HandlerType, InstanceContentType, ItemOperationKind, LogMessageType, ObjectId,
+    ObjectTypeId, ObjectTypeKind, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3,
+    Position, QuestSpecialFlags, TAB_SHARED_FATE_COUNT, WarpType, calculate_max_level,
 };
 use kawari::config::get_config;
 use kawari_world::inventory::{Item, MAX_LARGE_STORAGE, Storage, get_next_free_slot};
@@ -26,8 +26,9 @@ use kawari::ipc::zone::{
 };
 
 use kawari::ipc::zone::{
-    Blacklist, BlacklistedCharacter, ClientTriggerCommand, ClientZoneIpcData, ReadyCheckReply,
-    ServerZoneIpcData, ServerZoneIpcSegment,
+    Blacklist, BlacklistedCharacter, ClientTriggerCommand, ClientZoneIpcData,
+    FellowshipActivityTag, FellowshipSearchInfo, ReadyCheckReply, ServerZoneIpcData,
+    ServerZoneIpcSegment, SocialListUILanguages,
 };
 
 use kawari::common::{CharacterMode, NETWORK_TIMEOUT, RECEIVE_BUFFER_SIZE};
@@ -2655,13 +2656,45 @@ async fn process_packet(
                             connection.send_crossworld_linkshells(true).await;
                         }
                         ClientZoneIpcData::SearchFellowships { .. } => {
-                            // Report back that no results were found.
-                            // TODO: Implement this for real!
+                            // TODO: Actually implement Fellowship searches, for now none of the player's search criteria are used.
+                            let fellowships = vec![
+                                FellowshipSearchInfo {
+                                    community_id: 1,
+                                    master_content_id: 1,
+                                    recruiter_content_id: 1,
+                                    recruitment_deadline: 0xFFFF_FFFF,
+                                    languages: SocialListUILanguages::JAPANESE
+                                        | SocialListUILanguages::ENGLISH
+                                        | SocialListUILanguages::GERMAN
+                                        | SocialListUILanguages::FRENCH,
+                                    primary_language: ClientLanguage::English,
+                                    recruiter_world_id: connection.config.world_id,
+                                    master_world_id: connection.config.world_id,
+                                    current_member_count: 999,
+                                    target_member_count: 1000,
+                                    activity1: FellowshipActivityTag::Chatting,
+                                    unk1: [0; 4],
+                                    activity2: FellowshipActivityTag::DomanMahjong,
+                                    activity3: FellowshipActivityTag::Glamours,
+                                    fellowship_name: "Kawari Fellowship Test".to_string(),
+                                    recruiter_name: "Kawari Player".to_string(),
+                                    master_name: "Kawari Player".to_string(),
+                                    fellowship_description: b"The Fellowship's description.".into(),
+                                },
+                                FellowshipSearchInfo::default(),
+                                FellowshipSearchInfo::default(),
+                                FellowshipSearchInfo::default(),
+                            ];
+
                             let ipc = ServerZoneIpcSegment::new(
-                                ServerZoneIpcData::SearchFellowshipsNoResults {
-                                    err_code: 0x01240C89,
+                                ServerZoneIpcData::SearchFellowshipsResults {
+                                    unk1: 0xFFFF_FFFF,
+                                    sequence_end: 0xFFFF_FFFF,
+                                    sequence_current: 0,
+                                    fellowships,
                                 },
                             );
+
                             connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::StartCountdown {
@@ -3765,9 +3798,23 @@ async fn process_packet(
                             // TODO: what to do with these?
                         }
                         ClientZoneIpcData::CreateFellowship { .. } => {
-                            connection
-                                .send_notice("Creating Fellowships is currently unimplemented.")
-                                .await;
+                            let ipc =
+                                ServerZoneIpcSegment::new(ServerZoneIpcData::ShowLinkshellError {
+                                    log_message: LogMessageType::UnableToCreateMoreFellowships
+                                        as u16,
+                                    unk: 0, // I don't have a capture of this yet, but zero works fine.
+                                });
+
+                            connection.send_ipc_self(ipc).await;
+                        }
+                        ClientZoneIpcData::SearchFellowshipsJoin { .. } => {
+                            let ipc =
+                                ServerZoneIpcSegment::new(ServerZoneIpcData::ShowLinkshellError {
+                                    log_message: LogMessageType::UnableToJoinMoreFellowships as u16,
+                                    unk: 0x0124_0E82, // Observed in a capture, but it doesn't seem to matter what we set it to, zero works too.
+                                });
+
+                            connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(

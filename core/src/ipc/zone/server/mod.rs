@@ -1511,7 +1511,7 @@ pub enum ServerZoneIpcData {
     ZoneDiceRollResult(ZoneDiceRollResult),
     SearchFellowshipsNoResults {
         #[brw(pad_before = 4, pad_after = 16)]
-        err_code: u32, // Name is assumed, observed as 0x01240C89, changing this seems to make the client incorrectly think there are results incoming
+        err_code: u32, // Name is assumed, observed as 0x01240C89. Changing this to an incorrect value seems to make the client wait for more results (the UI window acts as if it's waiting with a spinner)?
     },
     SearchFellowshipsResults {
         #[brw(pad_before = 4)] // Seems to always be zeroes/padding
