@@ -122,5 +122,6 @@ The following tests should also be visible to others in the zone upon completion
 - [ ] Trading: attempt to trade with another player, and ensure the client tells you that the other player is unable trade.
 - [ ] Run the `/playtime` command and ensure it displays your character's total play time.
 For the following, ensure the following items display their correct unimplemented messages when trying to do them.
-- [ ] Fellowships & Fellowship Finder: ensure the Finder shows no results (and doesn't display an error message), and that creating a Fellowship sends a server notice indicating it's unimplemented.
+- [ ] Fellowships: ensure that creating a Fellowship displays "You cannot create any more Fellowships."
+- [ ] Fellowship Finder: ensure that the window displays the sample Fellowship, and that attempting to join it displays "You cannot join any more Fellowships."
 - [ ] Run the `/dice` and `/random` commands and ensure they display both for you and another player
