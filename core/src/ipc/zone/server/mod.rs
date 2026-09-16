@@ -159,6 +159,9 @@ pub use marketboard::{MarketBoardHistory, MarketBoardHistoryEntry, MarketBoardIt
 mod linkshell;
 pub use linkshell::*;
 
+mod fellowships;
+pub use fellowships::*;
+
 mod spawn_treasure;
 pub use spawn_treasure::SpawnTreasure;
 
@@ -1506,6 +1509,21 @@ pub enum ServerZoneIpcData {
         hits: u32,
     },
     ZoneDiceRollResult(ZoneDiceRollResult),
+    SearchFellowshipsNoResults {
+        #[brw(pad_before = 4, pad_after = 16)]
+        err_code: u32, // Name is assumed, observed as 0x01240C89, changing this seems to make the client incorrectly think there are results incoming
+    },
+    SearchFellowshipsResults {
+        #[brw(pad_before = 4)] // Seems to always be zeroes/padding
+        unk1: u32, // Seems to always be 0xFFFF_FFFF
+        sequence_end: u32, // Is typically 0xFFFF_FFFF, but seems to change to 0x28 as the final value when a number of FellowshipFinderResults have been sent. If only one is sent, it stays at 0xFFFF_FFFF and sequence_current will be 0. More research is needed for this.
+        /// The current sequence value, so the client knows which packet this is so far. If it's set to 0, the client won't expect more to be coming (the appropriate page arrows in the Finder window will be disabled).
+        sequence_current: u32,
+        /// The actual Fellowship result items.
+        #[br(count = 4)]
+        #[bw(pad_size_to = 4 * 376)]
+        fellowships: Vec<FellowshipSearchInfo>,
+    },
 }
 
 #[cfg(test)]

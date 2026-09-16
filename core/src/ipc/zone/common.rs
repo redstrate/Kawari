@@ -20,6 +20,37 @@ pub struct StrategyBoardUpdate {
     data: Vec<u8>,
 }
 
+/// Represents circle/Fellowship activity tags that players set for Fellowships they've created, or tags that can be used to search for Fellowships to join.
+#[binrw]
+#[brw(repr = u16)]
+#[derive(Clone, Debug, Default)]
+pub enum FellowshipActivityTag {
+    #[default]
+    None = 0,
+    RolePlaying = 1,
+    PlayerEvents = 2,
+    MakingFriends = 3,
+    NoviceSupport = 4,
+    Casual = 5,
+    Hardcore = 6,
+    Leveling = 7,
+    Battle = 8,
+    Crafting = 9,
+    Gathering = 10,
+    Housing = 11,
+    Hunts = 12,
+    TreasureHunt = 13,
+    PvP = 14,
+    Fishing = 15,
+    DomanMahjong = 16,
+    Performance = 17,
+    Glamours = 18,
+    GroupPose = 19,
+    TripleTriad = 20,
+    Collectables = 21,
+    Chatting = 22,
+}
+
 /// Represents housing appeal tags that players can set for their owned housing.
 #[binrw]
 #[brw(repr = u8)]

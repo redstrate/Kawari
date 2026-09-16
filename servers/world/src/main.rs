@@ -2644,13 +2644,25 @@ async fn process_packet(
                             connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::RequestFellowships { .. } => {
-                            tracing::info!("Fellowships is unimplemented");
+                            // Report back that they're not in a fellowship
+                            // TODO: Implement this for real!
+                            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::Fellowships {
+                                unk1: [0; 808],
+                            });
+                            connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::RequestCrossworldLinkshells { .. } => {
                             connection.send_crossworld_linkshells(true).await;
                         }
                         ClientZoneIpcData::SearchFellowships { .. } => {
-                            tracing::info!("Fellowship Finder is unimplemented");
+                            // Report back that no results were found.
+                            // TODO: Implement this for real!
+                            let ipc = ServerZoneIpcSegment::new(
+                                ServerZoneIpcData::SearchFellowshipsNoResults {
+                                    err_code: 0x01240C89,
+                                },
+                            );
+                            connection.send_ipc_self(ipc).await;
                         }
                         ClientZoneIpcData::StartCountdown {
                             starter_actor_id,
@@ -3751,6 +3763,11 @@ async fn process_packet(
                         }
                         ClientZoneIpcData::PerformanceNote { .. } => {
                             // TODO: what to do with these?
+                        }
+                        ClientZoneIpcData::CreateFellowship { .. } => {
+                            connection
+                                .send_notice("Creating Fellowships is currently unimplemented.")
+                                .await;
                         }
                         ClientZoneIpcData::Unknown { unk } => {
                             tracing::warn!(
