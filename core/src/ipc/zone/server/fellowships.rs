@@ -21,10 +21,10 @@ pub struct FellowshipSearchInfo {
     /// A 32-bit UNIX timestamp indicating when this recruitment listing will expire.
     pub recruitment_deadline: u32,
     /// The languages this Fellowship is seeking.
-    pub languages: SocialListUILanguages, // Fellowship language(s), this might be SocialListUILanguages
+    pub languages: SocialListUILanguages,
     #[brw(pad_before = 3, pad_after = 3)] // Probably just padding
     /// The primary/underlined language of this Fellowship. This seems to be set to the recruiter's client language at the time of Fellowship's creation, or during the time of starting a recruitment listing.
-    pub primary_language: ClientLanguage, // 0 = Japanese, 1 = English, 2 = German, 3 = French
+    pub primary_language: ClientLanguage,
     /// The home world of the Fellowship's recruiter.
     pub recruiter_world_id: u16,
     /// The home world of the Fellowship's master.
