@@ -77,6 +77,7 @@ Test cross-world linkshells:
 - [ ] Promote the member to Leader and Master: the CWLS UI should show on both ends that the promotions worked.
 - [ ] Send a message from both players to ensure linkshell chat is functional.
 - [ ] Disband the linkshell: the CWLS UI should not show that linkshell anymore, and all players should see a message that they have left the shell.
+- [ ] Rename the linkshell: ensure the renaming is successful (or is properly denied if the name already exists), and that online players are informed in the chat log.
 
 Test Moogle Mail:
 - [ ] Send a letter to a friend, with attachments and a max-length message, ideally in Japanese, Chinese, or another language that uses multi-byte Unicode glyphs.
@@ -121,7 +122,8 @@ The following tests should also be visible to others in the zone upon completion
 - [ ] Open the party finder and ensure you see the test entries.
 - [ ] Trading: attempt to trade with another player, and ensure the client tells you that the other player is unable trade.
 - [ ] Run the `/playtime` command and ensure it displays your character's total play time.
-For the following, ensure the following items display their correct unimplemented messages when trying to do them.
 - [ ] Fellowships: ensure that creating a Fellowship displays "You cannot create any more Fellowships."
 - [ ] Fellowship Finder: ensure that the window displays the sample Fellowship, and that attempting to join it displays "You cannot join any more Fellowships."
 - [ ] Run the `/dice` and `/random` commands and ensure they display both for you and another player
+- [ ] View a player's Adventurer Plate.
+- [ ] Edit your own search info, and ensure another player can see the changes.
