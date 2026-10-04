@@ -4,6 +4,9 @@ command_sender = "[setrace] "
 function onCommand(player, args, name)
     local race = args[1]
 
-    player:set_race(race)
+    local customize = player.chara_make.customize
+    customize.race = race_from_repr(race)
+
+    player:set_customize(customize)
     printf(player, "Set race to %s.", race)
 end

@@ -637,18 +637,6 @@ async fn process_packet(
                                 connection.player_data.classjob.levels.0.to_vec();
                             padded_levels.resize(CLASSJOB_ARRAY_SIZE, padded_levels[0]);
 
-                            let chara_make;
-                            let city_state;
-                            {
-                                let mut database = connection.database.lock();
-                                chara_make = database.get_chara_make(
-                                    connection.player_data.character.content_id as u64,
-                                );
-                                city_state = database.get_city_state(
-                                    connection.player_data.character.content_id as u64,
-                                );
-                            }
-
                             // Player Setup
                             {
                                 let mut player_state_flags1 = PlayerStateFlags1::empty();
@@ -690,13 +678,47 @@ async fn process_packet(
                                         expansion: expansion.max_ex as u8,
                                         name: connection.player_data.character.name.clone(),
                                         actor_id: connection.player_data.character.actor_id,
-                                        race: chara_make.customize.race as u8,
-                                        sex: chara_make.customize.gender as u8,
-                                        tribe: chara_make.customize.tribe as u8,
-                                        start_town: city_state,
-                                        birth_month: chara_make.birth_month as u8,
-                                        birth_day: chara_make.birth_day as u8,
-                                        guardian_deity: chara_make.guardian as u8,
+                                        race: connection
+                                            .player_data
+                                            .customize
+                                            .chara_make
+                                            .customize
+                                            .race
+                                            as u8,
+                                        sex: connection
+                                            .player_data
+                                            .customize
+                                            .chara_make
+                                            .customize
+                                            .gender
+                                            as u8,
+                                        tribe: connection
+                                            .player_data
+                                            .customize
+                                            .chara_make
+                                            .customize
+                                            .tribe
+                                            as u8,
+                                        start_town: connection.player_data.customize.city_state
+                                            as u8,
+                                        birth_month: connection
+                                            .player_data
+                                            .customize
+                                            .chara_make
+                                            .birth_month
+                                            as u8,
+                                        birth_day: connection
+                                            .player_data
+                                            .customize
+                                            .chara_make
+                                            .birth_day
+                                            as u8,
+                                        guardian_deity: connection
+                                            .player_data
+                                            .customize
+                                            .chara_make
+                                            .guardian
+                                            as u8,
                                         current_classjob_id: connection
                                             .player_data
                                             .classjob
@@ -2303,6 +2325,25 @@ async fn process_packet(
                             }
                         }
                         ClientZoneIpcData::EventYieldHandler16(handler) => {
+                            tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, yield_id = handler.yield_id, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
+
+                            if let Some(event) = events.last() {
+                                event
+                                    .0
+                                    .on_yield(
+                                        &event.1,
+                                        connection,
+                                        handler.scene,
+                                        handler.yield_id,
+                                        &handler.params[..handler.num_results as usize],
+                                        lua_player,
+                                    )
+                                    .await;
+                            } else {
+                                tracing::warn!("There's no current event to yield from!");
+                            }
+                        }
+                        ClientZoneIpcData::EventYieldHandler32(handler) => {
                             tracing::info!(message = "Event yielded", handler_id = %handler.handler_id, yield_id = handler.yield_id, scene = handler.scene, params = ?&handler.params[..handler.num_results as usize]);
 
                             if let Some(event) = events.last() {

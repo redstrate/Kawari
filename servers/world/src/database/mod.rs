@@ -5,7 +5,7 @@ mod mail;
 
 mod models;
 pub use models::{
-    AetherCurrent, Aetheryte, Buddy, Character, ClassJob, Companion, Content, Friends,
+    AetherCurrent, Aetheryte, Buddy, Character, ClassJob, Companion, Content, Customize, Friends,
     GrandCompany, Mentor, Quest, SearchInfo, Unlock, Volatile,
 };
 

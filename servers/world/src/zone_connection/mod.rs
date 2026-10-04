@@ -11,8 +11,8 @@ use tokio::net::TcpStream;
 use crate::{
     Content, GameData, Recipe, Unlock,
     database::{
-        AetherCurrent, Aetheryte, Buddy, Character, ClassJob, Companion, Friends, GrandCompany,
-        Mentor, Quest, SearchInfo, Volatile,
+        AetherCurrent, Aetheryte, Buddy, Character, ClassJob, Companion, Customize, Friends,
+        GrandCompany, Mentor, Quest, SearchInfo, Volatile,
     },
     lua::{KawariLua, LuaTask},
 };
@@ -84,7 +84,6 @@ pub struct PersistentQuest {
 pub struct PlayerData {
     pub character: Character,
     pub classjob: ClassJob,
-    pub subrace: u8,
     pub volatile: Volatile,
     pub inventory: Inventory,
     pub city_state: u8,
@@ -111,6 +110,7 @@ pub struct PlayerData {
     pub house_inventory: HousingInventory,
     pub buddy: Buddy,
     pub equipped_glasses_ids: [u16; 2],
+    pub customize: Customize,
 }
 
 /// Various obsfucation-related bits like the seeds and keys for this connection.

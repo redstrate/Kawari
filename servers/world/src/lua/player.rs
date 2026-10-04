@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use mlua::{LuaSerdeExt, UserData, UserDataFields, UserDataMethods, Value};
 use parking_lot::Mutex;
+use physis::savedata::chardat::CustomizeData;
 
 use crate::{
     GameData, PlayerData, RemakeMode, StatusEffects,
@@ -373,18 +374,6 @@ impl LuaPlayer {
         self.queued_tasks.push(LuaTask::SetMP { mp });
     }
 
-    fn set_race(&mut self, race: u8) {
-        self.queued_tasks.push(LuaTask::SetRace { race });
-    }
-
-    fn set_tribe(&mut self, tribe: u8) {
-        self.queued_tasks.push(LuaTask::SetTribe { tribe });
-    }
-
-    fn set_sex(&mut self, sex: u8) {
-        self.queued_tasks.push(LuaTask::SetSex { sex });
-    }
-
     fn start_talk_event(&mut self) {
         self.queued_tasks.push(LuaTask::StartTalkEvent {});
     }
@@ -571,6 +560,10 @@ impl LuaPlayer {
         }
 
         None
+    }
+
+    fn set_customize(&mut self, customize: CustomizeData) {
+        self.queued_tasks.push(LuaTask::SetCustomize { customize });
     }
 }
 
@@ -872,18 +865,6 @@ impl UserData for LuaPlayer {
             this.set_mp(mp);
             Ok(())
         });
-        methods.add_method_mut("set_race", |_, this, race: u8| {
-            this.set_race(race);
-            Ok(())
-        });
-        methods.add_method_mut("set_tribe", |_, this, tribe: u8| {
-            this.set_tribe(tribe);
-            Ok(())
-        });
-        methods.add_method_mut("set_sex", |_, this, sex: u8| {
-            this.set_sex(sex);
-            Ok(())
-        });
         methods.add_method("get_effect", |_, this, effect_id: u16| {
             Ok(this.status_effects.get(effect_id))
         });
@@ -1028,6 +1009,10 @@ impl UserData for LuaPlayer {
         methods.add_method_mut("get_territory_fate_rank", |lua, this, _: ()| {
             Ok(this.get_territory_fate_rank(lua.globals().get("GAME_DATA").unwrap()))
         });
+        methods.add_method_mut("set_customize", |lua, this, customize: Value| {
+            this.set_customize(lua.from_value(customize).unwrap());
+            Ok(())
+        });
     }
 
     fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
@@ -1037,7 +1022,6 @@ impl UserData for LuaPlayer {
                 object_type: ObjectTypeKind::None,
             })
         });
-
         fields.add_field_method_get("teleport_query", |_, this| {
             Ok(this.player_data.teleport_query.clone())
         });
@@ -1047,7 +1031,6 @@ impl UserData for LuaPlayer {
             Ok(this.player_data.inventory.clone())
         });
         fields.add_field_method_get("zone", |_, this| Ok(this.zone_data.clone()));
-        // Helper method to reduce the amount of typing for gil
         fields.add_field_method_get("gil", |_, this| {
             Ok(this.player_data.inventory.currency.gil.quantity)
         });
@@ -1062,5 +1045,8 @@ impl UserData for LuaPlayer {
             Ok(this.player_data.grand_company.active_company)
         });
         fields.add_field_method_get("city_state", |_, this| Ok(this.player_data.city_state));
+        fields.add_field_method_get("chara_make", |_, this| {
+            Ok(this.player_data.customize.chara_make.clone())
+        });
     }
 }

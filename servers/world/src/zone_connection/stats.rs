@@ -373,7 +373,7 @@ impl ZoneConnection {
             .expect("Failed to read param grow");
 
         let attributes = game_data
-            .get_racial_base_attributes(self.player_data.subrace)
+            .get_racial_base_attributes(self.player_data.customize.chara_make.customize.tribe as u8)
             .expect("Failed to read racial attributes");
 
         let level = self
@@ -429,7 +429,7 @@ impl ZoneConnection {
             .expect("Failed to read param grow");
 
         let attributes = game_data
-            .get_racial_base_attributes(self.player_data.subrace)
+            .get_racial_base_attributes(self.player_data.customize.chara_make.customize.tribe as u8)
             .expect("Failed to read racial attributes");
 
         let level = self.current_level(&game_data);

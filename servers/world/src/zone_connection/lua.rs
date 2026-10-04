@@ -24,7 +24,6 @@ use kawari::{
         ServerZoneIpcSegment,
     },
 };
-use physis::race::{Gender, Race, Tribe};
 
 impl ZoneConnection {
     pub async fn process_lua_player(
@@ -539,48 +538,6 @@ impl ZoneConnection {
                         self.toggle_aether_current_comp_flg_set(i).await;
                     }
                 }
-                LuaTask::SetRace { race } => {
-                    {
-                        let mut database = self.database.lock();
-                        let mut chara_make =
-                            database.get_chara_make(self.player_data.character.content_id as u64);
-                        chara_make.customize.race = Race::from_repr(*race).unwrap();
-
-                        database.set_chara_make(
-                            self.player_data.character.content_id as u64,
-                            &chara_make.to_json(),
-                        );
-                    }
-                    self.respawn_player(false).await;
-                }
-                LuaTask::SetTribe { tribe } => {
-                    {
-                        let mut database = self.database.lock();
-                        let mut chara_make =
-                            database.get_chara_make(self.player_data.character.content_id as u64);
-                        chara_make.customize.tribe = Tribe::from_repr(*tribe).unwrap();
-
-                        database.set_chara_make(
-                            self.player_data.character.content_id as u64,
-                            &chara_make.to_json(),
-                        );
-                    }
-                    self.respawn_player(false).await;
-                }
-                LuaTask::SetSex { sex } => {
-                    {
-                        let mut database = self.database.lock();
-                        let mut chara_make =
-                            database.get_chara_make(self.player_data.character.content_id as u64);
-                        chara_make.customize.gender = Gender::from_repr(*sex).unwrap();
-
-                        database.set_chara_make(
-                            self.player_data.character.content_id as u64,
-                            &chara_make.to_json(),
-                        );
-                    }
-                    self.respawn_player(false).await;
-                }
                 LuaTask::SendSegment { segment } => {
                     self.send_segment(segment.clone()).await;
                 }
@@ -833,6 +790,14 @@ impl ZoneConnection {
                     } else {
                         tracing::warn!("finish_dyeing called without dye information prepared?!");
                     }
+                }
+                LuaTask::SetCustomize { customize } => {
+                    self.player_data.customize.chara_make.customize = customize.clone();
+                    {
+                        let mut database = self.database.lock();
+                        database.commit_customize(&self.player_data);
+                    }
+                    self.respawn_player(false).await;
                 }
             }
         }

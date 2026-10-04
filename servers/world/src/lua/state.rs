@@ -1,8 +1,9 @@
 use std::{collections::HashMap, fmt::Display, sync::Arc};
 
 use bitflags::Flags;
-use mlua::{IntoLua, Lua};
+use mlua::{IntoLua, Lua, Value};
 use parking_lot::Mutex;
+use physis::race::{Gender, Race, Tribe};
 use strum::IntoEnumIterator;
 
 use crate::{
@@ -30,8 +31,6 @@ impl KawariLua {
     pub fn new() -> Self {
         let mut lua = Lua::new();
 
-        // TODO: we should use a global static here so we can define this at the enum level
-        // Specifically something like the linkme crate
         Self::register_flags::<ServerNoticeFlags>(&mut lua, "SERVER_NOTICE");
         Self::register_enum::<GameMasterRank>(&mut lua, "GM_RANK");
         Self::register_flags::<SceneFlags>(&mut lua, ""); // TODO: might want to prefix these at some point
@@ -42,17 +41,48 @@ impl KawariLua {
         Self::register_enum::<DamageType>(&mut lua, "DAMAGE_TYPE");
         Self::register_enum::<Condition>(&mut lua, "CONDITION");
 
-        let config = get_config();
-        lua.globals()
-            .set("WORLD_ID", config.world.world_id)
+        // Needed by some GM commands and events
+        let race_func = lua
+            .create_function(|_, value: Value| {
+                Ok(Race::from_repr(value.as_i32().unwrap() as u8)
+                    .unwrap()
+                    .to_string())
+            })
             .unwrap();
-        lua.globals().set("WORLD_NAME", WORLD_NAME).unwrap();
+        lua.globals().set("race_from_repr", race_func).unwrap();
 
-        // Load Global.lua
-        let file_name = config.filesystem.locate_script_file("Global.lua");
-        lua.load(std::fs::read(file_name).expect("Failed to locate scripts directory!"))
-            .exec()
+        let tribe_func = lua
+            .create_function(|_, value: Value| {
+                Ok(Tribe::from_repr(value.as_i32().unwrap() as u8)
+                    .unwrap()
+                    .to_string())
+            })
             .unwrap();
+        lua.globals().set("tribe_from_repr", tribe_func).unwrap();
+
+        let gender_func = lua
+            .create_function(|_, value: Value| {
+                Ok(Gender::from_repr(value.as_i32().unwrap() as u8)
+                    .unwrap()
+                    .to_string())
+            })
+            .unwrap();
+        lua.globals().set("gender_from_repr", gender_func).unwrap();
+
+        // Not needed for tests
+        if !cfg!(test) {
+            let config = get_config();
+            lua.globals()
+                .set("WORLD_ID", config.world.world_id)
+                .unwrap();
+            lua.globals().set("WORLD_NAME", WORLD_NAME).unwrap();
+
+            // Load Global.lua
+            let file_name = config.filesystem.locate_script_file("Global.lua");
+            lua.load(std::fs::read(file_name).expect("Failed to locate scripts directory!"))
+                .exec()
+                .unwrap();
+        }
 
         Self(lua)
     }

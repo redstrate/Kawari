@@ -41,7 +41,7 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         } else {
             tracing::error!(
-                "Unable to play event {}, scene {:?}, scene_flags {scene_flags}!",
+                "Unable to package event scene {}, scene {:?}, scene_flags {scene_flags}!",
                 event.id,
                 scene
             );
@@ -201,7 +201,10 @@ impl ZoneConnection {
         if let Some(ipc) = scene.package() {
             self.send_ipc_self(ipc).await;
         } else {
-            tracing::error!("Unable to resume event {event_id}, scene {:?}!", scene);
+            tracing::error!(
+                "Unable to package resume event {event_id}, scene {:?}!",
+                scene
+            );
         }
     }
 }

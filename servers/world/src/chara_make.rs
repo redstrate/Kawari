@@ -6,6 +6,7 @@ use diesel::{
     sql_types::Text,
     sqlite::Sqlite,
 };
+use mlua::{FromLua, Lua, LuaSerdeExt, UserData, UserDataFields};
 use physis::savedata::chardat::CustomizeData;
 use serde_json::{Value, json};
 
@@ -73,9 +74,30 @@ impl deserialize::FromSql<Text, Sqlite> for CharaMake {
     }
 }
 
+impl FromLua for CharaMake {
+    fn from_lua(value: mlua::Value, _: &Lua) -> mlua::Result<Self> {
+        match value {
+            mlua::Value::UserData(ud) => Ok(ud.borrow::<Self>()?.clone()),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl UserData for CharaMake {
+    fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+        fields.add_field_method_get("customize", |lua, this| lua.to_value(&this.customize));
+        fields.add_field_method_set("customize", |lua, this, value| {
+            this.customize = lua.from_value(value).unwrap();
+            Ok(())
+        });
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use physis::race::Gender;
+    use physis::race::{Gender, Race};
+
+    use crate::lua::KawariLua;
 
     use super::*;
 
@@ -94,8 +116,59 @@ mod tests {
     }
 
     #[test]
-    fn roundtrip_chara_make() {
+    fn roundtrip_charamake() {
         let json = "{\"classid\":118,\"classname\":\"CharaMake\",\"content\":[[\"1\",\"0\",\"1\",\"50\",\"1\",\"5\",\"161\",\"0\",\"3\",\"30\",\"103\",\"0\",\"0\",\"0\",\"1\",\"30\",\"4\",\"5\",\"2\",\"128\",\"35\",\"50\",\"0\",\"0\",\"0\",\"0\"],\"1\",\"1\",\"1\",\"1\",\"1\",\"1\"]}";
         assert_eq!(CharaMake::from_json(json).to_json(), json);
+    }
+
+    #[test]
+    fn lua_api_charamake() {
+        let chara_make = CharaMake::default();
+
+        let lua = KawariLua::new();
+        lua.0.globals().set("chara_make", chara_make).unwrap();
+
+        // The fields are actually available
+        lua.0
+            .load(
+                r#"
+            assert(chara_make.customize.race == "Hyur")
+        "#,
+            )
+            .exec()
+            .unwrap();
+
+        // The fields can be written to in Lua...
+        lua.0
+            .load(
+                r#"
+            local new_customize = chara_make.customize
+            new_customize.race = "Viera"
+            chara_make.customize = new_customize
+            assert(chara_make.customize.race == "Viera")
+        "#,
+            )
+            .exec()
+            .unwrap();
+
+        // ... but available in Rust
+        let chara_make: CharaMake = lua.0.globals().get("chara_make").unwrap();
+        assert_eq!(chara_make.customize.race, Race::Viera);
+
+        // And ditto if they're using integer representation (needed by certian GM commands and events)
+        lua.0
+            .load(
+                r#"
+            local new_customize = chara_make.customize
+            new_customize.race = race_from_repr(1)
+            chara_make.customize = new_customize
+            assert(chara_make.customize.race == "Hyur")
+        "#,
+            )
+            .exec()
+            .unwrap();
+
+        let chara_make: CharaMake = lua.0.globals().get("chara_make").unwrap();
+        assert_eq!(chara_make.customize.race, Race::Hyur);
     }
 }

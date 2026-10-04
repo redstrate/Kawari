@@ -884,6 +884,10 @@ ClientZoneIpcType:
   comment: Unknown purpose.
   opcode: 1222
   size: 72
+- name: EventYieldHandler32
+  comment: Unknown purpose.
+  opcode: 637
+  size: 136
 - name: EventYieldHandler128
   comment: Unknown purpose.
   opcode: 1239

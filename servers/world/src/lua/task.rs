@@ -7,6 +7,7 @@ use kawari::{
     ipc::zone::{EventType, GrandCompany, SceneFlags, ServerZoneIpcSegment},
     packet::PacketSegment,
 };
+use physis::savedata::chardat::CustomizeData;
 
 #[derive(Clone, Debug)]
 pub enum LuaTask {
@@ -144,15 +145,6 @@ pub enum LuaTask {
         id: u32,
     },
     ToggleAetherCurrentCompFlgSetAll,
-    SetRace {
-        race: u8,
-    },
-    SetTribe {
-        tribe: u8,
-    },
-    SetSex {
-        sex: u8,
-    },
     // previously, this was kept as a separate thing apart from tasks
     // but I discovered that this doesn't mix well - for example with play_scene (segment-based) and start_event (task)
     // this is because segments were always sent before tasks and there wasn't strong ordering
@@ -229,4 +221,7 @@ pub enum LuaTask {
         name: String,
     },
     FinishDyeing,
+    SetCustomize {
+        customize: CustomizeData,
+    },
 }

@@ -146,7 +146,6 @@ impl WorldDatabase {
             player_data = PlayerData {
                 character: found_character,
                 classjob,
-                subrace: customize.chara_make.customize.tribe as u8,
                 volatile,
                 inventory: inventory.contents,
                 unlock,
@@ -161,6 +160,7 @@ impl WorldDatabase {
                 grand_company,
                 buddy,
                 equipped_glasses_ids: inventory.equipped_glasses_ids.0.try_into().unwrap(),
+                customize,
                 ..Default::default()
             };
         }
@@ -213,6 +213,14 @@ impl WorldDatabase {
             .unwrap();
     }
 
+    pub fn commit_customize(&mut self, data: &PlayerData) {
+        use models::*;
+
+        data.customize
+            .save_changes::<Customize>(&mut self.connection)
+            .unwrap();
+    }
+
     /// Commit the dynamic player data back to the database
     pub fn commit_player_data(&mut self, data: &PlayerData) {
         use models::*;
@@ -250,6 +258,7 @@ impl WorldDatabase {
         data.buddy
             .save_changes::<Buddy>(&mut self.connection)
             .unwrap();
+        self.commit_customize(data);
     }
 
     pub fn get_character_list(
@@ -715,40 +724,6 @@ impl WorldDatabase {
             .unwrap();
     }
 
-    /// Sets the chara make JSON for a character
-    pub fn set_chara_make(&mut self, for_content_id: u64, chara_make_json: &str) {
-        use schema::customize::dsl::*;
-
-        diesel::update(customize.filter(content_id.eq(for_content_id as i64)))
-            .set(chara_make.eq(chara_make_json))
-            .execute(&mut self.connection)
-            .unwrap();
-    }
-
-    /// Gets the chara make for a character
-    pub fn get_chara_make(&mut self, for_content_id: u64) -> CharaMake {
-        use schema::customize::dsl::*;
-
-        CharaMake::from_json(
-            &customize
-                .filter(content_id.eq(for_content_id as i64))
-                .select(chara_make)
-                .first::<String>(&mut self.connection)
-                .unwrap(),
-        )
-    }
-
-    /// Gets the city state for a character
-    pub fn get_city_state(&mut self, for_content_id: u64) -> u8 {
-        use schema::customize::dsl::*;
-
-        customize
-            .filter(content_id.eq(for_content_id as i64))
-            .select(city_state)
-            .first::<i32>(&mut self.connection)
-            .unwrap() as u8
-    }
-
     /// Deletes all character associated with the service account.
     pub fn delete_characters(&mut self, for_service_account_id: u64) {
         use schema::character::dsl::*;
@@ -945,5 +920,16 @@ impl WorldDatabase {
             comment: search_info.comment.clone(),
             name: for_character.name.clone(),
         })
+    }
+
+    /// Sets the chara make JSON for a character.
+    /// This is only useful for our custom IPC connection. You probably want to use commit_customize.
+    pub fn set_chara_make(&mut self, for_content_id: u64, chara_make_json: &str) {
+        use schema::customize::dsl::*;
+
+        diesel::update(customize.filter(content_id.eq(for_content_id as i64)))
+            .set(chara_make.eq(chara_make_json))
+            .execute(&mut self.connection)
+            .unwrap();
     }
 }

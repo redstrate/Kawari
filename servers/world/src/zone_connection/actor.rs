@@ -206,9 +206,7 @@ impl ZoneConnection {
     fn get_player_common_spawn(&self, start_invisible: bool) -> CommonSpawn {
         let inventory = &self.player_data.inventory;
 
-        let mut database = self.database.lock();
-        let chara_make = database.get_chara_make(self.player_data.character.content_id as u64);
-        let mut look = chara_make.customize;
+        let mut look = self.player_data.customize.chara_make.customize.clone();
 
         // There seems to be no display flag for this, so clear the bit out
         if self
@@ -245,7 +243,7 @@ impl ZoneConnection {
             second_model_stain_ids: inventory.second_model_stain_ids(),
             position: self.player_data.volatile.position,
             rotation: self.player_data.volatile.rotation as f32,
-            voice: chara_make.voice_id as u8,
+            voice: self.player_data.customize.chara_make.voice_id as u8,
             active_minion: self.active_minion as u16,
             // TODO: Dismount if entering a duty? Towns are probably fine to leave alone.
             current_mount: self.player_data.volatile.current_mount as u16,
