@@ -19,8 +19,8 @@ pub use gathering::*;
 mod crafting;
 pub use crafting::*;
 
-mod instance_content;
-pub use instance_content::*;
+mod content;
+pub use content::*;
 
 mod special_shop;
 pub use special_shop::*;

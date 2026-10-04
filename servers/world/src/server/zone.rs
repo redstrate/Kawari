@@ -525,6 +525,12 @@ impl Zone {
         None
     }
 
+    /// Returns a random pop range in this zone.
+    pub fn find_random_pop_range(&self) -> Option<&InstanceObject> {
+        let object_id = fastrand::choice(&self.cached_pop_ranges)?.0;
+        self.find_pop_range(*object_id).map(|x| x.0)
+    }
+
     /// Returns a list of event objects to spawn by default. If `explorer_mode`, replaces the shortcut object.
     ///
     /// For example, the Gold Saucer arcade machines or shortcuts in dungeons.
@@ -998,8 +1004,18 @@ pub fn change_zone_warp_to_entrance(
         tracing::warn!(
             "Failed to find instanced content entrance?! This is a bug in Kawari, please report it!"
         );
-        exit_position = None;
-        exit_rotation = None;
+        // I strongly suspect things like the Battlehall actuall end up doing this anyway (but not as a fallback)
+        if let Some(destination_object) = target_instance.zone.find_random_pop_range() {
+            tracing::warn!("Picking a random poprange as a fallback...");
+
+            let (_, rotation, _) =
+                Affine3A::from(destination_object.transform).to_scale_rotation_translation();
+            exit_position = Some(pick_point_in_pop_range(destination_object));
+            exit_rotation = Some(euler_to_direction(rotation.to_euler(EulerRot::XYZ)));
+        } else {
+            exit_position = None;
+            exit_rotation = None;
+        }
     }
 
     do_change_zone(

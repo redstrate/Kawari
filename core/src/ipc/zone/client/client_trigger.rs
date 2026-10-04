@@ -294,6 +294,10 @@ pub enum ClientTriggerCommand {
         id: u32,
     },
 
+    /// Seen right before the server sends DirectorVars etc.
+    #[brw(magic = 801u32)]
+    ReadyForDirectorVars,
+
     /// Various triggers related to instanced content.
     #[brw(magic = 808u32)]
     DirectorTrigger {

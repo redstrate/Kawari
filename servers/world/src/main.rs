@@ -2988,6 +2988,10 @@ async fn process_packet(
                                 .await;
                             if let Some(event) = events.last_mut() {
                                 event.0.on_enter_territory(&event.1, lua_player).await;
+                            } else {
+                                tracing::warn!(
+                                    "No event started from EnterTerritoryEvent?! This probably means its missing a handler for its type."
+                                );
                             }
                         }
                         ClientZoneIpcData::Trade { sequence, .. } => {

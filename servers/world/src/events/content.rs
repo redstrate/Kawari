@@ -3,25 +3,25 @@ use kawari::ipc::zone::EventType;
 
 use crate::{Event, EventHandler, ToServer, ZoneConnection, lua::LuaPlayer};
 
-/// For instance content events.
+/// For content director events.
 /// This is mostly a dummy struct, most of the logic exists in the global server state.
 #[derive(Debug)]
-pub struct InstanceContentEventHandler;
+pub struct ContentEventHandler;
 
-impl Default for InstanceContentEventHandler {
+impl Default for ContentEventHandler {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl InstanceContentEventHandler {
+impl ContentEventHandler {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl EventHandler for InstanceContentEventHandler {
+impl EventHandler for ContentEventHandler {
     async fn on_return(
         &self,
         event: &Event,

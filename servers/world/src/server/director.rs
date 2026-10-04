@@ -890,7 +890,6 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
 pub fn handle_director_messages(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
-    gamedata: Arc<Mutex<GameData>>,
     msg: &ToServer,
 ) -> bool {
     match msg {
@@ -970,62 +969,6 @@ pub fn handle_director_messages(
             let mut network = network.lock();
             for director in &instance.directors {
                 if director.id.handler_type().is_content_director() {
-                    network.send_to_by_actor_id(
-                        *from_actor_id,
-                        FromServer::PacketSegment(director.build_var_segment(), *from_actor_id),
-                        DestinationNetwork::ZoneClients,
-                    );
-
-                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UnkDirector1 {
-                        unk: [
-                            0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0,
-                            0, 0, 0, 0, 0, 0, 0, 0, 38, 0, 0, 0,
-                        ],
-                    });
-                    network.send_to_by_actor_id(
-                        *from_actor_id,
-                        FromServer::PacketSegment(ipc, *from_actor_id),
-                        DestinationNetwork::ZoneClients,
-                    );
-
-                    let mut gamedata = gamedata.lock();
-                    if let Some(map_effects) = gamedata.get_map_effects(instance.content_id as u32)
-                    {
-                        let mut states = Vec::new();
-                        for (i, layout_id) in map_effects.iter().enumerate() {
-                            // A layout ID of zero means the effect should be skipped.
-                            if *layout_id != 0 {
-                                states.resize(i + 1, 0);
-                                states[i] = 4; // 4 means to play it, I guess?
-                            }
-                        }
-
-                        let ipc = MapEffects {
-                            handler_id: director.id,
-                            unk_flag: 5,
-                            states,
-                            ..Default::default()
-                        }
-                        .package()
-                        .unwrap();
-                        network.send_to_by_actor_id(
-                            *from_actor_id,
-                            FromServer::PacketSegment(ipc, *from_actor_id),
-                            DestinationNetwork::ZoneClients,
-                        );
-                    }
-
-                    let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UnkDirector2 {
-                        unk: [
-                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        ],
-                    });
-                    network.send_to_by_actor_id(
-                        *from_actor_id,
-                        FromServer::PacketSegment(ipc, *from_actor_id),
-                        DestinationNetwork::ZoneClients,
-                    );
-
                     // Start the initial cutscene
                     network.send_to_by_actor_id(
                         *from_actor_id,
@@ -1039,81 +982,6 @@ pub fn handle_director_messages(
                         DestinationNetwork::ZoneClients,
                     );
                 }
-
-                if director.id.handler_type() == HandlerType::PublicContent {
-                    let content_type;
-                    {
-                        let mut game_data = gamedata.lock();
-                        content_type = game_data
-                            .find_public_content_type(director.id.event_id())
-                            .unwrap_or_default();
-                    }
-
-                    if content_type == PublicContentType::OccultCrescent {
-                        // Setup the panel
-                        let ipc =
-                            ServerZoneIpcSegment::new(ServerZoneIpcData::OccultCrescentSetup {
-                                unk1: [
-                                    243, 152, 1, 0, 136, 182, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 48, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 137, 21, 36, 0, 0, 0,
-                                    0, 0, 0, 0, 2, 5, 0, 1, 0, 0, 4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 1, 223, 63, 0, 0, 0, 0, 0, 0, 0, 0,
-                                ],
-                            });
-                        network.send_to_by_actor_id(
-                            *from_actor_id,
-                            FromServer::PacketSegment(ipc, *from_actor_id),
-                            DestinationNetwork::ZoneClients,
-                        );
-
-                        // Setup duty actions
-                        network.send_to_by_actor_id(
-                            *from_actor_id,
-                            FromServer::ActorControlSelf(ActorControlCategory::UnkDutyActions {
-                                unk1: 24,
-                            }),
-                            DestinationNetwork::ZoneClients,
-                        );
-                        network.send_to_by_actor_id(
-                            *from_actor_id,
-                            FromServer::ActorControlSelf(ActorControlCategory::EnableDutyActions {
-                                enabled: true,
-                            }),
-                            DestinationNetwork::ZoneClients,
-                        );
-                        network.send_to_by_actor_id(
-                            *from_actor_id,
-                            FromServer::ActorControlSelf(ActorControlCategory::SetDutyActions {
-                                action_ids: [41588, 41589, 41590, 0, 0],
-                            }),
-                            DestinationNetwork::ZoneClients,
-                        );
-                    }
-                }
-
-                // TODO: temporary, don't send in all instances
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SpectatorList {
-                    object_ids: [
-                        *from_actor_id,
-                        ObjectId::default(),
-                        ObjectId::default(),
-                        ObjectId::default(),
-                        ObjectId::default(),
-                        ObjectId::default(),
-                        ObjectId::default(),
-                        ObjectId::default(),
-                    ],
-                    unk1: 1,
-                });
-                network.send_to_by_actor_id(
-                    *from_actor_id,
-                    FromServer::PacketSegment(ipc, *from_actor_id),
-                    DestinationNetwork::ZoneClients,
-                );
             }
 
             true
@@ -1226,4 +1094,148 @@ pub fn handle_director_trigger(
     }
 
     // TODO: send triggers to Lua etc.
+}
+
+pub fn send_director_vars(
+    data: Arc<Mutex<WorldServer>>,
+    network: Arc<Mutex<NetworkState>>,
+    gamedata: Arc<Mutex<GameData>>,
+    from_actor_id: ObjectId,
+) {
+    let mut data = data.lock();
+    let Some(instance) = data.find_actor_instance_mut(from_actor_id) else {
+        tracing::warn!("Somehow failed to find an instance for actor?");
+        return;
+    };
+
+    let mut network = network.lock();
+    for director in &instance.directors {
+        if director.id.handler_type().is_content_director() {
+            network.send_to_by_actor_id(
+                from_actor_id,
+                FromServer::PacketSegment(director.build_var_segment(), from_actor_id),
+                DestinationNetwork::ZoneClients,
+            );
+
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UnkDirector1 {
+                unk: [
+                    0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 38, 0, 0, 0,
+                ],
+            });
+            network.send_to_by_actor_id(
+                from_actor_id,
+                FromServer::PacketSegment(ipc, from_actor_id),
+                DestinationNetwork::ZoneClients,
+            );
+
+            let mut gamedata = gamedata.lock();
+            if let Some(map_effects) = gamedata.get_map_effects(instance.content_id as u32) {
+                let mut states = Vec::new();
+                for (i, layout_id) in map_effects.iter().enumerate() {
+                    // A layout ID of zero means the effect should be skipped.
+                    if *layout_id != 0 {
+                        states.resize(i + 1, 0);
+                        states[i] = 4; // 4 means to play it, I guess?
+                    }
+                }
+
+                let ipc = MapEffects {
+                    handler_id: director.id,
+                    unk_flag: 5,
+                    states,
+                    ..Default::default()
+                }
+                .package()
+                .unwrap();
+                network.send_to_by_actor_id(
+                    from_actor_id,
+                    FromServer::PacketSegment(ipc, from_actor_id),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
+
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UnkDirector2 {
+                unk: [
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                ],
+            });
+            network.send_to_by_actor_id(
+                from_actor_id,
+                FromServer::PacketSegment(ipc, from_actor_id),
+                DestinationNetwork::ZoneClients,
+            );
+        }
+
+        if director.id.handler_type() == HandlerType::PublicContent {
+            let content_type;
+            {
+                let mut game_data = gamedata.lock();
+                content_type = game_data
+                    .find_public_content_type(director.id.event_id())
+                    .unwrap_or_default();
+            }
+
+            if content_type == PublicContentType::OccultCrescent {
+                // Setup the panel
+                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::OccultCrescentSetup {
+                    unk1: [
+                        243, 152, 1, 0, 136, 182, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 48, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 137, 21, 36, 0, 0,
+                        0, 0, 0, 0, 0, 2, 5, 0, 1, 0, 0, 4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 1, 223, 63, 0, 0, 0, 0, 0, 0, 0, 0,
+                    ],
+                });
+                network.send_to_by_actor_id(
+                    from_actor_id,
+                    FromServer::PacketSegment(ipc, from_actor_id),
+                    DestinationNetwork::ZoneClients,
+                );
+
+                // Setup duty actions
+                network.send_to_by_actor_id(
+                    from_actor_id,
+                    FromServer::ActorControlSelf(ActorControlCategory::UnkDutyActions { unk1: 24 }),
+                    DestinationNetwork::ZoneClients,
+                );
+                network.send_to_by_actor_id(
+                    from_actor_id,
+                    FromServer::ActorControlSelf(ActorControlCategory::EnableDutyActions {
+                        enabled: true,
+                    }),
+                    DestinationNetwork::ZoneClients,
+                );
+                network.send_to_by_actor_id(
+                    from_actor_id,
+                    FromServer::ActorControlSelf(ActorControlCategory::SetDutyActions {
+                        action_ids: [41588, 41589, 41590, 0, 0],
+                    }),
+                    DestinationNetwork::ZoneClients,
+                );
+            }
+        }
+
+        // TODO: temporary, don't send in all instances
+        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SpectatorList {
+            object_ids: [
+                from_actor_id,
+                ObjectId::default(),
+                ObjectId::default(),
+                ObjectId::default(),
+                ObjectId::default(),
+                ObjectId::default(),
+                ObjectId::default(),
+                ObjectId::default(),
+            ],
+            unk1: 1,
+        });
+        network.send_to_by_actor_id(
+            from_actor_id,
+            FromServer::PacketSegment(ipc, from_actor_id),
+            DestinationNetwork::ZoneClients,
+        );
+    }
 }

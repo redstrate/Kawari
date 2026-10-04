@@ -9,9 +9,9 @@ use kawari::{
 };
 
 use crate::{
-    CraftingEventHandler, FateEventHandler, FishingEventHandler, GameData, GatheringEventHandler,
-    GimmickAccessorEventHandler, InclusionShopEventHandler, InstanceContentEventHandler,
-    LuaEventHandler, ShopEventHandler, SpecialShopEventHandler, ZoneConnection,
+    ContentEventHandler, CraftingEventHandler, FateEventHandler, FishingEventHandler, GameData,
+    GatheringEventHandler, GimmickAccessorEventHandler, InclusionShopEventHandler, LuaEventHandler,
+    ShopEventHandler, SpecialShopEventHandler, ZoneConnection,
 };
 
 use super::lua::LuaPlayer;
@@ -216,7 +216,8 @@ pub fn dispatch_event(
         }
         HandlerType::SpecialShop => Some(Box::new(SpecialShopEventHandler::new())),
         HandlerType::HousingAethernet => generic_lua_event("events/generic/HousingAethernet.lua"),
-        HandlerType::InstanceContent => Some(Box::new(InstanceContentEventHandler::new())),
+        HandlerType::InstanceContent => Some(Box::new(ContentEventHandler::new())),
+        HandlerType::PublicContent => Some(Box::new(ContentEventHandler::new())),
         HandlerType::Fate => Some(Box::new(FateEventHandler {
             fate_id: *connection.fate_motivation_npcs.get(&actor_id).unwrap(),
         })),
