@@ -43,6 +43,7 @@ These are commands already built-in into the FFXIV client. Normally only availab
 | `//gm orchestrion <on/off> <id>` | Unlock an Orchestrion song. |
 | `//gm pos <x> <y> <z>` | Teleport to the specified location. |
 | `//gm race <id>` | Sets your player's race. |
+| `//gm reward <on/off> <id/all>` | Unlock an action, emote, etc. for example: `1` for Return and `4` for Teleport. |
 | `//gm getrest` | Returns the current amount of rested EXP. |
 | `//gm sex <id>` | Sets your player's sex (0 is male, 1 is female.) |
 | `//gm speed <multiplier>` | Increases your movement speed by `multiplier`. |

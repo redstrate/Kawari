@@ -20,6 +20,7 @@ GM_SET_MP = 101
 GM_EXP = 104
 GM_GET_REST = 108
 GM_ORCHESTRION = 116
+GM_REWARD = 109
 GM_GIVE_ITEM = 200
 GM_GIL = 201
 GM_COLLECT = 202
@@ -81,6 +82,7 @@ registerGMCommand(GM_TERRITORY_INFO,     GM_DIR.."TerritoryInfo.lua")
 registerGMCommand(GM_JUMP,               GM_DIR.."Jump.lua")
 registerGMCommand(GM_WORLD,              GM_DIR.."World.lua")
 registerGMCommand(GM_IMMEDIATELY_ACTION, GM_DIR.."ImmediatelyAction.lua")
+registerGMCommand(GM_REWARD,             GM_DIR.."Reward.lua")
 
 -- Debug commands
 -- Please keep these in alphabetical order!
@@ -106,7 +108,6 @@ registerCommand("toggleminion",                     DBG_DIR.."ToggleMinion.lua")
 registerCommand("togglemount",                      DBG_DIR.."ToggleMount.lua")
 registerCommand("toggleornament",                   DBG_DIR.."ToggleOrnament.lua")
 registerCommand("toggletripletriadcard",            DBG_DIR.."ToggleTripleTriadCard.lua")
-registerCommand("unlock",                           DBG_DIR.."Unlock.lua")
 registerCommand("unlockbuddyequip",                 DBG_DIR.."UnlockBuddyEquip.lua")
 registerCommand("unlockcontent",                    DBG_DIR.."UnlockContent.lua")
 registerCommand("skipintro",                        DBG_DIR.."SkipIntro.lua")
