@@ -49,3 +49,4 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!yell <id>` | Sends a debug NpcYell. |
 | `!path <id> <path id>` | Sends a particular NPC to follow a path. Not very useful. |
 | `!target` | Prints your currently targeted actor. |
+| `!treasurehunt` | Spawns a debug treasure hunt at your location. |

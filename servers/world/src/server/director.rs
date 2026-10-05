@@ -1218,6 +1218,14 @@ pub fn send_director_vars(
             }
         }
 
+        if director.id.handler_type() == HandlerType::TreasureHunt {
+            network.send_to_by_actor_id(
+                from_actor_id,
+                FromServer::PacketSegment(director.build_var_segment(), from_actor_id),
+                DestinationNetwork::ZoneClients,
+            );
+        }
+
         // TODO: temporary, don't send in all instances
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SpectatorList {
             object_ids: [

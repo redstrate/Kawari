@@ -121,7 +121,7 @@ pub enum TargetEffectKind {
     /// Play this VFX.
     #[brw(magic = 59u8)]
     PlayVFX { unk: [u8; 5], effect_id: u16 },
-    /// Seen with the Gyshal Greens item.
+    /// Seen with the Gyshal Greens item and while deciphering maps.
     #[brw(magic = 61u8)]
     SummonCompanion {
         param0: u8,

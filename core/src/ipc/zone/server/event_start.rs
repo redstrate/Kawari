@@ -26,9 +26,9 @@ pub enum EventType {
     WithinRange = 10,
     OutsideRange = 11,
     GameStart = 12,
-    /// Seen in Gold Saucer Invitational
+    /// Seen in Gold Saucer Invitational and Treasure Hunts.
     GameProgress = 13,
-    /// Unknown?
+    /// Used for events started by EnterTerritoryEvent.
     EnterTerritory = 15,
     GameComeBack = 17,
     ActionResult = 18,

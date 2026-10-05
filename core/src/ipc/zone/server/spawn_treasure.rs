@@ -15,8 +15,9 @@ pub enum TreasureKind {
     Levequest = 1,
     DungeonRaid = 2,
     Unk3 = 3,
+    /// Spawned by Treasure Hunts.
     TreasureHunt = 4,
-    /// Variant, Occult Crescent, etc.
+    /// Variant dungeons, Occult Crescent, etc.
     PersonalLoot = 5,
 }
 

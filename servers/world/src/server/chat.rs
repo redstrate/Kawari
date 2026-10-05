@@ -2,10 +2,10 @@ use std::{sync::Arc, time::Duration};
 
 use bstr::BString;
 use kawari::{
-    common::{DEBUG_COMMAND_TRIGGER, DirectorEvent, ObjectId, WarpType},
+    common::{DEBUG_COMMAND_TRIGGER, DirectorEvent, HandlerId, HandlerType, ObjectId, WarpType},
     ipc::zone::{
         ActionRequest, ActionType, ActorControlCategory, ServerNoticeMessage, ServerZoneIpcData,
-        ServerZoneIpcSegment,
+        ServerZoneIpcSegment, SpawnTreasure, TreasureKind,
     },
 };
 use parking_lot::Mutex;
@@ -17,6 +17,7 @@ use crate::{
         WorldServer,
         action::execute_action,
         actor::{NetworkedActor, NpcState, spawn_custom_bnpc},
+        director::DirectorData,
         fate::spawn_fate,
         instance::QueuedTaskData,
         network::{DestinationNetwork, NetworkState},
@@ -469,6 +470,53 @@ fn process_debug_commands(
                     FromServer::PacketSegment(ipc, from_actor_id),
                     DestinationNetwork::ZoneClients,
                 );
+            }
+
+            true
+        }
+        "!treasurehunt" => {
+            let mut data = data.lock();
+            if let Some(instance) = data.find_actor_instance_mut(from_actor_id)
+                && let Some(actor) = instance.find_actor(from_actor_id)
+            {
+                // TODO: What does 350 mean here?
+                let handler_id = HandlerId::new(HandlerType::TreasureHunt, 350);
+
+                // TODO: turn spawning directors into a generic function so we can use it for Levequests, etc.
+
+                let mut network = network.lock();
+                network.send_to_by_actor_id(
+                    from_actor_id,
+                    FromServer::ActorControlSelf(ActorControlCategory::InitDirector {
+                        handler_id,
+                        content_id: 0,
+                        flags: 0,
+                    }),
+                    DestinationNetwork::ZoneClients,
+                );
+
+                let treasure_id = ObjectId(fastrand::u32(..));
+                instance.insert_treasure(
+                    treasure_id,
+                    SpawnTreasure {
+                        entity_id: treasure_id,
+                        layout_id: 4517187, // TODO
+                        event_state: 1,
+                        coffer_kind: TreasureKind::TreasureHunt,
+                        handler_id,
+                        exported_sg_row_id: 1596, // TODO
+                        position: actor.position(),
+                        rotation: actor.rotation(),
+                        ..Default::default()
+                    },
+                );
+
+                instance.directors.push(DirectorData {
+                    id: handler_id,
+                    flag: 4,
+                    data: [0, 4, 1, 44, 0, 0, 0, 0, 0, 0],
+                    ..Default::default()
+                });
             }
 
             true

@@ -380,13 +380,16 @@ pub enum HandlerType {
     /// See EventMountGimmickPathMove Excel sheet.
     EventMountGimmickPathMove = 65,
 
+    /// Used for battle Levequests.
     BattleLeve = 0x8001,
+    /// Used for gathering Levequests.
     GatheringLeve = 0x8002,
     /// Used for dungeons, including Deep Dungeons.
     InstanceContent = 0x8003,
     PublicContent = 0x8004,
     QuestBattle = 0x8006,
     CompanyLeve = 0x8007,
+    /// Used for treasure hunts.
     TreasureHunt = 0x8009,
     /// Used for the explorable Gold Saucer zones.
     GoldSaucer = 0x800A,

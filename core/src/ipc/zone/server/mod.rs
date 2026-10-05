@@ -163,7 +163,7 @@ mod fellowships;
 pub use fellowships::*;
 
 mod spawn_treasure;
-pub use spawn_treasure::SpawnTreasure;
+pub use spawn_treasure::{SpawnTreasure, TreasureKind};
 
 mod mogpendium;
 pub use mogpendium::{Mogpendium, MogpendiumCompletionFlags};
