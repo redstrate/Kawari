@@ -1077,6 +1077,24 @@ pub async fn server_main_loop(
                                     start_next_fate(&mut network, &mut game_data, &lua, instance);
                                 }
                             }
+                            QueuedTaskData::TerminateDirector { handler_id } => {
+                                let mut data = data.lock();
+                                if let Some(instance) = data.instances.get_mut(*instance_index) {
+                                    instance.directors.retain(|x| x.id != *handler_id);
+
+                                    let mut network = network.lock();
+                                    network.send_to_instance(
+                                        ObjectId::default(),
+                                        instance,
+                                        FromServer::ActorControlSelf(
+                                            ActorControlCategory::TerminateDirector {
+                                                handler_id: *handler_id,
+                                            },
+                                        ),
+                                        DestinationNetwork::ZoneClients,
+                                    );
+                                }
+                            }
                         }
                     }
                 }

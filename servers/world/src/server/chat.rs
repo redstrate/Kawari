@@ -517,6 +517,13 @@ fn process_debug_commands(
                     data: [0, 4, 1, 44, 0, 0, 0, 0, 0, 0],
                     ..Default::default()
                 });
+
+                instance.insert_task(
+                    from_id,
+                    from_actor_id,
+                    Duration::from_mins(5),
+                    QueuedTaskData::TerminateDirector { handler_id },
+                );
             }
 
             true
@@ -548,6 +555,13 @@ fn process_debug_commands(
                     flag: 1,
                     ..Default::default()
                 });
+
+                instance.insert_task(
+                    from_id,
+                    from_actor_id,
+                    Duration::from_mins(20),
+                    QueuedTaskData::TerminateDirector { handler_id },
+                );
             }
 
             true

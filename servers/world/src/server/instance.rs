@@ -81,6 +81,8 @@ pub enum QueuedTaskData {
     RespawnMob { layout_id: u32 },
     /// Ends a FATE.
     EndFate { fate_id: u32 },
+    /// Terminates a director.
+    TerminateDirector { handler_id: HandlerId },
 }
 
 #[derive(Debug, Clone)]
