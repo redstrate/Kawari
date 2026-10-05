@@ -267,7 +267,7 @@ pub enum HandlerType {
     GatheringPoint = 3,
     /// See GilShop Excel sheet.
     Shop = 4,
-    /// See Aetheryte Excel sheet (event_id & 0xFFFF.)
+    /// See Aetheryte Excel sheet.
     Aetheryte = 5,
     /// See GuildleveAssignment Excel sheet.
     GuildLeveAssignment = 6,
@@ -285,9 +285,9 @@ pub enum HandlerType {
     CraftLeveClient = 14,
     /// Used for interactable dungeon objects.
     GimmickAccessor = 15,
-    /// See GimmickBill Excel sheet (event_id & 0xFFFF.)
+    /// See GimmickBill Excel sheet.
     GimmickBill = 16,
-    /// See GimmickRect Excel sheet (event_id & 0xFFFF.)
+    /// See GimmickRect Excel sheet.
     GimmickRect = 17,
     /// See ChocoboTaxiStand Excel sheet.
     ChocoboTaxiStand = 18,
@@ -325,15 +325,15 @@ pub enum HandlerType {
     DailyQuestSupply = 34,
     /// See TripleTriad Excel sheet.
     TripleTriad = 35,
-    /// See GoldSaucerArcadeMachine Excel sheet.
+    /// Used by the various arcade machines in the Gold Saucer. See GoldSaucerArcadeMachine Excel sheet.
     GoldSaucerArcadeMachine = 36,
-    /// Unknown purpose.
+    /// Used by the Mini Cactpot in the Gold Saucer.
     LotteryDaily = 37,
-    /// Unknown purpose.
+    /// Used by the Jumbo Cactpot in the Gold Saucer.
     LotteryWeekly = 38,
     /// Unknown purpose.
     RaceChocoboRegistrar = 39,
-    /// Used for certain Gold Saucer NPCs.
+    /// Used by certain Gold Saucer NPCs.
     GoldSaucerTalk = 41,
     /// See FccShop Excel sheet.
     FreeCompanyCreditShop = 42,
@@ -341,11 +341,11 @@ pub enum HandlerType {
     AetherCurrent = 43,
     /// See ContentEntry Excel sheet.
     ContentEntry = 44,
-    /// Unknown purpose.
+    /// Used by the Verminion Tables and the Tournament Recordkeeper.
     Verminion = 45,
     /// Unknown purpose.
     SkyIslandEntrance = 46,
-    /// See DpsChallengeOfficer Excel sheet.
+    /// Used by the Stone, Sky, Sea entrance NPC. See DpsChallengeOfficer Excel sheet.
     DpsChallengeOfficer = 47,
     /// Unknown purpose.
     BeginnerTrainingOfficer = 48,
@@ -357,23 +357,23 @@ pub enum HandlerType {
     LotteryExchangeShop = 52,
     /// See DisposalShop Excel sheet.
     DisposalShop = 53,
-    /// See PreHandler Excel sheet.
+    /// Checks for quest completion before handing off to the actual event. See PreHandler Excel sheet.
     PreHandler = 54,
     /// See Description Excel sheet.
     Description = 55,
-    /// Unknown purpose.
+    /// Used for Ishgardian Restoration.
     HwdDev = 56,
-    /// Unknown purpose.
+    /// Used for Desynthesis, Materia Extraction, and Aetherial Reduction.
     Materialize = 57,
     /// See InclusionShop Excel sheet.
     InclusionShop = 58,
     /// See CollectablesShop Excel sheet.
     CollectablesShop = 59,
-    /// Unknown purpose.
+    /// Used for Island Sanctuary's Pasture.
     MJIPasture = 60,
-    /// See EventPathMove Excel sheet.
+    /// Used for Argos in Mare Lamentorum. See EventPathMove Excel sheet.
     EventPathMove = 61,
-    /// Unknown purpose.
+    /// Used for Island Sanctuary Cropland. See ReactionEventObject sheet.
     ReactionEvent = 62,
     /// Used for the Solution Nine teleporter pads, for example. See EventGimmickPathMove Excel sheet.
     EventGimmickPathMove = 64,
@@ -386,6 +386,7 @@ pub enum HandlerType {
     GatheringLeve = 0x8002,
     /// Used for dungeons, including Deep Dungeons.
     InstanceContent = 0x8003,
+    /// Used for misc. large-scale content like Occult Crescent or Blunderville.
     PublicContent = 0x8004,
     QuestBattle = 0x8006,
     CompanyLeve = 0x8007,
@@ -394,6 +395,7 @@ pub enum HandlerType {
     /// Used for the explorable Gold Saucer zones.
     GoldSaucer = 0x800A,
     CompanyCraft = 0x800B,
+    /// Supposedly used in the early phases of the Diadem.
     SkyIsland = 0x800C,
     /// Used for Stone, Sky, Sea challenges.
     DpsChallenge = 0x800D,
