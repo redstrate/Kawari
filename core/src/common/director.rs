@@ -264,6 +264,22 @@ pub enum GimmickRectEvent {
     },
 }
 
+/// Updates handled by `Client::Game::Event::LeveDirector`.
+///
+/// TODO: Find client implementation!!
+#[binrw]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum LeveDirectorEvent {
+    /// Begins the Leve.
+    #[brw(magic = 2u32)]
+    DutyCommence {
+        /// In seconds.
+        time_limit: u32,
+        /// The timestamp of this packet in seconds since UNIX epoch. Used for the timer.
+        start_timestamp: u32,
+    },
+}
+
 /// Events are sent by the server (who is acting as the director) to change state.
 #[binrw]
 #[br(import(handler_id: HandlerId))]
@@ -278,6 +294,8 @@ pub enum DirectorEvent {
     /// Event for MassivePcContent handlers.
     #[br(pre_assert(handler_id.handler_type() == HandlerType::MassivePcContent))]
     MassivePcContentDirector(MassivePcContentEvent),
+    #[br(pre_assert(handler_id.handler_type().is_leve_director()))]
+    LeveDirector(LeveDirectorEvent),
     /// Unknown event.
     Unknown {
         id: u32,

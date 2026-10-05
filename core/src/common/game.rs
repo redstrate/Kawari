@@ -444,6 +444,15 @@ impl HandlerType {
             HandlerType::InstanceContent | HandlerType::PublicContent
         )
     }
+
+    /// If this HandlerType is a descendant of the LeveDirector class in the client.
+    /// Only useful for determining the correct DirectorEvent and DirectorTrigger really.
+    pub fn is_leve_director(&self) -> bool {
+        matches!(
+            self,
+            HandlerType::BattleLeve | HandlerType::GatheringLeve | HandlerType::CompanyLeve
+        )
+    }
 }
 
 #[cfg(feature = "server")]

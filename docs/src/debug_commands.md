@@ -50,3 +50,4 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!path <id> <path id>` | Sends a particular NPC to follow a path. Not very useful. |
 | `!target` | Prints your currently targeted actor. |
 | `!treasurehunt` | Spawns a debug treasure hunt at your location. |
+| `!leve <id>` | Begins a debug levequest at your location. |

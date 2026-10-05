@@ -6,7 +6,8 @@ use kawari::{
     common::{
         ContentDirectorEvent, DirectorEvent, DirectorTrigger, DutyOption, EOBJ_EXIT, EOBJ_SHORTCUT,
         EventState, GimmickRectEvent, HandlerId, HandlerType, InstanceContentDirectorEvent,
-        ObjectId, ObjectTypeId, ObjectTypeKind, Position, PublicContentType,
+        LeveDirectorEvent, ObjectId, ObjectTypeId, ObjectTypeKind, Position, PublicContentType,
+        timestamp_secs,
     },
     config::get_config,
     ipc::zone::{
@@ -1222,6 +1223,28 @@ pub fn send_director_vars(
             network.send_to_by_actor_id(
                 from_actor_id,
                 FromServer::PacketSegment(director.build_var_segment(), from_actor_id),
+                DestinationNetwork::ZoneClients,
+            );
+        }
+
+        if director.id.handler_type().is_leve_director() {
+            network.send_to_by_actor_id(
+                from_actor_id,
+                FromServer::PacketSegment(director.build_var_segment(), from_actor_id),
+                DestinationNetwork::ZoneClients,
+            );
+
+            // Send a dummy commence for now
+            // TODO: I think this can be extrapolated from Excel
+            network.send_to_by_actor_id(
+                from_actor_id,
+                FromServer::ActorControlSelf(ActorControlCategory::DirectorEvent {
+                    handler_id: director.id,
+                    event: DirectorEvent::LeveDirector(LeveDirectorEvent::DutyCommence {
+                        time_limit: 1200,
+                        start_timestamp: timestamp_secs(),
+                    }),
+                }),
                 DestinationNetwork::ZoneClients,
             );
         }

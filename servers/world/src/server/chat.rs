@@ -521,6 +521,37 @@ fn process_debug_commands(
 
             true
         }
+        "!leve" => {
+            let parts: Vec<&str> = chat_message.split(' ').collect();
+            let content_id: u16 = parts[1].parse().unwrap();
+
+            let mut data = data.lock();
+            if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+                // TODO: What does 1012 mean here?
+                let handler_id = HandlerId::new(HandlerType::BattleLeve, 1012);
+
+                // TODO: combine with the code above
+
+                let mut network = network.lock();
+                network.send_to_by_actor_id(
+                    from_actor_id,
+                    FromServer::ActorControlSelf(ActorControlCategory::InitDirector {
+                        handler_id,
+                        content_id,
+                        flags: 0,
+                    }),
+                    DestinationNetwork::ZoneClients,
+                );
+
+                instance.directors.push(DirectorData {
+                    id: handler_id,
+                    flag: 1,
+                    ..Default::default()
+                });
+            }
+
+            true
+        }
         _ => false,
     }
 }
