@@ -1,8 +1,8 @@
 mod fishing;
 pub use fishing::*;
 
-mod gimmick_accessor;
-pub use gimmick_accessor::*;
+mod gimmick;
+pub use gimmick::*;
 
 mod lua;
 pub use lua::*;

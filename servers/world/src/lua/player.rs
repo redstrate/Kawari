@@ -464,7 +464,7 @@ impl LuaPlayer {
         create_ipc_self(self, ipc, self.player_data.character.actor_id);
     }
 
-    fn abandon_content(&mut self) {
+    pub fn abandon_content(&mut self) {
         self.queued_tasks.push(LuaTask::AbandonContent {});
     }
 
