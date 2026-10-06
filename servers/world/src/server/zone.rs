@@ -1386,7 +1386,6 @@ pub fn handle_zone_messages(
                     .remove(DisplayFlag::INVISIBLE);
 
                 // Send them the current list of FATEs
-                // TODO: This needs to be handled in the opposite way: only create a FATE director if there are FATEs to spawn. This way FATEs in towns (like the Ul'dah festivals) makes more sense.
                 if let Some(director) = &instance.directors.first()
                     && director.id.handler_type() == HandlerType::Fate
                 {
