@@ -284,6 +284,41 @@ pub enum GimmickAccessorType {
     Unknown25 = 25,
 }
 
+// TODO: currently guesswork (see <https://wiki.xiv.zone/Gimmicks#GimmickRect>)
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, FromRepr, PartialEq)]
+pub enum GimmickRectTrigger {
+    Unknown0 = 0,
+    /// Seen in Sastasha for triggering the final boss' cutscene.
+    Cutscene = 1,
+    Unknown3 = 3,
+    Unknown4 = 4,
+    Unknown5 = 5,
+    /// Seen in Sycrus Tower, used to fake going into a separate zone.
+    FakeExit = 6,
+    Unknown7 = 7,
+    /// Seen in the Gold Saucer for its jumping pads.
+    Jump = 8,
+    Unknown9 = 9,
+    Unknown10 = 10,
+    Unknown11 = 11,
+    Unknown12 = 12,
+    Unknown13 = 13,
+    Unknown14 = 14,
+    Unknown15 = 15,
+    Unknown16 = 16,
+    Unknown17 = 17,
+    /// Obviously not only used for this, but seen in The Merchants Tale.
+    VVDRouteTrigger = 18,
+    Unknown19 = 19,
+    Unknown20 = 20,
+    Unknown21 = 21,
+    Unknown22 = 22,
+    Unknown23 = 23,
+    Unknown24 = 24,
+    Unknown25 = 25,
+}
+
 impl GameData {
     pub fn new() -> Self {
         let config = get_config();

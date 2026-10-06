@@ -14,6 +14,7 @@ use physis::{
 
 use crate::{
     ClientId, FromServer, GameData, StatusEffects, TerritoryNameKind, ToServer,
+    gamedata::GimmickRectTrigger,
     lua::{KawariLua, LuaZone},
     server::{
         NetworkedActor, WorldServer,
@@ -302,7 +303,10 @@ impl Zone {
                                     let sgb_animation_id = gimmick_rect_info.Params[2];
 
                                     // 8 seems to indicate a jumping pad
-                                    if gimmick_rect_info.TriggerIn == 8 {
+                                    if GimmickRectTrigger::from_repr(gimmick_rect_info.TriggerIn)
+                                        .unwrap()
+                                        == GimmickRectTrigger::Jump
+                                    {
                                         let (_, _, translation) =
                                             Affine3A::from(target_pop_range.0.transform)
                                                 .to_scale_rotation_translation();
@@ -322,7 +326,7 @@ impl Zone {
                                         }
                                     } else {
                                         tracing::warn!(
-                                            "Unsupported Gimmick trigger {}",
+                                            "Unsupported Gimmick trigger for EventObj {}",
                                             gimmick_rect_info.TriggerIn
                                         );
                                     }
@@ -338,19 +342,22 @@ impl Zone {
                                 game_data.lookup_gimmick_rect(object.instance_id)
                         {
                             let mut map_gimmick = None;
-                            match gimmick_rect_info.TriggerIn {
-                                1 | 18 => {
-                                    // FIXME: 1 is seen for cutscene triggers in Sastasha, while 18 is seen for Variant Dungeon routes in A Merchant's Tale. We should make this less "generic".
+                            match GimmickRectTrigger::from_repr(gimmick_rect_info.TriggerIn)
+                                .unwrap()
+                            {
+                                GimmickRectTrigger::Cutscene
+                                | GimmickRectTrigger::VVDRouteTrigger => {
+                                    // FIXME: We should make this less "generic".
                                     map_gimmick = Some(MapGimmick::Generic {});
                                 }
-                                6 => {
+                                GimmickRectTrigger::FakeExit => {
                                     // Seen for same-zone "exit ranges" like the one in the beginning of Sycrus Tower
                                     map_gimmick = Some(MapGimmick::FakeExit {
                                         exit_pop_range_id: gimmick_rect_info.Params[0],
                                     });
                                 }
                                 _ => tracing::warn!(
-                                    "Unknown GimmickRect type: {} for event range instance {}",
+                                    "Unknown GimmickRect type: {} for EventRange {}",
                                     gimmick_rect_info.TriggerIn,
                                     object.instance_id
                                 ),
