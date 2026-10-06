@@ -33,7 +33,6 @@ impl ZoneConnection {
             handler_id: event.id,
             scene,
             scene_flags,
-            params_count: params.len() as u8,
             params,
             ..Default::default()
         };
@@ -195,7 +194,6 @@ impl ZoneConnection {
             handler_id: HandlerId(event_id),
             scene,
             resume_id,
-            params_count: params.len() as u8,
             params,
         };
         if let Some(ipc) = scene.package() {

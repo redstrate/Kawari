@@ -11,8 +11,8 @@ use kawari::{
     },
     config::get_config,
     ipc::zone::{
-        ActorControlCategory, ActorControlSelf, DutyFinderSetting, MapEffects, ServerZoneIpcData,
-        ServerZoneIpcSegment,
+        ActorControlCategory, ActorControlSelf, DutyFinderSetting, EventLogMessage, MapEffects,
+        ServerZoneIpcData, ServerZoneIpcSegment, WalkInEvent,
     },
 };
 use mlua::{Function, LuaSerdeExt, UserData, UserDataMethods, Value};
@@ -660,13 +660,13 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 );
             }
             LuaDirectorTask::LogMessage { id, params } => {
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LogMessage {
+                let ipc = EventLogMessage {
                     handler_id: director_id,
                     message_type: *id,
-                    params_count: params.len() as u32,
-                    item_id: params.first().copied().unwrap_or_default(),
-                    item_quantity: params.get(1).copied().unwrap_or_default(),
-                });
+                    params: params.to_vec(),
+                }
+                .package()
+                .unwrap();
 
                 let mut network = network.lock();
                 network.send_to_instance(

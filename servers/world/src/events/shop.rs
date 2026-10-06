@@ -4,7 +4,10 @@ use kawari::{
         ContainerType, ERR_INVENTORY_ADD_FAILED, HandlerId, INVENTORY_ACTION_ACK_SHOP,
         ItemOperationKind, LogMessageType, ObjectTypeId,
     },
-    ipc::zone::{ItemInfo, ItemOperation, SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment},
+    ipc::zone::{
+        EventLogMessage, ItemInfo, ItemOperation, SceneFlags, ServerZoneIpcData,
+        ServerZoneIpcSegment,
+    },
 };
 
 use crate::{
@@ -107,14 +110,13 @@ impl ShopEventHandler {
             ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateInventorySlot(
                 item_dst_info.clone(),
             )),
-            ServerZoneIpcSegment::new(ServerZoneIpcData::ShopLogMessage {
+            EventLogMessage {
                 handler_id: HandlerId(shop_id),
                 message_type: LogMessageType::ItemBoughtBack as u32,
-                params_count: 3,
-                item_id: bb_item.item_id,
-                item_quantity: item_dst_info.quantity as u32,
-                total_sale_cost: cost as u32,
-            }),
+                params: vec![bb_item.item_id, item_dst_info.quantity as u32, cost as u32],
+            }
+            .package()
+            .unwrap(),
         ];
 
         // Finally, queue up the packets required to make the magic happen.
@@ -346,14 +348,13 @@ impl ShopEventHandler {
         price_per_item: u32,
         message_type: LogMessageType,
     ) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ShopLogMessage {
+        let ipc = EventLogMessage {
             handler_id: HandlerId(event_id),
             message_type: message_type as u32,
-            params_count: 3,
-            item_id,
-            item_quantity,
-            total_sale_cost: item_quantity * price_per_item,
-        });
+            params: vec![item_id, item_quantity, item_quantity * price_per_item],
+        }
+        .package()
+        .unwrap();
         connection.send_ipc_self(ipc).await;
     }
 

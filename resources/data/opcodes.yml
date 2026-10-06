@@ -219,7 +219,7 @@ ServerZoneIpcType:
   comment: Contains the list of completed levequests.
   opcode: 629
   size: 232
-- name: ShopLogMessage
+- name: EventLogMessage4
   comment: Sent by the server when an item is obtained from shops that accept gil.
   opcode: 706
   size: 32
@@ -231,7 +231,7 @@ ServerZoneIpcType:
   comment: Unknown purpose.
   opcode: 305
   size: 96
-- name: LogMessage
+- name: EventLogMessage2
   comment: Sent by the server to send a predefined log message in chat.
   opcode: 168
   size: 24

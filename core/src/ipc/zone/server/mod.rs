@@ -193,6 +193,9 @@ pub use walk_in_event::{WalkInEvent, WalkInEventType};
 mod dice_roll_result;
 pub use dice_roll_result::ZoneDiceRollResult;
 
+mod event_log_message;
+pub use event_log_message::EventLogMessage;
+
 use crate::common::{
     CHAR_NAME_MAX_LENGTH, ContainerType, ItemOperationKind, ObjectId, read_bool_from, read_string,
     write_bool_as, write_string,
@@ -407,32 +410,8 @@ pub enum ServerZoneIpcData {
         #[bw(pad_size_to = 6)]
         unk2: Vec<u8>,
     },
-    ShopLogMessage {
-        /// Event ID of this shop.
-        handler_id: HandlerId,
-        /// When buying: 0x697
-        /// When selling: 0x698
-        /// When buying back: 0x699
-        message_type: u32,
-        /// Always 3, regardless of the interactions going on
-        params_count: u32,
-        item_id: u32,
-        item_quantity: u32,
-        #[brw(pad_after = 8)]
-        total_sale_cost: u32,
-    },
-    LogMessage {
-        handler_id: HandlerId,
-        /// Non-stackable item or a single item: 750 / 0x2EE ("You obtained a .")
-        /// Stackable item: 751 / 0x2EF ("You obtained .")
-        message_type: u32,
-        /// Always 2
-        params_count: u32,
-        item_id: u32,
-        #[brw(pad_after = 4)]
-        /// Set to zero if only one item was obtained (stackable or not)
-        item_quantity: u32,
-    },
+    EventLogMessage2(#[brw(args { max_params: 2 } )] EventLogMessage),
+    EventLogMessage4(#[brw(args { max_params: 4 } )] EventLogMessage),
     UpdateInventorySlot(ItemInfo),
     EffectResult(EffectResult),
     ContentFinderCommencing {

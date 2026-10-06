@@ -4,7 +4,7 @@ use kawari::{
         ContainerType, ERR_INVENTORY_ADD_FAILED, HandlerId, INVENTORY_ACTION_ACK_SHOP,
         LogMessageType, ObjectTypeId,
     },
-    ipc::zone::{ItemInfo, SceneFlags, ServerZoneIpcData, ServerZoneIpcSegment},
+    ipc::zone::{EventLogMessage, ItemInfo, SceneFlags},
 };
 
 use crate::{
@@ -137,14 +137,13 @@ impl SpecialShopEventHandler {
         price_per_item: u32,
         message_type: LogMessageType,
     ) {
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::ShopLogMessage {
+        let ipc = EventLogMessage {
             handler_id: HandlerId(event_id),
             message_type: message_type as u32,
-            params_count: 3,
-            item_id,
-            item_quantity,
-            total_sale_cost: item_quantity * price_per_item,
-        });
+            params: vec![item_id, item_quantity, item_quantity * price_per_item],
+        }
+        .package()
+        .unwrap();
         connection.send_ipc_self(ipc).await;
     }
 }

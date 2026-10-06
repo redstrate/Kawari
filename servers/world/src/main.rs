@@ -20,7 +20,7 @@ use kawari::ipc::chat::ClientChatIpcData;
 use kawari::ipc::zone::{
     ActorControlCategory, CWLSLeaveReason, ClientTriggerTarget, Conditions,
     ContentFinderUserAction, CrossRealmListing, CrossRealmListings, DutyFinderSetting,
-    DutySupportInformation, EventType, FurnitureTranslatedForObserver, ItemInfo,
+    DutySupportInformation, EventLogMessage, EventType, FurnitureTranslatedForObserver, ItemInfo,
     LinkshellInviteResponse, MarketBoardHistory, MarketBoardHistoryEntry, MarketBoardItem,
     OnlineStatus, OnlineStatusMask, PlayerSetup, SceneFlags, SearchInfo, SocialListRequestType,
     TrustContent, TrustInformation,
@@ -1267,15 +1267,13 @@ async fn process_packet(
                                             )
                                             .await;
 
-                                        let ipc = ServerZoneIpcSegment::new(
-                                            ServerZoneIpcData::LogMessage {
-                                                handler_id,
-                                                message_type: 1110,
-                                                params_count: 1,
-                                                item_id: 28,
-                                                item_quantity: 0,
-                                            },
-                                        );
+                                        let ipc = EventLogMessage {
+                                            handler_id,
+                                            message_type: 1110,
+                                            params: vec![28],
+                                        }
+                                        .package()
+                                        .unwrap();
                                         connection.send_ipc_self(ipc).await;
 
                                         connection
@@ -4191,13 +4189,13 @@ async fn process_server_msg(
             FromServer::FishBite => {
                 let handler_id = HandlerId::new(HandlerType::Fishing, 1).0;
 
-                let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::LogMessage {
+                let ipc = EventLogMessage {
                     handler_id: HandlerId(handler_id),
                     message_type: 1127,
-                    params_count: 0,
-                    item_id: 0,
-                    item_quantity: 0,
-                });
+                    ..Default::default()
+                }
+                .package()
+                .unwrap();
                 connection.send_ipc_self(ipc).await;
 
                 connection

@@ -5,8 +5,8 @@ use binrw::binrw;
 use crate::common::HandlerId;
 use crate::ipc::zone::server::{ServerZoneIpcData, ServerZoneIpcSegment};
 
-#[derive(Debug, Clone, Default)]
 #[binrw]
+#[derive(Debug, Clone, Default)]
 #[brw(import{max_params: usize})]
 #[brw(assert(params.len() <= max_params, "Too many params! {} > {}", params.len(), max_params))]
 pub struct EventResume {
@@ -16,8 +16,10 @@ pub struct EventResume {
     pub scene: u16,
     /// Seems to be a custom ID (handled internally by an EventHandler on the client.)
     pub resume_id: u8,
-    pub params_count: u8,
-    #[br(count = max_params)]
+    #[br(temp)]
+    #[bw(calc = params.len() as u8)]
+    params_count: u8,
+    #[br(count = params_count)]
     #[bw(pad_size_to = 4 * max_params)]
     pub params: Vec<u32>,
 }

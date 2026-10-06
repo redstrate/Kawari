@@ -65,8 +65,8 @@ bitflags! {
     }
 }
 
-#[derive(Debug, Clone, Default)]
 #[binrw]
+#[derive(Debug, Clone, Default)]
 #[brw(import{max_params: usize})]
 #[brw(assert(params.len() <= max_params, "Too many params! {} > {}", params.len(), max_params))]
 pub struct EventScene {
@@ -78,10 +78,13 @@ pub struct EventScene {
     #[brw(pad_before = 2)] // FIXME: um, i don't think this is empty!!
     pub scene_flags: SceneFlags,
     pub unk1: u32,
-    pub params_count: u8,
+    #[brw(pad_after = 3)]
+    #[br(temp)]
+    #[bw(calc = params.len() as u8)]
+    params_count: u8,
     // Extra padding seems needed after or the client will seemingly softlock even with 2 params, possibly used for alignment?
-    #[brw(pad_before = 3, pad_after = 4)]
-    #[br(count = max_params)]
+    #[brw(pad_after = 4)]
+    #[br(count = params_count)]
     #[bw(pad_size_to = 4 * max_params)]
     pub params: Vec<u32>,
 }
@@ -163,8 +166,6 @@ mod tests {
                 | SceneFlags::DISABLE_STEALTH
         );
         assert_eq!(event_play.unk1, 0);
-        assert_eq!(event_play.params_count, 1);
         assert_eq!(event_play.params[0], 0);
-        assert_eq!(event_play.params[1], 0);
     }
 }
