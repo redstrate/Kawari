@@ -122,7 +122,7 @@ local seen_final_cutscene
 local chopper_spawned
 
 function onSetup(director)
-    coral_color = math.random(0, 2)
+    coral_color = math.random(0, #EOBJ_CORAL_IDS - 1)
 
     -- Take down initial boss walls
     director:hide_eobj(EOBJ_CATTERY_BOSS_WALL)
