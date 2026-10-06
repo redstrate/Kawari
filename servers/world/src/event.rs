@@ -77,6 +77,19 @@ pub trait EventHandler: std::fmt::Debug + Send + Sync {
     }
 }
 
+/// Dummied out EventHandler, which can be useful for certain handlers that don't need any logic.
+#[derive(Debug)]
+pub struct DummyEventHandler {}
+
+impl DummyEventHandler {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+#[async_trait]
+impl EventHandler for DummyEventHandler {}
+
 /// Extracts the script id from a given CustomTalk `name`. For example, "CmnDefBeginnerGuide_00327" will return 327.
 fn extract_script_id(name: &str) -> Result<u32, std::num::ParseIntError> {
     name[name.len() - 5..].parse()
@@ -164,7 +177,7 @@ pub fn dispatch_event(
                 generic_lua_event("events/generic/AethernetShard.lua")
             }
         }
-        HandlerType::DefaultTalk => generic_lua_event("events/generic/DefaultTalk.lua"),
+        HandlerType::DefaultTalk => Some(Box::new(DummyEventHandler::new())), // This is normally handled client-side, however in certain cases e.g. SwitchTalk we need this scripted for... reasons.
         HandlerType::Craft => Some(Box::new(CraftingEventHandler::new())),
         HandlerType::GuildLeveAssignment => generic_lua_event("events/generic/Levemete.lua"),
         HandlerType::CustomTalk => {
@@ -211,7 +224,7 @@ pub fn dispatch_event(
         }
         HandlerType::TopicSelect => generic_lua_event("events/generic/TopicSelect.lua"),
         HandlerType::PreHandler => generic_lua_event("events/generic/PreHandler.lua"),
-        HandlerType::Description => generic_lua_event("events/generic/Description.lua"),
+        HandlerType::Description => Some(Box::new(DummyEventHandler::new())), // Same reason as DefaultTalk
         HandlerType::InclusionShop => Some(Box::new(InclusionShopEventHandler::new())),
         HandlerType::EventGimmickPathMove => {
             generic_lua_event("events/generic/GimmickPathMove.lua")
