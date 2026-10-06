@@ -3,7 +3,8 @@ use std::{sync::Arc, time::Duration};
 use bstr::BString;
 use kawari::{
     common::{
-        DEBUG_COMMAND_TRIGGER, DirectorEvent, EOBJ_EXIT, HandlerId, HandlerType, ObjectId, WarpType,
+        DEBUG_COMMAND_TRIGGER, DirectorEvent, EOBJ_EXIT, EventState, HandlerId, HandlerType,
+        ObjectId, WarpType,
     },
     ipc::zone::{
         ActionRequest, ActionType, ActorControlCategory, ServerNoticeMessage, ServerZoneIpcData,
@@ -503,7 +504,7 @@ fn process_debug_commands(
                     SpawnTreasure {
                         entity_id: treasure_id,
                         layout_id: 4517187, // TODO
-                        event_state: 1,
+                        event_state: EventState::OFF,
                         coffer_kind: TreasureKind::TreasureHunt,
                         handler_id,
                         exported_sg_row_id: 1596, // TODO

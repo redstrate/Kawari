@@ -1,8 +1,8 @@
 use binrw::binrw;
 
 use crate::common::{
-    HandlerId, ObjectId, Position, read_bool_from, read_packed_position, read_quantized_rotation,
-    write_bool_as, write_packed_position, write_quantized_rotation,
+    EventState, HandlerId, ObjectId, Position, read_bool_from, read_packed_position,
+    read_quantized_rotation, write_bool_as, write_packed_position, write_quantized_rotation,
 };
 
 #[binrw]
@@ -37,7 +37,8 @@ pub struct SpawnTreasure {
     /// The object's spawn index. Note that this is a completely separate index from actors.
     pub spawn_index: u8,
     pub item_count: u8,
-    pub event_state: u8,
+    /// Controls the animation of the treasure.
+    pub event_state: EventState,
     pub coffer_kind: TreasureKind,
     #[brw(pad_after = 1)] // empty?
     /// Whether this object is initially hidden or not.

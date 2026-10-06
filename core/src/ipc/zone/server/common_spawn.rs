@@ -260,7 +260,7 @@ pub struct CommonSpawn {
     pub level: u8,
     /// See ClassJob Excel sheet.
     pub class_job: u8,
-    /// Controls the animation of the event object.
+    /// Controls the animation of this character.
     pub event_state: EventState,
     /// Whether this object is initially hidden or not.
     #[br(map = read_bool_from::<u8>)]
