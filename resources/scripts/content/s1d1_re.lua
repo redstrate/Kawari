@@ -144,6 +144,15 @@ function setSequence(director, sequence)
     director:set_data(0, sequence)
 end
 
+-- TODO: This should be handled using the existing boss system
+function beginBattleMusic(director)
+    director:set_bgm(37)
+end
+
+function endBattleMusic(director)
+    director:set_bgm(0)
+end
+
 function onGimmickAccessor(director, actor_id, id, params)
     -- -1 = will not touch the coral
     -- 0 = will touch the coral
@@ -155,8 +164,7 @@ function onGimmickAccessor(director, actor_id, id, params)
             if not chopper_spawned then
                 chopper_spawned = true
 
-                -- Set battle music
-                director:set_bgm(37)
+                beginBattleMusic(director)
                 director:spawn_boss(BNPC_CHOPPER, EOBJ_CATTERY_BOSS_WALL, EOBJ_CATTERY_BOSS_LINE, PLACE_CATTERY)
             end
         else
@@ -249,14 +257,14 @@ end
 function onActorDeath(director, bnpc_id, position)
     if bnpc_id == BNPC_CHOPPER then
         director:spawn_treasure(94) -- Treasure for this boss
-        director:set_bgm(0) -- Reset music
+        endBattleMusic(director)
         chopper_defeated = true
 
         -- Update shortcut
         director:update_shortcut(SHORTCUT_AFTER_CATTERY)
     elseif bnpc_id == BNPC_CAPTAIN1 then
         director:spawn_treasure(95) -- Treasure for this boss
-        director:set_bgm(0) -- Reset music
+        endBattleMusic(director)
         beginSequence3(director)
 
         -- Update shortcut
@@ -267,7 +275,7 @@ function onActorDeath(director, bnpc_id, position)
         director:spawn_eobj(EOBJ_WAVERIDER_GATE_KEY, { x = position.x, y = position.y, z = position.z })
     elseif bnpc_id == BNPC_CAPTAIN2 then
         director:spawn_treasure(96) -- Treasure for this boss
-        director:set_bgm(0) -- Reset music
+        endBattleMusic(director)
         director:hide_eobj(EOBJ_RAMBADE_DOOR2)
 
         beginSequence5(director)
@@ -276,7 +284,7 @@ function onActorDeath(director, bnpc_id, position)
         director:update_shortcut(SHORTCUT_AFTER_CAPTAIN2)
     elseif bnpc_id == BNPC_DENN then
         director:spawn_treasure(93) -- Treasure for this boss
-        director:set_bgm(0) -- Reset music
+        endBattleMusic(director)
 
         -- Update shortcut
         director:update_shortcut(SHORTCUT_AFTER_DENN)
@@ -359,8 +367,7 @@ function beginSequence2(director)
     director:spawn_bnpc(BNPC_REAVER1)
     director:spawn_bnpc(BNPC_REAVER2)
 
-    -- Set battle music
-    director:set_bgm(37)
+    beginBattleMusic(director)
     director:spawn_boss(BNPC_CAPTAIN1, EOBJ_FIRST_RAMBADE_BOSS_WALL, EOBJ_FIRST_RAMBADE_BOSS_LINE, PLACE_FIRST_RAMBADE)
 end
 
@@ -387,8 +394,7 @@ function beginSequence4(director)
     -- Update shortcut
     director:update_shortcut(SHORTCUT_BEFORE_CAPTAIN2)
 
-    -- Set battle music
-    director:set_bgm(37)
+    beginBattleMusic(director)
     director:spawn_boss(BNPC_CAPTAIN2, EOBJ_SECOND_RAMBADE_BOSS_WALL, EOBJ_SECOND_RAMBADE_BOSS_LINE, PLACE_SECOND_RAMBADE)
 end
 
