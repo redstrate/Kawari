@@ -18,6 +18,10 @@ EOBJ_WAVERIDER_GATE_KEY = 2000255
 EOBJ_KEY_TO_THE_HOLE = 2000256
 EOBJ_NEXT_DOOR2 = 2001539
 EOBJ_RAMBADE_DOOR2 = 2000236
+EOBJ_UNNATURAL_RIPPLES1 = 2000405
+EOBJ_UNNATURAL_RIPPLES2 = 2000406
+EOBJ_UNNATURAL_RIPPLES3 = 2000407
+EOBJ_UNNATURAL_RIPPLES4 = 2000408
 
 EOBJ_CORAL_IDS = {
     EOBJ_BLUE_CORAL_FORMATION,
@@ -188,6 +192,8 @@ function isGimmickFunctional(id)
         return has_captains_quarters_key
     elseif id == EOBJ_WAVERIDER_GATE then
         return has_waverider_gate_key
+    elseif id == EOBJ_UNNATURAL_RIPPLES1 or id == EOBJ_UNNATURAL_RIPPLES2 or id == EOBJ_UNNATURAL_RIPPLES3 or id == EOBJ_UNNATURAL_RIPPLES4 then
+        return false -- Currently not used
     end
 
     return true
