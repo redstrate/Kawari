@@ -906,10 +906,11 @@ pub fn handle_director_messages(
                 return true;
             };
 
-            let gimmick_accessor_type;
+            let (gimmick_accessor_type, gimmick_param1, gimmick_param2);
             {
                 let mut gamedata = gamedata.lock();
-                gimmick_accessor_type = gamedata.lookup_gimmick_accessor(*id).unwrap();
+                (gimmick_accessor_type, gimmick_param1, gimmick_param2) =
+                    gamedata.lookup_gimmick_accessor(*id).unwrap();
             }
 
             match gimmick_accessor_type {
@@ -921,13 +922,51 @@ pub fn handle_director_messages(
                         actor_id: *from_actor_id,
                     });
                 }
-                GimmickAccessorType::DutyExit => {
+                GimmickAccessorType::DutyExit
+                | GimmickAccessorType::DeepDungeonExit
+                | GimmickAccessorType::LeapOfFaithExit => {
                     // 0 means the user hit "Yes" in the prompt
                     if params[0] == 0 {
                         director.tasks.push(LuaDirectorTask::AbandonDuty {
                             actor_id: *from_actor_id,
                         });
                     }
+                    director.tasks.push(LuaDirectorTask::FinishGimmickEvent {
+                        actor_id: *from_actor_id,
+                    });
+                }
+                GimmickAccessorType::GimmickPath => {
+                    let pop_range_id = gimmick_param2;
+                    let path_id = gimmick_param1;
+                    let speed = 150; // TODO: dunno if this is defined somewhere
+
+                    // TODO: Needs an EventAction before this happens I think
+                    if let Some((position, rotation)) =
+                        instance.zone.cached_pop_ranges.get(&pop_range_id)
+                    {
+                        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::WalkInEvent(
+                            WalkInEvent {
+                                path_id,
+                                rotation: *rotation,
+                                speed,
+                                position: *position,
+                                ..Default::default()
+                            },
+                        ));
+                        let mut network = network.lock();
+                        network.send_to_by_actor_id(
+                            *from_actor_id,
+                            FromServer::PacketSegment(ipc, *from_actor_id),
+                            DestinationNetwork::ZoneClients,
+                        );
+                    }
+
+                    director.tasks.push(LuaDirectorTask::FinishGimmickEvent {
+                        actor_id: *from_actor_id,
+                    });
+                }
+                GimmickAccessorType::Talk => {
+                    // This handled by the client, we just need to finish it
                     director.tasks.push(LuaDirectorTask::FinishGimmickEvent {
                         actor_id: *from_actor_id,
                     });

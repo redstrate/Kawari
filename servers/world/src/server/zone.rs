@@ -111,7 +111,7 @@ pub struct Zone {
     bg_path: String,
     cached_housing_plots: Vec<HousingPlot>,
     cached_eobj_base_ids: HashMap<u32, u32>,
-    cached_pop_ranges: HashMap<u32, (Position, f32)>,
+    pub cached_pop_ranges: HashMap<u32, (Position, f32)>,
     pub cached_paths: HashMap<u32, ServerPathInstanceObject>,
 }
 
