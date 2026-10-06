@@ -58,6 +58,7 @@ pub trait EventHandler: std::fmt::Debug + Send + Sync {
         results: &[i32],
         player: &mut LuaPlayer,
     ) {
+        // TODO: Check back later and see if we're OK with this somewhat magical behavior
         player.finish_event();
     }
 
