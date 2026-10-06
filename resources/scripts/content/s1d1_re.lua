@@ -106,13 +106,15 @@ local coral_color
 -- Whether the party has the key to The Hole
 local has_hole
 -- Whether the party has the key to Captain's Quarters
-local has_captains_quarters
+local has_captains_quarters_key
 -- Whether the party has the key to Waverider Gate
-local has_waverider_gate
+local has_waverider_gate_key
 -- Whether the Chopper boss was defeated
 local chopper_defeated
 -- Whether the final boss cutscene played
 local seen_final_cutscene
+-- Whether Chopper was spawned
+local chopper_spawned
 
 function onSetup(director)
     coral_color = math.random(0, 2)
@@ -145,9 +147,13 @@ function onGimmickAccessor(director, actor_id, id, params)
         return
     elseif id == EOBJ_INCONSPICUOUS_SWITCH then
         if not chopper_defeated then
-            -- Set battle music
-            director:set_bgm(37)
-            director:spawn_boss(BNPC_CHOPPER, EOBJ_CATTERY_BOSS_WALL, EOBJ_CATTERY_BOSS_LINE, PLACE_CATTERY)
+            if not chopper_spawned then
+                chopper_spawned = true
+
+                -- Set battle music
+                director:set_bgm(37)
+                director:spawn_boss(BNPC_CHOPPER, EOBJ_CATTERY_BOSS_WALL, EOBJ_CATTERY_BOSS_LINE, PLACE_CATTERY)
+            end
         else
             director:event_action(EVENT_ACTION_INTERACT, actor_id, id)
             return
@@ -156,24 +162,35 @@ function onGimmickAccessor(director, actor_id, id, params)
         director:event_action(EVENT_ACTION_INTERACT, actor_id, id)
         return
     elseif id == EOBJ_THE_HOLE_DOOR then
-        if has_hole_key then
-            -- TODO: what happens if they don't have access to The Hole?
-            director:event_action(EVENT_ACTION_INTERACT, actor_id, id)
-            return
-        end
+        director:event_action(EVENT_ACTION_INTERACT, actor_id, id)
+        return
     elseif id == EOBJ_CAPTAINS_QUARTERS_DOOR then
-        if has_captains_quarters then
-            director:event_action(EVENT_ACTION_INTERACT, actor_id, id)
-            return
-        end
+        director:event_action(EVENT_ACTION_INTERACT, actor_id, id)
+        return
     elseif id == EOBJ_WAVERIDER_GATE then
-        if has_waverider_gate then
-            director:event_action(EVENT_ACTION_INTERACT, actor_id, id)
-            return
-        end
+        director:event_action(EVENT_ACTION_INTERACT, actor_id, id)
+        return
     end
 
     director:finish_gimmick(actor_id)
+end
+
+function isGimmickFunctional(id)
+    if id == EOBJ_INCONSPICUOUS_SWITCH then
+        if not chopper_defeated and chopper_spawned then
+            return false -- Switch is non-functional if you attempt to use it while Chopper is still alive
+        else
+            return true
+        end
+    elseif id == EOBJ_THE_HOLE_DOOR then
+        return has_hole_key
+    elseif id == EOBJ_CAPTAINS_QUARTERS_DOOR then
+        return has_captains_quarters_key
+    elseif id == EOBJ_WAVERIDER_GATE then
+        return has_waverider_gate_key
+    end
+
+    return true
 end
 
 function onGimmickRect(director, target)
@@ -203,13 +220,13 @@ function onEventActionCast(director, actor_id, target)
 
         director:hide_eobj(target)
     elseif target == EOBJ_WAVERIDER_GATE_KEY then
-        has_waverider_gate = true
+        has_waverider_gate_key = true
 
         director:hide_eobj(target)
 
         beginSequence4(director)
     elseif target == EOBJ_CAPTAINS_QUARTERS_KEY then
-        has_captains_quarters = true
+        has_captains_quarters_key = true
 
         director:hide_eobj(target)
     elseif target == EOBJ_CAPTAINS_QUARTERS_DOOR then
@@ -281,8 +298,6 @@ end
 
 function beginSequence0(director)
     setSequence(director, SEQ0)
-
-    director:hide_eobj(EOBJ_SHORTCUT)
 
     hideBloodyMemos(director)
     director:hide_eobj(EOBJ_INCONSPICUOUS_SWITCH)

@@ -1885,10 +1885,14 @@ impl GameData {
     }
 
     /// Returns information about a GimmickAccessor.
-    pub fn lookup_gimmick_accessor(&mut self, id: u32) -> Option<(GimmickAccessorType, u32, u32)> {
+    pub fn lookup_gimmick_accessor(
+        &mut self,
+        id: u32,
+    ) -> Option<(GimmickAccessorType, u32, u32, u32)> {
         let row = self.gimmick_accessor_sheet.row(id)?;
         Some((
             GimmickAccessorType::from_repr(row.Param0)?, // TODO: Rename to Type upstream
+            row.Param1,                                  // TODO: Rename to Param0
             row.Param2,                                  // TODO: Rename to Param1
             row.Type,                                    // TODO: Rename to Param2
         ))

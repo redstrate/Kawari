@@ -502,6 +502,24 @@ impl DirectorData {
             tracing::warn!("Syntax error during onVariantVote: {err:?}");
         }
     }
+
+    pub fn is_gimmick_functional(&self, id: u32) -> bool {
+        let run_script = || {
+            self.lua.0.scope(|_| {
+                let func: Function = self.lua.0.globals().get("isGimmickFunctional")?;
+
+                func.call::<bool>(id)
+            })
+        };
+        match run_script() {
+            Ok(value) => value,
+            Err(err) => {
+                tracing::warn!("Syntax error during isGimmickFunctional: {err:?}");
+
+                true
+            }
+        }
+    }
 }
 
 /// Perform any queued director tasks
@@ -906,11 +924,15 @@ pub fn handle_director_messages(
                 return true;
             };
 
-            let (gimmick_accessor_type, gimmick_param1, gimmick_param2);
+            let (gimmick_accessor_type, gimmick_param0, gimmick_param1, gimmick_param2);
             {
                 let mut gamedata = gamedata.lock();
-                (gimmick_accessor_type, gimmick_param1, gimmick_param2) =
-                    gamedata.lookup_gimmick_accessor(*id).unwrap();
+                (
+                    gimmick_accessor_type,
+                    gimmick_param0,
+                    gimmick_param1,
+                    gimmick_param2,
+                ) = gamedata.lookup_gimmick_accessor(*id).unwrap();
             }
 
             match gimmick_accessor_type {
@@ -970,6 +992,37 @@ pub fn handle_director_messages(
                     director.tasks.push(LuaDirectorTask::FinishGimmickEvent {
                         actor_id: *from_actor_id,
                     });
+                }
+                GimmickAccessorType::FalliblePrompt => {
+                    // 0 means the user hit "Yes" in the prompt
+                    if params[0] == 0 {
+                        if director.is_gimmick_functional(base_id) {
+                            director.gimmick_accessor(*from_actor_id, base_id, params);
+                            return true;
+                        } else {
+                            director.tasks.push(LuaDirectorTask::LogMessage {
+                                id: gimmick_param1,
+                                params: Vec::default(),
+                            });
+                        }
+                    }
+
+                    director.tasks.push(LuaDirectorTask::FinishGimmickEvent {
+                        actor_id: *from_actor_id,
+                    });
+                }
+                GimmickAccessorType::Message => {
+                    if director.is_gimmick_functional(base_id) {
+                        director.gimmick_accessor(*from_actor_id, base_id, params);
+                    } else {
+                        director.tasks.push(LuaDirectorTask::LogMessage {
+                            id: gimmick_param0,
+                            params: Vec::default(),
+                        });
+                        director.tasks.push(LuaDirectorTask::FinishGimmickEvent {
+                            actor_id: *from_actor_id,
+                        });
+                    }
                 }
                 _ => {
                     director.gimmick_accessor(*from_actor_id, base_id, params);
