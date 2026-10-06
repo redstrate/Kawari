@@ -526,7 +526,7 @@ impl FilesystemConfig {
 /// Configuration for various tweaks.
 #[derive(Serialize, Deserialize)]
 pub struct TweaksConfig {
-    /// If true, always the player to skip cutscenes marked as unskippable.
+    /// If true, allows the player to skip some cutscenes that are normally unskippable.
     #[serde(default)]
     pub always_allow_skipping: bool,
 
