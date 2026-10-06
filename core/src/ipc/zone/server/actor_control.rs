@@ -695,8 +695,10 @@ pub enum ActorControlCategory {
 
     #[brw(magic = 517u32)]
     LogMessage {
-        log_message: u32, // Index to LogMessage sheet
-        id: u32,          // Index to variable sheet, depending on LogMessage
+        /// Index into the LogMessage Excel sheet.
+        log_message: u32,
+        /// Index to the variable sheet, depending on LogMessage.
+        id: u32,
     },
 
     #[brw(magic = 519u32)]
