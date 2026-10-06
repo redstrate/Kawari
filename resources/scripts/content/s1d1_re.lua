@@ -95,6 +95,7 @@ SHORTCUT_AFTER_DENN = 7372594
 EVENT_ACTION_INTERACT = 24
 
 LOG_MESSAGE_SEQ0 = 2034 -- You hear something move in the distance
+LOG_MESSAGE_POSION = 2035 -- You are doused with poison!
 
 EFFECT_POSION = 18
 
@@ -289,7 +290,7 @@ end
 
 -- Spawns an enemy for getting the coral selection wrong, and douse the player in posion.
 function spawnCoralEnemy(director, actor_id, target)
-    -- TODO: Show message "you were doused with posion"
+    director:log_message(LOG_MESSAGE_POSION, {})
 
     director:gain_effect(actor_id, EFFECT_POSION, 0, 120.0)
 
