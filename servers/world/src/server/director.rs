@@ -306,6 +306,10 @@ impl DirectorData {
         };
         if let Err(err) = run_script() {
             tracing::warn!("Syntax error during onGimmickAccessor: {err:?}");
+
+            // Finish the gimmick event so the client at least gets unstuck
+            self.tasks
+                .push(LuaDirectorTask::FinishGimmickEvent { actor_id });
         }
     }
 
