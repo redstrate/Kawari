@@ -9,7 +9,6 @@ use kawari::{
         FestivalId, HandlerId, HouseId, HouseUnit, HousingFlag, LandData, Position, WarpType,
         timestamp_secs,
     },
-    config::get_config,
     constants::OBFUSCATION_ENABLED_MODE,
     ipc::zone::{
         ActorControlCategory, Condition, DutyFinderSetting, FurnitureList, House, HouseExterior,
@@ -111,10 +110,8 @@ impl ZoneConnection {
         // Clear the server's copy of the buyback list.
         self.player_data.buyback_list = BuyBackList::default();
 
-        let config = get_config();
-
         // Send obsfucation init
-        if config.world.enable_packet_obsfucation {
+        if self.config.enable_packet_obsfucation {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InitializeObfuscation {
                 unk_before: [0; 6],
                 obsfucation_mode: OBFUSCATION_ENABLED_MODE,
@@ -157,7 +154,7 @@ impl ZoneConnection {
                         ward_index: 0,
                         room_number: 1,
                         territory_type_id: 340,
-                        world_id: config.world.world_id,
+                        world_id: self.config.world_id,
                     },
                     flags: 19,
                     unk1: 0,
@@ -179,7 +176,7 @@ impl ZoneConnection {
             self.send_ipc_self(ipc).await;
         }
 
-        let mut game_festival_ids = config.world.active_festivals.map(FestivalId);
+        let mut game_festival_ids = self.config.active_festivals.map(FestivalId);
         let mut game_festival_phases = [0; 8];
 
         // Set up ocean fishing
@@ -241,7 +238,7 @@ impl ZoneConnection {
                 content_finder_condition_id,
                 game_festival_ids,
                 game_festival_phases,
-                ui_festival_ids: config.world.active_festivals.map(FestivalId),
+                ui_festival_ids: self.config.active_festivals.map(FestivalId),
                 unk1: 8.59375,
                 ..Default::default()
             }));
@@ -336,13 +333,12 @@ impl ZoneConnection {
                 ..Default::default()
             };
 
-            let config = get_config();
             self.send_ipc_self(ServerZoneIpcSegment::new(ServerZoneIpcData::HouseList(
                 HouseList {
                     land_id: 0,
                     ward: 0,
                     territory_type_id: lua_zone.zone_id,
-                    world_id: config.world.world_id,
+                    world_id: self.config.world_id,
                     subdivision: 257, // TODO: Figure out more about subdivisions
                     houses,
                 },
@@ -364,7 +360,6 @@ impl ZoneConnection {
         }
 
         if lua_zone.intended_use == TerritoryIntendedUse::HousingIndoor as u8 {
-            let config = get_config();
             // Bare minimum stuff to make housing interiors load
             self.send_ipc_self(ServerZoneIpcSegment::new(
                 ServerZoneIpcData::HousingInteriorDetails(HousingInteriorDetails::default()),
@@ -385,7 +380,7 @@ impl ZoneConnection {
                             room_number: 1,
                             ward_index: 0,
                             territory_type_id: 340,
-                            world_id: config.world.world_id,
+                            world_id: self.config.world_id,
                         },
                         count: 6,
                         index,

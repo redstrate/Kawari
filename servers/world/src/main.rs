@@ -665,7 +665,6 @@ async fn process_packet(
                                     quest_special_flags.insert(QuestSpecialFlags::LEGACY);
                                 }
 
-                                let config = get_config();
                                 let ipc = ServerZoneIpcSegment::new(
                                     ServerZoneIpcData::PlayerSetup(PlayerSetup {
                                         content_id: connection.player_data.character.content_id
@@ -897,8 +896,8 @@ async fn process_packet(
                                             .cleared_misc_content
                                             .data_truncated(),
                                         can_do_triple_triad_matches: true,
-                                        ui_festival_ids: config
-                                            .world
+                                        ui_festival_ids: connection
+                                            .config
                                             .active_festivals
                                             .map(FestivalId),
                                         quest_special_flags,
@@ -2005,7 +2004,6 @@ async fn process_packet(
                             }
 
                             // Send the message to the global server to be processed further
-                            let config = get_config();
                             let info = MessageInfo {
                                 sender_actor_id: connection.player_data.character.actor_id,
                                 sender_account_id: connection
@@ -2013,7 +2011,7 @@ async fn process_packet(
                                     .character
                                     .service_account_id
                                     as u64,
-                                sender_world_id: config.world.world_id,
+                                sender_world_id: connection.config.world_id,
                                 sender_position: connection.player_data.volatile.position,
                                 sender_name: connection.player_data.character.name.clone(),
                                 channel: chat_message.channel,
