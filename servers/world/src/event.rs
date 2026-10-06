@@ -162,7 +162,6 @@ pub fn dispatch_event(
             Some(Box::new(GatheringEventHandler::new(count)))
         }
         HandlerType::Aetheryte => {
-            // The Aetheryte sheet actually begins at 0, not 327680
             let aetheryte_id = handler_id.event_id();
 
             // Aetherytes and Aethernet shards are handled by different event scripts
