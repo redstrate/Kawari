@@ -1024,6 +1024,16 @@ pub fn handle_director_messages(
                         });
                     }
                 }
+                GimmickAccessorType::InfalliblePrompt => {
+                    // 0 means the user hit "Yes" in the prompt
+                    if params[0] == 0 {
+                        director.gimmick_accessor(*from_actor_id, base_id, params);
+                    } else {
+                        director.tasks.push(LuaDirectorTask::FinishGimmickEvent {
+                            actor_id: *from_actor_id,
+                        });
+                    }
+                }
                 _ => {
                     director.gimmick_accessor(*from_actor_id, base_id, params);
                 }

@@ -142,7 +142,7 @@ end
 function onGimmickAccessor(director, actor_id, id, params)
     -- -1 = will not touch the coral
     -- 0 = will touch the coral
-    if has_value(EOBJ_CORAL_IDS, id) and params[1] == 0 then
+    if has_value(EOBJ_CORAL_IDS, id) then
         director:event_action(EVENT_ACTION_INTERACT, actor_id, id)
         return
     elseif id == EOBJ_INCONSPICUOUS_SWITCH then
