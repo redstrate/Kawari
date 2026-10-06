@@ -17,6 +17,7 @@ use kawari::{
 };
 use mlua::{Function, LuaSerdeExt, UserData, UserDataMethods, Value};
 use parking_lot::Mutex;
+use physis::TerritoryIntendedUse;
 
 use crate::{
     ClientId, FromServer, GameData, ToServer,
@@ -1273,24 +1274,26 @@ pub fn send_director_vars(
             );
         }
 
-        // TODO: temporary, don't send in all instances
-        let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SpectatorList {
-            object_ids: [
+        if instance.zone.intended_use == TerritoryIntendedUse::CrystallineConflictCustomMatch as u8
+        {
+            let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SpectatorList {
+                object_ids: [
+                    from_actor_id,
+                    ObjectId::default(),
+                    ObjectId::default(),
+                    ObjectId::default(),
+                    ObjectId::default(),
+                    ObjectId::default(),
+                    ObjectId::default(),
+                    ObjectId::default(),
+                ],
+                unk1: 1,
+            });
+            network.send_to_by_actor_id(
                 from_actor_id,
-                ObjectId::default(),
-                ObjectId::default(),
-                ObjectId::default(),
-                ObjectId::default(),
-                ObjectId::default(),
-                ObjectId::default(),
-                ObjectId::default(),
-            ],
-            unk1: 1,
-        });
-        network.send_to_by_actor_id(
-            from_actor_id,
-            FromServer::PacketSegment(ipc, from_actor_id),
-            DestinationNetwork::ZoneClients,
-        );
+                FromServer::PacketSegment(ipc, from_actor_id),
+                DestinationNetwork::ZoneClients,
+            );
+        }
     }
 }
