@@ -6,6 +6,8 @@ use std::{
 use physis::Language;
 use serde::{Deserialize, Serialize};
 
+use crate::packet::CompressionType;
+
 fn default_listen_address() -> String {
     "0.0.0.0".to_string()
 }
@@ -429,6 +431,14 @@ impl WorldConfig {
 
     pub fn language(&self) -> Language {
         Language::from_shortname(self.language.as_str())
+    }
+
+    pub fn compression(&self) -> CompressionType {
+        if self.enable_packet_compression {
+            CompressionType::Oodle
+        } else {
+            CompressionType::Uncompressed
+        }
     }
 }
 

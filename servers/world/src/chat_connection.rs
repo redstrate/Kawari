@@ -19,9 +19,8 @@ use kawari::{
     },
     opcodes::ServerChatIpcType,
     packet::{
-        CompressionType, ConnectionState, ConnectionType, IpcSegmentHeader, PacketSegment,
-        SegmentData, SegmentType, ServerIpcSegmentHeader, parse_packet, send_keep_alive,
-        send_packet,
+        ConnectionState, ConnectionType, IpcSegmentHeader, PacketSegment, SegmentData, SegmentType,
+        ServerIpcSegmentHeader, parse_packet, send_keep_alive, send_packet,
     },
 };
 
@@ -88,11 +87,7 @@ impl ChatConnection {
             &mut self.socket,
             &mut self.state,
             ConnectionType::Chat,
-            if self.config.enable_packet_compression {
-                CompressionType::Oodle
-            } else {
-                CompressionType::Uncompressed
-            },
+            self.config.compression(),
             &[segment],
         ))
         .await;
@@ -113,7 +108,7 @@ impl ChatConnection {
                 &mut self.socket,
                 &mut self.state,
                 ConnectionType::Chat,
-                CompressionType::Oodle,
+                self.config.compression(),
                 &[response],
             )
             .await;
@@ -133,7 +128,7 @@ impl ChatConnection {
                 &mut self.socket,
                 &mut self.state,
                 ConnectionType::Chat,
-                CompressionType::Oodle,
+                self.config.compression(),
                 &[response],
             )
             .await;
@@ -155,7 +150,7 @@ impl ChatConnection {
                 &mut self.socket,
                 &mut self.state,
                 ConnectionType::Chat,
-                CompressionType::Oodle,
+                self.config.compression(),
                 &[response],
             )
             .await;
