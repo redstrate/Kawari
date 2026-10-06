@@ -404,7 +404,7 @@ pub enum HandlerType {
     DpsChallenge = 0x800D,
     /// Used for content like Cosmisc Exploration.
     MassivePcContent = 0x800E,
-    /// Used in open world zones that have FATEs.
+    /// Used in zones that have FATEs.
     Fate = 0x801A,
 }
 
@@ -809,7 +809,6 @@ pub enum InstanceContentType {
     KeyboundBrawler = 23,
 }
 
-// TODO: see if this can be extrapolated from game data
 const AETHER_CURRENT_COMP_FLG_SET_TO_SCREENIMAGE: [(u32, u32); 31] = [
     // Heavensward
     (1, 328), // Coerthas Western Highlands
