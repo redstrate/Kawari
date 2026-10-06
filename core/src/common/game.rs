@@ -428,7 +428,7 @@ impl HandlerType {
             TerritoryIntendedUse::RivalWings => Some(Self::InstanceContent),
             TerritoryIntendedUse::TreasureMapInstance => Some(Self::InstanceContent),
             TerritoryIntendedUse::CosmicExploration => Some(Self::MassivePcContent),
-            TerritoryIntendedUse::PreEwOverworldQuestBattle => Some(Self::QuestBattle),
+            TerritoryIntendedUse::PreEwOverworldQuestBattle => None,
             TerritoryIntendedUse::LeapOfFaith => Some(Self::PublicContent),
             TerritoryIntendedUse::GoldSaucer => Some(Self::GoldSaucer),
             TerritoryIntendedUse::OceanFishing => Some(Self::InstanceContent),
@@ -437,7 +437,48 @@ impl HandlerType {
             TerritoryIntendedUse::TripleTriadBattleHall => Some(Self::PublicContent),
             TerritoryIntendedUse::LordOfVerminion => Some(Self::GoldSaucer),
             TerritoryIntendedUse::SeasonalInstancedArea => Some(Self::InstanceContent),
-            _ => None,
+            TerritoryIntendedUse::Town => None,
+            TerritoryIntendedUse::Overworld => None,
+            TerritoryIntendedUse::Inn => None,
+            TerritoryIntendedUse::MordionGaol => None,
+            TerritoryIntendedUse::OpeningArea => None,
+            TerritoryIntendedUse::BeforeTrialDung => None,
+            TerritoryIntendedUse::Unknown11 => None,
+            TerritoryIntendedUse::WaitingRoom => None,
+            TerritoryIntendedUse::HousingOutdoor => None,
+            TerritoryIntendedUse::HousingIndoor => None,
+            TerritoryIntendedUse::SoloOverworldInstances => None,
+            TerritoryIntendedUse::Raid1 => Some(Self::InstanceContent),
+            TerritoryIntendedUse::ChocoboSquareOld => None,
+            TerritoryIntendedUse::ChocoboRacing => Some(Self::InstanceContent),
+            TerritoryIntendedUse::Firmament => None,
+            TerritoryIntendedUse::SanctumOfTheTwelve => Some(Self::PublicContent),
+            TerritoryIntendedUse::OriginalStepsOfFaith => None,
+            TerritoryIntendedUse::ExploratoryMissions => Some(Self::PublicContent),
+            TerritoryIntendedUse::HallOfTheNovice => Some(Self::InstanceContent),
+            TerritoryIntendedUse::SoloDuty => None,
+            TerritoryIntendedUse::GrandCompanyBarracks => None,
+            TerritoryIntendedUse::Seasonal => None,
+            TerritoryIntendedUse::HuntingGrounds => Some(Self::PublicContent),
+            TerritoryIntendedUse::Seasonal2 => None,
+            TerritoryIntendedUse::Eureka => Some(Self::PublicContent),
+            TerritoryIntendedUse::Unknown42 => None,
+            TerritoryIntendedUse::TheCalamityRetold => Some(Self::PublicContent),
+            TerritoryIntendedUse::MaskedCarnival => Some(Self::InstanceContent),
+            TerritoryIntendedUse::Diadem => Some(Self::PublicContent),
+            TerritoryIntendedUse::Bozja => Some(Self::PublicContent),
+            TerritoryIntendedUse::IslandSanctuary => Some(Self::PublicContent),
+            TerritoryIntendedUse::TripleTriadOpenTournament => Some(Self::InstanceContent),
+            TerritoryIntendedUse::DelubrumReginae => Some(Self::InstanceContent),
+            TerritoryIntendedUse::DelubrumReginaeSavage => Some(Self::InstanceContent),
+            TerritoryIntendedUse::EndwalkerMsqSoloOverworld => None,
+            TerritoryIntendedUse::Unknown55 => None,
+            TerritoryIntendedUse::Elysion => None,
+            TerritoryIntendedUse::CrucibleOfTheUnbroken => Some(Self::InstanceContent),
+            TerritoryIntendedUse::Seasonal3 => Some(Self::InstanceContent),
+            TerritoryIntendedUse::AirForceOne => Some(Self::InstanceContent), // This plays completely client-side, we don't actually do anything here
+            TerritoryIntendedUse::KeyboundBrawler => Some(Self::InstanceContent),
+            TerritoryIntendedUse::Unknown66 => None,
         }
     }
 
@@ -1235,6 +1276,7 @@ pub fn is_private_area(intended_use: TerritoryIntendedUse) -> bool {
     // TODO: Maybe this exists on the Excel sheet?
     intended_use == TerritoryIntendedUse::Inn
         || intended_use == TerritoryIntendedUse::GrandCompanyBarracks
+        || intended_use == TerritoryIntendedUse::SoloOverworldInstances
 }
 
 /// Returns the internal housing row used for certain sheets.
