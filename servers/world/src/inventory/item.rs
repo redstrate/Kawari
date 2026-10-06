@@ -46,18 +46,18 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn new(item_info: &ItemRow, quantity: i32) -> Self {
+    pub fn new(row: &ItemRow, quantity: i32) -> Self {
         Self {
             quantity,
-            item_id: item_info.id,
+            item_id: row.id,
             condition: ITEM_CONDITION_MAX,
-            item_level: item_info.item_level,
-            stack_size: item_info.stack_size,
-            price_low: item_info.price_low,
-            base_param_ids: item_info.base_param_ids,
-            base_param_values: item_info.base_param_values,
-            defense: item_info.defense,
-            magic_defense: item_info.magic_defense,
+            item_level: row.item_level,
+            stack_size: row.stack_size,
+            price_low: row.price_low,
+            base_param_ids: row.base_param_ids,
+            base_param_values: row.base_param_values,
+            defense: row.defense,
+            magic_defense: row.magic_defense,
             ..Default::default()
         }
     }
