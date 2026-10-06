@@ -380,20 +380,23 @@ pub enum HandlerType {
     /// See EventMountGimmickPathMove Excel sheet.
     EventMountGimmickPathMove = 65,
 
-    /// Used for battle Levequests.
+    /// Used for battle Leves.
     BattleLeve = 0x8001,
-    /// Used for gathering Levequests.
+    /// Used for gathering Leves.
     GatheringLeve = 0x8002,
     /// Used for dungeons, including Deep Dungeons.
     InstanceContent = 0x8003,
     /// Used for misc. large-scale content like Occult Crescent or Blunderville.
     PublicContent = 0x8004,
+    /// Used for solo battles in quests.
     QuestBattle = 0x8006,
+    /// Used for Grand Company Leves.
     CompanyLeve = 0x8007,
     /// Used for treasure hunts.
     TreasureHunt = 0x8009,
     /// Used for the explorable Gold Saucer zones.
     GoldSaucer = 0x800A,
+    /// Used for Subaquatic Voyages.
     CompanyCraft = 0x800B,
     /// Supposedly used in the early phases of the Diadem.
     SkyIsland = 0x800C,
