@@ -27,7 +27,7 @@ pub struct MapMarkers {
     handler_ids: Vec<HandlerId>,
 
     /// Unknown (elevation?)
-    #[brw(pad_after = 4)] // empty
+    #[brw(pad_after = if max_params > 4 { 4 } else { 0 })] // empty
     #[br(count = max_params)]
     #[bw(pad_size_to = max_params)]
     unk: Vec<u8>,

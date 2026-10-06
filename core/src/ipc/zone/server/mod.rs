@@ -617,6 +617,7 @@ pub enum ServerZoneIpcData {
         #[brw(pad_after = 4)]
         flag2: u8,
     },
+    UpdateMapMarkers4(#[brw(args { max_params: 4 } )] MapMarkers),
     UpdateMapMarkers8(#[brw(args { max_params: 8 } )] MapMarkers),
     UpdateMapMarkers16(#[brw(args { max_params: 16 } )] MapMarkers),
     UpdateMapMarkers32(#[brw(args { max_params: 32 } )] MapMarkers),

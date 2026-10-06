@@ -359,6 +359,10 @@ ServerZoneIpcType:
   comment: Sent by the server when finshing a quest.
   opcode: 975
   size: 8
+- name: UpdateMapMarkers4
+  comment: Unknown purpose.
+  opcode: 680
+  size: 56
 - name: UpdateMapMarkers8
   comment: Unknown purpose.
   opcode: 357
