@@ -18,7 +18,7 @@ pub struct SearchInfo {
     #[bw(map = write_string)]
     pub comment: String,
     #[br(count = 138)]
-    #[bw(pad_size_to = 138)]
+    #[brw(pad_size_to = 138)]
     pub unk: Vec<u8>,
 }
 

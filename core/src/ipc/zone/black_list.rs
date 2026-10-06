@@ -25,7 +25,7 @@ pub struct Blacklist {
     /// The actual blocked chara/account data.
     #[brw(pad_after = 1)]
     #[br(count = Blacklist::NUM_ENTRIES)]
-    #[bw(pad_size_to = Blacklist::NUM_ENTRIES * BlacklistedCharacter::SIZE)]
+    #[brw(pad_size_to = Blacklist::NUM_ENTRIES * BlacklistedCharacter::SIZE)]
     pub data: Vec<BlacklistedCharacter>, // TODO: How many actually fit in here? This matches the packet size, but it's unclear if it sends fewer
     /// A sequence value used for bookkeeping/synchronization. It matches the one sent by the client.
     #[brw(pad_after = 5)]

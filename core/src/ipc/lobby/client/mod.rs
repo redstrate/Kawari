@@ -44,13 +44,13 @@ pub enum ClientLobbyIpcData {
         #[brw(pad_after = 2)]
         unk1: u32,
         #[br(count = 64)]
-        #[bw(pad_size_to = 64)]
+        #[brw(pad_size_to = 64)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         session_id: String,
 
         #[br(count = 144)]
-        #[bw(pad_size_to = 144)]
+        #[brw(pad_size_to = 144)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         version_info: String,
@@ -64,23 +64,23 @@ pub enum ClientLobbyIpcData {
         unk2: u32,
 
         #[br(count = 64)]
-        #[bw(pad_size_to = 64)]
+        #[brw(pad_size_to = 64)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         session_id: String,
 
         #[br(count = 320)]
-        #[bw(pad_size_to = 320)]
+        #[brw(pad_size_to = 320)]
         padding: Vec<u8>, // all empty
 
         #[br(count = 144)]
-        #[bw(pad_size_to = 144)]
+        #[brw(pad_size_to = 144)]
         #[br(map = read_string)]
         #[bw(map = write_string)]
         version_info: String,
 
         #[br(count = 912)]
-        #[bw(pad_size_to = 912)]
+        #[brw(pad_size_to = 912)]
         padding2: Vec<u8>, // all empty
     },
     CharaMake(CharaMake),

@@ -19,7 +19,7 @@ pub struct NackReply {
     pub message_size: u16,
     /// Seems to be unused
     #[brw(pad_after = 4)] // garbage
-    #[bw(pad_size_to = 512)]
+    #[brw(pad_size_to = 512)]
     #[br(count = 512)]
     #[br(map = read_string)]
     #[bw(map = write_string)]

@@ -85,7 +85,7 @@ pub struct EventScene {
     // Extra padding seems needed after or the client will seemingly softlock even with 2 params, possibly used for alignment?
     #[brw(pad_after = 4)]
     #[br(count = params_count)]
-    #[bw(pad_size_to = 4 * max_params)]
+    #[brw(pad_size_to = 4 * max_params)]
     pub params: Vec<u32>,
 }
 

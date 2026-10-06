@@ -5,7 +5,7 @@ use binrw::binrw;
 pub struct DutySupportInformation {
     /// List of indices into the DawnContent Excel sheet.
     #[br(count = Self::INDICE_COUNT)]
-    #[bw(pad_size_to = Self::INDICE_COUNT)]
+    #[brw(pad_size_to = Self::INDICE_COUNT)]
     pub available_content: Vec<u8>,
 }
 

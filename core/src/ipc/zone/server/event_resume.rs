@@ -20,7 +20,7 @@ pub struct EventResume {
     #[bw(calc = params.len() as u8)]
     params_count: u8,
     #[br(count = params_count)]
-    #[bw(pad_size_to = 4 * max_params)]
+    #[brw(pad_size_to = 4 * max_params)]
     pub params: Vec<u32>,
 }
 

@@ -55,7 +55,7 @@ pub enum ServerLobbyIpcData {
         #[brw(pad_before = 4)]
         content_id: u64,
         #[brw(pad_before = 4)]
-        #[bw(pad_size_to = 66)]
+        #[brw(pad_size_to = 66)]
         #[br(count = 66)]
         #[br(map = read_string)]
         #[bw(map = write_string)]

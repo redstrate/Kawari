@@ -303,7 +303,7 @@ pub struct CommonSpawn {
     pub glasses_ids: [u16; 2],
     /// Their name, for non-player characters this is the usually the original Japanese name.
     #[br(count = CHAR_NAME_MAX_LENGTH)]
-    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
@@ -311,7 +311,7 @@ pub struct CommonSpawn {
     pub look: CustomizeData,
     /// Their short Free Company tag.
     #[br(count = 6)]
-    #[bw(pad_size_to = 6)]
+    #[brw(pad_size_to = 6)]
     #[brw(pad_after = 6)] // i think is empty?
     #[br(map = read_string)]
     #[bw(map = write_string)]

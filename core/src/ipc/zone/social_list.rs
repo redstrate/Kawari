@@ -199,14 +199,14 @@ pub struct PlayerEntry {
     pub home_world_id: u16,
     /// Their name.
     #[br(count = CHAR_NAME_MAX_LENGTH)]
-    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
     /// Their free company tag, if any. The client will automatically display Voyager/Wanderer/Traveller in its place if they're from another world or datacenter.
     #[brw(pad_after = 6)]
     #[br(count = 6)]
-    #[bw(pad_size_to = 6)]
+    #[brw(pad_size_to = 6)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub fc_tag: String,
@@ -227,7 +227,7 @@ pub struct SocialList {
     pub sequence: u8,
     #[brw(pad_before = 2)] // Empty? Still possible it might have data in other SocialList types
     #[br(count = PlayerEntry::COUNT)]
-    #[bw(pad_size_to = PlayerEntry::COUNT * PlayerEntry::SIZE)]
+    #[brw(pad_size_to = PlayerEntry::COUNT * PlayerEntry::SIZE)]
     pub entries: Vec<PlayerEntry>,
 }
 

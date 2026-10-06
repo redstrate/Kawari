@@ -11,7 +11,7 @@ pub struct HousingWardInfo {
     pub id: HouseId,
 
     #[br(count = 60)]
-    #[bw(pad_size_to = 60 * HousingWardSummaryItem::SIZE)]
+    #[brw(pad_size_to = 60 * HousingWardSummaryItem::SIZE)]
     pub house_summaries: Vec<HousingWardSummaryItem>,
 
     pub purchase_type: PurchaseType,

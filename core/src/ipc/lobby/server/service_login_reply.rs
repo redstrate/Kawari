@@ -43,22 +43,22 @@ pub struct CharacterDetails {
     pub origin_server_id: u16,
     pub current_server_id: u16,
     pub unk2: [u8; 16],
-    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub character_name: String,
-    #[bw(pad_size_to = 32)]
+    #[brw(pad_size_to = 32)]
     #[br(count = 32)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub origin_server_name: String,
-    #[bw(pad_size_to = 32)]
+    #[brw(pad_size_to = 32)]
     #[br(count = 32)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub current_server_name: String,
-    #[bw(pad_size_to = 1024)]
+    #[brw(pad_size_to = 1024)]
     #[br(count = 1024)]
     #[br(map = read_string)]
     #[bw(map = write_string)]

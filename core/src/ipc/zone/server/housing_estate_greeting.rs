@@ -8,7 +8,7 @@ use crate::common::{HouseId, read_string, write_string};
 pub struct HousingEstateGreeting {
     pub id: HouseId,
 
-    #[bw(pad_size_to = 193)]
+    #[brw(pad_size_to = 193)]
     #[br(count = 193)]
     #[br(map = read_string)]
     #[bw(map = write_string)]

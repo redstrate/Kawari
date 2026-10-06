@@ -18,7 +18,7 @@ impl TrustContent {
 #[derive(Debug, Clone)]
 pub struct TrustInformation {
     #[br(count = Self::NUM_INDICES)]
-    #[bw(pad_size_to = TrustContent::SIZE * Self::NUM_INDICES)]
+    #[brw(pad_size_to = TrustContent::SIZE * Self::NUM_INDICES)]
     /// Which Trust content that you have available.
     /// There must be at least one valid TrustContent, otherwise the window will never show.
     pub available_content: Vec<TrustContent>,

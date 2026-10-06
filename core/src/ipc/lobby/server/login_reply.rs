@@ -11,7 +11,7 @@ pub struct ServiceAccount {
     /// Index into the service account list.
     pub index: u32,
     /// Name of the service account, usually "FINAL FANTASY XIV X" where X is the index + 1. The number is not included if you only have one service account.
-    #[bw(pad_size_to = 0x44)]
+    #[brw(pad_size_to = 0x44)]
     #[br(count = 0x44)]
     #[br(map = read_string)]
     #[bw(map = write_string)]

@@ -11,7 +11,7 @@ pub struct RetainerInfo {
     param1: u8,
     status: u16,
     param2: u32,
-    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]

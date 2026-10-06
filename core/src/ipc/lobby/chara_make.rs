@@ -49,12 +49,12 @@ pub struct CharaMake {
     pub character_index: u8,
     pub action: LobbyCharacterActionKind,
     pub world_id: u16,
-    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(count = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
-    #[bw(pad_size_to = 436)]
+    #[brw(pad_size_to = 436)]
     #[br(count = 436)]
     #[br(map = read_string)]
     #[bw(map = write_string)]

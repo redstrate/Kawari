@@ -192,7 +192,7 @@ pub enum ClientZoneIpcData {
         #[brw(pad_after = 2)]
         unk2: u16,
         #[br(count = 56)]
-        #[bw(pad_size_to = 56)]
+        #[brw(pad_size_to = 56)]
         unk3: Vec<u8>,
     },
     StartWalkInEvent {
@@ -243,7 +243,7 @@ pub enum ClientZoneIpcData {
     },
     SearchFellowships {
         #[br(count = 112)]
-        #[bw(pad_size_to = 112)]
+        #[brw(pad_size_to = 112)]
         unk: Vec<u8>,
     },
     StartCountdown {
@@ -439,7 +439,7 @@ pub enum ClientZoneIpcData {
         #[brw(pad_before = 4)] // empty
         sequence: u16, // probably
         #[br(count = 130)]
-        #[bw(pad_size_to = 130)]
+        #[brw(pad_size_to = 130)]
         unk: Vec<u8>,
     },
     CreateLocalLinkshellRequest {
@@ -480,7 +480,7 @@ pub enum ClientZoneIpcData {
     },
     CheckCWLinkshellNameAvailability {
         unk1: u8, // TODO: What is this? Seems to be always 1?
-        #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+        #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
         #[br(count = CHAR_NAME_MAX_LENGTH)]
         #[br(map = read_string)]
         #[bw(map = write_string)]

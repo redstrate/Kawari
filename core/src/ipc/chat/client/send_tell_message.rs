@@ -16,14 +16,14 @@ pub struct SendTellMessage {
     pub recipient_world_id: u16,
 
     #[br(count = CHAR_NAME_MAX_LENGTH)]
-    #[bw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
+    #[brw(pad_size_to = CHAR_NAME_MAX_LENGTH)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     #[brw(pad_before = 1)]
     pub recipient_name: String,
 
     #[br(count = MESSAGE_MAX_LENGTH)]
-    #[bw(pad_size_to = MESSAGE_MAX_LENGTH)]
+    #[brw(pad_size_to = MESSAGE_MAX_LENGTH)]
     #[br(map = read_sestring)]
     #[bw(map = write_sestring)]
     #[brw(pad_after = 5)]

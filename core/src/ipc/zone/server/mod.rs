@@ -311,11 +311,11 @@ pub enum ServerZoneIpcData {
     QuestCompleteList {
         /// Bitmask of completed quests.
         #[br(count = COMPLETED_QUEST_BITMASK_SIZE)]
-        #[bw(pad_size_to = COMPLETED_QUEST_BITMASK_SIZE)]
+        #[brw(pad_size_to = COMPLETED_QUEST_BITMASK_SIZE)]
         completed_quests: Vec<u8>,
         #[brw(pad_after = 1)] // unused I guess
         #[br(count = UNLOCKED_MAP_MARKERS_BITMASK_SIZE)]
-        #[bw(pad_size_to = UNLOCKED_MAP_MARKERS_BITMASK_SIZE)]
+        #[brw(pad_size_to = UNLOCKED_MAP_MARKERS_BITMASK_SIZE)]
         unlocked_map_markers: Vec<u8>,
     },
     UnkResponse2 {
@@ -397,17 +397,17 @@ pub enum ServerZoneIpcData {
     TitleList {
         /// Bitmask of unlocked titles.
         #[br(count = TITLE_UNLOCK_BITMASK_SIZE)]
-        #[bw(pad_size_to = TITLE_UNLOCK_BITMASK_SIZE)]
+        #[brw(pad_size_to = TITLE_UNLOCK_BITMASK_SIZE)]
         unlock_bitmask: Vec<u8>,
     },
     QuestActiveList(QuestActiveList),
     LevequestCompleteList {
         /// Bitmask of completed levequests.
         #[br(count = COMPLETED_LEVEQUEST_BITMASK_SIZE)]
-        #[bw(pad_size_to = COMPLETED_LEVEQUEST_BITMASK_SIZE)]
+        #[brw(pad_size_to = COMPLETED_LEVEQUEST_BITMASK_SIZE)]
         completed_levequests: Vec<u8>,
         #[br(count = 6)]
-        #[bw(pad_size_to = 6)]
+        #[brw(pad_size_to = 6)]
         unk2: Vec<u8>,
     },
     EventLogMessage2(#[brw(args { max_params: 2 } )] EventLogMessage),
@@ -445,13 +445,13 @@ pub enum ServerZoneIpcData {
     CraftingLog {
         #[brw(pad_after = 7)] // unaccounted for in the CS size
         #[br(count = COMPLETED_RECIPES_BITMASK_SIZE)]
-        #[bw(pad_size_to = COMPLETED_RECIPES_BITMASK_SIZE)]
+        #[brw(pad_size_to = COMPLETED_RECIPES_BITMASK_SIZE)]
         bitmask: Vec<u8>,
     },
     GatheringLog {
         #[brw(pad_after = 2)] // unaccounted for in the CS size
         #[br(count = GATHERED_GATHERING_ITEMS_BITMASK_SIZE)]
-        #[bw(pad_size_to = GATHERED_GATHERING_ITEMS_BITMASK_SIZE)]
+        #[brw(pad_size_to = GATHERED_GATHERING_ITEMS_BITMASK_SIZE)]
         bitmask: Vec<u8>,
     },
     Fellowships {
@@ -466,7 +466,7 @@ pub enum ServerZoneIpcData {
     Linkshells {
         /// List of linkshells.
         #[br(count = LinkshellEntry::COUNT)]
-        #[bw(pad_size_to = LinkshellEntry::SIZE * LinkshellEntry::COUNT)]
+        #[brw(pad_size_to = LinkshellEntry::SIZE * LinkshellEntry::COUNT)]
         shells: Vec<LinkshellEntry>,
     },
     ChatMessage(ChatMessage),
@@ -492,7 +492,7 @@ pub enum ServerZoneIpcData {
     CharaInfoFromContentIds {
         #[brw(pad_before = 8)] // empty
         #[br(count = 10)]
-        #[bw(pad_size_to = 10 * CharaInfoFromContentIdsData::SIZE)]
+        #[brw(pad_size_to = 10 * CharaInfoFromContentIdsData::SIZE)]
         info: Vec<CharaInfoFromContentIdsData>,
     },
     InviteCharacterResult {
@@ -568,7 +568,7 @@ pub enum ServerZoneIpcData {
     },
     PartyList {
         #[br(count = PartyMemberEntry::NUM_ENTRIES)]
-        #[bw(pad_size_to = PartyMemberEntry::NUM_ENTRIES * PartyMemberEntry::SIZE)]
+        #[brw(pad_size_to = PartyMemberEntry::NUM_ENTRIES * PartyMemberEntry::SIZE)]
         members: Vec<PartyMemberEntry>,
         party_id: u64,
         party_chatchannel: ChatChannel,
@@ -620,7 +620,7 @@ pub enum ServerZoneIpcData {
     },
     LegacyQuestList {
         #[br(count = COMPLETED_LEGACY_QUEST_BITMASK_SIZE)]
-        #[bw(pad_size_to = COMPLETED_LEGACY_QUEST_BITMASK_SIZE)]
+        #[brw(pad_size_to = COMPLETED_LEGACY_QUEST_BITMASK_SIZE)]
         bitmask: Vec<u8>,
     },
     DirectorVars {
@@ -711,7 +711,7 @@ pub enum ServerZoneIpcData {
         leader_name: String,
 
         #[br(count = 16)]
-        #[bw(pad_size_to = 16 * FcHierarchy::SIZE)]
+        #[brw(pad_size_to = 16 * FcHierarchy::SIZE)]
         hierarchy_list: Vec<FcHierarchy>,
     },
     FreeCompanyShortMessage {
@@ -857,7 +857,7 @@ pub enum ServerZoneIpcData {
     },
     UnkSocialResponse {
         #[br(count = 80)]
-        #[bw(pad_size_to = 80)]
+        #[brw(pad_size_to = 80)]
         unk: Vec<u8>,
     },
     UnkClassRelated {
@@ -1476,7 +1476,7 @@ pub enum ServerZoneIpcData {
         unk1: [u8; 44],
         item_id: u32,
         #[br(count = 1392)]
-        #[bw(pad_size_to = 1392)]
+        #[brw(pad_size_to = 1392)]
         unk2: Vec<u8>,
         unk3: u8, // TODO: bool,
         unk4: u8, // TODO: bool
@@ -1501,7 +1501,7 @@ pub enum ServerZoneIpcData {
         sequence_current: u32,
         /// The actual Fellowship result items.
         #[br(count = 4)]
-        #[bw(pad_size_to = 4 * 376)]
+        #[brw(pad_size_to = 4 * 376)]
         fellowships: Vec<FellowshipSearchInfo>,
     },
 }

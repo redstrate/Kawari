@@ -13,22 +13,22 @@ pub struct MapMarkers {
 
     /// Icons to set.
     #[br(count = max_params)]
-    #[bw(pad_size_to = 4 * max_params)]
+    #[brw(pad_size_to = 4 * max_params)]
     icon_ids: Vec<u32>,
 
     /// The instance ID in the level.
     #[br(count = max_params)]
-    #[bw(pad_size_to = 4 * max_params)]
+    #[brw(pad_size_to = 4 * max_params)]
     layout_ids: Vec<u32>,
 
     /// The event ID to update for, usually a quest ID.
     #[br(count = max_params)]
-    #[bw(pad_size_to = 4 * max_params)]
+    #[brw(pad_size_to = 4 * max_params)]
     handler_ids: Vec<HandlerId>,
 
     /// Unknown (elevation?)
     #[brw(pad_after = if max_params > 4 { 4 } else { 0 })] // empty
     #[br(count = max_params)]
-    #[bw(pad_size_to = max_params)]
+    #[brw(pad_size_to = max_params)]
     unk: Vec<u8>,
 }

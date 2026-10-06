@@ -137,23 +137,23 @@ pub struct PlayerSetup {
     pub unknowna3: [u8; 7],
     /// Current EXP for all classjobs. This doesn't control the class' "unlocked state" in the Character UI.
     #[br(count = CLASSJOB_ARRAY_SIZE)]
-    #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 4)]
+    #[brw(pad_size_to = CLASSJOB_ARRAY_SIZE * 4)]
     pub exp: Vec<i32>,
     pub experience_maelstrom: u32,
     pub experience_twin_adder: u32,
     pub experience_immortal_flames: u32,
     #[br(count = 12)]
-    #[bw(pad_size_to = 12)]
+    #[brw(pad_size_to = 12)]
     pub unknown138: Vec<u8>,
     pub unknown_unix_timestamp: i32,
     /// Current levels for all classjobs. If non-zero, the class is visibly "unlocked" in the Character UI.
     #[br(count = CLASSJOB_ARRAY_SIZE)]
-    #[bw(pad_size_to = CLASSJOB_ARRAY_SIZE * 2)]
+    #[brw(pad_size_to = CLASSJOB_ARRAY_SIZE * 2)]
     pub levels: Vec<u16>,
     pub ui_festival_ids: [FestivalId; 8],
     pub ui_festival_phases: [u16; 8],
     #[br(count = 176)]
-    #[bw(pad_size_to = 176)]
+    #[brw(pad_size_to = 176)]
     pub unknown194: Vec<u8>,
     pub beast_reputation_value: [u16; BEAST_TRIBE_ARRAY_SIZE],
     pub quest_unk0: u16,
@@ -164,39 +164,39 @@ pub struct PlayerSetup {
     pub unk8: [u8; 6],
     pub supply_satisfcation: [u16; 12],
     #[br(count = 21)]
-    #[bw(pad_size_to = 21)]
+    #[brw(pad_size_to = 21)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub companion_name: String,
     pub buddy_levels: [u8; 3],
     #[br(count = MOUNT_BITMASK_SIZE)]
-    #[bw(pad_size_to = MOUNT_BITMASK_SIZE)]
+    #[brw(pad_size_to = MOUNT_BITMASK_SIZE)]
     pub mounts: Vec<u8>,
     #[br(count = ORNAMENT_BITMASK_SIZE)]
-    #[bw(pad_size_to = ORNAMENT_BITMASK_SIZE)]
+    #[brw(pad_size_to = ORNAMENT_BITMASK_SIZE)]
     pub ornament_mask: Vec<u8>,
     #[br(count = GLASSES_STYLES_BITMASK_SIZE)]
-    #[bw(pad_size_to = GLASSES_STYLES_BITMASK_SIZE)]
+    #[brw(pad_size_to = GLASSES_STYLES_BITMASK_SIZE)]
     pub glasses_styles_mask: Vec<u8>,
     /// Probably unaccounted for glasses styles.
     pub padding_probably_after_glasses_styles: u8,
     #[br(count = FRAMERS_KIT_BITMASK_SIZE)]
-    #[bw(pad_size_to = FRAMERS_KIT_BITMASK_SIZE)]
+    #[brw(pad_size_to = FRAMERS_KIT_BITMASK_SIZE)]
     pub framers_kits_mask: Vec<u8>,
     // NOTE: Only part of this is used for the name, but bytes >=40 may contain the online ID...? I don't have access to any PS4/PS5/Xbox/NS2 captures yet.
     #[br(count = 64)]
-    #[bw(pad_size_to = 64)]
+    #[brw(pad_size_to = 64)]
     #[br(map = read_string)]
     #[bw(map = write_string)]
     pub name: String,
     /// Unlock bitmask for everything else, mostly for game features.
     /// This might also be referred to as "rewards".
     #[br(count = UNLOCK_BITMASK_SIZE)]
-    #[bw(pad_size_to = UNLOCK_BITMASK_SIZE)]
+    #[brw(pad_size_to = UNLOCK_BITMASK_SIZE)]
     pub unlocks: Vec<u8>,
     /// Unlock bitmask for Aetherytes.
     #[br(count = AETHERYTE_UNLOCK_BITMASK_SIZE)]
-    #[bw(pad_size_to = AETHERYTE_UNLOCK_BITMASK_SIZE)]
+    #[brw(pad_size_to = AETHERYTE_UNLOCK_BITMASK_SIZE)]
     pub aetherytes: Vec<u8>,
     pub favorite_aetheryte_ids: [u16; 4],
     pub free_aetheryte_id: u16,
@@ -205,47 +205,47 @@ pub struct PlayerSetup {
     /// Free Aetheryte for Nintendo Switch Online members.
     pub free_aetheryte_id_nso: u16,
     #[br(count = DISCOVERY_MAPS_WITH_UP_TO_16_REGIONS_BITMASK_SIZE)]
-    #[bw(pad_size_to = DISCOVERY_MAPS_WITH_UP_TO_16_REGIONS_BITMASK_SIZE * 2)]
+    #[brw(pad_size_to = DISCOVERY_MAPS_WITH_UP_TO_16_REGIONS_BITMASK_SIZE * 2)]
     pub maps_with_up_to_16_regions: Vec<u16>,
     #[br(count = DISCOVERY_MAPS_WITH_UP_TO_32_REGIONS_BITMASK_SIZE)]
-    #[bw(pad_size_to = DISCOVERY_MAPS_WITH_UP_TO_32_REGIONS_BITMASK_SIZE * 4)]
+    #[brw(pad_size_to = DISCOVERY_MAPS_WITH_UP_TO_32_REGIONS_BITMASK_SIZE * 4)]
     pub maps_with_up_to_32_regions: Vec<u32>,
     pub padding_probably_after_discovery_related_unk2: [u8; 4],
     /// Which Active Help guides the player has seen.
     #[br(count = ACTIVE_HELP_BITMASK_SIZE)]
-    #[bw(pad_size_to = ACTIVE_HELP_BITMASK_SIZE)]
+    #[brw(pad_size_to = ACTIVE_HELP_BITMASK_SIZE)]
     pub seen_active_help: Vec<u8>,
     /// Unlock bitmask for minions.
     #[br(count = MINION_BITMASK_SIZE)]
-    #[bw(pad_size_to = MINION_BITMASK_SIZE)]
+    #[brw(pad_size_to = MINION_BITMASK_SIZE)]
     pub minions: Vec<u8>,
     #[br(count = CHOCOBO_TAXI_STANDS_BITMASK_SIZE)]
-    #[bw(pad_size_to = CHOCOBO_TAXI_STANDS_BITMASK_SIZE)]
+    #[brw(pad_size_to = CHOCOBO_TAXI_STANDS_BITMASK_SIZE)]
     pub chocobo_taxi_stands_mask: Vec<u8>,
     #[br(count = CUTSCENE_SEEN_BITMASK_SIZE)]
-    #[bw(pad_size_to = CUTSCENE_SEEN_BITMASK_SIZE)]
+    #[brw(pad_size_to = CUTSCENE_SEEN_BITMASK_SIZE)]
     pub cutscene_seen_mask: Vec<u8>,
     pub unknown6ff: u8,
     #[br(count = BUDDY_EQUIP_BITMASK_SIZE)]
-    #[bw(pad_size_to = BUDDY_EQUIP_BITMASK_SIZE)]
+    #[brw(pad_size_to = BUDDY_EQUIP_BITMASK_SIZE)]
     pub buddy_equip_mask: Vec<u8>,
     /// Most likely unaccounted for buddy equips.
     pub buddy_equip_mask_padding: u8,
     pub buddy_equip_row_ids: [u8; 3],
     #[br(count = 13)]
-    #[bw(pad_size_to = 13)]
+    #[brw(pad_size_to = 13)]
     pub unknown_mask: Vec<u8>,
     #[br(count = CAUGHT_FISH_BITMASK_SIZE)]
-    #[bw(pad_size_to = CAUGHT_FISH_BITMASK_SIZE)]
+    #[brw(pad_size_to = CAUGHT_FISH_BITMASK_SIZE)]
     pub caught_fish_mask: Vec<u8>,
     pub padding_probably_after_caught_fish: [u8; 2],
     #[br(count = UNLOCKED_FISHING_SPOTS_BITMASK_SIZE)]
-    #[bw(pad_size_to = UNLOCKED_FISHING_SPOTS_BITMASK_SIZE)]
+    #[brw(pad_size_to = UNLOCKED_FISHING_SPOTS_BITMASK_SIZE)]
     pub unlocked_fishing_spots: Vec<u8>,
     /// Most likely unaccounted for fishing spots.
     pub fishing_spots_padding: u8,
     #[br(count = CAUGHT_SPEARFISH_BITMASK_SIZE)]
-    #[bw(pad_size_to = CAUGHT_SPEARFISH_BITMASK_SIZE)]
+    #[brw(pad_size_to = CAUGHT_SPEARFISH_BITMASK_SIZE)]
     pub caught_spearfish_mask: Vec<u8>,
     pub unlocked_spearfishing_notebooks: [u8; 8],
     /// Most likely unaccounted for spearfishing notebooks.
@@ -262,37 +262,37 @@ pub struct PlayerSetup {
     pub contents_note_completion_flags: [u8; CONTENTS_NOTE_COMPLETION_FLAGS_BITMASK_SIZE],
     pub unlocked_secret_recipe_books: [u8; UNLOCKED_SECRET_RECIPE_BOOKS_BITMASK_SIZE],
     #[br(count = 28)]
-    #[bw(pad_size_to = 28)]
+    #[brw(pad_size_to = 28)]
     pub unknown879: Vec<u8>,
     pub relic_monster_progress: [u8; 10],
     pub objective_progress: [u8; 2],
     #[br(count = ADVENTURE_BITMASK_SIZE)]
-    #[bw(pad_size_to = ADVENTURE_BITMASK_SIZE)]
+    #[brw(pad_size_to = ADVENTURE_BITMASK_SIZE)]
     pub adventure_mask: Vec<u8>,
     #[br(count = 124)]
-    #[bw(pad_size_to = 124)]
+    #[brw(pad_size_to = 124)]
     pub hunting_mark_data: Vec<u8>,
     #[br(count = TRIPLE_TRIAD_CARDS_BITMASK_SIZE)]
-    #[bw(pad_size_to = TRIPLE_TRIAD_CARDS_BITMASK_SIZE)]
+    #[brw(pad_size_to = TRIPLE_TRIAD_CARDS_BITMASK_SIZE)]
     pub triple_triad_cards: Vec<u8>,
     #[br(count = 17)]
-    #[bw(pad_size_to = 17)]
+    #[brw(pad_size_to = 17)]
     pub unknown95a: Vec<u8>,
     // We do -1 because of aether_current_comp_flg_set_bitmask1 being present way earlier.
     #[br(count = AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE - 1)]
-    #[bw(pad_size_to = AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE - 1)]
+    #[brw(pad_size_to = AETHER_CURRENT_COMP_FLG_SET_BITMASK_SIZE - 1)]
     pub aether_current_comp_flg_set_bitmask2: Vec<u8>, // This is the rest of the full bitmask. The rest of the zones are in here.
     #[br(count = AETHER_CURRENT_BITMASK_SIZE)]
-    #[bw(pad_size_to = AETHER_CURRENT_BITMASK_SIZE)]
+    #[brw(pad_size_to = AETHER_CURRENT_BITMASK_SIZE)]
     pub aether_currents_mask: Vec<u8>,
     pub unlocked_miner_folklore_tomes: [u8; 2],
     pub unlocked_botainst_folklore_tomes: [u8; 2],
     pub unlocked_fisher_folklore_tomes: [u8; 2],
     #[br(count = ORCHESTRION_ROLL_BITMASK_SIZE)]
-    #[bw(pad_size_to = ORCHESTRION_ROLL_BITMASK_SIZE)]
+    #[brw(pad_size_to = ORCHESTRION_ROLL_BITMASK_SIZE)]
     pub orchestrion_roll_mask: Vec<u8>,
     #[br(count = BEGINNER_TRAINING_ARRAY_SIZE)]
-    #[bw(pad_size_to = BEGINNER_TRAINING_ARRAY_SIZE)]
+    #[brw(pad_size_to = BEGINNER_TRAINING_ARRAY_SIZE)]
     pub completed_beginner_training: Vec<u8>,
     pub unk_completion2: [u8; 11],
 
@@ -303,73 +303,73 @@ pub struct PlayerSetup {
     pub used_supply_allowances: [u8; SASTISFACTION_SIZE],
 
     #[br(count = SPECIAL_CONTENT_ARRAY_SIZE)]
-    #[bw(pad_size_to = SPECIAL_CONTENT_ARRAY_SIZE)]
+    #[brw(pad_size_to = SPECIAL_CONTENT_ARRAY_SIZE)]
     pub unlocked_special_content: Vec<u8>,
 
     // unlocked status
     #[br(count = RAID_ARRAY_SIZE)]
-    #[bw(pad_size_to = RAID_ARRAY_SIZE)]
+    #[brw(pad_size_to = RAID_ARRAY_SIZE)]
     pub unlocked_raids: Vec<u8>,
 
     #[br(count = DUNGEON_ARRAY_SIZE)]
-    #[bw(pad_size_to = DUNGEON_ARRAY_SIZE)]
+    #[brw(pad_size_to = DUNGEON_ARRAY_SIZE)]
     pub unlocked_dungeons: Vec<u8>,
 
     #[br(count = GUILDHEST_ARRAY_SIZE)]
-    #[bw(pad_size_to = GUILDHEST_ARRAY_SIZE)]
+    #[brw(pad_size_to = GUILDHEST_ARRAY_SIZE)]
     pub unlocked_guildhests: Vec<u8>,
 
     #[br(count = TRIAL_ARRAY_SIZE)]
-    #[bw(pad_size_to = TRIAL_ARRAY_SIZE)]
+    #[brw(pad_size_to = TRIAL_ARRAY_SIZE)]
     pub unlocked_trials: Vec<u8>,
 
     #[br(count = CRYSTALLINE_CONFLICT_ARRAY_SIZE)]
-    #[bw(pad_size_to = CRYSTALLINE_CONFLICT_ARRAY_SIZE)]
+    #[brw(pad_size_to = CRYSTALLINE_CONFLICT_ARRAY_SIZE)]
     pub unlocked_crystalline_conflict: Vec<u8>,
 
     #[br(count = FRONTLINE_ARRAY_SIZE)]
-    #[bw(pad_size_to = FRONTLINE_ARRAY_SIZE)]
+    #[brw(pad_size_to = FRONTLINE_ARRAY_SIZE)]
     pub unlocked_frontline: Vec<u8>,
 
     // cleared status
     #[br(count = RAID_ARRAY_SIZE)]
-    #[bw(pad_size_to = RAID_ARRAY_SIZE)]
+    #[brw(pad_size_to = RAID_ARRAY_SIZE)]
     pub cleared_raids: Vec<u8>,
 
     #[br(count = DUNGEON_ARRAY_SIZE)]
-    #[bw(pad_size_to = DUNGEON_ARRAY_SIZE)]
+    #[brw(pad_size_to = DUNGEON_ARRAY_SIZE)]
     pub cleared_dungeons: Vec<u8>,
 
     #[br(count = GUILDHEST_ARRAY_SIZE)]
-    #[bw(pad_size_to = GUILDHEST_ARRAY_SIZE)]
+    #[brw(pad_size_to = GUILDHEST_ARRAY_SIZE)]
     pub cleared_guildhests: Vec<u8>,
 
     #[br(count = TRIAL_ARRAY_SIZE)]
-    #[bw(pad_size_to = TRIAL_ARRAY_SIZE)]
+    #[brw(pad_size_to = TRIAL_ARRAY_SIZE)]
     pub cleared_trials: Vec<u8>,
 
     #[br(count = CRYSTALLINE_CONFLICT_ARRAY_SIZE)]
-    #[bw(pad_size_to = CRYSTALLINE_CONFLICT_ARRAY_SIZE)]
+    #[brw(pad_size_to = CRYSTALLINE_CONFLICT_ARRAY_SIZE)]
     pub cleared_crystalline_conflict: Vec<u8>,
 
     #[br(count = FRONTLINE_ARRAY_SIZE)]
-    #[bw(pad_size_to = FRONTLINE_ARRAY_SIZE)]
+    #[brw(pad_size_to = FRONTLINE_ARRAY_SIZE)]
     pub cleared_frontline: Vec<u8>,
 
     #[br(count = MASKED_CARNIVALE_ARRAY_SIZE)]
-    #[bw(pad_size_to = MASKED_CARNIVALE_ARRAY_SIZE)]
+    #[brw(pad_size_to = MASKED_CARNIVALE_ARRAY_SIZE)]
     pub cleared_masked_carnivale: Vec<u8>,
 
     pub completed_vvd_notebook_contents: [u8; 7],
 
     #[br(count = MISC_CONTENT_ARRAY_SIZE)]
-    #[bw(pad_size_to = MISC_CONTENT_ARRAY_SIZE)]
+    #[brw(pad_size_to = MISC_CONTENT_ARRAY_SIZE)]
     pub unlocked_misc_content: Vec<u8>,
 
     pub unk_after_misc_content: u8,
 
     #[br(count = MISC_CONTENT_ARRAY_SIZE)]
-    #[bw(pad_size_to = MISC_CONTENT_ARRAY_SIZE)]
+    #[brw(pad_size_to = MISC_CONTENT_ARRAY_SIZE)]
     pub cleared_misc_content: Vec<u8>,
 
     pub unknown949: [u8; 2],

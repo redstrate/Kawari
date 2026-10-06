@@ -17,7 +17,7 @@ pub struct Server {
     #[br(map = read_bool_from::<u32>)]
     #[bw(map = write_bool_as::<u32>)]
     pub exp_bonus: bool,
-    #[bw(pad_size_to = 64)]
+    #[brw(pad_size_to = 64)]
     #[br(count = 64)]
     #[br(map = read_string)]
     #[bw(map = write_string)]

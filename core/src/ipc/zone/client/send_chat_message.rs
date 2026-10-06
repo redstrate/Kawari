@@ -17,7 +17,7 @@ pub struct SendChatMessage {
 
     #[brw(pad_after = 6)] // seems to be junk?
     #[br(count = MESSAGE_MAX_LENGTH)]
-    #[bw(pad_size_to = MESSAGE_MAX_LENGTH)]
+    #[brw(pad_size_to = MESSAGE_MAX_LENGTH)]
     #[br(map = read_sestring)]
     #[bw(map = write_sestring)]
     pub message: BString, // NOTE: This is a BString due to the fact that SEString macros can appear in its contents.
