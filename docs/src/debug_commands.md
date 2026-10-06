@@ -51,3 +51,4 @@ These special debug commands start with `!` and are custom to Kawari.
 | `!target` | Prints your currently targeted actor. |
 | `!treasurehunt` | Spawns a debug treasure hunt at your location. |
 | `!leve <id>` | Begins a debug levequest at your location. |
+| `!complete_duty` | Forcefully completes the current duty and makes the exit visible. |

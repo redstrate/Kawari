@@ -28,6 +28,7 @@ use icarus::GatheringItemLevelConvertTable::GatheringItemLevelConvertTableSheet;
 use icarus::GatheringPoint::GatheringPointSheet;
 use icarus::GatheringPointBase::GatheringPointBaseSheet;
 use icarus::GilShopItem::GilShopItemSheet;
+use icarus::GimmickAccessor::GimmickAccessorSheet;
 use icarus::GimmickRect::{GimmickRectRow, GimmickRectSheet};
 use icarus::GoldSaucerContent::GoldSaucerContentSheet;
 use icarus::HalloweenNpcSelect::HalloweenNpcSelectSheet;
@@ -112,6 +113,7 @@ pub struct GameData {
     pub dawn_content_sheet: DawnContentSheet,
     pub fate_progress_ui_sheet: FateProgressUISheet,
     pub gold_saucer_content_sheet: GoldSaucerContentSheet,
+    pub gimmick_accessor_sheet: GimmickAccessorSheet,
 
     pub gimmick_rect_lookup: HashMap<u32, u32>,
     pub fate_event_range_lookup: HashMap<u32, u32>,
@@ -245,6 +247,41 @@ pub struct GatheringPointItem {
     pub item_id: i32,
     pub level: u8,
     pub hidden: bool,
+}
+
+// TODO: currently guesswork (see <https://wiki.xiv.zone/Gimmicks#GimmickAccessor>)
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, FromRepr)]
+pub enum GimmickAccessorType {
+    Unknown1 = 1,
+    /// Used for generic duty actions like picking up keys.
+    DutyAction1 = 2,
+    /// Also... used for this? Kinda? Like opening doors?
+    DutyAction2 = 3,
+    Unknown4 = 4,
+    /// Used for generic shortcuts (like the one for teleporting to bossrooms) as well as ones that go to specific locations.
+    Shortcut = 5,
+    /// Used for exits.
+    DutyExit = 6,
+    Unknown7 = 7,
+    Unknown8 = 8,
+    Unknown9 = 9,
+    Unknown10 = 10,
+    Unknown11 = 11,
+    Unknown12 = 12,
+    Unknown13 = 13,
+    Unknown14 = 14,
+    Unknown15 = 15,
+    Unknown16 = 16,
+    Unknown17 = 17,
+    Unknown18 = 18,
+    Unknown19 = 19,
+    Unknown20 = 20,
+    Unknown21 = 21,
+    Unknown22 = 22,
+    Unknown23 = 23,
+    Unknown24 = 24,
+    Unknown25 = 25,
 }
 
 impl GameData {
@@ -387,6 +424,9 @@ impl GameData {
         let gold_saucer_content_sheet =
             GoldSaucerContentSheet::read_from(&mut resource_resolver, Language::None).unwrap();
 
+        let gimmick_accessor_sheet =
+            GimmickAccessorSheet::read_from(&mut resource_resolver, Language::None).unwrap();
+
         let mut gimmick_rect_lookup = HashMap::new();
         for (id, row) in gimmick_rect_sheet.into_iter().flatten_subrows() {
             gimmick_rect_lookup.insert(row.LayoutID, id);
@@ -436,6 +476,7 @@ impl GameData {
             dawn_content_sheet,
             fate_progress_ui_sheet,
             gold_saucer_content_sheet,
+            gimmick_accessor_sheet,
         }
     }
 
@@ -1792,6 +1833,11 @@ impl GameData {
         let row = self.gold_saucer_content_sheet.row(id).unwrap();
 
         row.ContentFinderCondition as u32
+    }
+
+    pub fn lookup_gimmick_accessor(&mut self, id: u32) -> Option<GimmickAccessorType> {
+        // TODO: Rename to Type upstream
+        GimmickAccessorType::from_repr(self.gimmick_accessor_sheet.row(id)?.Param0)
     }
 }
 

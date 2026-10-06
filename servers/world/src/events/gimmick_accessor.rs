@@ -38,6 +38,7 @@ impl EventHandler for GimmickAccessorEventHandler {
         connection
             .handle
             .send(ToServer::GimmickAccessor(
+                event.id.event_id(),
                 connection.player_data.character.actor_id,
                 event.actor_id.object_id,
                 results.to_vec(),

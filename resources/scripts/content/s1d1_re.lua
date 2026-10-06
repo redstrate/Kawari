@@ -18,8 +18,6 @@ EOBJ_WAVERIDER_GATE_KEY = 2000255
 EOBJ_KEY_TO_THE_HOLE = 2000256
 EOBJ_NEXT_DOOR2 = 2001539
 EOBJ_RAMBADE_DOOR2 = 2000236
-EOBJ_SHORTCUT = 2000700
-EOBJ_EXIT = 2000139
 
 EOBJ_CORAL_IDS = {
     EOBJ_BLUE_CORAL_FORMATION,
@@ -173,10 +171,6 @@ function onGimmickAccessor(director, actor_id, id, params)
             director:event_action(EVENT_ACTION_INTERACT, actor_id, id)
             return
         end
-    elseif id == EOBJ_EXIT then
-        director:abandon_duty(actor_id) -- TODO: should be generically handled
-    elseif id == EOBJ_SHORTCUT then
-        director:use_shortcut(actor_id) -- TODO: should be generically handled
     end
 
     director:finish_gimmick(actor_id)

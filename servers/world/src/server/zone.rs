@@ -559,7 +559,7 @@ impl Zone {
                             eobj.parent_data.base_id
                         };
 
-                        // Hide shortcuts and exits, these will be spawned by the director.
+                        // Hide shortcuts and exits, these are spawned later by the director.
                         let event_state = if (eobj.parent_data.base_id == EOBJ_SHORTCUT
                             && !explorer_mode)
                             || eobj.parent_data.base_id == EOBJ_EXIT

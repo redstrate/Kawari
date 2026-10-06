@@ -2,7 +2,9 @@ use std::{sync::Arc, time::Duration};
 
 use bstr::BString;
 use kawari::{
-    common::{DEBUG_COMMAND_TRIGGER, DirectorEvent, HandlerId, HandlerType, ObjectId, WarpType},
+    common::{
+        DEBUG_COMMAND_TRIGGER, DirectorEvent, EOBJ_EXIT, HandlerId, HandlerType, ObjectId, WarpType,
+    },
     ipc::zone::{
         ActionRequest, ActionType, ActorControlCategory, ServerNoticeMessage, ServerZoneIpcData,
         ServerZoneIpcSegment, SpawnTreasure, TreasureKind,
@@ -17,7 +19,7 @@ use crate::{
         WorldServer,
         action::execute_action,
         actor::{NetworkedActor, NpcState, spawn_custom_bnpc},
-        director::DirectorData,
+        director::{DirectorData, LuaDirectorTask},
         fate::spawn_fate,
         instance::QueuedTaskData,
         network::{DestinationNetwork, NetworkState},
@@ -562,6 +564,25 @@ fn process_debug_commands(
                     Duration::from_mins(20),
                     QueuedTaskData::TerminateDirector { handler_id },
                 );
+            }
+
+            true
+        }
+        "!complete_duty" => {
+            let mut data = data.lock();
+            if let Some(instance) = data.find_actor_instance_mut(from_actor_id) {
+                instance
+                    .directors
+                    .first_mut()
+                    .unwrap()
+                    .tasks
+                    .push(LuaDirectorTask::ShowEObj { base_id: EOBJ_EXIT });
+                instance
+                    .directors
+                    .first_mut()
+                    .unwrap()
+                    .tasks
+                    .push(LuaDirectorTask::CompleteDuty {});
             }
 
             true

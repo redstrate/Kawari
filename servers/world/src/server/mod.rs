@@ -1122,7 +1122,7 @@ pub async fn server_main_loop(
         );
         handled |= handle_action_messages(data.clone(), game_data.clone(), network.clone(), &msg);
         handled |= handle_effect_messages(data.clone(), network.clone(), lua.clone(), &msg);
-        handled |= handle_director_messages(data.clone(), network.clone(), &msg);
+        handled |= handle_director_messages(data.clone(), network.clone(), game_data.clone(), &msg);
         handled |= handle_party_messages(data.clone(), network.clone(), &msg);
         handled |= handle_linkshell_messages(network.clone(), &msg);
 

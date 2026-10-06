@@ -20,6 +20,7 @@ use parking_lot::Mutex;
 
 use crate::{
     ClientId, FromServer, GameData, ToServer,
+    gamedata::GimmickAccessorType,
     lua::KawariLua,
     server::{
         WorldServer,
@@ -143,12 +144,6 @@ impl UserData for LuaDirector {
             Ok(())
         });
         methods.add_method("data", |_, this, index: u8| Ok(this.data[index as usize]));
-        methods.add_method_mut("abandon_duty", |_, this, actor_id: u32| {
-            this.tasks.push(LuaDirectorTask::AbandonDuty {
-                actor_id: ObjectId(actor_id),
-            });
-            Ok(())
-        });
         methods.add_method_mut(
             "event_action",
             |_, this, (action_id, actor_id, target): (u32, u32, u32)| {
@@ -223,12 +218,6 @@ impl UserData for LuaDirector {
             });
             this.tasks
                 .push(LuaDirectorTask::UpdateShortcut { poprange_id });
-            Ok(())
-        });
-        methods.add_method_mut("use_shortcut", |_, this, actor_id: u32| {
-            this.tasks.push(LuaDirectorTask::UseShortcut {
-                actor_id: ObjectId(actor_id),
-            });
             Ok(())
         });
         methods.add_method_mut("complete_duty", |_, this, _: ()| {
@@ -891,25 +880,56 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
 pub fn handle_director_messages(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
+    gamedata: Arc<Mutex<GameData>>,
     msg: &ToServer,
 ) -> bool {
     match msg {
-        ToServer::GimmickAccessor(from_actor_id, from_object_id, params) => {
+        ToServer::GimmickAccessor(id, from_actor_id, from_object_id, params) => {
             let mut data = data.lock();
             let Some(instance) = data.find_actor_instance_mut(*from_actor_id) else {
                 tracing::warn!("Somehow failed to find an instance for actor?");
                 return true;
             };
 
-            let Some(id) = instance.find_base_id_by_actor_id(*from_object_id) else {
+            let Some(base_id) = instance.find_base_id_by_actor_id(*from_object_id) else {
                 tracing::warn!("Somehow failed to find base id from actor id {from_object_id}!");
                 return true;
             };
 
-            if let Some(director) = &mut instance.directors.first_mut() {
-                director.gimmick_accessor(*from_actor_id, id, params);
-            } else {
+            let Some(director) = &mut instance.directors.first_mut() else {
                 tracing::warn!("Expected a director when recieving a GimmickAccessor?");
+                return true;
+            };
+
+            let gimmick_accessor_type;
+            {
+                let mut gamedata = gamedata.lock();
+                gimmick_accessor_type = gamedata.lookup_gimmick_accessor(*id).unwrap();
+            }
+
+            match gimmick_accessor_type {
+                GimmickAccessorType::Shortcut => {
+                    director.tasks.push(LuaDirectorTask::FinishGimmickEvent {
+                        actor_id: *from_actor_id,
+                    });
+                    director.tasks.push(LuaDirectorTask::UseShortcut {
+                        actor_id: *from_actor_id,
+                    });
+                }
+                GimmickAccessorType::DutyExit => {
+                    // 0 means the user hit "Yes" in the prompt
+                    if params[0] == 0 {
+                        director.tasks.push(LuaDirectorTask::AbandonDuty {
+                            actor_id: *from_actor_id,
+                        });
+                    }
+                    director.tasks.push(LuaDirectorTask::FinishGimmickEvent {
+                        actor_id: *from_actor_id,
+                    });
+                }
+                _ => {
+                    director.gimmick_accessor(*from_actor_id, base_id, params);
+                }
             }
 
             true
