@@ -9,6 +9,7 @@ use kawari::common::{
     HandlerId, HandlerType, InstanceContentType, ItemOperationKind, LogMessageType, ObjectId,
     ObjectTypeId, ObjectTypeKind, PlayerStateFlags1, PlayerStateFlags2, PlayerStateFlags3,
     Position, QuestSpecialFlags, TAB_SHARED_FATE_COUNT, WarpType, calculate_max_level,
+    in_housing_area,
 };
 use kawari::config::get_config;
 use kawari_world::inventory::{Item, MAX_LARGE_STORAGE, Storage, get_next_free_slot};
@@ -1461,8 +1462,8 @@ async fn process_packet(
                                 }
                                 ClientTriggerCommand::SetInteriorLightLevel { level, unk } => {
                                     // TODO: Also reject if they're not the owner/shared tenant
-                                    let intended_use = connection.get_zone_intended_use();
-                                    if !connection.in_housing_area(intended_use) {
+                                    let intended_use = lua_player.zone_data.intended_use;
+                                    if !in_housing_area(intended_use) {
                                         continue;
                                     }
 
@@ -1487,8 +1488,8 @@ async fn process_packet(
                                 }
                                 ClientTriggerCommand::FurnitureMenuToggled { closed } => {
                                     // TODO: Also reject if they're not the owner/shared tenant
-                                    let intended_use = connection.get_zone_intended_use();
-                                    if !connection.in_housing_area(intended_use) {
+                                    let intended_use = lua_player.zone_data.intended_use;
+                                    if !in_housing_area(intended_use) {
                                         continue;
                                     }
 
@@ -1509,8 +1510,8 @@ async fn process_packet(
                                 }
                                 ClientTriggerCommand::RequestHousingInventory { storeroom } => {
                                     // TODO: Also reject if they're not the owner/shared tenant
-                                    let intended_use = connection.get_zone_intended_use();
-                                    if !connection.in_housing_area(intended_use) {
+                                    let intended_use = lua_player.zone_data.intended_use;
+                                    if !in_housing_area(intended_use) {
                                         continue;
                                     }
 
@@ -1530,9 +1531,9 @@ async fn process_packet(
                                     slot,
                                     ..
                                 } => {
-                                    let intended_use = connection.get_zone_intended_use();
+                                    let intended_use = lua_player.zone_data.intended_use;
                                     // TODO: Also reject if they're not the owner/shared tenant
-                                    if !connection.in_housing_area(intended_use) {
+                                    if !in_housing_area(intended_use) {
                                         continue;
                                     }
 
@@ -1627,9 +1628,9 @@ async fn process_packet(
                                     container_index,
                                     ..
                                 } => {
-                                    let intended_use = connection.get_zone_intended_use();
+                                    let intended_use = lua_player.zone_data.intended_use;
                                     // TODO: Also reject if they're not the owner/shared tenant
-                                    if !connection.in_housing_area(intended_use) {
+                                    if !in_housing_area(intended_use) {
                                         continue;
                                     }
 
@@ -3509,10 +3510,10 @@ async fn process_packet(
                             plot_index,
                             ..
                         } => {
-                            let intended_use = connection.get_zone_intended_use();
+                            let intended_use = lua_player.zone_data.intended_use;
 
                             // TODO: Also reject if they're not the owner/shared tenant
-                            if !connection.in_housing_area(intended_use) {
+                            if !in_housing_area(intended_use) {
                                 tracing::error!(
                                     "The player attempted to place furniture while not within a housing zone! Rejecting request!"
                                 );
@@ -3650,10 +3651,10 @@ async fn process_packet(
                             unk2,
                             unk3,
                         } => {
-                            let intended_use = connection.get_zone_intended_use();
+                            let intended_use = lua_player.zone_data.intended_use;
 
                             // TODO: Also reject if they're not the owner/shared tenant
-                            if !connection.in_housing_area(intended_use) {
+                            if !in_housing_area(intended_use) {
                                 tracing::warn!(
                                     "Client attempted to move furniture when not in a housing area! Rejecting request!"
                                 );

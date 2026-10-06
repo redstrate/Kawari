@@ -1467,6 +1467,14 @@ pub enum PublicContentType {
     OccultCrescent = 11,
 }
 
+/// Returns true if the intended use is for housing, false otherwise.
+pub fn in_housing_area(intended_use: TerritoryIntendedUse) -> bool {
+    matches!(
+        intended_use,
+        TerritoryIntendedUse::HousingIndoor | TerritoryIntendedUse::HousingOutdoor
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
