@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use kawari::{common::ObjectTypeId, ipc::zone::SceneFlags};
 
-use crate::{Event, EventHandler, ZoneConnection, lua::LuaPlayer};
+use crate::{Event, EventHandler, lua::LuaPlayer};
 
 /// For FATE motivation NPCs.
 #[derive(Debug)]
@@ -17,16 +17,5 @@ impl EventHandler for FateEventHandler {
             SceneFlags::NO_DEFAULT_CAMERA | SceneFlags::HIDE_HOTBAR,
             vec![self.fate_id as u32, 139],
         );
-    }
-
-    async fn on_return(
-        &self,
-        _event: &Event,
-        _connection: &mut ZoneConnection,
-        _scene: u16,
-        _results: &[i32],
-        player: &mut LuaPlayer,
-    ) {
-        player.finish_event();
     }
 }

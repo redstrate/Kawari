@@ -114,15 +114,4 @@ impl EventHandler for GimmickBillEventHandler {
     async fn on_talk(&self, _event: &Event, _target_id: ObjectTypeId, player: &mut LuaPlayer) {
         player.play_scene(Self::SCENE_BEGIN, SceneFlags::HIDE_HOTBAR, Vec::new());
     }
-
-    async fn on_return(
-        &self,
-        _event: &Event,
-        _connection: &mut ZoneConnection,
-        _scene: u16,
-        _results: &[i32],
-        player: &mut LuaPlayer,
-    ) {
-        player.finish_event();
-    }
 }

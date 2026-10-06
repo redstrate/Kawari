@@ -74,15 +74,4 @@ impl EventHandler for InclusionShopEventHandler {
                 .await;
         }
     }
-
-    async fn on_return(
-        &self,
-        _event: &Event,
-        _connectionn: &mut ZoneConnection,
-        _scene: u16,
-        _results: &[i32],
-        player: &mut LuaPlayer,
-    ) {
-        player.finish_event();
-    }
 }

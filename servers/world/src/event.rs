@@ -49,6 +49,7 @@ pub trait EventHandler: std::fmt::Debug + Send + Sync {
     ) {
     }
 
+    /// The default implementation will always finish the event.
     async fn on_return(
         &self,
         event: &Event,
@@ -57,6 +58,7 @@ pub trait EventHandler: std::fmt::Debug + Send + Sync {
         results: &[i32],
         player: &mut LuaPlayer,
     ) {
+        player.finish_event();
     }
 
     /// Condition to set (or unset) for this handler.
