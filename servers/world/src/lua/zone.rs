@@ -1,23 +1,24 @@
 use std::collections::HashMap;
 
-use mlua::{UserData, UserDataFields};
+use mlua::{LuaSerdeExt, UserData, UserDataFields};
 
 use kawari::{
     common::{ObjectId, Position},
     ipc::zone::ServerZoneIpcSegment,
     packet::PacketSegment,
 };
+use physis::TerritoryIntendedUse;
 
 use super::QueueSegments;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct LuaZone {
     pub zone_id: u16,
     pub weather_id: u16,
     pub internal_name: String,
     pub region_name: String,
     pub place_name: String,
-    pub intended_use: u8,
+    pub intended_use: TerritoryIntendedUse,
     pub map_id: u16,
     pub queued_segments: Vec<PacketSegment<ServerZoneIpcSegment>>,
     // NOTE: These are here to be accessed in Lua via the injected BASE_ID
@@ -33,7 +34,7 @@ impl UserData for LuaZone {
         fields.add_field_method_get("internal_name", |_, this| Ok(this.internal_name.clone()));
         fields.add_field_method_get("region_name", |_, this| Ok(this.region_name.clone()));
         fields.add_field_method_get("place_name", |_, this| Ok(this.place_name.clone()));
-        fields.add_field_method_get("intended_use", |_, this| Ok(this.intended_use));
+        fields.add_field_method_get("intended_use", |lua, this| lua.to_value(&this.intended_use));
     }
 }
 

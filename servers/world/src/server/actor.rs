@@ -22,7 +22,6 @@ use kawari::{
     },
 };
 use parking_lot::Mutex;
-use physis::TerritoryIntendedUse;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum NpcState {
@@ -406,14 +405,12 @@ pub fn kill_actor(network: Arc<Mutex<NetworkState>>, instance: &mut Instance, ac
             }
         }
 
-        let respawn_layout_id = if actor.get_common_spawn().layout_id != 0
-            && should_respawn_mobs(
-                TerritoryIntendedUse::from_repr(intended_use).unwrap_or(TerritoryIntendedUse::Town),
-            ) {
-            Some(actor.get_common_spawn().layout_id)
-        } else {
-            None
-        };
+        let respawn_layout_id =
+            if actor.get_common_spawn().layout_id != 0 && should_respawn_mobs(intended_use) {
+                Some(actor.get_common_spawn().layout_id)
+            } else {
+                None
+            };
 
         for (gimmick_id, states) in new_timeline_states {
             let actor_id;

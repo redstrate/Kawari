@@ -164,7 +164,7 @@ impl ZoneConnection {
         }
 
         // Send the list of available items if we're in an inn, since its only accessible via their beds.
-        if lua_zone.intended_use == TerritoryIntendedUse::Inn as u8 {
+        if lua_zone.intended_use == TerritoryIntendedUse::Inn {
             let display_ids;
             {
                 let mut gamedata = self.gamedata.lock();
@@ -283,7 +283,7 @@ impl ZoneConnection {
             self.send_crafting_gathering_information().await;
         }
 
-        if lua_zone.intended_use == TerritoryIntendedUse::HousingOutdoor as u8 {
+        if lua_zone.intended_use == TerritoryIntendedUse::HousingOutdoor {
             let mut houses = [House::default(); 30];
 
             // First, populate the houses in this ward. Note that for now, we treat every ward the same.
@@ -359,7 +359,7 @@ impl ZoneConnection {
             }
         }
 
-        if lua_zone.intended_use == TerritoryIntendedUse::HousingIndoor as u8 {
+        if lua_zone.intended_use == TerritoryIntendedUse::HousingIndoor {
             // Bare minimum stuff to make housing interiors load
             self.send_ipc_self(ServerZoneIpcSegment::new(
                 ServerZoneIpcData::HousingInteriorDetails(HousingInteriorDetails::default()),

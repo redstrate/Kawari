@@ -1274,8 +1274,7 @@ pub fn send_director_vars(
             );
         }
 
-        if instance.zone.intended_use == TerritoryIntendedUse::CrystallineConflictCustomMatch as u8
-        {
+        if instance.zone.intended_use == TerritoryIntendedUse::CrystallineConflictCustomMatch {
             let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::SpectatorList {
                 object_ids: [
                     from_actor_id,

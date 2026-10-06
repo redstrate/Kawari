@@ -90,13 +90,13 @@ struct HousingPlot {
 }
 
 /// Represents a loaded zone
-#[derive(Default, Debug)]
+#[derive(Debug, Default)]
 pub struct Zone {
     pub id: u16,
     pub internal_name: String,
     pub region_name: String,
     pub place_name: String,
-    pub intended_use: u8,
+    pub intended_use: TerritoryIntendedUse,
     pub layer_groups: Vec<Lgb>,
     pub navimesh_path: String,
     pub map_id: u16,
@@ -126,7 +126,14 @@ impl Zone {
             return zone;
         };
 
-        zone.intended_use = row.TerritoryIntendedUse;
+        if let Some(intended_use) = TerritoryIntendedUse::from_repr(row.TerritoryIntendedUse) {
+            zone.intended_use = intended_use;
+        } else {
+            tracing::warn!(
+                "Unknown TerritoryIntendedUse {}, certain featureswill not function. Please report this as a bug.",
+                row.TerritoryIntendedUse
+            );
+        }
         zone.map_id = row.Map;
 
         // e.g. ffxiv/fst_f1/fld/f1f3/level/f1f3
@@ -374,7 +381,7 @@ impl Zone {
             .unwrap_or(fallback.to_string());
 
         // create housing plot cache
-        if zone.intended_use == TerritoryIntendedUse::HousingOutdoor as u8 {
+        if zone.intended_use == TerritoryIntendedUse::HousingOutdoor {
             let land_sets = game_data
                 .get_land_sets(internal_housing_row(id).unwrap())
                 .unwrap();

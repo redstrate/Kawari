@@ -1,6 +1,5 @@
 use glam::{Affine3A, EulerRot, Vec3A};
 use parking_lot::Mutex;
-use physis::TerritoryIntendedUse;
 use std::{
     collections::HashMap,
     env::consts::EXE_SUFFIX,
@@ -170,9 +169,7 @@ impl WorldServer {
         );
         instance.content_finder_condition_id = content_finder_condition;
 
-        if let Some(intended_use) = TerritoryIntendedUse::from_repr(instance.zone.intended_use)
-            && let Some(director_type) = HandlerType::from_intended_use(intended_use)
-        {
+        if let Some(director_type) = HandlerType::from_intended_use(instance.zone.intended_use) {
             instance.content_id = game_data
                 .find_content_for_content_finder_id(instance.content_finder_condition_id)
                 .unwrap();
