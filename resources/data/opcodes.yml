@@ -1421,3 +1421,7 @@ CustomIpcType:
   comment: Reloads the festivals in all running instances.
   opcode: 18
   size: 0
+- name: SpawnBattleNpc
+  comment: Spawns a given battle NPC to the first client
+  opcode: 19
+  size: 4

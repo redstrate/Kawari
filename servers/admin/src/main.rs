@@ -1,3 +1,4 @@
+use axum::extract::Query;
 use axum::response::{Html, Redirect};
 use axum::routing::post;
 use axum::{Router, extract::Form, routing::get};
@@ -165,6 +166,23 @@ async fn apply(Form(input): Form<Input>) -> Redirect {
     Redirect::to("/")
 }
 
+#[derive(Deserialize)]
+#[allow(dead_code)]
+struct Params {
+    bnpc_base_id: u32,
+}
+
+async fn spawn_bnpc(Query(query): Query<Params>) -> String {
+    // Spawn the battle NPC
+    // (There is no response.)
+    let _ = send_custom_world_packet(CustomIpcSegment::new(CustomIpcData::SpawnBattleNpc {
+        bnpc_base_id: query.bnpc_base_id,
+    }))
+    .await;
+
+    String::default()
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -175,6 +193,7 @@ async fn main() {
         .route("/users", get(users))
         .route("/characters", get(characters))
         .route("/service_accounts", get(service_accounts))
+        .route("/spawn_bnpc", post(spawn_bnpc))
         .nest_service("/static", ServeDir::new(web_static_dir!("")));
 
     let config = get_config();

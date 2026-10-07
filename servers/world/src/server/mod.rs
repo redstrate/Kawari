@@ -16,7 +16,7 @@ use crate::{
         action::{execute_action, handle_action_messages},
         actor::{
             NetworkedActor, NpcState, kill_actor, set_character_mode, set_player_minion,
-            update_actor_hp_mp,
+            spawn_custom_bnpc, update_actor_hp_mp,
         },
         chat::handle_chat_messages,
         director::{
@@ -2595,6 +2595,22 @@ pub async fn server_main_loop(
                                 festival4: config.world.active_festivals[3] as u32,
                             }),
                             DestinationNetwork::ZoneClients,
+                        );
+                    }
+                }
+                ToServer::SpawnBattleNpc(bnpc_base_id) => {
+                    // Currently spawns it on the first player we find
+                    let mut data = data.lock();
+                    let mut game_data = game_data.lock();
+                    let network = network.lock();
+                    if let Some(first_client) = network.clients.values().collect::<Vec<_>>().first()
+                    {
+                        spawn_custom_bnpc(
+                            &mut data,
+                            &mut game_data,
+                            first_client.0.actor_id,
+                            bnpc_base_id,
+                            405,
                         );
                     }
                 }

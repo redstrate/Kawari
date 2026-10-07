@@ -107,6 +107,9 @@ pub enum CustomIpcData {
         json: String,
     },
     ReloadFestivals,
+    SpawnBattleNpc {
+        bnpc_base_id: u32,
+    },
 }
 
 #[cfg(test)]

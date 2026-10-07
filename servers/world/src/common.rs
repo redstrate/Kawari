@@ -501,6 +501,8 @@ pub enum ToServer {
     ZoneDiceRoll(ObjectId, ZoneDiceRollResult),
     /// Tell the server to reload the active festivals in all running instances.
     ReloadFestivals,
+    /// For the SpawnBatteNpc custom IPC.
+    SpawnBattleNpc(u32),
 }
 
 #[derive(Clone, Debug)]

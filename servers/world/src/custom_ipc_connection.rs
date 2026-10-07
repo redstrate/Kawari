@@ -269,6 +269,11 @@ impl CustomIpcConnection {
             CustomIpcData::ReloadFestivals => {
                 self.handle.send(ToServer::ReloadFestivals).await;
             }
+            CustomIpcData::SpawnBattleNpc { bnpc_base_id } => {
+                self.handle
+                    .send(ToServer::SpawnBattleNpc(*bnpc_base_id))
+                    .await;
+            }
             _ => {
                 panic!("The server is recieving a response or unknown custom IPC! {data:#?}")
             }
