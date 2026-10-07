@@ -247,11 +247,15 @@ pub fn set_character_mode(
     mode_arg: u8,
     inform_client: bool,
 ) {
+    let is_npc;
+
     // Update internal data model for new spawns
     {
         let Some(actor) = instance.find_actor_mut(from_actor_id) else {
             return;
         };
+
+        is_npc = matches!(actor, NetworkedActor::Npc { .. });
 
         // Skip if this mode is already set.
         if actor.get_common_spawn().mode == mode && actor.get_common_spawn().mode_arg == mode_arg {
@@ -262,13 +266,28 @@ pub fn set_character_mode(
         actor.get_common_spawn_mut().mode_arg = mode_arg;
     }
 
-    // Tell the client of their new CharacterMode, they will be in charge of distributing that information to other players
-    if inform_client {
-        network.send_to_by_actor_id(
+    if is_npc {
+        network.send_in_range_instance(
             from_actor_id,
-            FromServer::SetCharacterMode(mode, mode_arg),
+            instance,
+            FromServer::ActorControl(
+                from_actor_id,
+                ActorControlCategory::SetMode {
+                    mode,
+                    mode_arg: mode_arg as u32,
+                },
+            ),
             DestinationNetwork::ZoneClients,
         );
+    } else {
+        // Tell the client of their new CharacterMode, they will be in charge of distributing that information to other players
+        if inform_client {
+            network.send_to_by_actor_id(
+                from_actor_id,
+                FromServer::SetCharacterMode(mode, mode_arg),
+                DestinationNetwork::ZoneClients,
+            );
+        }
     }
 }
 
