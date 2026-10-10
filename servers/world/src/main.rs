@@ -1269,7 +1269,7 @@ async fn process_packet(
 
                                         let ipc = EventLogMessage {
                                             handler_id,
-                                            message_type: 1110,
+                                            message_type: LogMessageType::FishingCastLine as u32,
                                             params: vec![28],
                                         }
                                         .package()
@@ -3358,11 +3358,10 @@ async fn process_packet(
                             linkshell_id,
                             content_id,
                         } => {
-                            let result = connection
+                            if let Some(result) = connection
                                 .invite_to_linkshell(*content_id, *linkshell_id)
-                                .await;
-
-                            if result != LogMessageType::Default {
+                                .await
+                            {
                                 connection.send_linkshell_error(result).await;
                             }
                         }
@@ -4191,7 +4190,7 @@ async fn process_server_msg(
 
                 let ipc = EventLogMessage {
                     handler_id: HandlerId(handler_id),
-                    message_type: 1127,
+                    message_type: LogMessageType::FishingNoBite as u32,
                     ..Default::default()
                 }
                 .package()

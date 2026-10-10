@@ -26,7 +26,7 @@ pub fn handle_social_messages(
             recipient_character_name,
             invite_type,
         ) => {
-            let mut log_message = LogMessageType::Default;
+            let mut log_message = None;
             let mut network = network.lock();
 
             let is_online;
@@ -37,7 +37,7 @@ pub fn handle_social_messages(
 
             // The client seems to enforce offline friend list requests itself, but we'll still block it.
             if !is_online {
-                log_message = LogMessageType::UnableToPerformPlayerOffline;
+                log_message = Some(LogMessageType::UnableToPerformPlayerOffline);
             } else {
                 match invite_type {
                     InviteType::FriendList => {}
@@ -54,7 +54,7 @@ pub fn handle_social_messages(
                             .count()
                             > 0
                         {
-                            log_message = LogMessageType::PlayerAlreadyInAnotherParty;
+                            log_message = Some(LogMessageType::PlayerAlreadyInAnotherParty);
                         }
                     }
                     _ => {
@@ -68,7 +68,7 @@ pub fn handle_social_messages(
             }
 
             // If all is well, send the invite to the recipient.
-            if log_message == LogMessageType::Default {
+            if log_message.is_none() {
                 let msg = FromServer::SocialInvite(
                     *from_account_id,
                     *from_content_id,
@@ -85,7 +85,7 @@ pub fn handle_social_messages(
             // Inform the sender of the invite they just sent.
             let msg = FromServer::InviteCharacterResult(
                 *recipient_content_id,
-                log_message,
+                log_message.map(|x| x as u16).unwrap_or_default(),
                 *invite_type,
                 recipient_character_name.clone(),
             );

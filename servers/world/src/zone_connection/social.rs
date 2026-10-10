@@ -1,7 +1,7 @@
 //! Other social features, as well as invite sending and replies.
 use crate::{ToServer, ZoneConnection, common::roll_die};
 use kawari::{
-    common::{LogMessageType, ObjectId, timestamp_secs},
+    common::{ObjectId, timestamp_secs},
     ipc::zone::{
         InviteReply, InviteType, InviteUpdateType, OnlineStatus, OnlineStatusMask, PlayerEntry,
         SearchUIClassJobMask, SearchUIGrandCompanies, ServerZoneIpcData, ServerZoneIpcSegment,
@@ -160,13 +160,13 @@ impl ZoneConnection {
     pub async fn invite_character_result(
         &mut self,
         content_id: u64,
-        message_id: LogMessageType,
+        message_id: u16,
         invite_type: InviteType,
         character_name: String,
     ) {
         let ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::InviteCharacterResult {
             content_id,
-            message_id: message_id as u16,
+            message_id,
             world_id: self.config.world_id,
             invite_type,
             unk1: 1,

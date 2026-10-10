@@ -757,26 +757,50 @@ pub enum ItemOperationKind {
 }
 
 /// Useful pre-defined log messages. Feel free to add any ones we need. Index into the LogMessage Excel sheet.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum LogMessageType {
-    #[default]
-    Default = 0,
-    PlayerAlreadyFriend = 0x138, // That player is already a friend or has been sent a request. TODO: unclear if this one is sent by the server or the client keeps track of that itself
-    PlayerAlreadyInAnotherParty = 0x146, // That player is already in another party.
-    UnableToAcceptLSInvite = 0x1DD, // Unable to accept linkshell invite.
-    ItemBought = 0x697,
-    ItemSold = 0x698,
-    ItemBoughtBack = 0x699,
-    UnableToPerformPlayerOffline = 0x1617, // Unable to perform that action. That player is offline.
-    CWLSIsFull = 0x242B, // Unable to add new members. Cross-world linkshell roster is full.
-    UnableToInviteToCWLS = 0x242D, // Unable to invite to cross-world linkshell.
-    PlayerAlreadyInYourCWLS = 0x242E, // Player is already a cross-world linkshell member.
-    PlayerInTooManyCWLSes = 0x242F, // The person you have invited cannot join any more cross-world linkshells.
-    UnableToAcceptAttachmentInventoryFull = 0x17B, // Unable to accept attachment. Inventory is full.
-    FurnitureMovedToStoreroom = 0xD9F,             // The <item name> was moved to your storeroom.
-    FurnitureMovedToInventory = 0xDA0,             // The <item name> was moved to your inventory.
-    UnableToJoinMoreFellowships = 0x15FE,          // You cannot join any more Fellowships.
-    UnableToCreateMoreFellowships = 0x15E3,        // You cannot create any more Fellowshiops.
+    /// "That player is already a friend or has been sent a request."
+    PlayerAlreadyFriend = 312,
+    /// "That player is already in another party."
+    PlayerAlreadyInAnotherParty = 326,
+    /// "Unable to accept attachment. Inventory is full."
+    UnableToAcceptAttachmentInventoryFull = 379,
+    /// "Unable to accept linkshell invite."
+    UnableToAcceptLSInvite = 477,
+    /// "<Something> line <something else>."
+    FishingCastLine = 1110,
+    /// "Nothing bites. The bait you are using may not be suited to this location."
+    FishingNoBite = 1127,
+    /// "You purchase <item> for <amount> gil."
+    ItemBought = 1687,
+    /// "You sell <item> for <amount> gil."
+    ItemSold = 1688,
+    /// "You buy back <item> for <amount> gil."
+    ItemBoughtBack = 1689,
+    /// "<Location> will be sealed off in <time>!"
+    BossRoomSealing = 2012,
+    /// "<Location> is sealed off!"
+    BossRoomSealed = 2013,
+    /// "<Location> is no longer sealed!"
+    BossRoomUnsealed = 2014,
+    /// "Unable to add new members. Cross-world linkshell roster is full."
+    CWLSIsFull = 9259,
+    /// "Unable to invite to cross-world linkshell."
+    UnableToInviteToCWLS = 9261,
+    /// "Player is already a cross-world linkshell member."
+    PlayerAlreadyInYourCWLS = 9262,
+    /// "The person you have invited cannot join any more cross-world linkshells."
+    PlayerInTooManyCWLSes = 9263,
+    /// "The <item name> was moved to your storeroom."
+    FurnitureMovedToStoreroom = 3487,
+    /// "The <item name> was moved to your inventory."
+    FurnitureMovedToInventory = 3488,
+    /// "You cannot create any more Fellowshiops."
+    UnableToCreateMoreFellowships = 5603,
+    /// "You cannot join any more Fellowships."
+    UnableToJoinMoreFellowships = 5630,
+    /// "Unable to perform that action. That player is offline."
+    UnableToPerformPlayerOffline = 5655,
 }
 
 /// Names for rows in the Excel sheet of the same name.

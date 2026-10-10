@@ -17,7 +17,7 @@ use crate::{
 };
 use kawari::{
     common::{
-        CharacterMode, ContainerType, HandlerId, JumpState, LegacyEquipmentModelId, LogMessageType,
+        CharacterMode, ContainerType, HandlerId, JumpState, LegacyEquipmentModelId,
         MoveAnimationState, MoveAnimationType, ObjectId, ObjectTypeId, Position, WarpType,
         WeaponModelId,
     },
@@ -154,7 +154,7 @@ pub enum FromServer {
         Option<(u64, u32, ObjectId, Vec<PartyMemberEntry>)>,
     ),
     /// Inform the client of the result of a social invite they have sent.
-    InviteCharacterResult(u64, LogMessageType, InviteType, String),
+    InviteCharacterResult(u64, u16, InviteType, String),
     /// Inform the client they were in a party, and request that they inform us of their return.
     RejoinPartyAfterDisconnect(u64),
     /// Send an arbitrary IPC segment to the client.

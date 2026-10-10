@@ -6,8 +6,8 @@ use kawari::{
     common::{
         ContentDirectorEvent, DirectorEvent, DirectorTrigger, DutyOption, EOBJ_EXIT, EOBJ_SHORTCUT,
         EventState, GimmickRectEvent, HandlerId, HandlerType, InstanceContentDirectorEvent,
-        LeveDirectorEvent, ObjectId, ObjectTypeId, ObjectTypeKind, Position, PublicContentType,
-        timestamp_secs,
+        LeveDirectorEvent, LogMessageType, ObjectId, ObjectTypeId, ObjectTypeKind, Position,
+        PublicContentType, timestamp_secs,
     },
     config::get_config,
     ipc::zone::{
@@ -394,7 +394,7 @@ impl DirectorData {
     pub fn seal_boss_wall(&mut self, id: u32, place_name: u32) {
         if let Some(boss) = self.bosses.iter_mut().find(|x| x.1.wall_id == id) {
             self.tasks.push(LuaDirectorTask::LogMessage {
-                id: 2013,
+                id: LogMessageType::BossRoomSealed as u32,
                 params: vec![place_name],
             });
             self.tasks.push(LuaDirectorTask::ShowEObj { base_id: id });
@@ -409,7 +409,7 @@ impl DirectorData {
         self.tasks
             .push(LuaDirectorTask::HideEObj { base_id: line_id });
         self.tasks.push(LuaDirectorTask::LogMessage {
-            id: 2014,
+            id: LogMessageType::BossRoomUnsealed as u32,
             params: vec![place_name],
         });
     }
@@ -420,7 +420,7 @@ impl DirectorData {
         {
             // TODO: is there times that are longer than 15 secs?
             self.tasks.push(LuaDirectorTask::LogMessage {
-                id: 2012,
+                id: LogMessageType::BossRoomSealing as u32,
                 params: vec![boss.place_name, 15],
             });
             self.tasks.push(LuaDirectorTask::SealBossWall {
