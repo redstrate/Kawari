@@ -222,7 +222,7 @@ impl ZoneConnection {
         }
 
         let base_parameters = self.base_parameters(); // TODO: maybe cache this?
-        let mut game_data = self.gamedata.lock();
+        let mut game_data = self.game_data.lock();
 
         CommonSpawn {
             class_job: self.player_data.classjob.current_class as u8,

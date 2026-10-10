@@ -778,10 +778,10 @@ pub fn execute_item_action(
     let (action_type, action_data, additional_data);
     let is_misc;
     {
-        let mut gamedata = game_data.lock();
+        let mut game_data = game_data.lock();
         (action_type, action_data, additional_data) =
-            gamedata.lookup_item_action_data(key).unwrap_or_default();
-        is_misc = gamedata.item_is_misc(key);
+            game_data.lookup_item_action_data(key).unwrap_or_default();
+        is_misc = game_data.item_is_misc(key);
     }
 
     let mut effects_builder = None;

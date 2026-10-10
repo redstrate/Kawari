@@ -9,7 +9,7 @@ impl ZoneConnection {
         // Only refresh if we ran out of results from a prior run.
         if self.friend_results.is_empty() {
             let mut db = self.database.lock();
-            let mut game_data = self.gamedata.lock();
+            let mut game_data = self.game_data.lock();
             self.friend_results =
                 db.find_friend_list(&mut game_data, self.player_data.character.content_id);
 

@@ -131,7 +131,7 @@ impl ZoneConnection {
         let mut entries = Vec::new();
 
         let mut database = self.database.lock();
-        let mut game_data = self.gamedata.lock();
+        let mut game_data = self.game_data.lock();
         if self.party_id != 0 {
             entries = database.get_party_entries(&mut game_data, self.party_id as i64);
         } else {

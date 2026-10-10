@@ -526,7 +526,7 @@ impl DirectorData {
 pub fn director_tick(
     network: Arc<Mutex<NetworkState>>,
     instance: &mut Instance,
-    gamedata: Arc<Mutex<GameData>>,
+    game_data: Arc<Mutex<GameData>>,
 ) {
     let tasks = if let Some(director) = &instance.directors.first() {
         director.tasks.clone()
@@ -702,8 +702,8 @@ pub fn director_tick(
                 if let Some(mut npc) = instance.zone.get_battle_npc(*id) {
                     npc.common.handler_id = director_id;
                     let config = get_config();
-                    let mut gamedata = gamedata.lock();
-                    instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config, &mut gamedata);
+                    let mut game_data = game_data.lock();
+                    instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config, &mut game_data);
                 } else {
                     tracing::warn!("Failed to find bnpc {id} for SpawnBattleNpc, it won't spawn!");
                 }
@@ -773,7 +773,7 @@ pub fn director_tick(
 
                     let actor_id = ObjectId(fastrand::u32(..));
                     let config = get_config();
-                    let mut game_data = gamedata.lock();
+                    let mut game_data = game_data.lock();
                     instance.insert_npc(actor_id, npc, &config, &mut game_data);
                     bosses.insert(
                         *bnpc_id,
@@ -909,7 +909,7 @@ pub fn director_tick(
 pub fn handle_director_messages(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
-    gamedata: Arc<Mutex<GameData>>,
+    game_data: Arc<Mutex<GameData>>,
     msg: &ToServer,
 ) -> bool {
     match msg {
@@ -932,13 +932,13 @@ pub fn handle_director_messages(
 
             let (gimmick_accessor_type, gimmick_param0, gimmick_param1, gimmick_param2);
             {
-                let mut gamedata = gamedata.lock();
+                let mut game_data = game_data.lock();
                 (
                     gimmick_accessor_type,
                     gimmick_param0,
                     gimmick_param1,
                     gimmick_param2,
-                ) = gamedata.lookup_gimmick_accessor(*id).unwrap();
+                ) = game_data.lookup_gimmick_accessor(*id).unwrap();
             }
 
             match gimmick_accessor_type {
@@ -1233,7 +1233,7 @@ pub fn handle_director_trigger(
 pub fn send_director_vars(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
-    gamedata: Arc<Mutex<GameData>>,
+    game_data: Arc<Mutex<GameData>>,
     from_actor_id: ObjectId,
 ) {
     let mut data = data.lock();
@@ -1263,8 +1263,8 @@ pub fn send_director_vars(
                 DestinationNetwork::ZoneClients,
             );
 
-            let mut gamedata = gamedata.lock();
-            if let Some(map_effects) = gamedata.get_map_effects(instance.content_id as u32) {
+            let mut game_data = game_data.lock();
+            if let Some(map_effects) = game_data.get_map_effects(instance.content_id as u32) {
                 let mut states = Vec::new();
                 for (i, layout_id) in map_effects.iter().enumerate() {
                     // A layout ID of zero means the effect should be skipped.
@@ -1304,7 +1304,7 @@ pub fn send_director_vars(
         if director.id.handler_type() == HandlerType::PublicContent {
             let content_type;
             {
-                let mut game_data = gamedata.lock();
+                let mut game_data = game_data.lock();
                 content_type = game_data
                     .find_public_content_type(director.id.event_id())
                     .unwrap_or_default();

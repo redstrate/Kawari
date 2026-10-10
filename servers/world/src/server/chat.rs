@@ -177,8 +177,8 @@ fn process_debug_commands(
                 let mount_id = match mount.parse::<u16>() {
                     Ok(id) => id,
                     Err(_) => {
-                        let mut gamedata = game_data.lock();
-                        gamedata
+                        let mut game_data = game_data.lock();
+                        game_data
                             .get_mount_id_from_name(mount.to_string())
                             .unwrap_or(1) // Fallback to a company chocobo otherwise
                     }

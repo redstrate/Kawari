@@ -145,7 +145,7 @@ impl ShopEventHandler {
         if buy_sell_mode == BUY {
             let result;
             {
-                let mut game_data = connection.gamedata.lock();
+                let mut game_data = connection.game_data.lock();
                 result = game_data.get_gilshop_item(event.id.0, item_index as u16);
             }
 
@@ -229,7 +229,7 @@ impl ShopEventHandler {
                     );
                     return;
                 };
-                let mut game_data = connection.gamedata.lock();
+                let mut game_data = connection.game_data.lock();
                 result = game_data.get_item_info(ItemInfoQuery::ById(item.item_id));
                 quantity = item.quantity;
             }

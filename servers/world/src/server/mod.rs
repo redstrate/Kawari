@@ -293,7 +293,7 @@ impl WorldServer {
 fn server_logic_tick(
     data: Arc<Mutex<WorldServer>>,
     network: Arc<Mutex<NetworkState>>,
-    gamedata: Arc<Mutex<GameData>>,
+    game_data: Arc<Mutex<GameData>>,
     lua: Arc<Mutex<KawariLua>>,
 ) {
     let mut actors_to_update_hp_mp = Vec::new();
@@ -315,7 +315,7 @@ fn server_logic_tick(
 
         for instance in &mut data.instances {
             let mut haters = HashMap::new();
-            npc_behavior::npc_behavior(network.clone(), gamedata.clone(), instance, &mut haters);
+            npc_behavior::npc_behavior(network.clone(), game_data.clone(), instance, &mut haters);
 
             let mut actors_now_gimmick_jumping = Vec::new();
             let mut actors_now_inside_instance_exits = Vec::new();
@@ -760,8 +760,8 @@ fn server_logic_tick(
             }
 
             // Process any director tasks for this instance.
-            director_tick(network.clone(), instance, gamedata.clone());
-            fate_tick(network.clone(), instance, gamedata.clone());
+            director_tick(network.clone(), instance, game_data.clone());
+            fate_tick(network.clone(), instance, game_data.clone());
         }
         // Ensure the rested EXP counter only happens every 10 seconds.
         data.rested_exp_counter += 1;
@@ -783,7 +783,7 @@ fn server_logic_tick(
     }
 
     for (id, exit_pop_range_id) in actors_to_fake_zone_jump {
-        let mut game_data = gamedata.lock();
+        let mut game_data = game_data.lock();
         let mut data = data.lock();
         let mut network = network.lock();
         let lua = lua.lock();

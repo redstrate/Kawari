@@ -23,7 +23,7 @@ impl ZoneConnection {
         let model_ids;
         let second_model_stain_ids;
         {
-            let mut game_data = self.gamedata.lock();
+            let mut game_data = self.game_data.lock();
             let inventory = &self.player_data.inventory;
 
             main_weapon_id = inventory.get_main_weapon_id(&mut game_data);
@@ -198,7 +198,7 @@ impl ZoneConnection {
         if self.player_data.character.actor_id == actor_id {
             let level;
             {
-                let mut game_data = self.gamedata.lock();
+                let mut game_data = self.game_data.lock();
 
                 level = self
                     .player_data
@@ -349,7 +349,7 @@ impl ZoneConnection {
         // Check the weapon's compatible class jobs:
         let classjobs;
         {
-            let mut game_data = self.gamedata.lock();
+            let mut game_data = self.game_data.lock();
 
             let weapon = self.player_data.inventory.equipped.main_hand.item_id;
             let item_info = game_data
@@ -372,7 +372,7 @@ impl ZoneConnection {
         if soul_crystal.quantity > 0 {
             let classjob_id;
             {
-                let mut game_data = self.gamedata.lock();
+                let mut game_data = self.game_data.lock();
                 classjob_id = game_data.get_applicable_classjob(soul_crystal.item_id);
             }
 
@@ -390,7 +390,7 @@ impl ZoneConnection {
     pub async fn remove_incompatible_armor(&mut self, action: &ItemOperation) {
         // NOTE: This has to match client behavior exactly! As this happens client-side.
 
-        let mut game_data = self.gamedata.lock();
+        let mut game_data = self.game_data.lock();
 
         // First remove incompatible classjob gear.
         for slot in EquipSlot::iter() {

@@ -92,8 +92,8 @@ impl ZoneConnection {
         // Only refresh and reset state if our list is empty.
         if self.cwls_results.is_empty() {
             let mut db = self.database.lock();
-            let mut gamedata = self.gamedata.lock();
-            if let Some(cwls_results) = db.find_linkshell_members(linkshell_id, &mut gamedata) {
+            let mut game_data = self.game_data.lock();
+            if let Some(cwls_results) = db.find_linkshell_members(linkshell_id, &mut game_data) {
                 self.cwls_results = cwls_results;
             } else {
                 // If we somehow are told about an empty linkshell, ensure we can at least provide a blank member list so the client doesn't experience oddities beyond that.
@@ -440,8 +440,8 @@ impl ZoneConnection {
                 return;
             };
 
-            let mut gamedata = self.gamedata.lock();
-            let Some(members) = db.find_linkshell_members(linkshell_id, &mut gamedata) else {
+            let mut game_data = self.game_data.lock();
+            let Some(members) = db.find_linkshell_members(linkshell_id, &mut game_data) else {
                 return;
             };
 

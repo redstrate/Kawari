@@ -100,10 +100,10 @@ fn spawn_initial_setup(
     socket: TcpStream,
     lua: Arc<Mutex<KawariLua>>,
     database: Arc<Mutex<WorldDatabase>>,
-    gamedata: Arc<Mutex<GameData>>,
+    game_data: Arc<Mutex<GameData>>,
     handle: ServerHandle,
 ) {
-    let _kill = tokio::spawn(initial_setup(id, socket, lua, database, gamedata, handle));
+    let _kill = tokio::spawn(initial_setup(id, socket, lua, database, game_data, handle));
 }
 
 /// The initial setup loop, which figures out what the remote connection wants and branches off to provide a chat connection, zone connection, or custom IPC connection.
@@ -125,7 +125,7 @@ async fn initial_setup(
                     socket,
                     state: ConnectionState::None,
                     database: database.clone(),
-                    gamedata: game_data.clone(),
+                    game_data: game_data.clone(),
                     id,
                     handle,
                 };
@@ -158,7 +158,7 @@ async fn initial_setup(
                     handle: handle.clone(),
                     database: database.clone(),
                     lua: lua.clone(),
-                    gamedata: game_data.clone(),
+                    game_data: game_data.clone(),
                     last_keep_alive: Instant::now(),
                     gracefully_logged_out: false,
                     obsfucation_data: ObsfucationData::default(),
@@ -218,7 +218,7 @@ async fn initial_setup(
                             if !connection.player_data.character.actor_id.is_valid() {
                                 let player_data;
                                 {
-                                    let mut game_data = connection.gamedata.lock();
+                                    let mut game_data = connection.game_data.lock();
                                     let mut database = connection.database.lock();
                                     player_data = database
                                         .find_player_data(ObjectId(actor_id), &mut game_data);
@@ -925,7 +925,7 @@ async fn process_packet(
 
                             let level;
                             {
-                                let mut game_data = connection.gamedata.lock();
+                                let mut game_data = connection.game_data.lock();
 
                                 level = connection
                                     .player_data
@@ -1157,7 +1157,7 @@ async fn process_packet(
                                     let mut available_content =
                                         Vec::with_capacity(DutySupportInformation::INDICE_COUNT);
                                     {
-                                        let mut game_data = connection.gamedata.lock();
+                                        let mut game_data = connection.game_data.lock();
                                         let content_finder_conditions =
                                             game_data.list_dawn_content_content_finder_conditions();
 
@@ -1303,14 +1303,14 @@ async fn process_packet(
                                     let gathering_point_bonus;
                                     let point_type;
                                     {
-                                        let mut gamedata = connection.gamedata.lock();
+                                        let mut game_data = connection.game_data.lock();
                                         (
                                             base_id,
                                             level,
                                             count,
                                             gathering_point_bonus,
                                             point_type,
-                                        ) = gamedata.get_gathering_point(id);
+                                        ) = game_data.get_gathering_point(id);
                                     }
 
                                     // TODO: document in EXDSchema that 3 seems to mean levequest ones
@@ -1354,8 +1354,8 @@ async fn process_packet(
 
                                         let recipe;
                                         {
-                                            let mut gamedata = connection.gamedata.lock();
-                                            recipe = gamedata.get_recipe(id);
+                                            let mut game_data = connection.game_data.lock();
+                                            recipe = game_data.get_recipe(id);
                                         }
 
                                         // TODO: wrong scene flags
@@ -1634,7 +1634,7 @@ async fn process_packet(
 
                                     let item_id;
                                     {
-                                        let mut gamedata = connection.gamedata.lock();
+                                        let mut game_data = connection.game_data.lock();
                                         let Some(the_item) = connection
                                             .player_data
                                             .house_inventory
@@ -1643,7 +1643,7 @@ async fn process_packet(
                                             continue;
                                         };
                                         let Some(the_id) =
-                                            gamedata.get_furniture_item_id(the_item.item_id)
+                                            game_data.get_furniture_item_id(the_item.item_id)
                                         else {
                                             continue;
                                         };
@@ -1734,8 +1734,8 @@ async fn process_packet(
                                     let mut fate_count_maximum = [0u8; 6];
                                     {
                                         for (j, i) in (start_index..start_index + 6).enumerate() {
-                                            let mut gamedata = connection.gamedata.lock();
-                                            fate_count_maximum[j] = gamedata
+                                            let mut game_data = connection.game_data.lock();
+                                            fate_count_maximum[j] = game_data
                                                 .get_fate_progress_maximum_count(i as u32)
                                                 .unwrap_or_default();
                                         }
@@ -1755,7 +1755,7 @@ async fn process_packet(
 
                                     // Toggles the syncing on and off
                                     if connection.synced_level.is_none() {
-                                        let mut game_data = connection.gamedata.lock();
+                                        let mut game_data = connection.game_data.lock();
                                         connection.synced_level =
                                             game_data.get_fate_max_level(fate_id);
                                     } else {
@@ -1790,8 +1790,8 @@ async fn process_packet(
                                 } => {
                                     let content_finder_condition_id;
                                     {
-                                        let mut gamedata = connection.gamedata.lock();
-                                        content_finder_condition_id = gamedata
+                                        let mut game_data = connection.game_data.lock();
+                                        content_finder_condition_id = game_data
                                             .get_dawn_content_cfc_id(dawn_content_id)
                                             .unwrap();
                                     }
@@ -2168,8 +2168,8 @@ async fn process_packet(
 
                                 let id;
                                 {
-                                    let mut gamedata = connection.gamedata.lock();
-                                    id = gamedata.get_soul_crystal_item_id(
+                                    let mut game_data = connection.game_data.lock();
+                                    id = game_data.get_soul_crystal_item_id(
                                         connection.player_data.classjob.current_class as u16,
                                     );
                                 }
@@ -2416,7 +2416,7 @@ async fn process_packet(
 
                             let duty_id;
                             {
-                                let mut game_data = connection.gamedata.lock();
+                                let mut game_data = connection.game_data.lock();
                                 // TODO: take into account whether these duties are unlocked
                                 duty_id = game_data.pick_roulette_duty(roulette) as u16;
                             }
@@ -2889,7 +2889,7 @@ async fn process_packet(
                             let search_info;
                             {
                                 let mut database = connection.database.lock();
-                                let mut game_data = connection.gamedata.lock();
+                                let mut game_data = connection.game_data.lock();
                                 search_info =
                                     database.get_search_info(&mut game_data, *content_id as i64);
                             }
@@ -3546,8 +3546,8 @@ async fn process_packet(
 
                             let item_id;
                             {
-                                let mut gamedata = connection.gamedata.lock();
-                                let result = gamedata.get_furniture_item_id(transfer_item.item_id);
+                                let mut game_data = connection.game_data.lock();
+                                let result = game_data.get_furniture_item_id(transfer_item.item_id);
                                 item_id = result.unwrap_or_default();
                             }
 
@@ -4418,7 +4418,7 @@ async fn process_server_msg(
             FromServer::SyncMaxLevel(synced_level) => {
                 let current_level;
                 {
-                    let game_data = connection.gamedata.lock();
+                    let game_data = connection.game_data.lock();
                     current_level = connection.current_level(&game_data);
                 }
 

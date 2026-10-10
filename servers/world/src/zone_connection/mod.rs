@@ -133,7 +133,7 @@ pub struct ZoneConnection {
 
     pub database: Arc<Mutex<WorldDatabase>>,
     pub lua: Arc<Mutex<KawariLua>>,
-    pub gamedata: Arc<Mutex<GameData>>,
+    pub game_data: Arc<Mutex<GameData>>,
 
     pub teleport_reason: TeleportReason,
     pub active_minion: u32,
@@ -513,9 +513,9 @@ impl ZoneConnection {
     }
 
     pub fn check_tele_sharing_eligibility(&mut self, aetheryte_id: u32) {
-        let mut gamedata = self.gamedata.lock();
+        let mut game_data = self.game_data.lock();
         // The teleport can only be offered if it's a town aetheryte (not shard) and the player is actually teleporting, not using the aethernet.
-        self.can_share_teleport = gamedata.is_aetheryte(aetheryte_id);
+        self.can_share_teleport = game_data.is_aetheryte(aetheryte_id);
     }
 
     pub fn can_offer_teleport(&self) -> bool {

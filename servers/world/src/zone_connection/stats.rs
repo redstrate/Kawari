@@ -311,7 +311,7 @@ impl ZoneConnection {
     pub async fn update_class_info(&mut self) {
         let ipc;
         {
-            let game_data = self.gamedata.lock();
+            let game_data = self.game_data.lock();
 
             ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UpdateClassInfo(UpdateClassInfo {
                 classjob_id: self.player_data.classjob.current_class as u8,
@@ -347,7 +347,7 @@ impl ZoneConnection {
 
         let ipc;
         {
-            let game_data = self.gamedata.lock();
+            let game_data = self.game_data.lock();
 
             ipc = ServerZoneIpcSegment::new(ServerZoneIpcData::UnkClassRelated {
                 classjob_id: self.player_data.classjob.current_class as u8,
@@ -366,7 +366,7 @@ impl ZoneConnection {
 
     /// Scaled parameters based on level and item level sync.
     pub fn base_parameters(&self) -> BaseParameters {
-        let mut game_data = self.gamedata.lock();
+        let mut game_data = self.game_data.lock();
 
         let modifiers = game_data
             .get_class_job_modifiers(self.player_data.classjob.current_class as u32)
@@ -422,7 +422,7 @@ impl ZoneConnection {
 
     /// Same as `base_parameters` but doesn't take into account level or item level sync.
     pub fn unscaled_base_parameters(&mut self) -> BaseParameters {
-        let mut game_data = self.gamedata.lock();
+        let mut game_data = self.game_data.lock();
 
         let modifiers = game_data
             .get_class_job_modifiers(self.player_data.classjob.current_class as u32)
@@ -501,11 +501,11 @@ impl ZoneConnection {
     async fn update_server_stats(&mut self) {
         let current_level;
         {
-            let gamedata = self.gamedata.lock();
+            let game_data = self.game_data.lock();
             if let Some(synced_level) = self.synced_level {
                 current_level = synced_level;
             } else {
-                current_level = self.current_level(&gamedata) as u8;
+                current_level = self.current_level(&game_data) as u8;
             }
         }
 
@@ -533,7 +533,7 @@ impl ZoneConnection {
     }
 
     pub fn set_level_for(&mut self, classjob_id: u8, level: u16) {
-        let game_data = self.gamedata.lock();
+        let game_data = self.game_data.lock();
 
         let index = game_data
             .get_exp_array_index(classjob_id as u16)
@@ -549,7 +549,7 @@ impl ZoneConnection {
     }
 
     pub fn set_current_exp(&mut self, exp: i32) {
-        let game_data = self.gamedata.lock();
+        let game_data = self.game_data.lock();
 
         let index = game_data
             .get_exp_array_index(self.player_data.classjob.current_class as u16)
@@ -579,7 +579,7 @@ impl ZoneConnection {
         let index;
         let mut level_up = 0;
         {
-            let mut game_data = self.gamedata.lock();
+            let mut game_data = self.game_data.lock();
 
             index = game_data
                 .get_exp_array_index(self.player_data.classjob.current_class as u16)
@@ -650,11 +650,11 @@ impl ZoneConnection {
             // Here is where the fun calculations come in for rested EXP.
             // We need to basically convert EXP to "seconds" - which is what rested EXP is counted in.
 
-            let mut gamedata = self.gamedata.lock();
-            let current_level = self.current_level(&gamedata);
+            let mut game_data = self.game_data.lock();
+            let current_level = self.current_level(&game_data);
 
             // This is the size of the bar in EXP.
-            let max_exp = gamedata.get_max_exp(current_level as u32);
+            let max_exp = game_data.get_max_exp(current_level as u32);
             assert!(max_exp > 0);
 
             // This is the size of the bar in seconds.

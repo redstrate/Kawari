@@ -16,7 +16,7 @@ impl ZoneConnection {
 
         if should_unlock {
             {
-                let mut game_data = self.gamedata.lock();
+                let mut game_data = self.game_data.lock();
                 item_id = game_data
                     .find_orchestrion_item_id(orchestrion_id)
                     .unwrap_or(0);
@@ -156,7 +156,7 @@ impl ZoneConnection {
     pub async fn toggle_aether_current(&mut self, aether_current_id: u32) {
         let aether_current_set;
         {
-            let mut game_data = self.gamedata.lock();
+            let mut game_data = self.game_data.lock();
             aether_current_set = game_data.find_aether_current_set(aether_current_id as i32);
         }
 
@@ -172,7 +172,7 @@ impl ZoneConnection {
                 let screen_image_id;
 
                 {
-                    let mut game_data = self.gamedata.lock();
+                    let mut game_data = self.game_data.lock();
 
                     currents_needed_for_zone = game_data
                         .get_aether_currents_from_zone(aether_current_set_id)
@@ -236,7 +236,7 @@ impl ZoneConnection {
 
         let screen_image_id;
         {
-            let mut game_data = self.gamedata.lock();
+            let mut game_data = self.game_data.lock();
             screen_image_id = game_data
                 .get_screenimage_from_aether_current_comp_flg_set(aether_current_comp_flg_set_id)
                 .unwrap();

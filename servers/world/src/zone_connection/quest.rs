@@ -118,8 +118,8 @@ impl ZoneConnection {
         // Grant rewards
         let rewards;
         {
-            let mut gamedata = self.gamedata.lock();
-            rewards = gamedata.get_quest_rewards(id);
+            let mut game_data = self.game_data.lock();
+            rewards = game_data.get_quest_rewards(id);
         }
 
         // Add gil
@@ -213,8 +213,8 @@ impl ZoneConnection {
     }
 
     pub fn record_fate_completion(&mut self) {
-        let mut gamedata = self.gamedata.lock();
-        if let Some(row) = gamedata.get_fate_progress_ui_row(self.player_data.volatile.zone_id) {
+        let mut game_data = self.game_data.lock();
+        if let Some(row) = game_data.get_fate_progress_ui_row(self.player_data.volatile.zone_id) {
             self.player_data.quest.shared_fates.0[row as usize] += 1;
         }
     }

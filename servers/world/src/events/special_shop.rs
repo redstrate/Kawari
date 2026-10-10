@@ -53,7 +53,7 @@ impl SpecialShopEventHandler {
         let result;
 
         {
-            let mut game_data = connection.gamedata.lock();
+            let mut game_data = connection.game_data.lock();
             result = game_data.get_specialshop_item(event.id.0, item_index as u16);
         }
 

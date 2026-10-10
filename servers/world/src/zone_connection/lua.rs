@@ -81,12 +81,12 @@ impl ZoneConnection {
                     let starting_level;
                     let soul_crystal_id;
                     {
-                        let mut gamedata = self.gamedata.lock();
+                        let mut game_data = self.game_data.lock();
 
-                        starting_level = gamedata
+                        starting_level = game_data
                             .get_starting_level(*classjob_id as u16)
                             .unwrap_or(1);
-                        soul_crystal_id = gamedata.get_soul_crystal_item_id(*classjob_id as u16);
+                        soul_crystal_id = game_data.get_soul_crystal_item_id(*classjob_id as u16);
                     }
 
                     self.set_level_for(*classjob_id, starting_level as u16);
@@ -250,7 +250,7 @@ impl ZoneConnection {
                 } => {
                     let new_item: Option<Item>;
                     {
-                        let mut game_data = self.gamedata.lock();
+                        let mut game_data = self.game_data.lock();
                         new_item = game_data
                             .get_item_info(ItemInfoQuery::ById(*id))
                             .map(|x| Item::new(&x, *quantity));
@@ -276,7 +276,7 @@ impl ZoneConnection {
                 }
                 LuaTask::UnlockContent { id } => {
                     {
-                        let mut game_data = self.gamedata.lock();
+                        let mut game_data = self.game_data.lock();
                         if let Some(instance_content_type) = game_data.find_type_for_content(*id) {
                             // Each id has to be subtracted by it's offset in the InstanceContent Excel sheet. For example, all guildheists start at ID 10000.
                             match instance_content_type {
@@ -369,7 +369,7 @@ impl ZoneConnection {
                 LuaTask::ToggleMount { id } => {
                     let order;
                     {
-                        let mut game_data = self.gamedata.lock();
+                        let mut game_data = self.game_data.lock();
                         order = game_data.find_mount_order(*id).unwrap_or(0);
                     }
 
@@ -822,7 +822,7 @@ impl ZoneConnection {
     pub async fn reload_scripts(&mut self) {
         {
             let mut lua = self.lua.lock();
-            if let Err(err) = lua.init(self.gamedata.clone()) {
+            if let Err(err) = lua.init(self.game_data.clone()) {
                 tracing::warn!("Failed to load Init.lua: {:?}", err);
             }
         }

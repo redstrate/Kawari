@@ -31,7 +31,7 @@ use crate::{
 /// Updates NPCs in this instance.
 pub fn npc_behavior(
     network: Arc<Mutex<NetworkState>>,
-    gamedata: Arc<Mutex<GameData>>,
+    game_data: Arc<Mutex<GameData>>,
     instance: &mut Instance,
     haters: &mut HashMap<ObjectId, Vec<ObjectId>>,
 ) {
@@ -184,7 +184,7 @@ pub fn npc_behavior(
                         .character_data_flags
                         .contains(CharacterDataFlag::HOSTILE)
                 {
-                    let mut game_data = gamedata.lock();
+                    let mut game_data = game_data.lock();
                     let possible_enemies =
                         game_data.get_battalion_enemies(spawn.common.battalion as u32);
 
@@ -318,7 +318,7 @@ pub fn npc_behavior(
                             if spawn.common.target_id.object_id.is_valid() && can_take_action {
                                 let cast_time;
                                 {
-                                    let mut game_data = gamedata.lock();
+                                    let mut game_data = game_data.lock();
                                     cast_time = game_data.get_casttime(*action_id).unwrap(); // TODO: take into account the haste stat like the client does
                                 }
                                 let cast_time_seconds = (cast_time as f32 * 100.0) / 1000.0; // TODO: just change how the Duration is interpreted instead of this nonsense

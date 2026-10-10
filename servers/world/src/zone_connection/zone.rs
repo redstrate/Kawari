@@ -167,8 +167,8 @@ impl ZoneConnection {
         if lua_zone.intended_use == TerritoryIntendedUse::Inn {
             let display_ids;
             {
-                let mut gamedata = self.gamedata.lock();
-                display_ids = gamedata.get_latest_fittingshop_display_ids();
+                let mut game_data = self.game_data.lock();
+                display_ids = game_data.get_latest_fittingshop_display_ids();
             }
 
             let ipc =
@@ -181,9 +181,9 @@ impl ZoneConnection {
 
         // Set up ocean fishing
         if bound_by_duty {
-            let mut gamedata = self.gamedata.lock();
+            let mut game_data = self.game_data.lock();
             if let Some(spots) =
-                gamedata.lookup_ikd_route_spots_via_content(content_finder_condition_id as u32)
+                game_data.lookup_ikd_route_spots_via_content(content_finder_condition_id as u32)
             {
                 // Special festivals used for ocean fishing.
                 game_festival_ids = [
@@ -225,7 +225,7 @@ impl ZoneConnection {
             } else {
                 self.offered_teleport = None; // Discard any previously offered teleports once we're in a duty.
 
-                let mut game_data = self.gamedata.lock();
+                let mut game_data = self.game_data.lock();
                 if game_data.is_duty_recorder_allowed(content_finder_condition_id) {
                     flags |= ZoneInitFlags::ENABLE_RECORD_READY_CHECK;
                 }
@@ -247,7 +247,7 @@ impl ZoneConnection {
 
         let level;
         {
-            let mut game_data = self.gamedata.lock();
+            let mut game_data = self.game_data.lock();
 
             level = self
                 .player_data
@@ -502,7 +502,7 @@ impl ZoneConnection {
         // If the player isn't in a valid zone, or in instanced content (both crash the game) then we need to reset them.
         let should_reset;
         {
-            let mut game_data = self.gamedata.lock();
+            let mut game_data = self.game_data.lock();
             should_reset = !game_data.is_zone_valid(zone_id as u16)
                 || game_data.is_zone_associated_with_content(zone_id as u16);
         }

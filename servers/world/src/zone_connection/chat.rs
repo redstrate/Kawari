@@ -143,8 +143,9 @@ impl ZoneConnection {
                 if let Some((_, name)) = chat_message.split_once(' ') {
                     let item_info;
                     {
-                        let mut gamedata = self.gamedata.lock();
-                        item_info = gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()));
+                        let mut game_data = self.game_data.lock();
+                        item_info =
+                            game_data.get_item_info(ItemInfoQuery::ByName(name.to_string()));
                     }
                     if let Some(item_info) = item_info {
                         let equip_slot = EquipSlot::from(&item_info.equip_category);
@@ -177,10 +178,10 @@ impl ZoneConnection {
                 if let Some((_, name)) = chat_message.split_once(' ') {
                     let mut result = None;
                     {
-                        let mut gamedata = self.gamedata.lock();
+                        let mut game_data = self.game_data.lock();
 
                         if let Some(item_info) =
-                            gamedata.get_item_info(ItemInfoQuery::ByName(name.to_string()))
+                            game_data.get_item_info(ItemInfoQuery::ByName(name.to_string()))
                         {
                             result = self
                                 .player_data
@@ -278,7 +279,7 @@ impl ZoneConnection {
 
                     let name_id;
                     {
-                        let mut game_data = self.gamedata.lock();
+                        let mut game_data = self.game_data.lock();
                         name_id = game_data
                             .get_npc_yell_name_id(npc_yell_id)
                             .unwrap_or_default();

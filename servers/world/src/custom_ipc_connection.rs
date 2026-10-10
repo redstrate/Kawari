@@ -22,7 +22,7 @@ pub struct CustomIpcConnection {
     pub socket: TcpStream,
     pub state: ConnectionState,
     pub database: Arc<Mutex<WorldDatabase>>,
-    pub gamedata: Arc<Mutex<GameData>>,
+    pub game_data: Arc<Mutex<GameData>>,
     pub id: ClientId,
     pub handle: ServerHandle,
 }
@@ -56,7 +56,7 @@ impl CustomIpcConnection {
 
                 let city_state;
                 {
-                    let mut game_data = self.gamedata.lock();
+                    let mut game_data = self.game_data.lock();
 
                     city_state = game_data
                         .get_citystate(chara_make.classjob_id as u16)
@@ -66,7 +66,7 @@ impl CustomIpcConnection {
                 let mut inventory = Inventory::default();
                 let (content_id, actor_id);
                 {
-                    let mut game_data = self.gamedata.lock();
+                    let mut game_data = self.game_data.lock();
 
                     inventory.equip_classjob_items(chara_make.classjob_id as u16, &mut game_data);
 
@@ -149,7 +149,7 @@ impl CustomIpcConnection {
 
                 let characters;
                 {
-                    let mut game_data = self.gamedata.lock();
+                    let mut game_data = self.game_data.lock();
 
                     let mut database = self.database.lock();
                     characters = database.get_character_list(
@@ -195,7 +195,7 @@ impl CustomIpcConnection {
             } => {
                 let message;
                 {
-                    let mut game_data = self.gamedata.lock();
+                    let mut game_data = self.game_data.lock();
                     let mut database = self.database.lock();
                     if let Err(err) =
                         database.import_character(&mut game_data, *service_account_id, path)

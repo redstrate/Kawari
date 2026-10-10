@@ -121,7 +121,7 @@ impl ZoneConnection {
         let handler = dispatch_event(
             event_id,
             base_id,
-            self.gamedata.clone(),
+            self.game_data.clone(),
             self,
             actor_id.object_id,
         );

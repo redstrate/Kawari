@@ -132,8 +132,8 @@ impl EventHandler for GatheringEventHandler {
         // TODO: store this on begin gather
         let items;
         {
-            let mut gamedata = connection.gamedata.lock();
-            items = gamedata.get_gathering_point_items(event.id.event_id());
+            let mut game_data = connection.game_data.lock();
+            items = game_data.get_gathering_point_items(event.id.event_id());
         }
 
         if results[2] == 2 {
@@ -146,10 +146,10 @@ impl EventHandler for GatheringEventHandler {
 
             // Add item to their inventory
             {
-                let mut gamedata = connection.gamedata.lock();
+                let mut game_data = connection.game_data.lock();
 
                 if let Some(item_info) =
-                    gamedata.get_item_info(ItemInfoQuery::ById(gather_item_id as u32))
+                    game_data.get_item_info(ItemInfoQuery::ById(gather_item_id as u32))
                 {
                     connection
                         .player_data

@@ -328,8 +328,8 @@ impl ZoneConnection {
         let mask = self.get_online_status_mask();
         let priorities;
         {
-            let mut gamedata = self.gamedata.lock();
-            priorities = gamedata.online_status_priorities();
+            let mut game_data = self.game_data.lock();
+            priorities = game_data.online_status_priorities();
         }
         let mut priorities: Vec<(usize, &u8)> = priorities.iter().enumerate().collect();
         priorities.sort_by(|(_, a_priority), (_, b_priority)| {
@@ -378,7 +378,7 @@ impl ZoneConnection {
         // First, grab up to 200 online players.
         {
             let mut db = self.database.lock();
-            let mut game_data = self.gamedata.lock();
+            let mut game_data = self.game_data.lock();
             self.search_results =
                 db.find_online_players(&mut game_data, self.player_data.character.content_id);
             self.search_index = 0;
@@ -492,7 +492,7 @@ impl ZoneConnection {
             }
 
             // If all other search conditions succeed, filter by area. This one is last instead of 4th, because there currently isn't a good condition to check against. The location check *always* happens if name, classjob and level all pass. You can't search for no areas, essentially.
-            let mut game_data = self.gamedata.lock();
+            let mut game_data = self.game_data.lock();
 
             // If the player is in an invalid zone somehow, or isn't in a region being searched for, they're not relevant.
             let Some(player_region) = game_data.get_territory_placenamezone_data(player.zone_id)

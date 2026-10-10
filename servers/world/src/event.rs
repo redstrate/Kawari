@@ -155,8 +155,8 @@ pub fn dispatch_event(
         HandlerType::GatheringPoint => {
             let count;
             {
-                let mut gamedata = game_data.lock();
-                (_, _, count, _, _) = gamedata.get_gathering_point(handler_id.event_id());
+                let mut game_data = game_data.lock();
+                (_, _, count, _, _) = game_data.get_gathering_point(handler_id.event_id());
             }
 
             Some(Box::new(GatheringEventHandler::new(count)))

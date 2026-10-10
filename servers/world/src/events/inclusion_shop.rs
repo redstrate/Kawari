@@ -47,7 +47,7 @@ impl EventHandler for InclusionShopEventHandler {
 
         let result;
         {
-            let mut game_data = connection.gamedata.lock();
+            let mut game_data = connection.game_data.lock();
             result = game_data.get_specialshop_item(special_shop_id, item_index);
         }
 

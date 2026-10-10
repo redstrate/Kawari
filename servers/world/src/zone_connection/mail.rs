@@ -307,8 +307,8 @@ impl ZoneConnection {
             let mut item_taken = false;
 
             {
-                let mut gamedata = self.gamedata.lock();
-                item.stack_size = gamedata
+                let mut game_data = self.game_data.lock();
+                item.stack_size = game_data
                     .get_item_info(ItemInfoQuery::ById(item.item_id))
                     .unwrap()
                     .stack_size;

@@ -55,9 +55,9 @@ impl EventHandler for CraftingEventHandler {
             let animation_start;
             let animation_end;
             {
-                let mut gamedata = connection.gamedata.lock();
+                let mut game_data = connection.game_data.lock();
                 (animation_start, animation_end) =
-                    gamedata.get_craft_action_animations(craft_action_id as u32);
+                    game_data.get_craft_action_animations(craft_action_id as u32);
             }
 
             // Play the basic touch animation and VFX:
@@ -84,9 +84,9 @@ impl EventHandler for CraftingEventHandler {
         } else if results[0] == 11 {
             // Add item to their inventory
             {
-                let mut gamedata = connection.gamedata.lock();
+                let mut game_data = connection.game_data.lock();
 
-                if let Some(item_info) = gamedata.get_item_info(ItemInfoQuery::ById(
+                if let Some(item_info) = game_data.get_item_info(ItemInfoQuery::ById(
                     connection.recipe.unwrap().item_id as u32,
                 )) {
                     connection
