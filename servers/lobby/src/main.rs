@@ -31,7 +31,9 @@ async fn main() {
 
     let game_exe_path = &format!(
         "{}{}{}",
-        config.filesystem.game_path, MAIN_SEPARATOR_STR, GAME_EXE_NAME
+        config.filesystem.game_path(),
+        MAIN_SEPARATOR_STR,
+        GAME_EXE_NAME
     );
 
     let expected_exe_len;

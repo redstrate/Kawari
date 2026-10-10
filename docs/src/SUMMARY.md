@@ -14,11 +14,11 @@
   - [In-Game Checklist](update_ingame_checklist.md)
   
 # Usage
+- [Configuration](configuration.md)
 - [GM Commands](gm_commands.md)
 - [Debug Commands](debug_commands.md)
 - [Tips](tips.md)
 - [Patching](patching.md)
-- [Connecting From Other Machines](external_connections.md)
 
 # Extending Kawari
 - [Extensibility](extensibility.md)

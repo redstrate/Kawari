@@ -20,10 +20,6 @@ git clone https://github.com/redstrate/Kawari.git
 
 Place the Oodle library for your platform in a new directory called `oodle` inside of the `Kawari` directory.
 
-## Configuration
-
-{{#include configuration.md}}
-
 ## Hosts setup
 
 {{#include hosts.md}}

@@ -20,17 +20,13 @@ Download the [latest build for Windows x86_64 from xiv.zone](https://xiv.zone/di
 
 Place the `oodle-network-shared.dll` from the Oodle zip you downloaded next to the Kawari executables.
 
-## Configuration
-
-{{#include configuration.md}}
-
 ## Hosts setup
 
 {{#include hosts.md}}
 
 ## Running
 
-Run the server by executing `kawari-run.exe`.
+Run the server by double-clicking `kawari-run.exe`.
 
 ## Logging in
 

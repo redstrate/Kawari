@@ -537,7 +537,7 @@ async fn main() {
 
     let config = get_config();
 
-    let sqpack_resource = SqPackResource::from_existing(&config.filesystem.game_path);
+    let sqpack_resource = SqPackResource::from_existing(&config.filesystem.game_path());
     let num_expansions = sqpack_resource.repositories.len() - 1; // Base game is always one
 
     let state = LoginServerState {

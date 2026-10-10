@@ -1,9 +1,10 @@
 use std::{
     net::{IpAddr, SocketAddr},
+    path::PathBuf,
     str::FromStr,
 };
 
-use physis::Language;
+use physis::{Language, Version, existing_dirs::find_existing_game_dirs};
 use serde::{Deserialize, Serialize};
 
 use crate::packet::CompressionType;
@@ -529,6 +530,38 @@ impl FilesystemConfig {
         }
 
         format!("resources/timelines/{path}")
+    }
+
+    /// Get the current game path, which will either take it from the
+    /// config or auto-detect it from the running system.
+    pub fn game_path(&self) -> String {
+        if !self.game_path.is_empty() {
+            return self.game_path.clone();
+        }
+
+        let mut game_dirs = find_existing_game_dirs();
+        // Naively sort by the latest version (realistically you're only to have one game install)
+        // TODO: This might make sense for the Physis API anyway
+        game_dirs.sort_by(|a, b| {
+            let a_version = Version(&a.version);
+            let b_version = Version(&b.version);
+
+            a_version.cmp(&b_version)
+        });
+        if let Some(game_dir) = game_dirs.last() {
+            let mut path = PathBuf::from(&game_dir.path);
+            path.push("game");
+            let path = path.to_str().unwrap().to_string();
+
+            tracing::info!(
+                "Automatically detected game installation at {path:?}. You can override this in config.yaml, see the documentation for more details."
+            );
+            return path;
+        }
+
+        panic!(
+            "The game directory isn't defined in config.yaml, nor could it be automatically found. See the documentation for more details."
+        );
     }
 }
 

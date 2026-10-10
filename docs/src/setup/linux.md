@@ -16,10 +16,6 @@ Download the [latest build for Linux x86_64](https://xiv.zone/distrib/kawari/kaw
 
 Place the `oodle-network-shared.so` from the Oodle zip you downloaded next to the Kawari executables.
 
-## Configuration
-
-{{#include configuration.md}}
-
 ## Hosts setup
 
 {{#include hosts.md}}
