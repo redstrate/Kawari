@@ -317,7 +317,9 @@ pub enum GimmickRectTrigger {
     Unknown10 = 10,
     Unknown11 = 11,
     Unknown12 = 12,
-    Unknown13 = 13,
+    /// 90% sure this is used for Duty Support/Trust NPCs talking. You can see this in the entrance of Sastasha,
+    /// where it has an EventRange placed which suspiciously lines up with when the NPCs yell.
+    FaithTalk = 13,
     Unknown14 = 14,
     Unknown15 = 15,
     Unknown16 = 16,

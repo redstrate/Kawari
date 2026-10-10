@@ -356,6 +356,9 @@ impl Zone {
                                         exit_pop_range_id: gimmick_rect_info.Params[0],
                                     });
                                 }
+                                GimmickRectTrigger::FaithTalk => {
+                                    // TODO: not sure what the param for this one means. It obviously plugs into NpcYell somehow
+                                }
                                 _ => tracing::warn!(
                                     "Unknown GimmickRect type: {} for EventRange {}",
                                     gimmick_rect_info.TriggerIn,
