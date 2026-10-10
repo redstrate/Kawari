@@ -20,7 +20,10 @@ async fn root() -> Html<String> {
     let template = environment.get_template("web.html").unwrap();
     Html(
         template
-            .render(context! { login_server => config.login.server_name, enable_registration => config.login.enable_registration })
+            .render(context! {
+                login_server => config.login.server_name,
+                enable_registration => config.login.enable_registration
+            })
             .unwrap(),
     )
 }
@@ -32,7 +35,16 @@ async fn setup() -> Html<String> {
     let template = environment.get_template("setup.html").unwrap();
     Html(
         template
-            .render(context! { login_server => config.login.server_name, lobby_port => config.lobby.port, lobby_host => config.lobby.server_name, game_version => SUPPORTED_GAME_VERSION, frontier_host => config.frontier.server_name, login_host => config.login.server_name, server_url => config.web.server_name, enable_registration => config.login.enable_registration })
+            .render(context! {
+                login_server => config.login.server_name.clone(),
+                lobby_port => config.lobby.port,
+                lobby_host => config.lobby.server_name,
+                game_version => SUPPORTED_GAME_VERSION,
+                frontier_host => config.frontier.server_name,
+                login_host => config.login.server_name.clone(),
+                server_url => config.web.server_name,
+                enable_registration => config.login.enable_registration
+            })
             .unwrap(),
     )
 }
@@ -44,8 +56,8 @@ async fn auto_config() -> String {
     let template = environment.get_template("autoconfig.json").unwrap();
     template
         .render(context! {
-            game_patch_server => config.patch.server_name,
-            boot_patch_server => config.patch.server_name,
+            game_patch_server => config.patch.server_name.clone(),
+            boot_patch_server => config.patch.server_name.clone(),
             login_server => config.login.server_name,
             lobby_server => config.lobby.server_name,
             lobby_port => config.lobby.port,
@@ -61,7 +73,10 @@ async fn help() -> Html<String> {
     let template = environment.get_template("help.html").unwrap();
     Html(
         template
-            .render(context! { login_server => config.login.server_name, enable_registration => config.login.enable_registration })
+            .render(context! {
+                login_server => config.login.server_name,
+                enable_registration => config.login.enable_registration
+            })
             .unwrap(),
     )
 }

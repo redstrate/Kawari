@@ -9,6 +9,7 @@ use kawari::ipc::kawari::{CustomIpcData, CustomIpcSegment};
 use kawari::packet::send_custom_world_packet;
 use kawari::web_static_dir;
 use minijinja::context;
+use minijinja::value::Serde;
 use minijinja::{Environment, path_loader};
 use serde::Deserialize;
 use tower_http::services::ServeDir;
@@ -26,7 +27,11 @@ async fn root() -> Html<String> {
 
     let environment = setup_default_environment();
     let template = environment.get_template("admin_general.html").unwrap();
-    Html(template.render(context! { config, festival_list }).unwrap())
+    Html(
+        template
+            .render(context! { config => Serde(&config), festival_list => Serde(&festival_list) })
+            .unwrap(),
+    )
 }
 
 async fn users() -> Html<String> {
@@ -50,7 +55,7 @@ async fn users() -> Html<String> {
 
     let users: Option<Vec<User>> = serde_json::from_str(&body).ok();
 
-    Html(template.render(context! { users }).unwrap())
+    Html(template.render(context! { users => Serde(&users)}).unwrap())
 }
 
 async fn characters() -> Html<String> {
@@ -63,7 +68,11 @@ async fn characters() -> Html<String> {
         && let CustomIpcData::FullCharacterListResponse { json } = response.data
     {
         let characters: Option<Vec<BasicCharacterData>> = serde_json::from_str(&json).ok();
-        Html(template.render(context! { characters }).unwrap())
+        Html(
+            template
+                .render(context! { characters => Serde(&characters) })
+                .unwrap(),
+        )
     } else {
         // error out better than this
         Html(template.render(context! {}).unwrap())
@@ -95,7 +104,11 @@ async fn service_accounts() -> Html<String> {
 
     let service_accounts: Option<Vec<BasicServiceAccountData>> = serde_json::from_str(&body).ok();
 
-    Html(template.render(context! { service_accounts }).unwrap())
+    Html(
+        template
+            .render(context! { service_accounts => Serde(&service_accounts) })
+            .unwrap(),
+    )
 }
 
 #[derive(Deserialize, Debug)]
