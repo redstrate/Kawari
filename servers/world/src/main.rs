@@ -3887,7 +3887,7 @@ async fn process_packet(
             connection.process_lua_player(lua_player, events).await;
         }
 
-        // update lua player
+        // Update lua player
         lua_player.player_data = connection.player_data.clone();
     }
 

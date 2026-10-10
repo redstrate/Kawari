@@ -106,6 +106,7 @@ pub fn execute_action(
         queued_tasks: Vec::new(),
         zone_data: LuaZone::default(),
         base_parameters: BaseParameters::default(),
+        current_level: 0,
     };
     // TODO: maybe move these misc effects to their own dedicated functions or something? I had some trouble remembering where this was
     // We need to set the player's mount id in their common spawn so both pillion works and also letting players see this existing actor's mount when they spawn.
@@ -196,6 +197,7 @@ pub fn execute_action(
         };
 
         common_spawn = actor.get_common_spawn().clone();
+        lua_player.current_level = common_spawn.level;
 
         effects_builder = match &request.action_type {
             ActionType::None => None,

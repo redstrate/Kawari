@@ -30,6 +30,7 @@ pub struct LuaPlayer {
     pub status_effects: StatusEffects,
     // TODO: move this into PlayerData
     pub base_parameters: BaseParameters,
+    pub current_level: u8,
 }
 
 impl QueueSegments for LuaPlayer {
@@ -1048,5 +1049,6 @@ impl UserData for LuaPlayer {
         fields.add_field_method_get("chara_make", |_, this| {
             Ok(this.player_data.customize.chara_make.clone())
         });
+        fields.add_field_method_get("level", |_, this| Ok(this.current_level));
     }
 }
