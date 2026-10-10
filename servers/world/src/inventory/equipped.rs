@@ -128,13 +128,18 @@ impl Storage for EquippedStorage {
 
 #[cfg(test)]
 mod tests {
-    // TODO: Fix this test so it can run again, calculate_item_level needs GameData now to function correctly.
-    /*use super::*;
+    use crate::test_game_data;
+
+    use super::*;
 
     #[test]
     fn test_item_level() {
+        tracing_subscriber::fmt::init();
+        let Some(mut game_data) = test_game_data() else {
+            return;
+        };
         let equipped = EquippedStorage::default();
-        assert_eq!(equipped.calculate_item_level(), 0);
+        assert_eq!(equipped.calculate_item_level(&mut game_data), 0);
 
         let base_item = Item {
             quantity: 1,
@@ -154,6 +159,6 @@ mod tests {
             left_ring: base_item,
             ..Default::default()
         };
-        assert_eq!(equipped.calculate_item_level(), 4);
-    }*/
+        assert_eq!(equipped.calculate_item_level(&mut game_data), 4);
+    }
 }

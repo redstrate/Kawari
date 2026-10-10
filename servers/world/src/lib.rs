@@ -133,3 +133,18 @@ define_sql_array!(GrandCompanyRanks, u8, 3);
 define_sql_array!(BuddyLevels, u8, 3);
 define_sql_array!(GlassesIds, u16, 2);
 define_sql_array!(SharedFates, u8, SHARED_FATES_SIZE);
+
+/// Helper for tests to initialize GameData, instead of each test creating its own.
+/// Please call `tracing_subscriber::fmt::init()` so this is printed in the CI log!
+#[cfg(test)]
+pub fn test_game_data() -> Option<&'static mut GameData> {
+    // Be able to skip these on the CI as we don't have game data there (yet)
+    if std::env::var("CI") == Ok("1".to_string()) {
+        tracing::warn!("Skipping test because it requires gamedata, and we're on the CI!");
+        return None;
+    }
+
+    static mut DEEP_THOUGHT: std::sync::LazyLock<GameData> =
+        std::sync::LazyLock::new(|| GameData::new());
+    unsafe { Some(&mut *DEEP_THOUGHT) }
+}
