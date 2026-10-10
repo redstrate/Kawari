@@ -566,6 +566,20 @@ impl LuaPlayer {
     fn set_customize(&mut self, customize: CustomizeData) {
         self.queued_tasks.push(LuaTask::SetCustomize { customize });
     }
+
+    fn has_trait(&self, game_data: mlua::Value, trait_id: u32) -> bool {
+        let game_data = match game_data {
+            mlua::Value::UserData(ud) => ud.borrow::<Arc<Mutex<GameData>>>().unwrap().clone(),
+            _ => unreachable!(),
+        };
+
+        let mut game_data = game_data.lock();
+        let (level, _quest) = game_data.get_trait_requirements(trait_id).unwrap();
+
+        // TODO: check quest requirements too
+
+        self.current_level >= level
+    }
 }
 
 impl UserData for LuaPlayer {
@@ -1013,6 +1027,9 @@ impl UserData for LuaPlayer {
         methods.add_method_mut("set_customize", |lua, this, customize: Value| {
             this.set_customize(lua.from_value(customize).unwrap());
             Ok(())
+        });
+        methods.add_method("has_trait", |lua, this, id: u32| {
+            Ok(this.has_trait(lua.globals().get("GAME_DATA").unwrap(), id))
         });
     }
 

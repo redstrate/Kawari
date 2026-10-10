@@ -54,6 +54,7 @@ use icarus::SpecialShop::SpecialShopSheet;
 use icarus::SwitchTalkVariation::{SwitchTalkVariationRow, SwitchTalkVariationSheet};
 use icarus::TerritoryType::TerritoryTypeSheet;
 use icarus::TopicSelect::TopicSelectSheet;
+use icarus::Trait::TraitSheet;
 use icarus::WarpLogic::WarpLogicSheet;
 use icarus::WeatherRate::WeatherRateSheet;
 use icarus::{Tribe::TribeSheet, Warp::WarpSheet};
@@ -114,6 +115,7 @@ pub struct GameData {
     pub fate_progress_ui_sheet: FateProgressUISheet,
     pub gold_saucer_content_sheet: GoldSaucerContentSheet,
     pub gimmick_accessor_sheet: GimmickAccessorSheet,
+    pub trait_sheet: TraitSheet,
 
     pub gimmick_rect_lookup: HashMap<u32, u32>,
     pub fate_event_range_lookup: HashMap<u32, u32>,
@@ -478,6 +480,9 @@ impl GameData {
         let gimmick_accessor_sheet =
             GimmickAccessorSheet::read_from(&mut resource_resolver, Language::None).unwrap();
 
+        let trait_sheet =
+            TraitSheet::read_from(&mut resource_resolver, config.world.language()).unwrap();
+
         let mut gimmick_rect_lookup = HashMap::new();
         for (id, row) in gimmick_rect_sheet.into_iter().flatten_subrows() {
             gimmick_rect_lookup.insert(row.LayoutID, id);
@@ -528,6 +533,7 @@ impl GameData {
             fate_progress_ui_sheet,
             gold_saucer_content_sheet,
             gimmick_accessor_sheet,
+            trait_sheet,
         }
     }
 
@@ -1898,6 +1904,12 @@ impl GameData {
             row.Param2,                                  // TODO: Rename to Param1
             row.Type,                                    // TODO: Rename to Param2
         ))
+    }
+
+    /// Look up the requirements for a given Trait.
+    pub fn get_trait_requirements(&mut self, id: u32) -> Option<(u8, u32)> {
+        let row = self.trait_sheet.row(id)?;
+        Some((row.Level, row.Quest))
     }
 }
 
