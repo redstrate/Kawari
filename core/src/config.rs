@@ -20,6 +20,10 @@ pub struct AdminConfig {
 
     #[serde(default = "default_listen_address")]
     pub listen_address: String,
+
+    /// Public-facing domain of the server.
+    #[serde(default = "AdminConfig::default_server_name")]
+    pub server_name: String,
 }
 
 impl Default for AdminConfig {
@@ -27,6 +31,7 @@ impl Default for AdminConfig {
         Self {
             port: Self::default_port(),
             listen_address: default_listen_address(),
+            server_name: Self::default_server_name(),
         }
     }
 }
@@ -42,6 +47,10 @@ impl AdminConfig {
 
     fn default_port() -> u16 {
         21057
+    }
+
+    fn default_server_name() -> String {
+        format!("http://admin.ffxiv.localhost:{}", Self::default_port())
     }
 }
 
