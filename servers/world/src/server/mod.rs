@@ -760,8 +760,8 @@ fn server_logic_tick(
             }
 
             // Process any director tasks for this instance.
-            director_tick(network.clone(), instance);
-            fate_tick(network.clone(), instance);
+            director_tick(network.clone(), instance, gamedata.clone());
+            fate_tick(network.clone(), instance, gamedata.clone());
         }
         // Ensure the rested EXP counter only happens every 10 seconds.
         data.rested_exp_counter += 1;
@@ -1019,7 +1019,8 @@ pub async fn server_main_loop(
                                 {
                                     let actor_id = ObjectId(fastrand::u32(..));
                                     let config = get_config();
-                                    instance.insert_npc(actor_id, npc, &config);
+                                    let mut game_data = game_data.lock();
+                                    instance.insert_npc(actor_id, npc, &config, &mut game_data);
                                 }
                             }
                             QueuedTaskData::EndFate { fate_id } => {

@@ -191,7 +191,8 @@ pub fn execute_action(
         };
         lua_player.base_parameters = match actor {
             NetworkedActor::Player { parameters, .. } => parameters.clone(),
-            _ => BaseParameters::default(), // TODO: fill for other actors!
+            NetworkedActor::Npc { parameters, .. } => parameters.clone(),
+            _ => BaseParameters::default(),
         };
 
         common_spawn = actor.get_common_spawn().clone();
@@ -385,6 +386,7 @@ pub fn execute_action(
                                 ..base_npc
                             },
                             &config,
+                            &mut game_data,
                         );
 
                         network.send_to_by_actor_id(
@@ -444,6 +446,7 @@ pub fn execute_action(
                                 ..base_npc
                             },
                             &config,
+                            &mut game_data,
                         );
 
                         // TODO: add to the party list

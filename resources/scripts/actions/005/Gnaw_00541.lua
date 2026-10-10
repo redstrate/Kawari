@@ -1,6 +1,8 @@
+POTENCY = 100
+
 function doAction(player, in_combo)
     effects = EffectsBuilder()
-    effects:damage(DAMAGE_TYPE_BLUNT, 1000) -- TODO: placeholder
+    effects:damage(DAMAGE_TYPE_BLUNT, player.parameters:calc_physical_damage(POTENCY))
 
     return effects
 end

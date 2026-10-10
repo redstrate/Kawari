@@ -187,7 +187,7 @@ impl Instance {
         if !explorer_mode {
             let config = get_config();
             for npc in instance.zone.get_npcs(game_data) {
-                instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
+                instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config, game_data);
             }
         }
 
@@ -243,7 +243,13 @@ impl Instance {
         self.actors.get_mut(&id)
     }
 
-    pub fn insert_npc(&mut self, id: ObjectId, spawn: SpawnNpc, config: &Config) {
+    pub fn insert_npc(
+        &mut self,
+        id: ObjectId,
+        spawn: SpawnNpc,
+        config: &Config,
+        game_data: &mut GameData,
+    ) {
         // Load drop-ins
         let mut timeline = serde_json::from_str(
             &std::fs::read_to_string(config.filesystem.locate_timeline_file("Default.json"))
@@ -285,6 +291,29 @@ impl Instance {
             }
         }
 
+        // TODO: does classjob/tribe even apply to NPCs?
+        let modifiers = game_data
+            .get_class_job_modifiers(spawn.common.class_job as u32)
+            .expect("Failed to read param grow");
+
+        let attributes = game_data
+            .get_racial_base_attributes(spawn.common.look.tribe as u8)
+            .expect("Failed to read racial attributes");
+
+        let level = spawn.common.level;
+
+        let param_grow = game_data
+            .get_param_grow(level as u32)
+            .expect("Failed to read param grow");
+
+        let primary_stat = game_data
+            .get_job_primary_stat(spawn.common.class_job as u16)
+            .unwrap_or(1);
+
+        let mut parameters = BaseParameters::default();
+        parameters.perform_calculations(primary_stat, &attributes, &param_grow, &modifiers);
+        parameters.calculate_potencies(&param_grow, Some(&modifiers));
+
         self.actors.insert(
             id,
             NetworkedActor::Npc {
@@ -301,6 +330,7 @@ impl Instance {
                 status_effects: StatusEffects::default(),
                 last_wander_timestamp: Instant::now()
                     + Duration::from_secs(fastrand::u64(0..MOB_WANDER_TIME.as_secs())),
+                parameters,
             },
         );
     }

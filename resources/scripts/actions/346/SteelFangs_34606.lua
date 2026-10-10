@@ -1,8 +1,9 @@
+POTENCY = 200
 STATUS_HONED_REAVERS = 3772
 
 function doAction(player, in_combo)
     effects = EffectsBuilder()
-    effects:damage(DAMAGE_TYPE_SLASHING, 200)
+    effects:damage(DAMAGE_TYPE_SLASHING, player.parameters:calc_physical_damage(POTENCY))
     effects:gain_effect_self(STATUS_HONED_REAVERS, 0, 60.0)
 
     return effects

@@ -193,7 +193,11 @@ impl FateData {
 }
 
 /// Perform any queued FATE tasks
-pub fn fate_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance) {
+pub fn fate_tick(
+    network: Arc<Mutex<NetworkState>>,
+    instance: &mut Instance,
+    game_data: Arc<Mutex<GameData>>,
+) {
     let mut fates = instance.fates.clone();
     let mut fates_that_updated = Vec::new();
     for fate in &mut fates {
@@ -207,7 +211,13 @@ pub fn fate_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance) {
                         npc.common.fate_id = fate_id as u16;
                         npc.common.handler_id = HandlerId::new(HandlerType::Fate, 65535);
                         let config = get_config();
-                        instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
+                        let mut game_data = game_data.lock();
+                        instance.insert_npc(
+                            ObjectId(fastrand::u32(..)),
+                            npc,
+                            &config,
+                            &mut game_data,
+                        );
                     } else {
                         tracing::warn!(
                             "Failed to find bnpc {id} for SpawnBattleNpc, it won't spawn!"
@@ -220,7 +230,13 @@ pub fn fate_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance) {
                         npc.common.handler_id = HandlerId::new(HandlerType::Fate, 65535);
                         npc.common.display_flags = DisplayFlag::FATE_START_NPC;
                         let config = get_config();
-                        instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
+                        let mut game_data = game_data.lock();
+                        instance.insert_npc(
+                            ObjectId(fastrand::u32(..)),
+                            npc,
+                            &config,
+                            &mut game_data,
+                        );
                     } else {
                         tracing::warn!(
                             "Failed to find bnpc {id} for SpawnBattleNpc, it won't spawn!"

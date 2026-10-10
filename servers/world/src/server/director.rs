@@ -523,7 +523,11 @@ impl DirectorData {
 }
 
 /// Perform any queued director tasks
-pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance) {
+pub fn director_tick(
+    network: Arc<Mutex<NetworkState>>,
+    instance: &mut Instance,
+    gamedata: Arc<Mutex<GameData>>,
+) {
     let tasks = if let Some(director) = &instance.directors.first() {
         director.tasks.clone()
     } else {
@@ -698,7 +702,8 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
                 if let Some(mut npc) = instance.zone.get_battle_npc(*id) {
                     npc.common.handler_id = director_id;
                     let config = get_config();
-                    instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config);
+                    let mut gamedata = gamedata.lock();
+                    instance.insert_npc(ObjectId(fastrand::u32(..)), npc, &config, &mut gamedata);
                 } else {
                     tracing::warn!("Failed to find bnpc {id} for SpawnBattleNpc, it won't spawn!");
                 }
@@ -768,7 +773,8 @@ pub fn director_tick(network: Arc<Mutex<NetworkState>>, instance: &mut Instance)
 
                     let actor_id = ObjectId(fastrand::u32(..));
                     let config = get_config();
-                    instance.insert_npc(actor_id, npc, &config);
+                    let mut game_data = gamedata.lock();
+                    instance.insert_npc(actor_id, npc, &config, &mut game_data);
                     bosses.insert(
                         *bnpc_id,
                         DirectorBoss {

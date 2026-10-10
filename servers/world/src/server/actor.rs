@@ -75,7 +75,9 @@ pub enum NetworkedActor {
         executing_gimmick_jump: bool,
         // If this actor is currently inside of an instance exit range.
         inside_instance_exit: bool,
+        /// Stat parameters.
         parameters: BaseParameters,
+        /// Their current duel opponent.
         dueling_opponent_id: ObjectId,
         /// Whether or not cooldowns should be cheatily removed.
         remove_cooldowns: bool,
@@ -106,6 +108,8 @@ pub enum NetworkedActor {
         status_effects: StatusEffects,
         /// The last time the mob wandered.
         last_wander_timestamp: Instant,
+        /// Stat parameters.
+        parameters: BaseParameters,
     },
     Object {
         object: SpawnObject,
@@ -524,7 +528,7 @@ pub fn spawn_custom_bnpc(
         };
 
         let config = get_config();
-        instance.insert_npc(actor_id, npc_spawn.clone(), &config);
+        instance.insert_npc(actor_id, npc_spawn.clone(), &config, game_data);
     }
 }
 
