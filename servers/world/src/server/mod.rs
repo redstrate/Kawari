@@ -282,7 +282,10 @@ impl WorldServer {
     /// Removes instances without players in them, which wastes resources.
     fn cleanup_dead_instances(&mut self) {
         self.instances.retain(|instance| {
-            instance
+            matches!(
+                instance.generate_navmesh,
+                NavmeshGenerationStep::None | NavmeshGenerationStep::Needed(..)
+            ) && instance
                 .actors
                 .iter()
                 .any(|x| matches!(x.1, NetworkedActor::Player { .. }))
