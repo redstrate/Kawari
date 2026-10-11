@@ -6,10 +6,10 @@
   - [Windows](setup/windows.md)
   - [macOS](setup/macos.md)
   - [Linux](setup/linux.md)
-  - [Local development](setup/source.md)
+  - [Local Development](setup/source.md)
   - [Profiling](profiling.md)
 - [Contributing](contributing.md)
-  - [Lua style guide](scripting/style_guide.md)
+  - [Lua Style Guide](scripting/style_guide.md)
 - [Updating](updating.md)
   - [In-Game Checklist](update_ingame_checklist.md)
   
@@ -33,7 +33,7 @@
   - [Setting up TemporalStasis](packets/temporalstasis.md)
   - [Dissection](packets/dissection.md)
   - [Tips](packets/tips.md)
-  - [Sending captures](packets/sending_captures.md)
+  - [Sending Captures](packets/sending_captures.md)
   - [Opcodes](opcodes.md)
 - [Events](scripting/scripter.md)
 

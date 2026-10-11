@@ -1,4 +1,4 @@
-# Debug commands
+# Debug Commands
 
 These special debug commands start with `!` and are custom to Kawari.
 

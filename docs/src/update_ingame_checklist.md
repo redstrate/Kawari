@@ -1,7 +1,9 @@
 # In-Game Testing Checklist
+
 When a new patch is released and you're testing in-game, it's easy to forget all the features Kawari supports, so one should ensure the following items function as expected. For all these, ensure that the console is not reporting unknown opcodes, or an unexpected/wrong opcode (e.g. a party member kick opcode when you're trying to invite someone to a party).
 
 ## Login/logout
+
 - [ ] Enter the lobby.
 - [ ] Create/delete characters.
 - [ ] Enter the world.
@@ -10,6 +12,7 @@ When a new patch is released and you're testing in-game, it's easy to forget all
 - [ ] Ensure the console reports the client disconnecting cleanly.
 
 ## World
+
 - [ ] In the Ruby Sea, ensure that diving, underwater portals into Tamamizu/Sui-no-Sato and surfacing all work.
 - [ ] Cross a zone exit line to ensure that changing areas works.
 - [ ] In the Gold Saucer, ensure that the water jet lifts/elevators function by lifting you up to the top floor.
@@ -17,15 +20,18 @@ When a new patch is released and you're testing in-game, it's easy to forget all
 - [ ] Moving around the world should uncover the fog of war on the map. The console should report when the client discovers new sub-areas of zones.
 
 ## Actions
+
 - [ ] Ensure that ActionRequests and ActionResults work: try teleporting to another area and using an attack on an enemy. These should also be visible to other players.
 
 ## Movement
+
 - [ ] Ensure the console doesn't report unknown states when moving, jumping or pivoting (default controls: A & D on Standard controls).
 - [ ] Mount, ensure it completes, and then test your movement speed vs running.
 - [ ] Check that you can ride as a passenger/pillion with a second player's mount. Riding pillion should also be visible to other players.
 - [ ] While mounted, ensure crossing a zone line and teleporting keep you mounted. Note that riding pillion will not keep you mounted currently.
 
 ## Inventory
+
 - [ ] Ensure the server sends your client the correct inventory, currency, and so on.
 - [ ] Ensure inventory operations work: move an item to an empty slot and check that the console output reports neither an unknown operation nor the incorrect operation (e.g. Exchange instead of Move or CombineStack).
 - [ ] Check that shops work: buy an item, sell it back, and then buy it back, ensuring that gil is subtracted or added appropriately, and your item is returned to you after buyback. Log messages appropriate to buying, selling, and buybacks should also be displayed.
@@ -35,6 +41,7 @@ When a new patch is released and you're testing in-game, it's easy to forget all
 - [ ] Equip a gearset, and ensure that your gear is changed correctly.
 
 ## Debug and GM Commands
+
 - [ ] Run the `!inspect` command to ensure debug commands can be invoked.
 - [ ] (Optional, but recommended) Check many or all of the debug commands to ensure they function as described in debug_commands.md.
 GM commands are trickier as there are at least three different "kinds", so to ensure all known kinds are tested, here are simple examples to use:
@@ -43,6 +50,7 @@ GM commands are trickier as there are at least three different "kinds", so to en
 - [ ] GMCommandName2: `//gm buddy_name <name>` (also requires you to target yourself or another player): check the console output for a test message in response to you invoking this command.
 
 ## Social
+
 - [ ] Ensure zone chat (Say, Shout, Yell, custom Emote) functions: a second client should be able to see your name and messages.
 - [ ] Ensure regular emotes (not /em chat mode) display correctly to other players.
 
@@ -88,6 +96,7 @@ Test Moogle Mail:
 - [ ] Delete the letter(s).
 
 ## Duty Finder
+
 - [ ] Use `!unlockcontent 4` or `!unlock all` to unlock Satasha or various duty finder contents. Log out and back in if necessary.
 - [ ] Queue for Sastasha using the Duty Finder UI.
 - [ ] Enter the duty by accepting the prompt.
@@ -98,6 +107,7 @@ Test Moogle Mail:
 - [ ] Enter Eden's Verse: Reflugence (`!unlockcontent 30094`) and ensure falling off the arena KOs your character.
 
 ## Housing
+
 - [ ] Enter a housing ward and ensure the zone loads correctly.
 - [ ] Enter a housing interior and ensure the zone loads correctly.
 - [ ] In an apartment, give yourself at least one furniture item.
@@ -110,12 +120,14 @@ The following tests should also be visible to others in the zone upon completion
 - [ ] Move an item to the storeroom, then place it down in the world again. Prior to placing it, a 3D preview should appear that faces towards your character.
 
 ## Events
+
 - [ ] Enter any inn and log out. Log back in, and ensure the "waking up" cutscene plays.
 - [ ] While in the inn, interact with the Unending Journey and ensure any of its cutscenes play.
 - [ ] While in the inn, interact with the bed, ensure dreamfitting works and doesn't crash the client while finishing.
 - [ ] Ensure the inn room can be exited via the door.
 
 ## Misc/Unimplemented tasks
+
 - [ ] Ensure the opening for all three city-states works. Play through their initial quests until the server sends you to the "real" versions of their areas.
 - [ ] Set a title for your character. These should be visible to other players.
 - [ ] Visit the market board and ensure you can view items.
