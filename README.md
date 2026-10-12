@@ -1,3 +1,6 @@
+> [!NOTE]
+> Our repository has moved to https://codeberg.org/redstrate/Kawari, this one is no longer be updated and will be removed at a later date.
+
 # Kawari
 
 Modern server emulator for FFXIV. Updates on the project can be found [on my blog](https://redstrate.com/blog/series/kawari-progress-report/).
